@@ -1,5 +1,5 @@
+import type { LlmError } from "@/core/llm/errors"
 import type { FornecedorDeModelo } from "@/core/llm/fornecedor"
-import type { LlmError } from "@/core/runs/agent-runtime"
 
 /** Fornecedor de teste: devolve o primeiro modelo até um rate_limit, depois avança na lista. */
 export function createFixedModel(

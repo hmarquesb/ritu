@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import { RituError } from "../errors"
-import { LlmError } from "./agent-runtime"
 import { RunAbertoError, RunNaoContinuavelError } from "./errors"
 
 describe("RunAbertoError", () => {
@@ -22,14 +21,5 @@ describe("RunNaoContinuavelError", () => {
 
     expect(erro).toBeInstanceOf(RituError)
     expect(erro.code).toBe("run_nao_continuavel")
-  })
-})
-
-describe("LlmError", () => {
-  it("guarda o código de falha do modelo", () => {
-    const erro = new LlmError("rate_limit", "x")
-
-    expect(erro).toBeInstanceOf(RituError)
-    expect(erro.code).toBe("rate_limit")
   })
 })

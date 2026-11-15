@@ -1,4 +1,4 @@
-import type { LlmError } from "@/core/runs/agent-runtime"
+import type { LlmError } from "./errors"
 
 export interface FornecedorDeModelo {
   /** null: sem modelo disponível. */

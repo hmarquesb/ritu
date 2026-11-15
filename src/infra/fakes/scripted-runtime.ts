@@ -1,10 +1,5 @@
-import {
-  type AgentRuntime,
-  type CodigoLlm,
-  LlmError,
-  type PedidoDePasso,
-  type ResultadoDePasso,
-} from "@/core/runs/agent-runtime"
+import { type CodigoLlm, LlmError } from "@/core/llm/errors"
+import type { AgentRuntime, PedidoDePasso, ResultadoDePasso } from "@/core/runs/agent-runtime"
 import type { createFixedClock } from "./fixed-clock"
 
 type FixedClock = ReturnType<typeof createFixedClock>

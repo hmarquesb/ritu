@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { LlmError } from "@/core/runs/agent-runtime"
+import { LlmError } from "@/core/llm/errors"
 import { createFixedClock } from "./fixed-clock"
 import { createScriptedRuntime } from "./scripted-runtime"
 

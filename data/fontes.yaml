@@ -53,3 +53,27 @@
   url: https://www.banyanbotanicals.com/info/ayurvedic-living/living-ayurveda/health-guides/an-ayurvedic-guide-to-balanced-sleep/balancing-insufficient-sleep/
   acessado_em: "2026-11-15"
   aprovada: true
+- ref: banyan-constituicao-vata
+  titulo: "Understanding Your Vata Constitution"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-vata
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-constituicao-pitta
+  titulo: "Understanding Your Pitta Constitution"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-pitta
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-constituicao-kapha
+  titulo: "Understanding Your Kapha Constitution"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-kapha
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: ayurveda-com-tipo-corporal
+  titulo: "Discovering your Ayurvedic Body Type"
+  autor: The Ayurvedic Institute
+  url: https://ayurveda.com/blog/discovering-your-ayurvedic-body-type/
+  acessado_em: "2026-11-15"
+  aprovada: true

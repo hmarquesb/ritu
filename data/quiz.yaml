@@ -1,2 +1,100 @@
 # Perguntas do quiz de dosha — schema em src/core/knowledge/schemas.ts
-[]
+- id: quiz-corpo
+  tema: corpo
+  texto: Como é a estrutura do seu corpo desde sempre?
+  opcoes:
+    - { dosha: vata, texto: "Fina e alongada, com ombros e quadris estreitos e articulações aparentes" }
+    - { dosha: pitta, texto: "Média e bem proporcionada, com músculos definidos" }
+    - { dosha: kapha, texto: "Larga e firme, com ossos fortes e ombros e quadris largos" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+    - { ref: ayurveda-com-tipo-corporal, campos: [opcoes] }
+
+- id: quiz-pele
+  tema: pele
+  texto: Como sua pele costuma ser no dia a dia?
+  opcoes:
+    - { dosha: vata, texto: "Fina e seca, às vezes áspera" }
+    - { dosha: pitta, texto: "Levemente oleosa, avermelha fácil e é sensível ao sol" }
+    - { dosha: kapha, texto: "Grossa, macia e lisa, com tendência a ficar oleosa" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+    - { ref: ayurveda-com-tipo-corporal, campos: [opcoes] }
+
+- id: quiz-apetite-digestao
+  tema: apetite_digestao
+  texto: Como é a sua fome ao longo dos dias?
+  opcoes:
+    - { dosha: vata, texto: "Irregular: tem dia que some, e às vezes você até esquece de comer" }
+    - { dosha: pitta, texto: "Forte e constante: se a refeição atrasa, você sente na hora" }
+    - { dosha: kapha, texto: "Constante, mas a digestão é lenta e é fácil comer além da conta" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+
+- id: quiz-sono
+  tema: sono
+  texto: Como costuma ser o seu sono?
+  opcoes:
+    - { dosha: vata, texto: "Leve e curto: você acorda fácil e às vezes custa a pegar no sono" }
+    - { dosha: pitta, texto: "Na medida: umas seis a oito horas bastam" }
+    - { dosha: kapha, texto: "Longo e profundo: você gosta de dormir oito horas ou mais" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+
+- id: quiz-clima
+  tema: clima
+  texto: Que tipo de tempo mais te incomoda?
+  opcoes:
+    - { dosha: vata, texto: "Frio, seco ou com vento" }
+    - { dosha: pitta, texto: "Calor forte e sol intenso" }
+    - { dosha: kapha, texto: "Tempo úmido e parado" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+
+- id: quiz-estresse
+  tema: estresse
+  texto: Quando a pressão aperta, o que costuma acontecer com você?
+  opcoes:
+    - { dosha: vata, texto: "Bate a ansiedade e a sensação de que é coisa demais" }
+    - { dosha: pitta, texto: "Vem a irritação, a frustração e a vontade de criticar" }
+    - { dosha: kapha, texto: "Você não se abala fácil, mas tende a se fechar e resistir à mudança" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+    - { ref: banyan-vata-pitta-kapha, campos: [opcoes] }
+
+- id: quiz-ritmo-energia
+  tema: ritmo_energia
+  texto: Como é o seu ritmo e a sua energia?
+  opcoes:
+    - { dosha: vata, texto: "Muita energia em picos, mas o fôlego acaba rápido" }
+    - { dosha: pitta, texto: "Determinação forte: você vai fundo e às vezes passa do seu limite" }
+    - { dosha: kapha, texto: "Ritmo mais calmo e constante, sem pressa" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+
+- id: quiz-peso
+  tema: peso
+  texto: Como o seu peso costuma se comportar ao longo da vida?
+  opcoes:
+    - { dosha: vata, texto: "Você custa a ganhar peso" }
+    - { dosha: pitta, texto: "Fica estável, com poucas mudanças" }
+    - { dosha: kapha, texto: "Você ganha peso com facilidade e custa a perder" }
+  fontes:
+    - { ref: banyan-constituicao-vata, campos: [opcoes] }
+    - { ref: banyan-constituicao-pitta, campos: [opcoes] }
+    - { ref: banyan-constituicao-kapha, campos: [opcoes] }
+    - { ref: ayurveda-com-tipo-corporal, campos: [opcoes] }

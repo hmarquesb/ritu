@@ -4,6 +4,8 @@ import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
 import { createCachedWeatherSource } from "@/core/weather/cache"
 import type { CityLookup, WeatherSource } from "@/core/weather/ports"
+import { createDbClient, type DbClient } from "@/infra/db/client"
+import { migrate } from "@/infra/db/migrate"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { createOpenMeteoCities } from "@/infra/open-meteo/cities"
 import { createOpenMeteoWeather } from "@/infra/open-meteo/weather"
@@ -53,4 +55,20 @@ let instance: Container | undefined
 export function getContainer(): Container {
   instance ??= createContainer()
   return instance
+}
+
+// Cliente do banco criado na primeira migração: importar o container não lê DATABASE_URL.
+let banco: DbClient | undefined
+
+// Aplica as migrações pendentes de db/migrations/ e devolve os nomes aplicados agora.
+export async function migrateDatabase(): Promise<string[]> {
+  banco ??= createDbClient()
+  return migrate(banco.sql, getContainer().clock)
+}
+
+// Fecha a conexão aberta pelos scripts, se houver, para o processo poder terminar.
+export async function closeDatabase(): Promise<void> {
+  const atual = banco
+  banco = undefined
+  await atual?.close()
 }

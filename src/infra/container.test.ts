@@ -109,4 +109,29 @@ describe("container", () => {
 
     expect(container.knowledge.alimento("banana")?.id).toBe("banana")
   })
+
+  it("closeDatabase sem conexão aberta resolve sem exigir DATABASE_URL", async () => {
+    const urlAnterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { closeDatabase } = await import("./container")
+
+      await expect(closeDatabase()).resolves.toBeUndefined()
+    } finally {
+      if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
+    }
+  })
+
+  it("migrateDatabase sem DATABASE_URL falha com env_ausente só na hora de migrar", async () => {
+    const urlAnterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { migrateDatabase } = await import("./container")
+      const { MissingEnvError } = await import("@/core/errors")
+
+      await expect(migrateDatabase()).rejects.toThrow(MissingEnvError)
+    } finally {
+      if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
+    }
+  })
 })

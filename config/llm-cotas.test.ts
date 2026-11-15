@@ -13,7 +13,7 @@ describe("llmCotas", () => {
   it("a primeira escolha de cada papel bate com a spec", () => {
     expect(llmCotas.papeis.decisao[0]).toBe("gemini-3.5-flash-lite")
     expect(llmCotas.papeis.apoio[0]).toBe("gemini-3.1-flash-lite")
-    expect(llmCotas.papeis.reforco[0]).toBe("gemini-3.8-flash")
+    expect(llmCotas.papeis.reforco[0]).toBe("gemini-3.6-flash")
   })
 
   it("o dia da cota segue o fuso de Los Angeles e os limites da spec", () => {

@@ -15,8 +15,12 @@ export const estomagoPesado: Cenario = {
     evitar_da_mensagem: ["amendoim"],
   },
   roteiro: [
-    { chamadas: [{ nome: "clima.agora", argumentos: {} }] },
     {
+      texto: "Vou ver o clima de agora antes de responder.",
+      chamadas: [{ nome: "clima.agora", argumentos: {} }],
+    },
+    {
+      texto: "Vou responder com cuidado, sem sugerir nada pesado.",
       chamadas: [
         {
           nome: "finalizar",

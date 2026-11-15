@@ -16,9 +16,11 @@ export const perguntaManga: Cenario = {
   },
   roteiro: [
     {
+      texto: "Vou consultar a base sobre o alimento citado.",
       chamadas: [{ nome: "ayurveda.alimento", argumentos: { alimentos: ["manga"] } }],
     },
     {
+      texto: "Vou responder com o que a base diz sobre isso.",
       chamadas: [
         {
           nome: "finalizar",

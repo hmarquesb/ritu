@@ -18,8 +18,12 @@ export const autocorrecao: Cenario = {
     evitar_da_mensagem: [],
   },
   roteiro: [
-    { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
     {
+      texto: "Vou ver o que tenho em casa antes de sugerir algo fresco.",
+      chamadas: [{ nome: "casa.ler", argumentos: {} }],
+    },
+    {
+      texto: "Vou montar uma primeira sugestão com o que tenho.",
       chamadas: [
         {
           nome: "finalizar",
@@ -50,6 +54,7 @@ export const autocorrecao: Cenario = {
       ],
     },
     {
+      texto: "Vou corrigir a sugestão para usar só o que está em casa.",
       chamadas: [
         {
           nome: "finalizar",

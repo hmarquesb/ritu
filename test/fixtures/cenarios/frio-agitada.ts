@@ -29,9 +29,16 @@ export const frioAgitada: Cenario = {
     evitar_da_mensagem: [],
   },
   roteiro: [
-    { chamadas: [{ nome: "clima.agora", argumentos: {} }] },
-    { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
     {
+      texto: "Vou ver o clima de agora antes de sugerir.",
+      chamadas: [{ nome: "clima.agora", argumentos: {} }],
+    },
+    {
+      texto: "Vou conferir o que tenho em casa agora.",
+      chamadas: [{ nome: "casa.ler", argumentos: {} }],
+    },
+    {
+      texto: "Vou conferir se as combinações funcionam juntas.",
       chamadas: [
         {
           nome: "ayurveda.checar_combinacao",
@@ -40,6 +47,7 @@ export const frioAgitada: Cenario = {
       ],
     },
     {
+      texto: "Vou montar a resposta com o que encontrei.",
       chamadas: [
         {
           nome: "finalizar",

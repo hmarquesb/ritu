@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "dup": "jscpd",
     "env:check": "node --env-file-if-exists=.env.local --import tsx scripts/env-check.ts",
-    "base:check": "tsx scripts/base-check.ts"
+    "base:check": "tsx scripts/base-check.ts",
+    "clima:real": "tsx scripts/clima-real.ts"
   },
   "dependencies": {
     "next": "^16.4.6",

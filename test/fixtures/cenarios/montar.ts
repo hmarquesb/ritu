@@ -1,12 +1,17 @@
 import { llmCotas, type Papel } from "@config/llm-cotas"
 import type { createCompanion } from "@/core/agents/companion/responder"
+import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
+import type { createConversation } from "@/core/conversation/conversar"
+import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
+import type { Caminho } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
 import type { Stores } from "@/core/stores"
 import { diaLocal } from "@/core/time/dia-local"
 import { createContainer } from "@/infra/container"
+import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFakeWeather, type FakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
@@ -24,12 +29,17 @@ export type DepsDoCenario = {
   router: ModelRouter
   weather: FakeWeather
   runtime: AgentRuntime
+  llm: LlmClient
   runs: ReturnType<typeof createRunService>
   companion: ReturnType<typeof createCompanion>
+  interpreter: ReturnType<typeof createInterpreter>
+  conversation: ReturnType<typeof createConversation>
 }
 
 export type OpcoesDoCenario = {
   runtime?: AgentRuntime
+  // Cliente do Intérprete; padrão: createFakeLlm com `interpretacao` do cenário.
+  llm?: LlmClient
   // Esgota, no dia, só o modelo principal do papel (registrarRateLimit × rateLimitsParaEsgotarODia).
   esgotar?: Papel
 }
@@ -132,6 +142,55 @@ function aplicarClima(weather: FakeWeather, clima: Cenario["clima"]): void {
   else if (clima) weather.set(clima)
 }
 
+// Run já encerrado, como os de conversas anteriores; o relógio precisa estar no momento do run.
+async function criarRunEncerrado(
+  stores: Stores,
+  contaId: string,
+  dia: string,
+  caminho: Caminho,
+): Promise<string> {
+  const run = await stores.runs.criar(contaId, { caminho: "acompanhante", intencoes: [], dia })
+  await stores.runs.atualizar(contaId, run.id, { status: "done", caminho })
+  return run.id
+}
+
+// Os retornos entram com o relógio em agora − diasAtras; depois o relógio volta a agora.
+async function aplicarRetornos(
+  stores: Stores,
+  clock: ReturnType<typeof createFixedClock>,
+  contaId: string,
+  c: Cenario,
+): Promise<void> {
+  for (const r of c.retornos ?? []) {
+    clock.set(isoMenos(c.agora, r.diasAtras))
+    const dia = diaLocal(clock.now(), c.perfil.cidade?.fuso)
+    const runId = await criarRunEncerrado(stores, contaId, dia, "acompanhante")
+    await stores.outcomes.criar(contaId, runId, [r.sugestao])
+  }
+  clock.set(c.agora)
+}
+
+// As mensagens anteriores entram com o relógio em agora; cada uma tem o seu run encerrado.
+async function aplicarMensagens(
+  stores: Stores,
+  clock: ReturnType<typeof createFixedClock>,
+  contaId: string,
+  c: Cenario,
+): Promise<void> {
+  clock.set(c.agora)
+  const dia = diaLocal(clock.now(), c.perfil.cidade?.fuso)
+  for (const m of c.mensagens ?? []) {
+    const runId = await criarRunEncerrado(stores, contaId, dia, m.caminho ?? "acompanhante")
+    await stores.messages.gravar(contaId, {
+      run_id: runId,
+      autor: m.autor,
+      texto: m.texto,
+      com_incomodo: false,
+      dia,
+    })
+  }
+}
+
 /**
  * Monta um cenário em memória: stores, ledger e clima em memória, relógio fixo em c.agora,
  * base real de data/ (pelo container), telemetria em memória, roteador real sobre o ledger,
@@ -141,12 +200,16 @@ export async function montarCenario(
   c: Cenario,
   opts: OpcoesDoCenario = {},
 ): Promise<{ contaId: string; deps: DepsDoCenario }> {
+  if (!c.entrada && !c.mensagem) {
+    throw new Error(`cenário ${c.nome} sem entrada nem mensagem`)
+  }
   const clock = createFixedClock(c.agora)
   const telemetry = createMemoryTelemetry()
   const ledger = createMemoryLedger(clock)
   const weather = createFakeWeather()
   const runtime = opts.runtime ?? createScriptedRuntime(c.roteiro, clock)
   const router = createModelRouter({ ledger, clock, telemetry })
+  const llm = opts.llm ?? createFakeLlm(c.interpretacao ? [c.interpretacao] : [])
   // O container lê a base real de data/ na primeira vez; os stores consultam a mesma base.
   const stores = createMemoryStores(clock, {
     alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
@@ -158,6 +221,7 @@ export async function montarCenario(
     weather,
     router,
     runtime,
+    llm,
     stores,
     tx: stores,
   })
@@ -172,6 +236,8 @@ export async function montarCenario(
   await aplicarCasa(stores, clock, conta.id, c)
   await aplicarFaltas(stores, conta.id, c, c.perfil.cidade?.fuso)
   await aplicarPreferencias(stores, conta.id, c)
+  await aplicarRetornos(stores, clock, conta.id, c)
+  await aplicarMensagens(stores, clock, conta.id, c)
   aplicarClima(weather, c.clima)
 
   return {
@@ -184,8 +250,11 @@ export async function montarCenario(
       router,
       weather,
       runtime,
+      llm,
       runs: container.runs,
       companion: container.companion,
+      interpreter: container.interpreter,
+      conversation: container.conversation,
     },
   }
 }

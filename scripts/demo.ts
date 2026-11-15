@@ -1,12 +1,29 @@
-// Demonstração do Acompanhante. Sem argumento, lista os cenários. Com --cenario, roda um deles
-// com o runtime roteirizado, sem rede. Com --llm (⚠️ chama o modelo real), troca só o runtime.
+// Demonstração do Acompanhante e da conversa. Sem argumento, lista os cenários. Com --cenario, roda um deles
+// com o runtime roteirizado, sem rede. Com --llm (⚠️ chama o modelo real), troca o runtime e o cliente do modelo.
 // Uso: npm run demo | npm run demo -- --cenario <nome> [--esgotar decisao] [--llm]
 import { parseArgs } from "node:util"
 import { config, llmCotas, type Papel } from "@config/index"
+import type { RespostaDaConversa } from "@/core/conversation/conversar"
+import type { EvitarItem } from "@/core/knowledge/filtros"
+import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { EventoAoVivo } from "@/core/runs/loop"
+import type { Caminho } from "@/core/runs/ports"
 import { getContainer } from "@/infra/container"
-import { cenarios, montarCenario, type OpcoesDoCenario } from "../test/fixtures/cenarios"
-import { formatarRelatorio, type Pensamento } from "./lib/demo-report"
+import {
+  type Cenario,
+  cenarios,
+  cenariosDeConversa,
+  type DepsDoCenario,
+  montarCenario,
+  type OpcoesDoCenario,
+} from "../test/fixtures/cenarios"
+import type { CenarioDeConversa } from "../test/fixtures/cenarios/tipos"
+import {
+  type DadosDoRelatorio,
+  formatarRelatorio,
+  type Pensamento,
+  type RespostaDoRelatorio,
+} from "./lib/demo-report"
 
 function papelValido(nome: string): nome is Papel {
   return Object.hasOwn(llmCotas.papeis, nome)
@@ -14,7 +31,15 @@ function papelValido(nome: string): nome is Papel {
 
 function listarCenarios(): void {
   console.log("Cenários:")
-  for (const c of Object.values(cenarios)) console.log(`  ${c.nome}  ${c.descricao}`)
+  for (const c of [...Object.values(cenarios), ...Object.values(cenariosDeConversa)]) {
+    console.log(`  ${c.nome}  ${c.descricao}`)
+  }
+}
+
+function acharCenario(nome: string): Cenario | CenarioDeConversa | undefined {
+  if (Object.hasOwn(cenarios, nome)) return cenarios[nome]
+  if (Object.hasOwn(cenariosDeConversa, nome)) return cenariosDeConversa[nome]
+  return undefined
 }
 
 // Guarda os pensamentos com a ordem da última etapa concluída, para o relatório encaixar cada um.
@@ -30,38 +55,72 @@ function coletorDePensamentos() {
   }
 }
 
+// Com mensagem, o cenário passa pela conversa; sem, vai direto ao Acompanhante (007).
+type Execucao = {
+  resposta: RespostaDoRelatorio
+  caminho?: Caminho
+  interpretacao?: RespostaDaConversa["interpretacao"]
+}
+
+async function executar(
+  cenario: Cenario | CenarioDeConversa,
+  deps: DepsDoCenario,
+  contaId: string,
+  aoVivo: (e: EventoAoVivo) => void,
+): Promise<Execucao> {
+  if (cenario.mensagem) {
+    const r = await deps.conversation.conversar(contaId, cenario.mensagem, { aoVivo })
+    return { resposta: r, caminho: r.caminho, interpretacao: r.interpretacao }
+  }
+  if (!cenario.entrada) throw new Error(`cenário ${cenario.nome} sem entrada nem mensagem`)
+  const resposta = await deps.companion.responder(contaId, cenario.entrada, { aoVivo })
+  return { resposta }
+}
+
+// Nome de quem o Evitar cita: alimento e grupo pelo nome da base; texto livre é a própria frase.
+function nomeDoEvitarDaBase(kb: KnowledgeBase) {
+  return (item: EvitarItem): string => {
+    if (item.tipo === "alimento") return kb.alimento(item.valor)?.nome ?? item.valor
+    if (item.tipo === "grupo") {
+      return kb.gruposEvitar.find((g) => g.id === item.valor)?.nome ?? item.valor
+    }
+    return item.valor
+  }
+}
+
 async function rodarCenario(
   nome: string,
   esgotar: Papel | undefined,
   llm: boolean,
 ): Promise<number> {
-  const cenario = Object.hasOwn(cenarios, nome) ? cenarios[nome] : undefined
+  const cenario = acharCenario(nome)
   if (!cenario) {
     console.error(`Cenário desconhecido: ${nome}. Liste com: npm run demo`)
     return 1
   }
+  const container = getContainer()
   const opcoes: OpcoesDoCenario = {
-    ...(llm ? { runtime: getContainer().runtime } : {}),
+    ...(llm ? { runtime: container.runtime, llm: container.llm } : {}),
     ...(esgotar ? { esgotar } : {}),
   }
   const { contaId, deps } = await montarCenario(cenario, opcoes)
   const coletor = coletorDePensamentos()
-  const resposta = await deps.companion.responder(contaId, cenario.entrada, {
-    aoVivo: coletor.aoVivo,
-  })
-  const run = await deps.stores.runs.buscar(contaId, resposta.run_id)
-  if (!run) throw new Error(`run ${resposta.run_id} não encontrado`)
-  const etapas = await deps.stores.runs.etapas(contaId, resposta.run_id)
-  console.log(
-    formatarRelatorio({
-      nome: cenario.nome,
-      resposta,
-      run,
-      etapas,
-      pensamentos: coletor.pensamentos,
-      disclaimer: config.app.disclaimer,
-    }),
-  )
+  const execucao = await executar(cenario, deps, contaId, coletor.aoVivo)
+  const run = await deps.stores.runs.buscar(contaId, execucao.resposta.run_id)
+  if (!run) throw new Error(`run ${execucao.resposta.run_id} não encontrado`)
+  const etapas = await deps.stores.runs.etapas(contaId, execucao.resposta.run_id)
+  const dados: DadosDoRelatorio = {
+    nome: cenario.nome,
+    resposta: execucao.resposta,
+    run,
+    etapas,
+    pensamentos: coletor.pensamentos,
+    disclaimer: config.app.disclaimer,
+    ...(execucao.caminho ? { caminho: execucao.caminho } : {}),
+    ...(execucao.interpretacao ? { interpretacao: execucao.interpretacao } : {}),
+    nomeDoEvitar: nomeDoEvitarDaBase(container.knowledge),
+  }
+  console.log(formatarRelatorio(dados))
   return 0
 }
 

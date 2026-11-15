@@ -1,10 +1,35 @@
 import { describe, expect, it } from "vitest"
 import type { RespostaDoRun } from "@/core/agents/companion/responder"
-import type { SaidaDoAcompanhante } from "@/core/agents/companion/saida"
+import type { Anotacao, SaidaDoAcompanhante } from "@/core/agents/companion/saida"
+import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { Run, RunEtapa } from "@/core/runs/ports"
 import { type DadosDoRelatorio, formatarRelatorio } from "./demo-report"
 
 const DISCLAIMER = "Não é orientação médica."
+
+function interpretacaoDeExemplo(): Interpretacao {
+  return {
+    intencoes: ["casa", "retorno"],
+    estados: ["com_frio"],
+    itens_casa: [
+      { alimento_id: "gengibre", nome: "Gengibre", acao: "tem" },
+      { nome: "Leite", acao: "acabou" },
+    ],
+    retorno: { resultado: "ajudou", retorno_id: "r-1", titulo: "Chá de gengibre" },
+    evitar: [{ tipo: "texto", valor: "salada crua" }],
+    nao_come: [],
+    gosta: [],
+    restricoes: [],
+    suspeito: false,
+  }
+}
+
+function anotacoesDeExemplo(): Anotacao[] {
+  return [
+    { tipo: "casa_tem", itens: [{ alimento_id: "gengibre", nome: "Gengibre" }] },
+    { tipo: "casa_acabou", itens: [{ nome: "Leite" }] },
+  ]
+}
 
 function etapa(ordem: number, tipo: string, nome: string, resumo: string | null): RunEtapa {
   return {
@@ -172,6 +197,78 @@ describe("formatarRelatorio", () => {
     expect(texto).toContain("modelo: gemini-3.5-flash-lite")
     expect(texto).toContain("trocas de modelo: 1")
     expect(texto).toContain("trace_id: abc123")
+  })
+
+  it("mostra o bloco Entendi com o caminho, as intenções, a casa, o retorno e o evitar", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      caminho: "casa",
+      interpretacao: interpretacaoDeExemplo(),
+    })
+    expect(texto).toContain("Entendi")
+    expect(texto).toContain("caminho: casa")
+    expect(texto).toContain("intenções: casa, retorno")
+    expect(texto).toContain("estados: com_frio")
+    expect(texto).toContain("Gengibre (tem), Leite (acabou)")
+    expect(texto).toContain("retorno: ajudou · Chá de gengibre")
+    expect(texto).toContain("evitar: salada crua")
+    expect(texto.indexOf("Entendi")).toBeLessThan(texto.indexOf("Etapas"))
+  })
+
+  it("diz sem ligação quando o retorno não está ligado a um registro", () => {
+    const interpretacao = {
+      ...interpretacaoDeExemplo(),
+      retorno: { resultado: "nao_ajudou" as const },
+    }
+    const texto = formatarRelatorio({ ...dadosDeExemplo(), caminho: "retorno", interpretacao })
+    expect(texto).toContain("retorno: nao_ajudou (sem ligação)")
+  })
+
+  it("não mostra linha vazia no Entendi quando o campo não foi citado", () => {
+    const interpretacao = { ...interpretacaoDeExemplo(), itens_casa: [], retorno: undefined }
+    const texto = formatarRelatorio({ ...dadosDeExemplo(), caminho: "casa", interpretacao })
+    expect(texto).not.toContain("\n  em casa:")
+    expect(texto).not.toContain("\n  retorno:")
+  })
+
+  it("nomeia o evitar com a função dada e o valor quando não há nome", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      caminho: "evitar",
+      interpretacao: {
+        ...interpretacaoDeExemplo(),
+        evitar: [{ tipo: "grupo", valor: "amendoim" }],
+      },
+      nomeDoEvitar: (item) => (item.valor === "amendoim" ? "Amendoim" : item.valor),
+    })
+    expect(texto).toContain("evitar: Amendoim")
+  })
+
+  it("mostra Posso anotar depois da resposta, uma linha por anotação, com o tipo e os nomes", () => {
+    const saida = { ...saidaDeExemplo(), anotacoes: anotacoesDeExemplo() }
+    const dados = dadosDeExemplo()
+    const texto = formatarRelatorio({ ...dados, resposta: { ...dados.resposta, saida } })
+    expect(texto).toContain("Posso anotar")
+    expect(texto).toContain("tem em casa: Gengibre")
+    expect(texto).toContain("acabou em casa: Leite")
+    expect(texto.indexOf("Posso anotar")).toBeGreaterThan(texto.indexOf("Resposta"))
+    expect(texto.indexOf("Posso anotar")).toBeLessThan(texto.indexOf("Avisos"))
+  })
+
+  it("não mostra Entendi nem Posso anotar num run da 007", () => {
+    const texto = formatarRelatorio(dadosDeExemplo())
+    expect(texto).not.toContain("Entendi")
+    expect(texto).not.toContain("Posso anotar")
+  })
+
+  it("mostra os modelos de apoio do Intérprete no resumo", () => {
+    const dados = dadosDeExemplo()
+    const texto = formatarRelatorio({
+      ...dados,
+      run: { ...dados.run, modelos: { decisao: ["gemini-a"], apoio: ["gemini-b"] } },
+    })
+    expect(texto).toContain("modelo: gemini-a")
+    expect(texto).toContain("apoio: gemini-b")
   })
 
   it("diz nada agora quando não há evitar nem vale ter em casa", () => {

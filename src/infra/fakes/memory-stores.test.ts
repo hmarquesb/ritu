@@ -13,8 +13,9 @@ import { routineContract } from "../../../test/contracts/routine.contract"
 import { runsContract } from "../../../test/contracts/runs.contract"
 import { shortagesContract } from "../../../test/contracts/shortages.contract"
 import { transactorContract } from "../../../test/contracts/transactor.contract"
+import { runUsageLedgerContract } from "../../../test/contracts/usage-ledger.contract"
 import { createFixedClock } from "./fixed-clock"
-import { createMemoryStores } from "./memory-stores"
+import { createMemoryLedger, createMemoryStores } from "./memory-stores"
 
 function ambiente() {
   const clock = createFixedClock("2026-01-15T12:00:00Z")
@@ -35,6 +36,7 @@ runsContract(() => ambiente())
 proposalsContract(() => ambiente())
 transactorContract(() => ambiente())
 deleteAccountContract(() => ambiente())
+runUsageLedgerContract("memória", (clock) => ({ ledger: createMemoryLedger(clock) }))
 
 describe("createMemoryStores: comportamento próprio do fake", () => {
   it("transação com erro desfaz as escritas feitas dentro dela", async () => {

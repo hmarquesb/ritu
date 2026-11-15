@@ -1,10 +1,13 @@
 import { config } from "@config/index"
+import { llmCotas } from "@config/llm-cotas"
 import type { AccountRepository, ProfileStore } from "@/core/accounts/ports"
 import type { Conta, Perfil } from "@/core/accounts/types"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import { normalizar } from "@/core/knowledge/identificar"
+import { diaDaCota, janelaDoMinuto } from "@/core/llm/janelas"
+import type { Limites, UsageLedger, UsoDoModelo } from "@/core/llm/ledger"
 import { momentoSchema, prakritiSchema, sugestaoRegistradaSchema } from "@/core/memory-schemas"
 import type { Mensagem, MessageRepository } from "@/core/messages/ports"
 import type { OutcomeStore, Retorno } from "@/core/outcomes/ports"
@@ -918,6 +921,108 @@ export function createMemoryStores(clock: Clock, opts: OpcoesMemoria = {}): Stor
         db.estado = antes
         throw erro
       }
+    },
+  }
+}
+
+type LinhaDeUso = {
+  pedidos: number
+  tokens: number
+  rate_limits: number
+  esgotado: boolean
+}
+
+const MS_DIA = 24 * 60 * 60 * 1000
+
+/**
+ * Fake em memória do registro de uso. Cada operação é síncrona por dentro, então
+ * a reserva é atômica. `limitesPorTeste` troca os limites de um modelo nos testes.
+ */
+export function createMemoryLedger(
+  clock: Clock,
+  limitesPorTeste: Partial<Record<string, Limites>> = {},
+): UsageLedger {
+  const minutos = new Map<string, LinhaDeUso>()
+  const dias = new Map<string, LinhaDeUso>()
+  const chave = (modelo: string, inicio: string) => `${modelo}\u0000${inicio}`
+  const vazia = (): LinhaDeUso => ({ pedidos: 0, tokens: 0, rate_limits: 0, esgotado: false })
+
+  function correntes(modelo: string) {
+    const agora = clock.now()
+    return {
+      kMinuto: chave(modelo, janelaDoMinuto(agora)),
+      kDia: chave(modelo, diaDaCota(agora)),
+    }
+  }
+
+  function obter(mapa: Map<string, LinhaDeUso>, k: string): LinhaDeUso {
+    let linha = mapa.get(k)
+    if (!linha) {
+      linha = vazia()
+      mapa.set(k, linha)
+    }
+    return linha
+  }
+
+  function apagarDe(mapa: Map<string, LinhaDeUso>, antesDe: number): number {
+    let apagadas = 0
+    for (const k of [...mapa.keys()]) {
+      const inicio = k.split("\u0000")[1] ?? ""
+      if (new Date(inicio).getTime() < antesDe) {
+        mapa.delete(k)
+        apagadas++
+      }
+    }
+    return apagadas
+  }
+
+  return {
+    async reservar(modelo, limitesRecebidos) {
+      const limites = limitesPorTeste[modelo] ?? limitesRecebidos
+      const { kMinuto, kDia } = correntes(modelo)
+      const min = minutos.get(kMinuto) ?? vazia()
+      const dia = dias.get(kDia) ?? vazia()
+      if (min.esgotado || dia.esgotado) return false
+      if (min.pedidos >= limites.rpm || min.tokens >= limites.tpm) return false
+      if (dia.pedidos >= limites.rpd) return false
+      obter(minutos, kMinuto).pedidos++
+      obter(dias, kDia).pedidos++
+      return true
+    },
+
+    async registrarTokens(modelo, tokens) {
+      const { kMinuto, kDia } = correntes(modelo)
+      obter(minutos, kMinuto).tokens += tokens
+      obter(dias, kDia).tokens += tokens
+    },
+
+    async registrarRateLimit(modelo) {
+      const { kMinuto, kDia } = correntes(modelo)
+      obter(minutos, kMinuto).esgotado = true
+      const dia = obter(dias, kDia)
+      dia.rate_limits++
+      if (dia.rate_limits >= llmCotas.rateLimitsParaEsgotarODia) dia.esgotado = true
+    },
+
+    async uso() {
+      return Object.keys(llmCotas.modelos).map((modelo): UsoDoModelo => {
+        const { kMinuto, kDia } = correntes(modelo)
+        const min = minutos.get(kMinuto) ?? vazia()
+        const dia = dias.get(kDia) ?? vazia()
+        const item: UsoDoModelo = {
+          modelo,
+          minuto: { pedidos: min.pedidos, tokens: min.tokens },
+          dia: { pedidos: dia.pedidos, tokens: dia.tokens, rate_limits: dia.rate_limits },
+        }
+        if (dia.esgotado) item.esgotado_ate = "dia"
+        else if (min.esgotado) item.esgotado_ate = "minuto"
+        return item
+      })
+    },
+
+    async apagarAntigas() {
+      const agora = clock.now().getTime()
+      return apagarDe(minutos, agora - MS_DIA) + apagarDe(dias, agora - 30 * MS_DIA)
     },
   }
 }

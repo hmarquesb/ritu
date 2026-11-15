@@ -2,6 +2,7 @@ import { type AppConfig, config } from "@config/index"
 import type { Clock } from "@/core/clock"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
+import type { UsageLedger } from "@/core/llm/ledger"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
 import { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
@@ -12,6 +13,7 @@ import { createDbClient, type DbClient } from "@/infra/db/client"
 import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
+import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { createMastraRuntime } from "@/infra/mastra/runtime"
@@ -29,6 +31,7 @@ export type Container = {
   cities: CityLookup
   stores: Stores
   tx: Transactor
+  ledger: UsageLedger
   telemetry: Telemetry
   runtime: AgentRuntime
   runs: ReturnType<typeof createRunService>
@@ -56,6 +59,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let cities: CityLookup | undefined
   let stores: Stores | undefined
   let tx: Transactor | undefined
+  let ledger: UsageLedger | undefined
   let telemetry: Telemetry | undefined
   let runtime: AgentRuntime | undefined
   let runs: ReturnType<typeof createRunService> | undefined
@@ -90,6 +94,10 @@ export function createContainer(overrides?: Partial<Container>): Container {
         alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
       })
       return tx
+    },
+    get ledger() {
+      ledger ??= createPgUsageLedger(bancoPreguicoso().sql, clock)
+      return ledger
     },
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
     get telemetry() {

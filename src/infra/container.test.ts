@@ -121,6 +121,20 @@ describe("container", () => {
     expect(container.tx).toBe(fake)
   })
 
+  it("ledger existe sem abrir o banco e aceita override", async () => {
+    const { createContainer } = await import("./container")
+    const { createMemoryLedger } = await import("@/infra/fakes/memory-stores")
+    const urlAnterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      expect(() => createContainer().ledger).not.toThrow()
+      const fake = createMemoryLedger(createFixedClock("2026-01-15T12:00:00Z"))
+      expect(createContainer({ ledger: fake }).ledger).toBe(fake)
+    } finally {
+      if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
+    }
+  })
+
   it("criar o container e ler stores não lê DATABASE_URL; a primeira consulta é que falha sem ela", async () => {
     const urlAnterior = process.env.DATABASE_URL
     delete process.env.DATABASE_URL

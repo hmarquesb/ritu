@@ -5,6 +5,7 @@ import { createDbClient, type DbClient } from "@/infra/db/client"
 import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
+import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { accountsContract } from "../contracts/accounts.contract"
 import { deleteAccountContract } from "../contracts/delete-account.contract"
@@ -20,6 +21,7 @@ import { routineContract } from "../contracts/routine.contract"
 import { runsContract } from "../contracts/runs.contract"
 import { shortagesContract } from "../contracts/shortages.contract"
 import { transactorContract } from "../contracts/transactor.contract"
+import { runUsageLedgerContract } from "../contracts/usage-ledger.contract"
 
 const URL_DO_BANCO = process.env.DATABASE_URL ?? "postgres://ritu:ritu@localhost:5432/ritu"
 const SCHEMA = "ritu_test"
@@ -79,6 +81,11 @@ describe("stores Postgres", () => {
   transactorContract(make)
   deleteAccountContract(make)
 })
+
+runUsageLedgerContract("Postgres", (clock) => ({
+  ledger: createPgUsageLedger(cliente.sql, clock),
+  limpar: truncarTudo,
+}))
 
 // Efeitos que nenhuma porta devolve: conferidos com SQL direto.
 describe("efeitos no banco", () => {

@@ -6,3 +6,10 @@ export class RunAbertoError extends RituError {
     this.name = "RunAbertoError"
   }
 }
+
+export class RunNaoContinuavelError extends RituError {
+  constructor() {
+    super("run_nao_continuavel", "Esta conversa não pode mais ser continuada")
+    this.name = "RunNaoContinuavelError"
+  }
+}

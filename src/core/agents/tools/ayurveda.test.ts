@@ -3,6 +3,7 @@ import { z } from "zod"
 import { filtroVazio } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
+import type { ToolContext } from "@/core/tools/tool"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
@@ -14,7 +15,6 @@ import {
   checarCombinacaoTool,
   substitutosTool,
 } from "./ayurveda"
-import type { ToolContext } from "./tool"
 
 const kb: KnowledgeBase = createMiniKnowledge()
 

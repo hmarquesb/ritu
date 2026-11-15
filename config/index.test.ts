@@ -40,6 +40,18 @@ describe("config", () => {
     expect(config.memoria.historicoLinhas).toBe(20)
   })
 
+  it("expõe os limites do loop do agente com os valores da spec", () => {
+    expect(config.loop).toEqual({
+      maxChamadasDeModelo: 6,
+      timeoutTrechoMs: 25_000,
+      timeoutPassoMs: 15_000,
+      maxTokensPorRun: 60_000,
+      maxEntregasRecusadas: 3,
+      maxToolsPorPasso: 4,
+      maxResultadoDeToolCaracteres: 4_000,
+    })
+  })
+
   it("expõe a validade da casa por durabilidade com os valores da spec", () => {
     expect(config.casa.validadeDias).toEqual({ curta: 5, media: 14, longa: 90 })
     expect(config.casa.durabilidadeDesconhecido).toBe("media")

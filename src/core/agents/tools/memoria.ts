@@ -7,7 +7,7 @@ import { estadoSchema, grupoSchema, momentoDoDiaSchema } from "@/core/knowledge/
 import { type EstadoCalculado, estadoDoItem } from "@/core/pantry/estado"
 import type { ItemDaCasa } from "@/core/pantry/types"
 import type { Run } from "@/core/runs/ports"
-import { definirTool, type Tool, type ToolContext } from "./tool"
+import { definirTool, type Tool, type ToolContext } from "@/core/tools/tool"
 
 const DIA_EM_MS = 86_400_000
 const DIAS_DO_HISTORICO = 7

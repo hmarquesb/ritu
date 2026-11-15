@@ -24,6 +24,8 @@ export type Tool<I, O> = {
   description: string
   input: z.ZodType<I>
   output: z.ZodType<O>
+  /** Até 80 caracteres, sem dado da pessoa. */
+  resumir?(saida: O): string
   execute(input: I, ctx: ToolContext): Promise<O>
 }
 

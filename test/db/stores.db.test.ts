@@ -95,7 +95,7 @@ describe("efeitos no banco", () => {
       clima_usado: { temp: 20 },
     })
     await env.stores.runs.acrescentarEtapa(a, run.id, {
-      tipo: "ferramenta",
+      tipo: "tool",
       nome: "casa.ler",
       resumo: "dados da casa",
       status: "ok",

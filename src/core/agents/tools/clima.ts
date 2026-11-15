@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { gunaSchema } from "@/core/knowledge/vocab"
+import { definirTool, type Tool, type ToolContext } from "@/core/tools/tool"
 import type { CidadeDaPessoa, Clima } from "@/core/weather/ports"
 import { climaEmQualidades } from "@/core/weather/qualidades"
 import { tendenciaDasProximasHoras } from "@/core/weather/tendencia"
-import { definirTool, type Tool, type ToolContext } from "./tool"
 
 const entradaSchema = z.object({}).strict()
 

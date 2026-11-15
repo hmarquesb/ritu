@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { type FiltroPessoa, filtroVazio } from "@/core/knowledge/filtros"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
+import type { ToolContext } from "@/core/tools/tool"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { casaLerTool, historicoRecenteTool, memoriaTools, preferenciasLerTool } from "./memoria"
-import type { ToolContext } from "./tool"
 
 const CONTA = "conta-1"
 const DIA_EM_MS = 86_400_000

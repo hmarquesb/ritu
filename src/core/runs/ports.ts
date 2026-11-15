@@ -67,7 +67,22 @@ export type RunEtapa = {
   criado_em: string
 }
 
-export type NovaEtapa = Omit<RunEtapa, "run_id" | "ordem" | "criado_em">
+export type TipoDeEtapa =
+  | "interprete"
+  | "llm"
+  | "tool"
+  | "validacao"
+  | "pergunta"
+  | "proposta"
+  | "aprovacao"
+  | "juiz"
+  | "guardrail"
+  | "troca_de_modelo"
+  | "erro"
+
+export type NovaEtapa = Omit<RunEtapa, "run_id" | "ordem" | "criado_em" | "tipo"> & {
+  tipo: TipoDeEtapa
+}
 
 export interface RunRepository {
   /** Lança RunAbertoError quando a conta já tem run aberto. */

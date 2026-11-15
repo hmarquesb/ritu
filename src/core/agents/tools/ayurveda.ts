@@ -23,7 +23,7 @@ import {
   vipakaSchema,
   viryaSchema,
 } from "@/core/knowledge/vocab"
-import { definirTool, type Tool, type ToolContext } from "./tool"
+import { definirTool, type Tool, type ToolContext } from "@/core/tools/tool"
 
 const TABELAS = { alimento: "alimentos", preparo: "preparos", pratica: "praticas" } as const
 

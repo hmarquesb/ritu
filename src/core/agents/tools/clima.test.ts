@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { filtroVazio } from "@/core/knowledge/filtros"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
+import type { Tool, ToolContext } from "@/core/tools/tool"
 import { createCachedWeatherSource } from "@/core/weather/cache"
 import type { CidadeDaPessoa, Clima, PrevisaoHora, WeatherSource } from "@/core/weather/ports"
 import { climaEmQualidades } from "@/core/weather/qualidades"
@@ -11,7 +12,6 @@ import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { climaAgoraTool, climaProximasHorasTool, climaTools } from "./clima"
-import type { Tool, ToolContext } from "./tool"
 
 const RIO: CidadeDaPessoa = {
   nome: "Rio de Janeiro",

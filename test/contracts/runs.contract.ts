@@ -16,7 +16,7 @@ const MOMENTO: Momento = {
 }
 
 const etapa = (nome: string): NovaEtapa => ({
-  tipo: "ferramenta",
+  tipo: "tool",
   nome,
   resumo: null,
   status: "ok",

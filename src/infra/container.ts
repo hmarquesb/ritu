@@ -2,6 +2,8 @@ import { type AppConfig, config } from "@config/index"
 import type { Clock } from "@/core/clock"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
+import type { AgentRuntime } from "@/core/runs/agent-runtime"
+import { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import { createCachedWeatherSource } from "@/core/weather/cache"
@@ -10,8 +12,9 @@ import { createDbClient, type DbClient } from "@/infra/db/client"
 import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
-import { optionalEnv } from "@/infra/env"
+import { optionalEnv, requireEnv } from "@/infra/env"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
+import { createMastraRuntime } from "@/infra/mastra/runtime"
 import { createOpenMeteoCities } from "@/infra/open-meteo/cities"
 import { createOpenMeteoWeather } from "@/infra/open-meteo/weather"
 import { createNullTelemetry } from "@/infra/otel/null-telemetry"
@@ -27,6 +30,8 @@ export type Container = {
   stores: Stores
   tx: Transactor
   telemetry: Telemetry
+  runtime: AgentRuntime
+  runs: ReturnType<typeof createRunService>
   encerrar(): Promise<void>
 }
 
@@ -51,6 +56,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let stores: Stores | undefined
   let tx: Transactor | undefined
   let telemetry: Telemetry | undefined
+  let runtime: AgentRuntime | undefined
+  let runs: ReturnType<typeof createRunService> | undefined
   const container: Container = {
     config,
     clock,
@@ -88,6 +95,21 @@ export function createContainer(overrides?: Partial<Container>): Container {
           ? createNullTelemetry()
           : createOtelTelemetry()
       return telemetry
+    },
+    // A chave do modelo só é lida na primeira chamada de passo.
+    get runtime() {
+      runtime ??= createMastraRuntime({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      return runtime
+    },
+    get runs() {
+      runs ??= createRunService({
+        stores: container.stores,
+        tx: container.tx,
+        runtime: container.runtime,
+        clock,
+        telemetry: container.telemetry,
+      })
+      return runs
     },
     async encerrar() {
       await container.telemetry.encerrar()

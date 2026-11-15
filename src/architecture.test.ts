@@ -22,6 +22,7 @@ const CORE_TEST_ALIASES = ["@/infra/fakes"]
 const SCRIPT_ALLOWED_INFRA = ["@/infra/container", "@/infra/env"]
 const PACKAGE_HOMES: Record<string, string[]> = {
   postgres: ["src/infra/db/"],
+  "@ai-sdk": ["src/infra/mastra/"],
   "@mastra": ["src/infra/mastra/"],
   "@opentelemetry": ["src/infra/otel/", "src/instrumentation.ts"],
   "@vercel/otel": ["src/infra/otel/", "src/instrumentation.ts"],
@@ -473,6 +474,11 @@ describe("R5 · pacote só na sua pasta", () => {
 
   it("@mastra fora de src/infra/mastra é violação", () => {
     expectOnly("src/infra/x.ts", `${IMPORT} { Agent } from "@mastra/core/agent"`, "R5")
+  })
+
+  it("@ai-sdk fora de src/infra/mastra é violação", () => {
+    expectOnly("src/infra/x.ts", `${IMPORT} { google } from "@ai-sdk/google"`, "R5")
+    expectClean("src/infra/mastra/x.ts", `${IMPORT} { google } from "@ai-sdk/google"`)
   })
 
   it("@opentelemetry em src/instrumentation.ts é válido", () => {

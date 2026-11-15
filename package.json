@@ -23,9 +23,11 @@
     "cleanup": "node --env-file-if-exists=.env.local --import tsx scripts/cleanup.ts",
     "env:check": "node --env-file-if-exists=.env.local --import tsx scripts/env-check.ts",
     "base:check": "tsx scripts/base-check.ts",
-    "clima:real": "tsx scripts/clima-real.ts"
+    "clima:real": "tsx scripts/clima-real.ts",
+    "runtime:real": "node --env-file-if-exists=.env.local --import tsx scripts/runtime-real.ts"
   },
   "dependencies": {
+    "@mastra/core": "^1.83.0",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.223.2",
     "@opentelemetry/exporter-logs-otlp-http": "^0.223.2",

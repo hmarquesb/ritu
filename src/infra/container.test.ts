@@ -225,4 +225,31 @@ describe("container", () => {
       if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
     }
   })
+
+  it("runtime e runs são preguiçosos: sem GEMINI_API_KEY nem DATABASE_URL, criar não lança", async () => {
+    const chave = process.env.GEMINI_API_KEY
+    const url = process.env.DATABASE_URL
+    delete process.env.GEMINI_API_KEY
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+      expect(container.runtime).toBe(container.runtime)
+      expect(typeof container.runtime.passo).toBe("function")
+      expect(container.runs).toBe(container.runs)
+    } finally {
+      if (chave !== undefined) process.env.GEMINI_API_KEY = chave
+      if (url !== undefined) process.env.DATABASE_URL = url
+    }
+  })
+
+  it("runtime e runs aceitam override", async () => {
+    const { createContainer } = await import("./container")
+    const { createScriptedRuntime } = await import("./fakes/scripted-runtime")
+    const runtime = createScriptedRuntime([])
+    const runs = {} as ReturnType<typeof createContainer>["runs"]
+    const container = createContainer({ runtime, runs })
+    expect(container.runtime).toBe(runtime)
+    expect(container.runs).toBe(runs)
+  })
 })

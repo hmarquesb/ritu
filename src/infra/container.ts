@@ -1,10 +1,16 @@
 import { type AppConfig, config } from "@config/index"
 import type { Clock } from "@/core/clock"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
-import { loadKnowledgeBase } from "@/infra/knowledge/yaml-knowledge"
+import type { DadosDaBase } from "@/core/knowledge/schemas"
+import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { systemClock } from "@/infra/system-clock"
 
 export type Container = { config: AppConfig; clock: Clock; knowledge: KnowledgeBase }
+
+// Leitura crua de data/ para scripts (sem validar): o script valida com validarBase.
+export function readKnowledgeData(dir?: string): DadosDaBase {
+  return readDadosDaBase(dir)
+}
 
 export function createContainer(overrides?: Partial<Container>): Container {
   let knowledge: KnowledgeBase | undefined

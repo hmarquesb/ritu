@@ -110,6 +110,34 @@ describe("container", () => {
     expect(container.knowledge.alimento("banana")?.id).toBe("banana")
   })
 
+  it("createContainer aceita stores e tx de teste e devolve os mesmos objetos", async () => {
+    const { createContainer } = await import("./container")
+    const { createMemoryStores } = await import("@/infra/fakes/memory-stores")
+    const fake = createMemoryStores(createFixedClock("2026-01-15T12:00:00Z"))
+
+    const container = createContainer({ stores: fake, tx: fake })
+
+    expect(container.stores).toBe(fake)
+    expect(container.tx).toBe(fake)
+  })
+
+  it("criar o container e ler stores não lê DATABASE_URL; a primeira consulta é que falha sem ela", async () => {
+    const urlAnterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const { MissingEnvError } = await import("@/core/errors")
+
+      const container = createContainer()
+      expect(() => container.stores).not.toThrow()
+      expect(() => container.tx).not.toThrow()
+
+      await expect(container.stores.accounts.buscar("x")).rejects.toThrow(MissingEnvError)
+    } finally {
+      if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
+    }
+  })
+
   it("closeDatabase sem conexão aberta resolve sem exigir DATABASE_URL", async () => {
     const urlAnterior = process.env.DATABASE_URL
     delete process.env.DATABASE_URL

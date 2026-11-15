@@ -28,6 +28,7 @@ const PACKAGE_HOMES: Record<string, string[]> = {
   "@google/genai": ["src/infra/gemini/"],
   "next-auth": ["src/infra/auth/"],
   "@auth": ["src/infra/auth/"],
+  yaml: ["src/infra/knowledge/"],
 }
 const PUBLIC_PREFIX = "NEXT_PUBLIC_"
 const FORBIDDEN_PUBLIC_WORDS = ["KEY", "SECRET", "TOKEN", "PASSWORD", "DATABASE"]
@@ -481,6 +482,14 @@ describe("R5 · pacote só na sua pasta", () => {
   it("@google/genai só em src/infra/gemini", () => {
     expectClean("src/infra/gemini/client.ts", `${IMPORT} { GoogleGenAI } from "@google/genai"`)
     expectOnly("src/app/x.ts", `${IMPORT} { GoogleGenAI } from "@google/genai"`, "R5")
+  })
+
+  it("yaml só em src/infra/knowledge", () => {
+    expectClean("src/infra/knowledge/x.ts", `${IMPORT} { parse } from "yaml"`)
+    expect(checkFile("src/core/x.ts", `${IMPORT} { parse } from "yaml"`)).toContain(
+      'src/core/x.ts: R1 importa "yaml"',
+    )
+    expectOnly("src/infra/x.ts", `${IMPORT} { parse } from "yaml"`, "R5")
   })
 })
 

@@ -56,7 +56,7 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 |---|---|
 | `npm run lint` | Biome (lint, formatação, complexidade cognitiva ≤ 15). `npm run format` corrige |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm test` | Vitest, sem rede, banco nem chave; inclui o teste de arquitetura (R1 a R9) |
+| `npm test` | Vitest, sem rede, banco nem chave; inclui o teste de arquitetura (R1 a R10) |
 | `npm run eval:det` | Evals determinísticos em `evals/det/**/*.eval.ts` |
 | `npm run dup` | Duplicação em `src/` (jscpd); no fechamento de spec e na CI |
 | `npm run build` | `next build` |
@@ -67,6 +67,8 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | ⚠️ `npm run test:db` | Roda as suítes de contrato das portas contra o Postgres do `docker compose`, no schema `ritu_test`, recriado a cada rodada |
 | `npm run cleanup` | Roda a limpeza diária no banco do `DATABASE_URL` e imprime as contagens |
 | `npm run loop:demo` | Roda o loop com o runtime roteirizado e os stores em memória, num cenário com pausa e retomada, sem LLM. Com `OTEL_EXPORTER_OTLP_ENDPOINT`, exporta o trace para o LGTM |
+| `npm run cotas` | Imprime, por modelo, pedidos e tokens do minuto e do dia, o limite e a porcentagem usada. Precisa do Postgres no ar |
+| ⚠️ `npm run modelos:check` | Uma chamada mínima por modelo de `config/llm-cotas.ts`, passando pelo registro de uso; diz `ok` ou o código do erro. Só à mão |
 | ⚠️ `npm run runtime:real -- <modelo>` | Uma chamada real pelo adaptador Mastra, com uma tool de exemplo; imprime a chamada pedida e os tokens |
 | `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |
 | `docker compose up -d` | Postgres (`5432`) e Grafana LGTM (`3001`, OTLP `4317`/`4318`) |

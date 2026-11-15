@@ -86,3 +86,23 @@
 > 005 · ⚠️ `runtime:real gemini-3.5-flash-lite` (2026-11-15): o modelo pediu `hora_atual` com `{}`; 42 tokens de entrada, 10 de saída. Antes disso, `gemini-2.5-flash` devolveu `APICallError` 4xx (modelo provavelmente fora de linha): a 006 deve conferir a lista de modelos de `AI.md` §10 antes de fixá-la. Diagnóstico com 2 chamadas extras (`gemini-3.5-flash-lite` e `gemini-3-flash-preview`, ambas ok).
 > 005 · Primeira conferência do `loop:demo` no LGTM: nenhum trace chegou ao Tempo, porque nenhum script ligava o SDK do Node. Correção C2.
 > 005 · LGTM (2026-11-15): com `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` explícito, o `loop:demo` gerou o trace `ad1c2e6c…` no Tempo: 14 spans (2 `run`, o inicial e o retomado no mesmo trace; 4 `agente.passo`; 4 `llm.chamada`; 4 `tool.chamada`), o evento `pausa` e só atributos permitidos. Com o valor do `.env.local` (que não foi lido), nada chegou: **a dona deve conferir se ele aponta para `http://localhost:4318`** (OTLP por HTTP), e não para a porta 4317 (gRPC).
+
+> Retomada (2026-11-15): sem `git push` (dona, 2026-11-15): só commits locais, até ela liberar o push.
+
+| Spec | Tarefa | Nível | Status | Commit |
+|---|---|---|---|---|
+| 006 | T1 · Quota config, windows, ports, R10 | mecanica | concluida | 55bd4f3 |
+| 006 | T2 · Memory ledger + contract | nucleo | concluida | 959695c |
+| 006 | T3 · llm_uso migration + Pg ledger | nucleo | concluida | 8d4a100 |
+| 006 | T4 · Model router | nucleo | concluida | e68e9dd |
+| 006 | T5 · Fake LLM | mecanica | concluida | 4bc52f6 |
+| 006 | T6 · chamarComPapel | nucleo | concluida | a40d6da |
+| 006 | T7 · Gemini client + container | nucleo | concluida | 793f3fb |
+| 006 | T8 · No-model response | mecanica | concluida | a103397 |
+| 006 | T9 · Cleanup llm_uso | mecanica | concluida | 51e8906 |
+| 006 | T10 · cotas and modelos:check | mecanica | concluida | 319fd17 |
+| 006 | T11 · Model evals | mecanica | concluida | 2430770 |
+| 006 | Fechamento (gates 1–6, test:db, ⚠️ modelos:check, ADR 0026, docs; sem push) | — | concluida | (este commit) |
+
+> 006 · ⚠️ `modelos:check` (2026-11-15): 3.5 Flash Lite, 3.1 Flash Lite e 3.6 Flash ok; 2.5 Flash Lite, 3 Flash e 2.5 Flash `indisponivel`; 3.8 Flash `timeout`. Registrado em `BLOQUEIOS.md`.
+> 006 · T10: o implementador incluiu `cat .env.local` num comando de leitura; o classificador negou e o arquivo não foi lido. Vai para o relatório da entrega.

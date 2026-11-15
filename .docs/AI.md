@@ -320,8 +320,10 @@ Por que assim:
 
 - Antes de cada chamada, reserva uma vaga no **registro de uso** (tabela `llm_uso`, contadores por modelo, por minuto e por dia). Sem vaga, passa para o próximo modelo da lista do papel.
 - O dia da cota vira à meia-noite do horário do Pacífico.
-- Erro 429 marca o modelo como esgotado até o fim da janela e segue para o próximo.
-- Um run tenta manter o mesmo modelo do começo ao fim de cada papel.
+- A reserva soma um pedido na janela do minuto (minuto cheio, em UTC) e na do dia numa única operação atômica. Os tokens são somados depois da chamada; com os tokens do minuto acima do limite, o modelo não recebe reserva nova naquele minuto.
+- Erro 429 tira o modelo até o fim do minuto e segue para o próximo; no terceiro 429 do mesmo dia da cota, o modelo fica fora até a virada do dia. O adaptador nunca tenta de novo sozinho.
+- Um run tenta manter o mesmo modelo do começo ao fim de cada papel: o modelo do checkpoint é tentado primeiro, e depois a lista do papel desde o começo. Assim o papel volta ao principal quando a cota dele se renova.
+- Os identificadores de modelo só aparecem em `config/llm-cotas.ts` (regra R10 do teste de arquitetura). ⚠️ `npm run modelos:check` faz uma chamada mínima por modelo e mostra o que deixou de responder; `npm run cotas` mostra o uso.
 - Sem nenhum modelo disponível para `decisao`: o run termina com a resposta montada por código (`BUSINESS.md` §14) e a tela avisa.
 - Sem nenhum modelo disponível para o Juiz: a resposta não é entregue (fail-closed) e sai a resposta segura.
 - O modelo usado, o papel e se houve troca ficam no run, na etapa e no span.

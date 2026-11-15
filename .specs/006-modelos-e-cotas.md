@@ -1,6 +1,7 @@
 ---
 title: Modelos e cotas
-status: approved
+status: implemented
+implemented: 2430770
 entrega: 1
 created: 2026-11-14
 ---
@@ -40,23 +41,23 @@ Depois desta spec, nenhuma parte do código escolhe modelo: pede um papel ao `Mo
 
 ## Critérios de aceite
 
-- [ ] Com cota livre, `paraPapel("decisao").proximo()` devolve `gemini-3.5-flash-lite`; `apoio`, `gemini-3.1-flash-lite`; `reforco`, `gemini-3.8-flash`.
-- [ ] Com a cota do **minuto** do modelo principal cheia (pedidos ou tokens), `proximo()` devolve o segundo da lista do papel, com `troca: { de, motivo: "cota" }`; no minuto seguinte volta ao principal.
-- [ ] Com a cota do **dia** cheia, o modelo fica fora até a virada do dia da cota.
-- [ ] O dia da cota vira à meia-noite de `America/Los_Angeles`: com o relógio fixo, um pedido às 23h59 e outro à 0h01 do Pacífico caem em janelas diferentes.
-- [ ] `falhou(modelo, rate_limit)` tira o modelo até o fim do minuto corrente; o terceiro `rate_limit` do mesmo modelo no mesmo dia da cota o tira até a virada do dia.
-- [ ] `proximo()` com `preferir` devolve o modelo preferido se ele tiver vaga, mesmo não sendo o primeiro da lista.
-- [ ] Com todos os modelos do papel sem vaga, `proximo()` devolve `null`.
-- [ ] A reserva é atômica: 20 reservas simultâneas num modelo com 15 por minuto dão exatamente 15 sucessos (teste no fake e, em `test:db`, no Postgres).
-- [ ] `usou` soma os tokens na janela do minuto e na do dia.
-- [ ] `chamarComPapel`: devolve o dado validado pelo schema, o modelo usado e as trocas; em `rate_limit` troca de modelo e tenta de novo; em `resposta_invalida` tenta uma vez mais no mesmo modelo; sem modelo, lança `SemModeloError`.
-- [ ] Cada troca gera a etapa `troca_de_modelo` (pelo gancho) e a métrica `ritu_llm_troca_de_modelo_total` com `papel`, `de`, `para` e `motivo`.
-- [ ] O adaptador Gemini pede saída em JSON, valida com o schema zod recebido e mapeia 429, timeout, 5xx e JSON inválido para os códigos de `LlmError`.
-- [ ] `respostaSemModelo` com estados devolve o texto aprovado para "sem modelo, com atalhos", com até 3 práticas do tipo `pratica` que favorecem os estados, sem as contraindicadas e sem as barradas pelo filtro da pessoa; sem estados, devolve o texto de "sem modelo, só texto" e nenhuma prática.
-- [ ] `executarLimpeza` apaga janelas de minuto com mais de 1 dia e de dia com mais de 30 dias.
-- [ ] `npm run cotas` imprime, por modelo, pedidos e tokens do minuto e do dia, o limite e a porcentagem usada.
-- [ ] ⚠️ `npm run modelos:check` faz uma chamada mínima por modelo de `config/llm-cotas.ts` e diz, para cada um, `ok` ou o erro. Roda só à mão.
-- [ ] Nenhum arquivo fora de `config/llm-cotas.ts` contém um identificador de modelo (teste de arquitetura, regra R9).
+- [x] Com cota livre, `paraPapel("decisao").proximo()` devolve `gemini-3.5-flash-lite`; `apoio`, `gemini-3.1-flash-lite`; `reforco`, `gemini-3.8-flash`.
+- [x] Com a cota do **minuto** do modelo principal cheia (pedidos ou tokens), `proximo()` devolve o segundo da lista do papel, com `troca: { de, motivo: "cota" }`; no minuto seguinte volta ao principal.
+- [x] Com a cota do **dia** cheia, o modelo fica fora até a virada do dia da cota.
+- [x] O dia da cota vira à meia-noite de `America/Los_Angeles`: com o relógio fixo, um pedido às 23h59 e outro à 0h01 do Pacífico caem em janelas diferentes.
+- [x] `falhou(modelo, rate_limit)` tira o modelo até o fim do minuto corrente; o terceiro `rate_limit` do mesmo modelo no mesmo dia da cota o tira até a virada do dia.
+- [x] `proximo()` com `preferir` devolve o modelo preferido se ele tiver vaga, mesmo não sendo o primeiro da lista.
+- [x] Com todos os modelos do papel sem vaga, `proximo()` devolve `null`.
+- [x] A reserva é atômica: 20 reservas simultâneas num modelo com 15 por minuto dão exatamente 15 sucessos (teste no fake e, em `test:db`, no Postgres).
+- [x] `usou` soma os tokens na janela do minuto e na do dia.
+- [x] `chamarComPapel`: devolve o dado validado pelo schema, o modelo usado e as trocas; em `rate_limit` troca de modelo e tenta de novo; em `resposta_invalida` tenta uma vez mais no mesmo modelo; sem modelo, lança `SemModeloError`.
+- [x] Cada troca gera a etapa `troca_de_modelo` (pelo gancho) e a métrica `ritu_llm_troca_de_modelo_total` com `papel`, `de`, `para` e `motivo`.
+- [x] O adaptador Gemini pede saída em JSON, valida com o schema zod recebido e mapeia 429, timeout, 5xx e JSON inválido para os códigos de `LlmError`.
+- [x] `respostaSemModelo` com estados devolve o texto aprovado para "sem modelo, com atalhos", com até 3 práticas do tipo `pratica` que favorecem os estados, sem as contraindicadas e sem as barradas pelo filtro da pessoa; sem estados, devolve o texto de "sem modelo, só texto" e nenhuma prática.
+- [x] `executarLimpeza` apaga janelas de minuto com mais de 1 dia e de dia com mais de 30 dias.
+- [x] `npm run cotas` imprime, por modelo, pedidos e tokens do minuto e do dia, o limite e a porcentagem usada.
+- [x] ⚠️ `npm run modelos:check` faz uma chamada mínima por modelo de `config/llm-cotas.ts` e diz, para cada um, `ok` ou o erro. Roda só à mão.
+- [x] Nenhum arquivo fora de `config/llm-cotas.ts` contém um identificador de modelo (teste de arquitetura, regra R10).
 
 ## O que fazer
 
@@ -64,7 +65,7 @@ Depois desta spec, nenhuma parte do código escolhe modelo: pede um papel ao `Mo
 - Fazer a reserva das duas janelas (minuto e dia) numa única operação atômica no adaptador Postgres.
 - Conferir a API do SDK do Gemini na documentação da versão instalada antes de escrever o adaptador.
 - Rodar ⚠️ `modelos:check` uma vez, no fechamento, e anotar o resultado no relatório da entrega. Identificador recusado: registrar em `.plans/BLOQUEIOS.md` e seguir com os demais.
-- Acrescentar a regra R9 ao teste de arquitetura.
+- Acrescentar a regra R10 ao teste de arquitetura.
 
 ## O que não fazer
 
@@ -87,7 +88,7 @@ Depois desta spec, nenhuma parte do código escolhe modelo: pede um papel ao `Mo
 | Saída estruturada | `LlmClient.gerar` sempre recebe um schema zod e devolve o dado validado | Intérprete, Juiz e Memória só produzem JSON |
 | Práticas da resposta sem modelo | Só do tipo `pratica` (sem ingrediente), ordenadas por `notaAdequacao` | Não dependem da casa nem de pergunta |
 | Textos da resposta sem modelo | Os dois textos de "Contratos" | Aprovados pela dona |
-| Identificadores só na configuração | Regra R9 no teste de arquitetura | Trocar de modelo é um commit num arquivo só |
+| Identificadores só na configuração | Regra R10 no teste de arquitetura | Trocar de modelo é um commit num arquivo só |
 
 ## Contratos
 
@@ -191,7 +192,7 @@ Textos (em `src/core/llm/textos.ts`):
 
 **Limpeza**: `executarLimpeza` (da 004) passa a receber `ledger` e devolve também `llm_uso: number`.
 
-**Teste de arquitetura, regra R9**: texto que casa com `/gemini-[0-9]/` em qualquer arquivo de `src/`, `scripts/` ou `evals/` que não seja `config/llm-cotas.ts` ou um teste. Mensagem: `<arquivo>: R9`.
+**Teste de arquitetura, regra R10**: texto que casa com `/gemini-[0-9]/` em qualquer arquivo de `src/`, `scripts/` ou `evals/` que não seja `config/llm-cotas.ts` ou um teste. Mensagem: `<arquivo>: R10`.
 
 **Scripts**
 
@@ -222,7 +223,7 @@ Com LLM: nenhum caso novo. A família Custo (checkpoint `c1-base`) usa os númer
 ## Nível das partes
 
 - **nucleo** (Sonnet): `router.ts`, `chamar.ts`, os dois adaptadores do registro de uso (atomicidade) e o adaptador Gemini.
-- `mecanica`: configuração, migração, fakes, `sem-modelo.ts`, scripts, R9, evals.
+- `mecanica`: configuração, migração, fakes, `sem-modelo.ts`, scripts, R10, evals.
 
 ## Leitura para a construção
 

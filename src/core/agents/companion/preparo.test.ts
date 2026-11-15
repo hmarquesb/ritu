@@ -335,6 +335,17 @@ describe("preparar: perguntas do run", () => {
     expect(dados.candidatos.map((c) => c.id)).not.toContain(alvo.id)
   })
 
+  it("grava em acabou os ids de Minha casa marcados como acabou e os da mensagem", async () => {
+    const { run, stores } = montar(JANTAR)
+    await stores.pantry.registrar(CONTA, [{ alimento_id: "canela" }], "conversa")
+    await stores.pantry.marcarAcabou(CONTA, [{ alimento_id: "canela" }])
+    const dados = await run({
+      estados: ["com_frio"],
+      casa_da_mensagem: { tem: [], acabou: ["mel"] },
+    })
+    expect(dados.acabou).toEqual(expect.arrayContaining(["canela", "mel"]))
+  })
+
   it("grava perguntas.feitas e deixa nao_come_do_run vazio", async () => {
     const { run } = montar(JANTAR)
     const dados = await run({ estados: ["com_frio"] }, { perguntasFeitas: 1 })

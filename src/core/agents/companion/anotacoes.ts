@@ -7,7 +7,8 @@ import type { Preferencia } from "@/core/preferences/ports"
 import type { Anotacao } from "./saida"
 
 type Citado = { alimento_id?: string; nome: string }
-type Extra = { kb: KnowledgeBase; preferencias: Preferencia[] }
+type Extra = { kb: KnowledgeBase; preferencias: Preferencia[]; nao_come_do_run?: string[] }
+type NaoCome = Extract<Anotacao, { tipo: "nao_come" }>
 
 function copiaDoCitado(c: Citado): Citado {
   return c.alimento_id ? { alimento_id: c.alimento_id, nome: c.nome } : { nome: c.nome }
@@ -63,8 +64,40 @@ function candidatas(i: Interpretacao, perfil: Perfil, extra: Extra): Anotacao[] 
   ]
 }
 
-// Vazio com alerta ou suspeito: nesses caminhos nada do que foi citado vira anotação. Só sai o que é novo.
+function semRepetirId(itens: Citado[]): Citado[] {
+  const vistos = new Set<string>()
+  return itens.filter((item) => {
+    if (!item.alimento_id) return true
+    if (vistos.has(item.alimento_id)) return false
+    vistos.add(item.alimento_id)
+    return true
+  })
+}
+
+// O "não como" que a pessoa respondeu numa pergunta do run entra na anotação nao_come, sem repetir o que já está.
+export function acrescentarNaoCome(
+  anotacoes: Anotacao[],
+  naoComeDoRun: string[],
+  perfil: Perfil,
+  kb: KnowledgeBase,
+): Anotacao[] {
+  const novos = naoComeDoRun.flatMap((id) => {
+    const alimento = kb.alimento(id)
+    if (!alimento || citadoNoPerfilDoNaoCome({ alimento_id: id, nome: alimento.nome }, perfil)) {
+      return []
+    }
+    return [{ alimento_id: id, nome: alimento.nome }]
+  })
+  if (novos.length === 0) return anotacoes
+  const existente = anotacoes.find((a): a is NaoCome => a.tipo === "nao_come")
+  if (!existente) return [...anotacoes, { tipo: "nao_come", itens: semRepetirId(novos) }]
+  const itens = semRepetirId([...existente.itens, ...novos])
+  return anotacoes.map((a) => (a === existente ? { tipo: "nao_come", itens } : a))
+}
+
+// Vazio com alerta ou suspeito: nesses caminhos nenhuma anotação sai, nem o "não como" do run.
 export function montarAnotacoes(i: Interpretacao, perfil: Perfil, extra: Extra): Anotacao[] {
   if (i.alerta || i.suspeito) return []
-  return candidatas(i, perfil, extra).filter((a) => a.itens.length > 0)
+  const daMensagem = candidatas(i, perfil, extra).filter((a) => a.itens.length > 0)
+  return acrescentarNaoCome(daMensagem, extra.nao_come_do_run ?? [], perfil, extra.kb)
 }

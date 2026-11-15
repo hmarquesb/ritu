@@ -153,6 +153,7 @@ export const dadosDoPreparoSchema = z.object({
     .default({ feitas: 0, alimentos: [] }),
   nao_come_do_run: z.array(z.string()).default([]),
   candidatos_completos: z.array(z.string()).default([]),
+  acabou: z.array(z.string()).default([]),
 })
 
 export type DadosDoPreparo = z.infer<typeof dadosDoPreparoSchema>
@@ -548,6 +549,7 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
     perguntas: m.perguntas,
     nao_come_do_run: [],
     candidatos_completos: m.candidatos_completos,
+    acabou: c.acabou,
     ...(entrada.casa_da_mensagem
       ? { casa_da_mensagem: nomesDaCasaDaMensagem(entrada.casa_da_mensagem, kb) }
       : {}),

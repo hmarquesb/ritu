@@ -67,6 +67,7 @@ function dados(mudar: Partial<DadosDoPreparo> = {}): DadosDoPreparo {
     perguntas: { feitas: 0, alimentos: [] },
     nao_come_do_run: [],
     candidatos_completos: [],
+    acabou: [],
     ...mudar,
   }
 }

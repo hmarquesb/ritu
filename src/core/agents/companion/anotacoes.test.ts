@@ -3,7 +3,7 @@ import type { Perfil } from "@/core/accounts/types"
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { Preferencia } from "@/core/preferences/ports"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
-import { montarAnotacoes } from "./anotacoes"
+import { acrescentarNaoCome, montarAnotacoes } from "./anotacoes"
 
 const kb = createMiniKnowledge()
 
@@ -163,5 +163,72 @@ describe("montarAnotacoes", () => {
       "gosta",
       "restricao",
     ])
+  })
+})
+
+describe("montarAnotacoes com o não como do run", () => {
+  it("sem nao_come_do_run devolve o mesmo de antes", () => {
+    const i = interpretacao({ nao_come: [{ alimento_id: "mel", nome: "Mel" }] })
+    expect(montarAnotacoes(i, perfil(), { kb, preferencias: [] })).toEqual(
+      montarAnotacoes(i, perfil(), { kb, preferencias: [], nao_come_do_run: [] }),
+    )
+  })
+
+  it("junta o não como do run à anotação nao_come", () => {
+    const i = interpretacao({ nao_come: [{ alimento_id: "mel", nome: "Mel" }] })
+    expect(
+      montarAnotacoes(i, perfil(), { kb, preferencias: [], nao_come_do_run: ["banana"] }),
+    ).toEqual([
+      {
+        tipo: "nao_come",
+        itens: [
+          { alimento_id: "mel", nome: "Mel" },
+          { alimento_id: "banana", nome: "Banana" },
+        ],
+      },
+    ])
+  })
+
+  it("com alerta, sai lista vazia mesmo com nao_come_do_run preenchido", () => {
+    const i = interpretacao({ alerta: "fisico" })
+    expect(
+      montarAnotacoes(i, perfil(), { kb, preferencias: [], nao_come_do_run: ["banana"] }),
+    ).toEqual([])
+  })
+})
+
+describe("acrescentarNaoCome", () => {
+  it("cria a anotação nao_come no fim quando não existe", () => {
+    const antes = [{ tipo: "restricao" as const, itens: ["vegana" as const] }]
+    expect(acrescentarNaoCome(antes, ["mel"], perfil(), kb)).toEqual([
+      ...antes,
+      { tipo: "nao_come", itens: [{ alimento_id: "mel", nome: "Mel" }] },
+    ])
+  })
+
+  it("junta a uma anotação existente sem repetir alimento_id", () => {
+    const antes = [
+      { tipo: "nao_come" as const, itens: [{ alimento_id: "mel", nome: "Mel" }, { nome: "pão" }] },
+    ]
+    expect(acrescentarNaoCome(antes, ["mel", "banana", "banana"], perfil(), kb)).toEqual([
+      {
+        tipo: "nao_come",
+        itens: [
+          { alimento_id: "mel", nome: "Mel" },
+          { nome: "pão" },
+          { alimento_id: "banana", nome: "Banana" },
+        ],
+      },
+    ])
+  })
+
+  it("ignora o que já está no perfil e o que não existe na base", () => {
+    const p = perfil({ nao_come: [{ tipo: "alimento", valor: "banana" }] })
+    expect(acrescentarNaoCome([], ["banana", "inexistente"], p, kb)).toEqual([])
+  })
+
+  it("não mexe nas anotações quando não há nada novo", () => {
+    const antes = [{ tipo: "restricao" as const, itens: ["vegana" as const] }]
+    expect(acrescentarNaoCome(antes, [], perfil(), kb)).toEqual(antes)
   })
 })

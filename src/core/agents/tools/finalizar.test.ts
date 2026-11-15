@@ -69,6 +69,7 @@ function dados(): DadosDoPreparo {
     perguntas: { feitas: 0, alimentos: [] },
     nao_come_do_run: [],
     candidatos_completos: [],
+    acabou: [],
   }
 }
 

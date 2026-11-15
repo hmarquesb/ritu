@@ -114,7 +114,7 @@ Vocabulário **fechado**: o agente só sugere alimentos de `alimentos.yaml`, pre
 
 ### 5.2 `data/preparos.yaml`
 
-Formas simples de preparar, com **vagas** que os alimentos preenchem. São 30: mingau, sopas, caldo, arroz bem cozido com legumes, kitchari, leguminosa bem cozida, refogados, legumes no vapor e assados, purê e raiz cozida, salada morna, salada crua, fruta cozida, assada e fresca, ovo mexido, omelete, leite morno com especiaria, iogurte batido com especiaria, tapioca, cuscuz, torrada, macarrão com legume, polenta mole, oleaginosas de molho.
+Formas simples de preparar, com **vagas** que os alimentos preenchem. Uma vaga restringe quem a preenche pela `funcao` e, opcionalmente, pelos `grupos`. São 30: mingau, sopas, caldo, arroz bem cozido com legumes, kitchari, leguminosa bem cozida, refogados, legumes no vapor e assados, purê e raiz cozida, salada morna, salada crua, fruta cozida, assada e fresca, ovo mexido, omelete, leite morno com especiaria, iogurte batido com especiaria, tapioca, cuscuz, torrada, macarrão com legume, polenta mole, oleaginosas de molho.
 
 ```yaml
 - id: arroz-com-legume
@@ -258,7 +258,7 @@ Na construção da base, as fontes são consultadas pela internet uma única vez
 
 - **Toda linha tem fonte.** Sem fonte, não entra.
 - **Divergência entre fontes** → `confianca: media` ou `baixa` e uma nota.
-- **Validação automática:** schema zod, ids únicos, referências existentes (fontes, alimentos citados em práticas e combinações), toda função de preparo com pelo menos 3 alimentos, cobertura mínima por grupo, por tipo de prática e por estado do momento.
+- **Validação automática:** schema zod, ids únicos, referências existentes (fontes, alimentos citados em práticas e combinações), toda vaga de preparo com pelo menos 3 alimentos possíveis (as exceções ficam listadas em `config/base.ts`, como a vaga de leite do `leite-morno-com-especiaria`, que aceita só o leite), cobertura mínima por grupo, por tipo de prática e por estado do momento.
 - **Crescimento guiado por dados:** os alimentos "ainda não conheço", os itens "incertos" e os 👎 indicam onde a base precisa crescer.
 - **Mudança na base = commit próprio.**
 - **Agentes de código não inventam fonte.** Se o agente não tem a fonte confirmada de uma linha, ela entra com `confianca: baixa` e `fontes: [{ ref: a_confirmar }]`, e a dona revisa no portão 1. Nenhum título, página ou URL é escrito de memória. Linha com `a_confirmar` vale em desenvolvimento e nos evals; `npm run base:check -- --producao` falha enquanto houver alguma, e é rodado antes de publicar.

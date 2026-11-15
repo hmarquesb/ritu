@@ -1,6 +1,7 @@
 ---
 title: Base de conhecimento
-status: approved
+status: implemented
+implemented: eb3226a
 entrega: 1
 created: 2026-11-14
 ---

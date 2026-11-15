@@ -29,6 +29,8 @@
 | [0019](0019-evals-como-gate.md) | Evals como gate, com registro da evolução | Aceito |
 | [0020](0020-so-planos-gratuitos.md) | Só planos gratuitos, sem cartão | Aceito |
 | [0021](0021-construcao-por-orquestrador-e-subagentes.md) | Construção por orquestrador e subagentes, com portões humanos | Aceito |
+| [0022](0022-vocabulario-fechado-de-12-qualidades.md) | Vocabulário fechado de 12 qualidades | Aceito |
+| [0023](0023-fontes-da-base-pela-internet.md) | Fontes da base consultadas pela internet, com registro da página | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

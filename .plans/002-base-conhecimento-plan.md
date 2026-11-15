@@ -134,9 +134,10 @@ type Fonte = { ref: string; titulo: string; autor: string; edicao?: string; pagi
 - Sem página aberta que traga o valor: `fontes: [{ ref: a_confirmar, campos: [<campos>] }]` e `confianca: baixa`. **Nunca** escreva título, página, edição ou URL de memória. `a_confirmar` não entra em `fontes.yaml`.
 - Página útil de outro site: entra em `fontes.yaml` com `aprovada: false`, e as linhas que a citam ficam com `confianca: baixa`.
 - Divergência entre fontes: `confianca: media` ou `baixa` e uma nota (`notas` nos alimentos).
-- Proibido: carnes, peixes, frutos do mar, suplementos, fitoterápicos, óleos essenciais; promessa de saúde ("cura", "trata", "resolve"), dosagem, quantidades em gramas, gotas ou "x vezes ao dia", linguagem de tratamento. Linguagem de conforto ("pode ajudar a aliviar a sensação de…").
+- Proibido: carnes, peixes, frutos do mar, suplementos, fitoterápicos, óleos essenciais; promessa de saúde ("cura", "trata", "resolve"), dosagem, qualquer medida ou quantidade (gramas, gotas, pitada, fio, colher, xícara, "x vezes ao dia"), linguagem de tratamento. Linguagem de conforto ("pode ajudar a aliviar a sensação de…").
 - Só o vocabulário fechado (12 qualidades: `quente`, `frio`, `pesado`, `leve`, `oleoso`, `seco`, `estavel`, `movel`, `suave`, `aspero`, `intenso`, `brando`). "Úmido" é `oleoso`, "estimulante" é `movel`, "nutritivo" é `pesado`. Nunca as duas de um par.
 - `data/fontes.yaml` é compartilhado entre tarefas: só **acrescente** linhas, nunca altere ou apague as existentes; reutilize uma `ref` já registrada se a página for a mesma.
+- Formatação: o Biome também formata YAML. Antes de terminar, rode `./node_modules/.bin/biome check --write <arquivos de data/ que você tocou>` e confira que `npm run lint` passa.
 - Comando: `npm run base:check`. Erros que começam com `cobertura:` são esperados enquanto as outras tarefas de conteúdo não terminam; **qualquer outro erro** ligado aos arquivos/ids da sua tarefa precisa ser zero.
 
 ---
@@ -657,6 +658,21 @@ type Fonte = { ref: string; titulo: string; autor: string; edicao?: string; pagi
 - comandos: `npm run base:check` — ao fim desta tarefa **zero erros** (inclusive `cobertura:`). Se algum mínimo por estado ou por momento não fechar, ajuste `favorece_estados`/`momento` das práticas desta tarefa (com coerência e fonte) e relate.
 - pronto quando: 44 práticas no arquivo e `npm run base:check` com código 0.
 - fora: alimentos, preparos (se faltar cobertura de preparo, relate em vez de editar).
+
+### T11 · Allow listed slots below the minimum food count
+- nivel: mecanica
+- objetivo: permitir, por configuração, que vagas específicas de preparo tenham menos que `minAlimentosPorVaga` alimentos possíveis (mas pelo menos 1).
+- arquivos: `config/base.ts`, `config/index.test.ts`, `src/core/knowledge/validate.ts`, `src/core/knowledge/validate.test.ts`
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - `config/base.ts` ganha `excecoesMinAlimentosPorVaga: ["leite-morno-com-especiaria:liquido"]` (lista de `"<preparo_id>:<funcao>"`, `as const` como o resto), sem mudar os outros campos.
+  - Regra 6 de `validate.ts` (vaga com menos de `minAlimentosPorVaga` alimentos possíveis): para uma vaga cuja chave `"<preparo.id>:<vaga.funcao>"` está em `excecoesMinAlimentosPorVaga`, o mínimo passa a ser 1 (vaga sem nenhum alimento possível continua erro). Mensagem de erro igual à atual.
+- testes primeiro: preparo `leite-morno-com-especiaria` com vaga `liquido` + `grupos: ["laticinios"]` e só 1 alimento possível → sem erro da regra 6; o mesmo preparo com 0 alimentos possíveis → erro; outro preparo com vaga de 1 alimento → erro (como hoje); `config.base.excecoesMinAlimentosPorVaga` contém a chave.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run base:check` (só erros `cobertura:` aceitos)
+- pronto quando: testes passam.
+- fora: `data/`, outras regras.
 
 ### T10 · Add deterministic evals for the real knowledge base
 - nivel: mecanica

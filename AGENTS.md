@@ -61,6 +61,7 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run dup` | Duplicação em `src/` (jscpd); no fechamento de spec e na CI |
 | `npm run build` | `next build` |
 | `npm run test:e2e` | Playwright (celular e desktop); precisa do build |
+| `npm run base:check` | Valida `data/` (schema, referências, cobertura) e imprime as contagens e as linhas `a_confirmar`. `-- --producao` falha com `a_confirmar` ou fonte não aprovada |
 | `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |
 | `docker compose up -d` | Postgres (`5432`) e Grafana LGTM (`3001`, OTLP `4317`/`4318`) |
 

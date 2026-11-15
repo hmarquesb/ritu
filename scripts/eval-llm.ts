@@ -5,7 +5,7 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import { parseArgs } from "node:util"
 import { z } from "zod"
-import { acompanhanteV2 } from "@/core/agents/prompts/acompanhante.v2"
+import { acompanhanteV3 } from "@/core/agents/prompts/acompanhante.v3"
 import { interpreteV1 } from "@/core/agents/prompts/interprete.v1"
 import { chamarComPapel, SemModeloError } from "@/core/llm/chamar"
 import type { RunEtapa } from "@/core/runs/ports"
@@ -140,7 +140,7 @@ const rodar = (container: Container, checkpoint: string, casos: CasoDoEval[]): P
   executarRodada({
     checkpoint,
     promptVersao: versaoDosPrompts(casos, {
-      acompanhante: acompanhanteV2.versao,
+      acompanhante: acompanhanteV3.versao,
       interprete: interpreteV1.versao,
     }),
     casos,

@@ -1,8 +1,17 @@
 import { z } from "zod"
+import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { passosDoPreparo, tituloDoPreparo } from "@/core/knowledge/lacunas"
 import { fraseDaTroca } from "@/core/knowledge/substitutos"
-import { type Funcao, funcaoSchema, GUNAS, type Guna, gunaSchema } from "@/core/knowledge/vocab"
+import {
+  type Funcao,
+  funcaoSchema,
+  GUNAS,
+  type Guna,
+  gunaSchema,
+  type Restricao,
+  restricaoSchema,
+} from "@/core/knowledge/vocab"
 import type { RespostaSemModelo } from "@/core/llm/sem-modelo"
 import type { EstadoNaCasa, ParaTer, TipoDeSugestao } from "@/core/ranking/tipos"
 import type { DadosDoPreparo } from "./preparo"
@@ -84,8 +93,17 @@ export type SugestaoEntregue = {
   aviso?: string
 }
 
+// Anotações: o que a pessoa disse e que vira proposta de gravação (quem grava é o executor). Nenhum campo leva motivo.
+export type Anotacao =
+  | { tipo: "casa_tem"; itens: { alimento_id?: string; nome: string }[] }
+  | { tipo: "casa_acabou"; itens: { alimento_id?: string; nome: string }[] }
+  | { tipo: "evitar_sempre"; itens: EvitarItem[] }
+  | { tipo: "nao_come"; itens: { alimento_id?: string; nome: string }[] }
+  | { tipo: "gosta"; itens: { alimento_id: string; nome: string }[] }
+  | { tipo: "restricao"; itens: Restricao[] }
+
 export type SaidaDoAcompanhante = {
-  origem: "agente" | "segura" | "sem_modelo"
+  origem: "agente" | "segura" | "sem_modelo" | "codigo"
   resposta: string
   geral: boolean
   avisos: Aviso[]
@@ -95,7 +113,26 @@ export type SaidaDoAcompanhante = {
   incertos: string[]
   citados: string[]
   para_ter?: ParaTer & { verbos: string[]; motivo: string }
+  anotacoes: Anotacao[]
 }
+
+const itemDeCasaSchema = z.object({ alimento_id: z.string().optional(), nome: z.string() })
+const evitarItemSchema = z.object({
+  tipo: z.enum(["grupo", "alimento", "texto"]),
+  valor: z.string(),
+})
+
+export const anotacaoSchema = z.discriminatedUnion("tipo", [
+  z.object({ tipo: z.literal("casa_tem"), itens: z.array(itemDeCasaSchema) }),
+  z.object({ tipo: z.literal("casa_acabou"), itens: z.array(itemDeCasaSchema) }),
+  z.object({ tipo: z.literal("evitar_sempre"), itens: z.array(evitarItemSchema) }),
+  z.object({ tipo: z.literal("nao_come"), itens: z.array(itemDeCasaSchema) }),
+  z.object({
+    tipo: z.literal("gosta"),
+    itens: z.array(z.object({ alimento_id: z.string(), nome: z.string() })),
+  }),
+  z.object({ tipo: z.literal("restricao"), itens: z.array(restricaoSchema) }),
+])
 
 const itemEntregueSchema = z.object({
   alimento_id: z.string(),
@@ -124,7 +161,7 @@ const sugestaoEntregueSchema = z.object({
 })
 
 export const saidaDoAcompanhanteSchema = z.object({
-  origem: z.enum(["agente", "segura", "sem_modelo"]),
+  origem: z.enum(["agente", "segura", "sem_modelo", "codigo"]),
   resposta: z.string(),
   geral: z.boolean(),
   avisos: z.array(z.object({ tipo: z.enum(["incomodo", "geral"]), texto: z.string() })),
@@ -147,6 +184,7 @@ export const saidaDoAcompanhanteSchema = z.object({
       motivo: z.string(),
     })
     .optional(),
+  anotacoes: z.array(anotacaoSchema),
 })
 
 type ItemEntregue = SugestaoEntregue["itens"][number]
@@ -280,6 +318,22 @@ export function completarSaida(
     incertos: entrega.incertos,
     citados: entrega.citados,
     ...(para_ter ? { para_ter } : {}),
+    anotacoes: [],
+  }
+}
+
+export function saidaDeCodigo(resposta: string, anotacoes: Anotacao[]): SaidaDoAcompanhante {
+  return {
+    origem: "codigo",
+    resposta,
+    geral: false,
+    avisos: [],
+    explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
+    sugestoes: [],
+    evitar: [],
+    incertos: [],
+    citados: [],
+    anotacoes,
   }
 }
 
@@ -294,6 +348,7 @@ export function saidaSegura(dados?: DadosDoPreparo): SaidaDoAcompanhante {
     evitar: [],
     incertos: [],
     citados: [],
+    anotacoes: [],
   }
 }
 
@@ -329,5 +384,6 @@ export function saidaSemModelo(
     evitar: [],
     incertos: [],
     citados: [],
+    anotacoes: [],
   }
 }

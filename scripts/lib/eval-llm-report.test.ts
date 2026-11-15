@@ -28,6 +28,7 @@ function runDe(saida: Partial<SaidaDoAcompanhante>): ResultadoDoRun {
       evitar: [],
       incertos: [],
       citados: [],
+      anotacoes: [],
       ...saida,
     },
     status: "done",

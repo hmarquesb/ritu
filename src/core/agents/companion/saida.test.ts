@@ -3,8 +3,10 @@ import { respostaSemModelo } from "@/core/llm/sem-modelo"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import type { DadosDoPreparo } from "./preparo"
 import {
+  type Anotacao,
   completarSaida,
   type EntregaDoModelo,
+  saidaDeCodigo,
   saidaDoAcompanhanteSchema,
   saidaSegura,
   saidaSemModelo,
@@ -109,6 +111,7 @@ describe("completarSaida", () => {
     )
     const s = saida.sugestoes[0]
     expect(saida.origem).toBe("agente")
+    expect(saida.anotacoes).toEqual([])
     expect(s?.titulo).toBe("Leite morno com canela")
     expect(s?.como_fazer).toBe("Aqueça o leite sem deixar ferver, junte canela e, se quiser, mel.")
     expect(s?.itens.map((i) => [i.nome, i.casa])).toEqual([
@@ -206,6 +209,40 @@ describe("completarSaida", () => {
   })
 })
 
+describe("saidaDeCodigo", () => {
+  it("leva a resposta e as anotações, com origem codigo e listas vazias", () => {
+    const anotacoes: Anotacao[] = [
+      { tipo: "casa_tem", itens: [{ alimento_id: "canela", nome: "Canela" }] },
+    ]
+    const saida = saidaDeCodigo("Boa, canela em casa.", anotacoes)
+    expect(saida).toEqual({
+      origem: "codigo",
+      resposta: "Boa, canela em casa.",
+      geral: false,
+      avisos: [],
+      explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
+      sugestoes: [],
+      evitar: [],
+      incertos: [],
+      citados: [],
+      anotacoes,
+    })
+    expect(saidaDoAcompanhanteSchema.safeParse(saida).success).toBe(true)
+  })
+
+  it("aceita todos os tipos de anotação no schema", () => {
+    const anotacoes: Anotacao[] = [
+      { tipo: "casa_tem", itens: [{ alimento_id: "canela", nome: "Canela" }] },
+      { tipo: "casa_acabou", itens: [{ nome: "pitaia" }] },
+      { tipo: "evitar_sempre", itens: [{ tipo: "texto", valor: "gelados" }] },
+      { tipo: "nao_come", itens: [{ alimento_id: "mel", nome: "Mel" }] },
+      { tipo: "gosta", itens: [{ alimento_id: "leite", nome: "Leite" }] },
+      { tipo: "restricao", itens: ["vegana"] },
+    ]
+    expect(saidaDoAcompanhanteSchema.safeParse(saidaDeCodigo("Ok.", anotacoes)).success).toBe(true)
+  })
+})
+
 describe("saidaSegura", () => {
   it("devolve o texto aprovado, listas vazias e geral dos dados ou false", () => {
     expect(saidaSegura()).toEqual({
@@ -218,6 +255,7 @@ describe("saidaSegura", () => {
       evitar: [],
       incertos: [],
       citados: [],
+      anotacoes: [],
     })
     expect(saidaSegura(dados({ geral: true })).geral).toBe(true)
     expect(saidaDoAcompanhanteSchema.safeParse(saidaSegura()).success).toBe(true)
@@ -237,6 +275,7 @@ describe("saidaSemModelo", () => {
     expect(r.praticas.length).toBeGreaterThan(0)
     const saida = saidaSemModelo(r, dados({ geral: true }), kb)
     expect(saida.origem).toBe("sem_modelo")
+    expect(saida.anotacoes).toEqual([])
     expect(saida.resposta).toBe(r.resposta)
     expect(saida.geral).toBe(true)
     expect(saida.sugestoes.map((s) => [s.pratica_id, s.titulo, s.motivo, s.linhas_base])).toEqual(

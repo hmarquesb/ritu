@@ -53,3 +53,18 @@
 | 003 | Fechamento (gates 1–6, ADR 0024, docs; sem push) | — | concluida | (este commit) |
 
 > 003 · ⚠️ `clima:real "Rio de Janeiro"` (2026-11-15, 04h local): Rio de Janeiro (Rio de Janeiro, Brasil) · America/Sao_Paulo · 25,1 °C (neutro) · 98% (úmido → `oleoso`) · próximas 6 h: esquenta, sem chuva · exit 0. Vai para o relatório da entrega.
+
+| Spec | Tarefa | Nível | Status | Commit |
+|---|---|---|---|---|
+| 004 | T1 · Memory config, dia local, pantry state | mecanica | concluida | 8fd937b |
+| 004 | T2 · Domain types, ports, jsonb schemas | mecanica | concluida | 965f6b4 |
+| 004 | T3 · Contracts + memory fake (accounts, profiles, pantry, shortages, preferences) | mecanica | concluida | 4382804 |
+| 004 | T4 · Contracts + memory fake (rest, transaction, delete account) | mecanica | concluida | bab3df8 |
+| 004 | T5 · postgres driver, migration, client, db:migrate | mecanica | concluida | fb10d7b |
+| 004 | T6 · Pg adapters part 1 + test:db | mecanica | concluida | 38abc25 |
+| 004 | T7 · Pg adapters part 2, transactor, container | mecanica | concluida | 4016e9e |
+| 004 | T8 · Daily cleanup | mecanica | concluida | d0e2f5e |
+| 004 | T9 · Memory tools + ToolContext | mecanica | concluida | fb589b6 |
+| 004 | T10 · Memory evals + CI db job | mecanica | concluida | 4e223b4 |
+| 004 | C1 · Test db:migrate idempotence | mecanica | concluida | 855506c |
+| 004 | Fechamento (gates 1–6, ⚠️ test:db 97 ok, ADR 0025, docs; sem push) | — | concluida | (este commit) |

@@ -140,19 +140,19 @@ A montagem acontece num único composition root (`src/infra/container.ts`). O te
 | `contas` | `id`, `tipo` (google, demo), `google_sub`, `email`, `expira_em`, `tester`, `aviso_aceito_em`, `evitar_passo` (pronto, nenhum, pulou), `evitar_lembrete_em`, `dosha_adiado_em` |
 | `perfis` | `conta_id`, `prakriti` (pode ser nulo), `origem` (quiz, declarado), `evitar_sempre[]` (`{tipo: grupo | alimento | texto, valor, desde}`), `restricoes[]`, `nao_come[]`, `cidade_nome`, `cidade_lat`, `cidade_lon` (duas casas decimais), `cidade_fuso` |
 | `evitar_temporario` | `conta_id`, `tipo`, `valor`, `dia`. O que a pessoa disse na conversa e vale até o fim do dia; apagado pela limpeza diária |
-| `casa` | `conta_id`, `alimento_id` (nulo se a base não conhece), `nome_livre`, `estado` (tem, acabou), `sempre_tenho`, `confirmado_em`, `origem` (conversa, tela, pergunta) |
+| `casa` | `id`, `conta_id`, `alimento_id` (nulo se a base não conhece), `nome_livre`, `nome_normalizado`, `estado` (tem, acabou), `sempre_tenho`, `confirmado_em`, `origem` (conversa, tela, pergunta). Exatamente um entre `alimento_id` e `nome_livre`; uma linha por conta e alimento, ou por conta e nome normalizado |
 | `preferencias` | `conta_id`, `item_tipo` (alimento, pratica, preparo), `item_id`, `gosto` (gosta, nao_gosta, nulo), `ajudou`, `nao_ajudou`, `nao_fez`, `ultimos_resultados` (os dois mais recentes), `ultima_sugestao_em` |
 | `retornos` | `id`, `conta_id`, `run_id`, `sugestao` (tipo e ids), `status` (aguardando, respondido), `resultado` (ajudou, nao_ajudou, nao_fez), `origem` (toque, conversa), `respondido_em`. Sem resposta em 7 dias, é apagado |
-| `rotina_notas` | `id`, `conta_id`, `texto`, `ativa`, `criado_em` |
-| `rotina_resumos` | `conta_id`, `texto`, `versao` |
-| `padroes` | `id`, `conta_id`, `tipo`, `chave`, `frase`, `ocorrencias`, `status` (candidato, confirmado, recusado) |
+| `rotina_notas` | `id`, `conta_id`, `texto` (até 200 caracteres), `ativa`, `criado_em` |
+| `rotina_resumos` | `conta_id`, `versao`, `texto` (até 1200 caracteres), `criado_em` |
+| `padroes` | `id`, `conta_id`, `tipo`, `chave`, `frase`, `ocorrencias`, `status` (candidato, confirmado, recusado), `criado_em`, `decidido_em`. Um por conta, tipo e chave |
 | `mensagens` | `id`, `conta_id`, `run_id`, `autor` (pessoa, agente), `texto`, `com_incomodo`, `dia`, `criado_em` (apagadas depois de 7 dias; as de run com incômodo, no dia seguinte) |
-| `runs` | `id`, `conta_id`, `caminho` (acompanhante, casa, retorno, evitar, ajuda, ofensa, alerta, fora, sem_modelo), `intencoes[]`, `status`, `checkpoint`, `pendencia`, `momento` (campos estruturados, sem incômodo), `com_incomodo`, `clima_usado`, `saida`, `passos`, `tokens_entrada`, `tokens_saida`, `latencia_ms`, `modelos` (por papel), `trocas_de_modelo`, `prompt_versao`, `juiz_tentativas`, `juiz_aprovado`, `trace_id`, `dia` |
+| `runs` | `id`, `conta_id`, `caminho` (acompanhante, casa, retorno, evitar, ajuda, ofensa, alerta, fora, sem_modelo), `intencoes[]`, `status`, `checkpoint`, `pendencia`, `momento` (campos estruturados, sem incômodo), `com_incomodo`, `clima_usado`, `saida`, `passos`, `tokens_entrada`, `tokens_saida`, `latencia_ms`, `modelos` (por papel), `trocas_de_modelo`, `prompt_versao`, `juiz_tentativas`, `juiz_aprovado`, `trace_id`, `dia`, `criado_em`, `atualizado_em`. No máximo um run aberto (`running`, `waiting_for_input`, `waiting_for_approval`) por conta |
 | `run_etapas` | `run_id`, `ordem`, `tipo`, `nome`, `resumo`, `status`, `duracao_ms`, `modelo`, `tokens_entrada`, `tokens_saida` |
 | `propostas` | `id`, `run_id`, `conta_id`, `tool`, `conteudo`, `decisao` (pendente, aprovada, recusada, expirada), `decidida_em` |
 | `faltas` | `conta_id`, `alimento_id`, `dia`, `origem` (teria_entrado, nao_tenho), `run_id`. Uma linha por conta, alimento e dia; apagadas depois de 30 dias |
 | `lista_ter_em_casa` | `conta_id`, `alimento_id`, `motivo` (faltou_hoje, fez_falta), `detalhe` (a sugestão de hoje, ou o número de faltas), `criado_em` |
-| `feedback` | `run_id`, `conta_id`, `voto` |
+| `feedback` | `run_id`, `conta_id`, `voto` (up, down), `criado_em`. Um voto por run |
 | `alimentos_desconhecidos` | `nome`, `vezes` (sem `conta_id`; candidatos a entrar na base) |
 | `llm_uso` | `modelo`, `janela` (minuto ou dia), `inicio`, `pedidos`, `tokens` |
 | `limites` | Contadores por conta e por IP (HMAC) |
@@ -161,7 +161,13 @@ O estado "incerto" de um item da casa não é gravado: é calculado de `confirma
 
 A recusa de uma indicação de "vale ter em casa" não tem tabela própria: é a proposta `lista.propor` daquele alimento com `decisao` recusada.
 
-"Apagar meus dados" remove a conta em cascata. Runs ficam sem `conta_id` e sem texto, só para as métricas agregadas.
+"Apagar meus dados" remove a conta em cascata. Runs ficam sem `conta_id` e sem `saida`, `checkpoint`, `pendencia` e `clima_usado`, e as etapas ficam sem `resumo`: servem só às métricas agregadas.
+
+**Como é guardado.** SQL puro com o driver `postgres`, sem ORM. As migrações ficam em `db/migrations/NNNN_nome.sql` e são aplicadas em ordem por `db:migrate`, cada uma numa transação, com registro em `_migracoes`. Migração aplicada não muda: correção é migração nova. Os ids são `uuid`. Todo carimbo de tempo vem do `Clock`, nunca de `now()` no SQL. Todo campo `jsonb` é validado com zod na escrita e na leitura. O dia de uma linha (`dia`) é o dia local da pessoa, no fuso da cidade dela ou no fuso padrão.
+
+**Portas.** O core grava e lê por onze portas (`AccountRepository`, `ProfileStore`, `PantryStore`, `PreferenceStore`, `OutcomeStore`, `ShortageStore`, `RoutineStore`, `PatternStore`, `MessageRepository`, `RunRepository`, `ProposalStore`) e por um `Transactor`, que entrega as mesmas portas ligadas a uma transação. Todo método recebe `contaId` primeiro, e ele vai no `WHERE` de toda consulta; as exceções são os métodos de limpeza, `alimentos_desconhecidos` e a busca de conta pelo `google_sub`. Cada porta tem um adaptador Postgres (`src/infra/db/`) e um fake em memória (`src/infra/fakes/memory-stores.ts`). Uma suíte de contrato única (`test/contracts/`) roda contra os dois: o fake no `npm test` e o Postgres no ⚠️ `test:db` e no job `db` da CI.
+
+**Limpeza diária.** `executarLimpeza` apaga as mensagens com mais de 7 dias, as mensagens com incômodo de dias anteriores, os retornos sem resposta com mais de 7 dias, as faltas com mais de 30 dias e o "evitar" temporário de dias anteriores. Ela também expira os runs em espera há mais de 30 minutos e as propostas pendentes deles, e apaga as contas de demonstração vencidas. Os prazos ficam em `config/memoria.ts`, e os cortes por dia usam o fuso padrão.
 
 ## 7. Estrutura de pastas
 

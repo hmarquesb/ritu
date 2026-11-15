@@ -1,6 +1,7 @@
 ---
 title: Dados e memória
-status: approved
+status: implemented
+implemented: 855506c
 entrega: 1
 created: 2026-11-14
 ---
@@ -41,23 +42,23 @@ Depois desta spec, as specs seguintes gravam e leem qualquer dado da pessoa por 
 
 ## Critérios de aceite
 
-- [ ] `npm test` roda a suíte de contrato de todas as portas contra os fakes, sem banco.
-- [ ] ⚠️ `npm run test:db`, com o Postgres do `docker compose` no ar, aplica as migrações num schema limpo e roda a mesma suíte de contrato contra os adaptadores Postgres, com código 0.
-- [ ] `npm run db:migrate` aplica as migrações pendentes em ordem, registra cada uma em `_migracoes`, e rodar de novo não faz nada.
-- [ ] **Autorização:** para cada porta, um teste grava com a conta A e tenta ler, alterar e apagar com a conta B; a leitura devolve vazio e a escrita não muda nada.
-- [ ] Só um run aberto por conta: criar um segundo run com outro em `running`, `waiting_for_input` ou `waiting_for_approval` lança `RunAbertoError`.
-- [ ] `estadoDoItem`: item de durabilidade curta confirmado há 5 dias é `confirmado`; há 6, `incerto`; média, 14 e 15; longa, 90 e 91; `sempre_tenho` nunca fica `incerto`; `estado: acabou` é sempre `acabou`; alimento que a base não conhece usa a durabilidade média.
-- [ ] `casa.registrar` de um alimento apaga as faltas dele e o tira de `lista_ter_em_casa`, na mesma transação.
-- [ ] Registrar em casa um nome que a base não conhece guarda o item com `alimento_id` nulo e soma 1 em `alimentos_desconhecidos`; o mesmo nome com acento ou maiúscula diferente cai na mesma linha.
-- [ ] `faltas.registrar` duas vezes para a mesma conta, alimento e dia mantém uma linha.
-- [ ] `faltas.diasComFalta` conta dias diferentes dentro da janela pedida e ignora os mais antigos.
-- [ ] `preferencias`: `contarResultado("ajudou")` soma 1 só no contador certo; `definirGosto` não mexe nos contadores. `ultimos_resultados` guarda os dois retornos mais recentes entre "ajudou" e "não ajudou", o mais novo primeiro; "não fez" não entra.
-- [ ] Limpeza diária, com relógio fixo: apaga mensagens com mais de 7 dias; apaga mensagens marcadas `com_incomodo` de dias anteriores; apaga retornos `aguardando` com mais de 7 dias (os respondidos ficam); apaga faltas com mais de 30 dias; apaga `evitar_temporario` de dias anteriores; marca como `expired` os runs em espera há mais de 30 minutos e como `expirada` as propostas pendentes deles; apaga contas de demonstração vencidas. Devolve a contagem de cada item.
-- [ ] `contas.apagar` remove perfil, casa, preferências, retornos, rotina, padrões, mensagens, propostas, faltas, lista e feedback da conta; os runs ficam sem `conta_id`, sem `saida`, `checkpoint`, `pendencia` e `clima_usado`, e as etapas ficam sem `resumo`.
-- [ ] Nenhuma tabela tem coluna para incômodo; `runs.momento` recusa (zod) objeto com campo de incômodo.
-- [ ] `perfil.removerEvitarSempre` só existe na porta de perfil e exige `confirmado: true`; nenhuma outra porta altera `evitar_sempre`.
-- [ ] `casa.ler` devolve os itens com estado calculado, sem os que acabaram e sem os que caem em "evitar sempre"; `preferencias.ler` devolve só os itens pedidos; `historico.recente` devolve no máximo 20 linhas dos últimos 7 dias, sem texto da pessoa.
-- [ ] Importar o container não abre conexão; a primeira consulta abre.
+- [x] `npm test` roda a suíte de contrato de todas as portas contra os fakes, sem banco.
+- [x] ⚠️ `npm run test:db`, com o Postgres do `docker compose` no ar, aplica as migrações num schema limpo e roda a mesma suíte de contrato contra os adaptadores Postgres, com código 0.
+- [x] `npm run db:migrate` aplica as migrações pendentes em ordem, registra cada uma em `_migracoes`, e rodar de novo não faz nada.
+- [x] **Autorização:** para cada porta, um teste grava com a conta A e tenta ler, alterar e apagar com a conta B; a leitura devolve vazio e a escrita não muda nada.
+- [x] Só um run aberto por conta: criar um segundo run com outro em `running`, `waiting_for_input` ou `waiting_for_approval` lança `RunAbertoError`.
+- [x] `estadoDoItem`: item de durabilidade curta confirmado há 5 dias é `confirmado`; há 6, `incerto`; média, 14 e 15; longa, 90 e 91; `sempre_tenho` nunca fica `incerto`; `estado: acabou` é sempre `acabou`; alimento que a base não conhece usa a durabilidade média.
+- [x] `casa.registrar` de um alimento apaga as faltas dele e o tira de `lista_ter_em_casa`, na mesma transação.
+- [x] Registrar em casa um nome que a base não conhece guarda o item com `alimento_id` nulo e soma 1 em `alimentos_desconhecidos`; o mesmo nome com acento ou maiúscula diferente cai na mesma linha.
+- [x] `faltas.registrar` duas vezes para a mesma conta, alimento e dia mantém uma linha.
+- [x] `faltas.diasComFalta` conta dias diferentes dentro da janela pedida e ignora os mais antigos.
+- [x] `preferencias`: `contarResultado("ajudou")` soma 1 só no contador certo; `definirGosto` não mexe nos contadores. `ultimos_resultados` guarda os dois retornos mais recentes entre "ajudou" e "não ajudou", o mais novo primeiro; "não fez" não entra.
+- [x] Limpeza diária, com relógio fixo: apaga mensagens com mais de 7 dias; apaga mensagens marcadas `com_incomodo` de dias anteriores; apaga retornos `aguardando` com mais de 7 dias (os respondidos ficam); apaga faltas com mais de 30 dias; apaga `evitar_temporario` de dias anteriores; marca como `expired` os runs em espera há mais de 30 minutos e como `expirada` as propostas pendentes deles; apaga contas de demonstração vencidas. Devolve a contagem de cada item.
+- [x] `contas.apagar` remove perfil, casa, preferências, retornos, rotina, padrões, mensagens, propostas, faltas, lista e feedback da conta; os runs ficam sem `conta_id`, sem `saida`, `checkpoint`, `pendencia` e `clima_usado`, e as etapas ficam sem `resumo`.
+- [x] Nenhuma tabela tem coluna para incômodo; `runs.momento` recusa (zod) objeto com campo de incômodo.
+- [x] `perfil.removerEvitarSempre` só existe na porta de perfil e exige `confirmado: true`; nenhuma outra porta altera `evitar_sempre`.
+- [x] `casa.ler` devolve os itens com estado calculado, sem os que acabaram e sem os que caem em "evitar sempre"; `preferencias.ler` devolve só os itens pedidos; `historico.recente` devolve no máximo 20 linhas dos últimos 7 dias, sem texto da pessoa.
+- [x] Importar o container não abre conexão; a primeira consulta abre.
 
 ## O que fazer
 

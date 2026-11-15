@@ -32,6 +32,7 @@
 | [0022](0022-vocabulario-fechado-de-12-qualidades.md) | Vocabulário fechado de 12 qualidades | Aceito |
 | [0023](0023-fontes-da-base-pela-internet.md) | Fontes da base consultadas pela internet, com registro da página | Aceito |
 | [0024](0024-clima-por-porta-com-cache-em-memoria.md) | Clima por porta, com cache em memória e sem nova tentativa | Aceito |
+| [0025](0025-suite-de-contrato-unica.md) | Suíte de contrato única para fakes e Postgres | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

@@ -63,6 +63,9 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run test:e2e` | Playwright (celular e desktop); precisa do build |
 | `npm run base:check` | Valida `data/` (schema, referências, cobertura) e imprime as contagens e as linhas `a_confirmar`. `-- --producao` falha com `a_confirmar` ou fonte não aprovada |
 | ⚠️ `npm run clima:real -- "<cidade>"` | Busca a cidade e o clima de verdade na Open-Meteo e imprime faixas, gunas e tendência. Chama a rede; fora dos gates |
+| `npm run db:migrate` | Aplica as migrações pendentes de `db/migrations/` no banco do `DATABASE_URL`. Precisa do Postgres no ar |
+| ⚠️ `npm run test:db` | Roda as suítes de contrato das portas contra o Postgres do `docker compose`, no schema `ritu_test`, recriado a cada rodada |
+| `npm run cleanup` | Roda a limpeza diária no banco do `DATABASE_URL` e imprime as contagens |
 | `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |
 | `docker compose up -d` | Postgres (`5432`) e Grafana LGTM (`3001`, OTLP `4317`/`4318`) |
 

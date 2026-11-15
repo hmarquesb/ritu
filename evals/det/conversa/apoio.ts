@@ -33,3 +33,12 @@ export function com(
     interpretacao: { ...SEM_SINAIS, ...parcial },
   }
 }
+
+// Conteúdo da primeira mensagem da pessoa no primeiro passo do runtime (o contexto do Acompanhante).
+export function conteudoDaPessoa(runtime: { pedidos: { mensagens: unknown[] }[] }): string {
+  const primeira = runtime.pedidos[0]?.mensagens.find(
+    (m): m is { papel: "pessoa"; conteudo: string } =>
+      typeof m === "object" && m !== null && "papel" in m && m.papel === "pessoa",
+  )
+  return primeira?.conteudo ?? ""
+}

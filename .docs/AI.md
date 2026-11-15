@@ -31,7 +31,7 @@ Um agente **decide o caminho**, **age**, **observa o resultado** e **corrige**. 
 
 | Agente | Entrada | Tools | Saída (zod) | Papel de modelo (§10) |
 |---|---|---|---|---|
-| **Intérprete** | Texto da mensagem + últimas mensagens do dia + lista numerada das sugestões que esperam retorno | — | `{intencoes[], estados[], incomodo, alerta, itens_casa[], retorno, fato_de_rotina, evitar_sempre[], suspeito}` | `apoio` |
+| **Intérprete** | Texto da mensagem + últimas mensagens do dia + lista numerada das sugestões que esperam retorno | — | `{intencoes[], estados[], incomodo, alerta, itens_casa[], retorno, fato_de_rotina, evitar[], nao_come[], gosta[], restricoes[], suspeito}` | `apoio` |
 | **Acompanhante** (o agente principal) | Saída do Intérprete + contexto montado no preparo | Catálogo de §4 | `{resposta, geral, explicacao, sugestoes[], evitar[], incertos[], para_ter, propostas[]}` | `decisao` |
 | **Juiz** (guardrail de saída) | Saída do Acompanhante + linhas da base citadas | — | `{aprovado, violacoes[]}` | `apoio` |
 | **Memória** | Notas de rotina aprovadas | — | Resumo de rotina compactado | `apoio` |
@@ -47,7 +47,7 @@ O Intérprete classifica a mensagem. O código escolhe o caminho; só o que prec
 | `vida` | "essa semana vou almoçar fora" | Intérprete → Acompanhante → Juiz | 3 a 4 |
 | `casa` (sozinha) | "comprei abóbora e couve" | Intérprete → código monta a proposta e o texto de confirmação | 1 |
 | `retorno` (sozinho) | "tomei o chá e melhorei" | Intérprete aponta a sugestão → código registra e responde com texto fixo. Sem saber qual é a sugestão, nada é registrado | 1 |
-| `evitar` (sozinho) | "não posso comer camarão" | Intérprete → código filtra na hora, responde com texto fixo e monta a proposta de fixo | 1 |
+| `evitar` (sozinho) | "não posso comer camarão", "não como coentro", "sou vegetariana" | Intérprete → código grava o item no temporário do dia (filtra na hora), responde com texto fixo e monta a proposta de fixo | 1 |
 | `ajuda` | "como apago meus dados?" | Texto fixo que aponta as telas | 1 |
 | `alerta` | "tô com dor no peito", "não aguento mais, queria sumir" | Padrões em código (e Intérprete, se passar) → resposta de encaminhamento fixa, física ou emocional (§8) | 0 ou 1 |
 | `ofensa` (sozinha) | "você é inútil" | Resposta curta fixa, sem sermão (§8) | 1 |
@@ -59,6 +59,12 @@ Uma mensagem pode ter mais de uma intenção ("comprei abóbora, o que faço com
 O alerta ganha de tudo: com ele, nenhum outro campo da mensagem é usado. Se o Intérprete não estiver disponível, a mensagem não vai ao agente: sai a resposta montada por código (§10).
 
 Mensagens de runs de `alerta`, `fora` e `ofensa` não voltam ao prompt como conversa do dia.
+
+**O run nasce antes do Intérprete** (ADR 0029): o gasto do papel `apoio`, a etapa `interprete` e o caminho escolhido ficam no rastro de todo caminho, com ou sem agente. Os totais do run somam o Intérprete (`modelos.apoio`, tokens); `passos` conta só os passos do Acompanhante.
+
+**O que a mensagem traz vale no mesmo run** (ADR 0028): itens de casa entram como `casa_da_mensagem`, sem gravar; "evitar sempre", "não como" (com alimento da base) e restrição vão ao temporário do dia antes do preparo, e o filtro do run o lê. O Acompanhante recebe só as palavras da pessoa que o código não resolveu (`evitar_da_mensagem`). "Não como" com nome livre vale só no run.
+
+**Anotações vindas do código:** nos caminhos `casa`, `evitar`, `retorno` e `acompanhante`, o código monta do que o Intérprete apontou as anotações a propor (casa tem e acabou, "evitar sempre", "não como", restrição, gosto), sem repetir o que já está no perfil nem um gosto já registrado. Nos demais caminhos a resposta sai sem anotação.
 
 ### Preparo (código, antes do loop)
 
@@ -122,9 +128,9 @@ Todas com entrada e saída em zod, determinísticas e testáveis sem LLM.
 |---|---|---|
 | `clima.agora` | Temperatura aparente e umidade da cidade da pessoa, já em qualidades; ou `indisponivel`; ou `sem_cidade` | Em mensagens de momento; dispensável em pergunta conceitual |
 | `clima.proximas_horas` | Tendência das próximas 6 h (esquenta, esfria, chove) | Só quando a ação é para mais tarde ou depende de sair de casa |
-| `casa.ler` | Itens da casa com estado (confirmado, incerto, sempre tenho), por grupo | Quando for sugerir chá, refeição ou óleo |
+| `casa.ler` | Itens da casa com estado (confirmado, incerto, sempre tenho), por grupo, já ajustados pelo que a mensagem disse (o que tem entra, o que acabou sai) | Quando for sugerir chá, refeição ou óleo |
 | `preferencias.ler` | Gosto e resultados dos itens pedidos | Só quando os sinais dizem que há registros e os candidatos do preparo não bastam |
-| `historico.recente` | Uma linha por run dos últimos 7 dias | Só quando a pessoa se refere a algo que já aconteceu |
+| `historico.recente` | Uma linha por run do Acompanhante dos últimos 7 dias (runs de caminhos de código não entram) | Só quando a pessoa se refere a algo que já aconteceu |
 | `ayurveda.alimento` | Propriedades de um ou mais alimentos (sabor, efeito térmico, qualidades, efeito por dosha, como equilibrar), com a linha da base | Perguntas sobre alimentos; explicar uma sugestão |
 | `ayurveda.candidatos` | Outros alimentos, preparos ou práticas, com outro filtro de qualidades ou de momento | Só quando os candidatos do preparo não bastam (o clima mudou as qualidades, a pessoa respondeu algo que muda o quadro) |
 | `ayurveda.substitutos` | Substitutos de um ingrediente numa função do preparo, já ordenados | Quando um ingrediente está incerto ou a pessoa disse que não tem |
@@ -275,7 +281,7 @@ Pausa: o run é salvo como `waiting_for_input` ou `waiting_for_approval`, com o 
 
 ## 8. Guardrails
 
-**Entrada (código, antes de qualquer LLM):** teto de tamanho; padrões de injection; padrões de sinal de alerta, físico e emocional; texto da pessoa sempre delimitado e marcado como dado; limites de uso. Os padrões pegam só as frases claras e encerram o run com o texto fixo, sem chamar modelo; injection clara leva à resposta padrão mesmo com um pedido legítimo junto.
+**Entrada (código, antes de qualquer LLM):** teto de tamanho; padrões de injection; padrões de sinal de alerta, físico e emocional; texto da pessoa sempre delimitado e marcado como dado; limites de uso. Os padrões pegam só as frases claras e encerram o run com o texto fixo, sem chamar modelo; injection clara leva à resposta padrão mesmo com um pedido legítimo junto. O que passa dos padrões é julgado pelo Intérprete: ele marca `alerta` (físico ou emocional) e `suspeito` (tentativa de mudar as regras), e o código leva `alerta` ao encaminhamento fixo e `suspeito` à resposta padrão de `fora`, sem chamar o Acompanhante. Alerta ganha de suspeito.
 
 **Memória também é dado:** tudo o que veio do texto da pessoa e volta ao prompt depois (resumo de rotina, mensagens do dia, "evitar sempre" em texto livre, frases de padrões) entra delimitado, com `<` e `>` neutralizados, e o prompt diz que é dado, como a mensagem. Uma nota aprovada com "ignore suas regras" não vira instrução.
 

@@ -65,10 +65,10 @@ Os padrões de fundação seguem as referências locais (`.local/REFERENCIAS.md`
 1. A tela envia a mensagem (`POST /api/runs`), com texto, atalhos de check-in ou os dois.
 2. Sessão → conta. Sem sessão: `401`. A rota confirma no banco que a conta existe e não venceu.
 3. Guardrail de entrada (tamanho, injection, sinal de alerta) e limite de uso (por conta e por IP).
-4. Com texto: o Intérprete devolve as intenções e os campos (`AI.md` §3). Só com atalhos: esse passo é pulado.
-5. O código escolhe o caminho pela intenção. Casa, retorno ou "evitar sempre" sozinhos, ajuda, ofensa, alerta e fora do assunto são resolvidos aqui, sem o agente.
-6. Preparo em código: qualidades, filtros, ordenação, faltas e contexto.
-7. O run é criado com um `trace_id` e o Acompanhante roda, **transmitindo as etapas** (streaming): "vendo o clima…", "olhando sua casa…", "conferindo a resposta…".
+4. `conversar` cria o run (caminho provisório, `trace_id`) e abre o span `run`, que cobre tudo até a resposta. A barreira de run aberto é conferida antes de gastar modelo (ADR 0029). A mensagem da pessoa é gravada com o `run_id`.
+5. Com texto: o Intérprete devolve as intenções e os campos (`AI.md` §3). Só com atalhos: esse passo é pulado. Se o Intérprete falha, o run segue com a resposta montada por código.
+6. O código escolhe o caminho pela intenção. Casa, retorno ou "evitar sempre" sozinhos, ajuda, ofensa, alerta e fora do assunto são resolvidos aqui, sem o agente. O que a mensagem traz (itens de casa, "evitar sempre", "não como", restrição) vale no mesmo run sem gravar a casa nem o perfil (ADR 0028).
+7. Preparo em código: qualidades, filtros, ordenação, faltas e contexto. O Acompanhante roda, **transmitindo as etapas** (streaming): "vendo o clima…", "olhando sua casa…", "conferindo a resposta…". O código anexa à saída as anotações a propor, e a resposta do agente é gravada em `mensagens`.
 8. `finalizar` → validador → correções, se houver → Juiz.
 9. A tela mostra o texto do agente e as sugestões. Cada sugestão vira um registro em `retornos` (aguardando). As faltas do run são gravadas em `faltas`. Se houver propostas, a tela mostra o bloco de aprovação e o run fica em `waiting_for_approval`.
 10. Etapas, tokens, modelo usado e latência ficam no banco; spans e métricas saem por OTel.
@@ -139,7 +139,7 @@ A montagem acontece num único composition root (`src/infra/container.ts`). O te
 |---|---|
 | `contas` | `id`, `tipo` (google, demo), `google_sub`, `email`, `expira_em`, `tester`, `aviso_aceito_em`, `evitar_passo` (pronto, nenhum, pulou), `evitar_lembrete_em`, `dosha_adiado_em` |
 | `perfis` | `conta_id`, `prakriti` (pode ser nulo), `origem` (quiz, declarado), `evitar_sempre[]` (`{tipo: grupo | alimento | texto, valor, desde}`), `restricoes[]`, `nao_come[]`, `cidade_nome`, `cidade_lat`, `cidade_lon` (duas casas decimais), `cidade_fuso` |
-| `evitar_temporario` | `conta_id`, `tipo`, `valor`, `dia`. O que a pessoa disse na conversa e vale até o fim do dia; apagado pela limpeza diária |
+| `evitar_temporario` | `conta_id`, `tipo` (grupo, alimento, texto, restricao, nao_come), `valor`, `dia`. O que a pessoa disse na conversa e vale até o fim do dia: "evitar sempre", restrição e "não como" com alimento da base; apagado pela limpeza diária |
 | `casa` | `id`, `conta_id`, `alimento_id` (nulo se a base não conhece), `nome_livre`, `nome_normalizado`, `estado` (tem, acabou), `sempre_tenho`, `confirmado_em`, `origem` (conversa, tela, pergunta). Exatamente um entre `alimento_id` e `nome_livre`; uma linha por conta e alimento, ou por conta e nome normalizado |
 | `preferencias` | `conta_id`, `item_tipo` (alimento, pratica, preparo), `item_id`, `gosto` (gosta, nao_gosta, nulo), `ajudou`, `nao_ajudou`, `nao_fez`, `ultimos_resultados` (os dois mais recentes), `ultima_sugestao_em` |
 | `retornos` | `id`, `conta_id`, `run_id`, `sugestao` (tipo e ids), `status` (aguardando, respondido), `resultado` (ajudou, nao_ajudou, nao_fez), `origem` (toque, conversa), `respondido_em`. Sem resposta em 7 dias, é apagado |

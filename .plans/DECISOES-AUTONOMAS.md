@@ -46,3 +46,9 @@
 | Entrega 2 · planejamento | As specs 008 a 015 somam centenas de KB; ler todas no contexto do orquestrador esgota a sessão antes do fim da entrega | Cada plano `.plans/NNN-*-plan.md` é escrito por um subagente planejador (Opus), com o mesmo formato e as mesmas regras da skill §1; o orquestrador revisa o plano antes de despachar | Preserva o contexto do orquestrador para despachar, decidir e commitar a entrega inteira | Voltar a escrever os planos na sessão principal |
 | 002 · C13-T2 | A spec pede água no `liquido` do mingau, mas a base não tem o id `agua`, e a tarefa não podia mexer em `alimentos.yaml` | `mingau:liquido` = leite, leite-de-coco, agua-de-coco; sem água | Criar alimento novo é conteúdo com fonte, fora do escopo da correção | Acrescentar `agua` em `data/alimentos.yaml` (função `liquido`) e na lista da vaga |
 | 002 · C13-T2 | "Pão, macarrão, tapioca e farinhas ficam só nos preparos em que são a base de fato" não dizia como | A `base` de tapioca-recheada, cuscuz-no-vapor, torrada-com-gordura, macarrao-com-legume e polenta-mole lista só o alimento dela, com as 5 vagas em `excecoesMinAlimentosPorVaga` | Evita "torrada de arroz" e "polenta de macarrão" | Tirar `alimentos` dessas vagas e as 5 exceções de `config/base.ts` |
+
+## 008 · T20 · Id do coentro no caso 20
+- Faltava: a tarefa citava o id `coentro`, que não existe na base.
+- Decidi: usar `coentro-fresco` (nome "Coentro"); o outro item é `coentro-em-grao` (semente).
+- Por quê: "não como coentro" no uso comum é a folha.
+- Desfazer: trocar o id em `evals/llm/casos/c2/intencao/20-nao-como-coentro.ts`.

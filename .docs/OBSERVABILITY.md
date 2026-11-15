@@ -35,9 +35,9 @@ O run guarda os totais: intenções, passos, tokens, latência, `prompt_versao`,
 ### Árvore de spans de um run
 
 ```
-run                         run.id, run.intencoes, run.caminho, conta.tipo, prompt.versao, run.status, run.passos
+run                         run.id, run.intencoes, run.caminho, conta.tipo, prompt.versao, run.status, run.passos (cobre o run inteiro, também os caminhos sem agente)
 ├─ guardrail.entrada        guardrail.resultado
-├─ interprete               (só com texto livre)
+├─ interprete               (só com texto livre; a etapa grava só os ids das intenções)
 │  └─ llm.chamada
 ├─ preparo                  candidatos.total, faltas.registradas, para_ter.candidato
 ├─ agente.passo (1..n)      passo.ordem
@@ -52,7 +52,7 @@ run                         run.id, run.intencoes, run.caminho, conta.tipo, prom
 
 Um run pausado continua **no mesmo trace** quando retoma: o `trace_id` fica salvo no run, e o trecho novo entra como filho do span raiz.
 
-`run` leva `prompt.versao` quando o caminho tem agente; `tool.chamada` das tools de clima leva `cache.hit`.
+`run` leva `prompt.versao` quando o caminho tem agente, e `run.intencoes` é a lista de ids de intenção do caminho escolhido (ADR 0029). Etapa `interprete`: `resumo` só com ids de intenção (ou `alerta`), nunca o texto. Caminhos `alerta` e `fora` gravam uma etapa `guardrail` com status `recusado` e nome `alerta_fisico`, `alerta_emocional`, `suspeito` ou `fora`, sem modelo nem tokens. `tool.chamada` das tools de clima leva `cache.hit`.
 
 Spans fora de um run: `toque` (`tipo`; na troca, `motivo` e `resultado`), `memoria.resumo` (`resumo.origem`) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`).
 

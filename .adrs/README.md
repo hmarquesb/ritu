@@ -35,6 +35,8 @@
 | [0025](0025-suite-de-contrato-unica.md) | Suíte de contrato única para fakes e Postgres | Aceito |
 | [0026](0026-roteador-com-registro-de-uso-atomico.md) | Roteador de modelos com registro de uso atômico por janela | Aceito |
 | [0027](0027-cenarios-compartilhados-entre-demo-e-evals.md) | Cenários compartilhados entre demo, evals e eval:llm | Aceito |
+| [0028](0028-o-que-a-mensagem-traz-vale-no-mesmo-run.md) | O que a mensagem traz vale no mesmo run, sem gravar | Aceito |
+| [0029](0029-run-nasce-antes-do-interprete.md) | O run nasce antes do Intérprete e o span `run` cobre o run inteiro | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

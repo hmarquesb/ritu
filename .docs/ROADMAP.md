@@ -4,10 +4,10 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Specs 008 a 015 aprovadas (entrega 2 toda especificada); 016 a 024 a escrever.
+Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 em construção: spec 008 implementada (com a correção C13 da 002); 009 a 015 aprovadas; 016 a 024 a escrever.
 
 **Próximos passos, na ordem:**
-1. `/construir-entrega 2` (antes da 008, a correção C13 da 002).
+1. `/construir-entrega 2`: continuar pela 009 (plano em `.plans/009-pausas-plan.md`).
 2. Fechamento da entrega 2: rodada do `c3-confiavel` com o OTLP ligado e o painel no relatório do portão 2.
 
 ## 1. Entregas

@@ -1,6 +1,7 @@
 ---
 title: Intérprete e conversa
-status: approved
+status: implemented
+implemented: d88e4a9
 entrega: 2
 created: 2026-11-14
 ---
@@ -45,27 +46,27 @@ Depois desta spec, `conversar(contaId, { texto, atalhos })` leva qualquer mensag
 
 ## Critérios de aceite
 
-- [ ] **Caminhos sem agente:** mensagem com só `casa`, só `retorno`, só `evitar`, só `ajuda`, só `ofensa` ou só `fora` termina em `done`, com o caminho de mesmo nome, `origem: "codigo"`, o texto de "Contratos" e nenhum pedido ao `AgentRuntime`.
-- [ ] **Só atalhos:** `{ atalhos: ["com_frio", "agitada"] }` não chama o `LlmClient`, vai ao Acompanhante com `intencoes: ["momento"]` e esses estados, e o run não tem etapa `interprete`.
-- [ ] **Duas intenções:** "comprei abóbora, o que faço com ela hoje?" (interpretação roteirizada com `casa` e `momento`) vai ao Acompanhante com as duas; `dados.casa.confirmados` contém `abobora` sem nada gravado em `casa`; `casa.ler` devolve a abóbora como confirmada; a saída traz a anotação `casa_tem`.
-- [ ] **Acabou no mesmo run:** item citado com `acao: "acabou"` sai de `casa.confirmados` e de `casa.incertos` naquele run.
-- [ ] **Escolha do caminho:** cada linha da tabela de precedência de "Contratos" tem um teste; `alerta` ganha de tudo; `suspeito` leva a `fora`; `ofensa`, `ajuda` e `fora` somem quando há outra intenção.
-- [ ] **Normalização:** estado, incômodo ou variante que não existem na base são descartados; intenção sem o campo dela sai, e campo sem a intenção a acrescenta; lista vazia vira `vida`; atalhos e estados do texto são unidos sem repetir.
-- [ ] **Alerta:** interpretação com `alerta: "emocional"` devolve o texto fixo com o CVV; com `"fisico"`, o texto de alerta físico. Nos dois: nenhuma anotação, nada em `evitar_temporario`, as duas mensagens do run ficam com `com_incomodo: true`, o run guarda só `intencoes: ["alerta"]`, e depois de `executarLimpeza` com o relógio no dia seguinte as mensagens não existem.
-- [ ] **Retorno ligado:** com um retorno aguardando e interpretação `{ resultado: "ajudou", pendente: 1 }`, o retorno fica `respondido` com `origem: "conversa"`, `preferencias` soma 1 em `ajudou` para a prática (ou o preparo) e para cada alimento da sugestão, `ritu_retorno_total{resultado, origem}` soma 1 e o texto traz o título da sugestão.
-- [ ] **Retorno sem ligação:** sem `pendente`, com número fora da lista ou sem retornos aguardando, nada muda no banco e sai o texto `retornoSemLigacao`.
-- [ ] **Retorno já respondido:** `registrarResultado` duas vezes no mesmo retorno soma os contadores uma vez só.
-- [ ] **Evitar sozinho:** "não posso comer camarão" grava `frutos_do_mar` em `evitar_temporario` com o dia local, devolve a anotação `evitar_sempre` e o texto com o nome do grupo; nada vai para `perfis.evitar_sempre`; item que já está no perfil não gera anotação e sai o texto `evitarJaGuardado`. Nenhum campo guarda o motivo.
-- [ ] **Restrição e "não como":** "sou vegetariana" e "não como coentro" seguem o caminho `evitar`, filtram no mesmo run e no resto do dia, saem como anotações `restricao` e `nao_come` e não vão para o perfil.
-- [ ] **Intérprete indisponível:** sem modelo para `apoio`, ou com erro do `LlmClient`, o run termina em `done` com caminho `sem_modelo` e a resposta sem modelo da 006 (com as práticas, se havia atalhos); `ritu_fallback_sem_llm_total` soma 1.
-- [ ] **Mensagens:** a fala da pessoa é gravada antes do Intérprete, com o `run_id`; a resposta é gravada ao fim, em todos os caminhos, inclusive resposta segura; run com incômodo marca as duas com `com_incomodo`.
-- [ ] **Contexto:** `mensagensParaOPrompt` não devolve as mensagens do run atual nem as de runs de caminho `alerta`, `fora` ou `ofensa`; no prompt do Intérprete e no do Acompanhante, `<` e `>` de todo texto da pessoa viram `‹` e `›`.
-- [ ] **Run e rastro:** o run nasce antes do Intérprete; a primeira etapa é `interprete`, com modelo, tokens e `resumo` igual às intenções (ids); o span `interprete` é filho de `run`; `ritu_run_intencao_total` soma por intenção; `runs.modelos` guarda o modelo do papel `apoio`. Nenhum span, métrica, log ou `resumo` leva texto da pessoa nem nome de alimento.
-- [ ] **Run aberto:** mensagem nova com um run em `running` lança `RunAbertoError` antes de qualquer chamada de modelo.
-- [ ] **Entrada inválida:** sem texto e sem atalhos, texto acima de 1000 caracteres ou atalho fora de `ESTADOS` lança `RituError` com código `mensagem_invalida`, sem criar run.
-- [ ] `historico.recente` devolve só runs de caminho `acompanhante`.
-- [ ] `npm run demo -- --cenario <nome>` roda os sete cenários novos sem rede, com código 0, imprimindo a interpretação (intenções e campos), o caminho, a resposta e as anotações.
-- [ ] `npm run eval:llm -- --checkpoint c2-conversa --listar` lista os casos de `c1` e de `c2` sem chamar modelo. A rodada ⚠️ do `c2-conversa` acontece no fechamento da 011.
+- [x] **Caminhos sem agente:** mensagem com só `casa`, só `retorno`, só `evitar`, só `ajuda`, só `ofensa` ou só `fora` termina em `done`, com o caminho de mesmo nome, `origem: "codigo"`, o texto de "Contratos" e nenhum pedido ao `AgentRuntime`.
+- [x] **Só atalhos:** `{ atalhos: ["com_frio", "agitada"] }` não chama o `LlmClient`, vai ao Acompanhante com `intencoes: ["momento"]` e esses estados, e o run não tem etapa `interprete`.
+- [x] **Duas intenções:** "comprei abóbora, o que faço com ela hoje?" (interpretação roteirizada com `casa` e `momento`) vai ao Acompanhante com as duas; `dados.casa.confirmados` contém `abobora` sem nada gravado em `casa`; `casa.ler` devolve a abóbora como confirmada; a saída traz a anotação `casa_tem`.
+- [x] **Acabou no mesmo run:** item citado com `acao: "acabou"` sai de `casa.confirmados` e de `casa.incertos` naquele run.
+- [x] **Escolha do caminho:** cada linha da tabela de precedência de "Contratos" tem um teste; `alerta` ganha de tudo; `suspeito` leva a `fora`; `ofensa`, `ajuda` e `fora` somem quando há outra intenção.
+- [x] **Normalização:** estado, incômodo ou variante que não existem na base são descartados; intenção sem o campo dela sai, e campo sem a intenção a acrescenta; lista vazia vira `vida`; atalhos e estados do texto são unidos sem repetir.
+- [x] **Alerta:** interpretação com `alerta: "emocional"` devolve o texto fixo com o CVV; com `"fisico"`, o texto de alerta físico. Nos dois: nenhuma anotação, nada em `evitar_temporario`, as duas mensagens do run ficam com `com_incomodo: true`, o run guarda só `intencoes: ["alerta"]`, e depois de `executarLimpeza` com o relógio no dia seguinte as mensagens não existem.
+- [x] **Retorno ligado:** com um retorno aguardando e interpretação `{ resultado: "ajudou", pendente: 1 }`, o retorno fica `respondido` com `origem: "conversa"`, `preferencias` soma 1 em `ajudou` para a prática (ou o preparo) e para cada alimento da sugestão, `ritu_retorno_total{resultado, origem}` soma 1 e o texto traz o título da sugestão.
+- [x] **Retorno sem ligação:** sem `pendente`, com número fora da lista ou sem retornos aguardando, nada muda no banco e sai o texto `retornoSemLigacao`.
+- [x] **Retorno já respondido:** `registrarResultado` duas vezes no mesmo retorno soma os contadores uma vez só.
+- [x] **Evitar sozinho:** "não posso comer camarão" grava `frutos_do_mar` em `evitar_temporario` com o dia local, devolve a anotação `evitar_sempre` e o texto com o nome do grupo; nada vai para `perfis.evitar_sempre`; item que já está no perfil não gera anotação e sai o texto `evitarJaGuardado`. Nenhum campo guarda o motivo.
+- [x] **Restrição e "não como":** "sou vegetariana" e "não como coentro" seguem o caminho `evitar`, filtram no mesmo run e no resto do dia, saem como anotações `restricao` e `nao_come` e não vão para o perfil.
+- [x] **Intérprete indisponível:** sem modelo para `apoio`, ou com erro do `LlmClient`, o run termina em `done` com caminho `sem_modelo` e a resposta sem modelo da 006 (com as práticas, se havia atalhos); `ritu_fallback_sem_llm_total` soma 1.
+- [x] **Mensagens:** a fala da pessoa é gravada antes do Intérprete, com o `run_id`; a resposta é gravada ao fim, em todos os caminhos, inclusive resposta segura; run com incômodo marca as duas com `com_incomodo`.
+- [x] **Contexto:** `mensagensParaOPrompt` não devolve as mensagens do run atual nem as de runs de caminho `alerta`, `fora` ou `ofensa`; no prompt do Intérprete e no do Acompanhante, `<` e `>` de todo texto da pessoa viram `‹` e `›`.
+- [x] **Run e rastro:** o run nasce antes do Intérprete; a primeira etapa é `interprete`, com modelo, tokens e `resumo` igual às intenções (ids); o span `interprete` é filho de `run`; `ritu_run_intencao_total` soma por intenção; `runs.modelos` guarda o modelo do papel `apoio`. Nenhum span, métrica, log ou `resumo` leva texto da pessoa nem nome de alimento.
+- [x] **Run aberto:** mensagem nova com um run em `running` lança `RunAbertoError` antes de qualquer chamada de modelo.
+- [x] **Entrada inválida:** sem texto e sem atalhos, texto acima de 1000 caracteres ou atalho fora de `ESTADOS` lança `RituError` com código `mensagem_invalida`, sem criar run.
+- [x] `historico.recente` devolve só runs de caminho `acompanhante`.
+- [x] `npm run demo -- --cenario <nome>` roda os sete cenários novos sem rede, com código 0, imprimindo a interpretação (intenções e campos), o caminho, a resposta e as anotações.
+- [x] `npm run eval:llm -- --checkpoint c2-conversa --listar` lista os casos de `c1` e de `c2` sem chamar modelo. A rodada ⚠️ do `c2-conversa` acontece no fechamento da 011.
 
 ## O que fazer
 

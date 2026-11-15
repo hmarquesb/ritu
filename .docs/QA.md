@@ -50,10 +50,14 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - `para_ter` na saída gera a proposta de lista; aprovada, grava o item com o motivo; recusada, o alimento não volta; expirada, pode voltar.
 - Registrar o alimento em casa apaga as faltas dele e o tira da lista.
 
-**Caminhos por intenção**
+**Caminhos por intenção** (`evals/det/conversa/`: caminhos, interpretação, casa da mensagem, evitar, retorno, alerta, ofensa e fora, degradação, mensagens, privacidade)
 - Casa sozinha, retorno sozinho, "evitar sempre" sozinho e pergunta sobre o próprio Ritu não chamam o Acompanhante nem o Juiz.
 - Retorno que o Intérprete não liga a uma sugestão não grava nada.
-- Item de casa citado na mensagem vale no mesmo run, sem ser gravado.
+- Item de casa citado na mensagem vale no mesmo run, sem ser gravado; "evitar sempre", "não como" e restrição citados filtram no mesmo run e ficam até o fim do dia.
+- Todo caminho tem run, etapas e um único span `run`; a etapa `interprete` e as de guardrail não levam texto da pessoa.
+- Alerta e `suspeito` do Intérprete encerram o run sem o Acompanhante; alerta ganha de suspeito; nesses caminhos não sai anotação.
+- Anotações (casa, "evitar sempre", "não como", restrição, gosto) saem só com o que é novo; o que já está no perfil não é proposto de novo.
+- `historico.recente` só traz runs do Acompanhante.
 - Intérprete indisponível leva à resposta montada por código.
 - Mensagem só com atalhos não chama o Intérprete.
 - Mensagem com duas intenções vai para o Acompanhante com as duas.
@@ -140,7 +144,7 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 | Checkpoint | Quando | O que já dá para medir |
 |---|---|---|
 | `c1-base` | Fim da entrega 1 | Conteúdo, fidelidade, explicação, trajetória, autocorreção, custo |
-| `c2-conversa` | Depois da spec 011 | Intenção, perguntas, casa, propostas, para ter em casa, aprendizado |
+| `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 20 casos de intenção do `c2`. Mede Intenção (acerto e falsos alertas), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1` |
 | `c3-confiavel` | Fim da entrega 2 | Todas as famílias |
 | `c4-site` | Fim da entrega 3 | Todas, pelas rotas reais do site |
 | `c5-publico` | Fim da entrega 4 | Todas, com os prompts e a configuração de produção |

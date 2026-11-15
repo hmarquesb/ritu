@@ -9,7 +9,7 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 - Marque na spec o **nível** de cada parte: `mecanica` (Haiku), `nucleo` (Sonnet), `tela` (Sonnet) ou `conteudo` (Opus). Regras em `RULES.md` §1.
 - Liste em "Leitura para a construção" só as seções de `.docs/` que a construção precisa abrir.
 - As specs de uma entrega são todas aprovadas antes de ela começar. As das entregas seguintes podem ser escritas durante a construção, a partir do código já commitado.
-- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 a 015 aprovadas (entrega 2 toda especificada); 016 a 024 a escrever. Antes da 008: correção C13 da 002 (alimentos aceitos por vaga).
+- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 implementada; 009 a 015 aprovadas (entrega 2 toda especificada); 016 a 024 a escrever. Antes da 008: correção C13 da 002 (alimentos aceitos por vaga).
 
 ## Backlog
 

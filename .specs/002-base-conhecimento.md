@@ -419,7 +419,7 @@ As specs seguintes acrescentam campos a `ToolContext`; nenhuma tool lê nada for
 
 ### Correção C13: alimentos aceitos por vaga
 
-Pendente; entra antes da spec 008.
+Aplicada (commits 47631ee, 2cddf81, db5d22f).
 
 ```ts
 // vagaSchema ganha

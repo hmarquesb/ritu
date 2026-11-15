@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ritu
+      POSTGRES_PASSWORD: ritu
+      POSTGRES_DB: ritu
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ritu -d ritu"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  lgtm:
+    image: grafana/otel-lgtm
+    ports:
+      - "3001:3000"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - lgtm-data:/data
+
+volumes:
+  postgres-data:
+  lgtm-data:

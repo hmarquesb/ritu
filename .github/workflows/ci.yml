@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Testes
+        run: npm test
+
+      - name: Evals determinísticos
+        run: npm run eval:det
+
+      - name: Duplicação
+        run: npm run dup
+
+      - name: Build
+        run: npm run build
+
+      - name: Instalar Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E
+        run: npm run test:e2e

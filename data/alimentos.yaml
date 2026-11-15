@@ -1,2 +1,679 @@
 # Alimentos da base — schema em src/core/knowledge/schemas.ts
-[]
+
+# ---------- frutas ----------
+- id: banana
+  nome: Banana
+  sinonimos: [banana-prata, banana-nanica, banana-maçã, banana-da-terra]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce]
+  virya: frio
+  vipaka: azedo
+  gunas: [pesado, suave]
+  efeito: { vata: -1, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Prefira em pequena porção, com canela ou gengibre."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-sabor-doce, campos: [rasa, gunas, marcas] }
+    - { ref: banyan-dieta-vata, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [como_equilibrar] }
+  confianca: baixa
+  notas: "Vipaka azedo vem do artigo de combinações (banana com leite). Pesado vem do sabor doce; suave da página Vata."
+
+- id: maca
+  nome: Maçã
+  sinonimos: [maçã fuji, maçã gala, maçã verde]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [adstringente, doce]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero]
+  efeito: { vata: 0, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Prefira cozida ou assada, com canela."
+    pitta: "Prefira a maçã doce à azeda."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, marcas] }
+  confianca: baixa
+  notas: "Diretrizes: Vata evita crua e favorece cozida; Pitta evita a azeda e favorece a doce. Efeito Vata 0 resume as duas."
+
+- id: pera
+  nome: Pera
+  sinonimos: [pera williams, pera d'água]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, seco]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Prefira cozida, com canela ou cravo."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, como_equilibrar, marcas] }
+  confianca: baixa
+  notas: ""
+
+- id: mamao
+  nome: Mamão
+  sinonimos: [papaia, mamão papaia, mamão formosa]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, suave]
+  efeito: { vata: -1, pitta: 0, kapha: 1 }
+  como_equilibrar:
+    pitta: "Em porção moderada."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, marcas] }
+  confianca: baixa
+  notas: "Diretrizes: Pitta 'em moderação' (asterisco)."
+
+- id: manga
+  nome: Manga
+  sinonimos: [manga palmer, manga tommy, manga espada]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    pitta: "Prefira a manga bem madura; a verde agrava."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, marcas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Kapha 'raramente' (dois asteriscos); a Banyan inclui manga entre as frutas frescas para Kapha. Divergência."
+
+- id: laranja
+  nome: Laranja
+  sinonimos: [laranja-pera, laranja-lima, laranja-bahia]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, azedo]
+  virya: quente
+  vipaka: azedo
+  gunas: [leve, oleoso]
+  efeito: { vata: -1, pitta: 0, kapha: 1 }
+  como_equilibrar:
+    pitta: "Prefira a laranja doce, como a lima, em porção moderada."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_azeda]
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [rasa, marcas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Pitta evita a azeda e aceita a doce com moderação."
+
+- id: tangerina
+  nome: Tangerina
+  sinonimos: [mexerica, bergamota, ponkan, mimosa]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, azedo]
+  virya: quente
+  vipaka: azedo
+  gunas: [leve, oleoso]
+  efeito: { vata: -1, pitta: 0, kapha: 1 }
+  como_equilibrar:
+    pitta: "Prefira as bem doces."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_azeda]
+  fontes:
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar, marcas] }
+  confianca: baixa
+  notas: "Não aparece nas diretrizes abertas; valores espelham a laranja."
+
+- id: limao
+  nome: Limão
+  sinonimos: [limão taiti, limão-galego, limão-siciliano, lima]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta, tempero]
+  rasa: [azedo]
+  virya: frio
+  vipaka: azedo
+  gunas: [leve, oleoso]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  como_equilibrar:
+    pitta: "Prefira só um toque, para finalizar o prato."
+    kapha: "Só uma espremida de vez em quando."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_azeda]
+  fontes:
+    - { ref: banyan-sabor-azedo, campos: [rasa, gunas, marcas] }
+    - { ref: banyan-dieta-pitta, campos: [virya, como_equilibrar] }
+    - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "O taiti é uma lima (lime). Diretrizes: lime Pitta e Kapha 'em moderação'; lemon Pitta evita. Usado o valor de lime."
+
+- id: abacate
+  nome: Abacate
+  sinonimos: [avocado]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta, gordura]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, oleoso, suave]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Em pouca quantidade, com limão e pimenta-do-reino."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [gunas] }
+    - { ref: banyan-dieta-pitta, campos: [virya] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, vipaka, como_equilibrar] }
+  confianca: baixa
+  notas: ""
+
+- id: abacaxi
+  nome: Abacaxi
+  sinonimos: [ananás]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, azedo]
+  virya: quente
+  vipaka: azedo
+  gunas: [leve, oleoso, intenso]
+  efeito: { vata: -1, pitta: 0, kapha: 1 }
+  como_equilibrar:
+    pitta: "Prefira bem maduro e doce, em porção moderada."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_azeda]
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [rasa, marcas] }
+    - { ref: banyan-dieta-pitta, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: Pitta evita o azedo e aceita o doce com moderação. Banyan chama de 'sharp' (intenso)."
+
+- id: melancia
+  nome: Melancia
+  sinonimos: []
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [frio, oleoso, pesado]
+  efeito: { vata: 1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    vata: "Coma sozinha, fora das refeições e sem gelar."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  observacao: "Melhor sozinha, longe das refeições."
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, marcas] }
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [observacao, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Rasa vem de 'melons' na página do sabor doce. O artigo de combinações pede melões sozinhos."
+
+- id: melao
+  nome: Melão
+  sinonimos: [melão amarelo, melão cantalupo, melão orange]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [oleoso, pesado]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Coma sozinho e em porção pequena."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  observacao: "Melhor sozinho, longe das refeições."
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, gunas, marcas] }
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [virya, observacao, como_equilibrar] }
+    - { ref: banyan-dieta-vata, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Banyan Vata: melões úmidos (oleoso). Combinações: melão é refrescante."
+
+- id: uva
+  nome: Uva
+  sinonimos: [uva roxa, uva verde, uva itália, uva niágara]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, azedo]
+  virya: frio
+  vipaka: doce
+  gunas: [oleoso, suave]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  como_equilibrar:
+    pitta: "Prefira a uva roxa; a verde é mais azeda."
+    kapha: "Em porção moderada."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [rasa] }
+    - { ref: ayurveda-com-guia-dieta, campos: [rasa, marcas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Pitta evita a verde e favorece a roxa; Kapha 'em moderação'."
+
+- id: morango
+  nome: Morango
+  sinonimos: []
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, azedo]
+  virya: quente
+  vipaka: azedo
+  gunas: [leve, oleoso]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  como_equilibrar:
+    pitta: "Em porção moderada."
+    kapha: "Em porção moderada."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_azeda]
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, marcas] }
+  confianca: baixa
+  notas: ""
+
+- id: goiaba
+  nome: Goiaba
+  sinonimos: [goiaba vermelha, goiaba branca]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, seco]
+  efeito: { vata: 0, pitta: -1, kapha: 0 }
+  como_equilibrar:
+    vata: "Prefira bem madura."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar, marcas] }
+  confianca: baixa
+  notas: "Não aparece nas páginas abertas."
+
+- id: maracuja
+  nome: Maracujá
+  sinonimos: [maracujá azedo, maracujá doce]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [azedo, doce]
+  virya: frio
+  vipaka: azedo
+  gunas: [leve, oleoso]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  como_equilibrar:
+    pitta: "Prefira com um pouco de adoçante, e não muito azedo."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_azeda]
+  fontes:
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar, marcas] }
+  confianca: baixa
+  notas: "Não aparece nas páginas abertas."
+
+- id: caqui
+  nome: Caqui
+  sinonimos: [caqui chocolate, caqui fuyu]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, seco]
+  efeito: { vata: 1, pitta: 1, kapha: -1 }
+  como_equilibrar:
+    vata: "Prefira bem maduro e macio."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, como_equilibrar, marcas] }
+  confianca: baixa
+  notas: ""
+
+- id: coco
+  nome: Coco
+  sinonimos: [coco seco, coco ralado, coco verde, água de coco]
+  grupo: frutas
+  durabilidade: curta
+  funcoes: [fruta, gordura]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, oleoso, suave]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Use pouco, como finalização."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: ayurveda-com-guia-dieta, campos: [rasa, marcas] }
+    - { ref: banyan-dieta-vata, campos: [gunas] }
+    - { ref: banyan-dieta-pitta, campos: [virya] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka, como_equilibrar] }
+  confianca: baixa
+  notas: "Não marcado em castanhas: confirmar se a base trata coco como alergênico de castanhas."
+
+- id: tamara
+  nome: Tâmara
+  sinonimos: [tâmara seca]
+  grupo: frutas
+  durabilidade: longa
+  funcoes: [fruta, adocante]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: 1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    vata: "Deixe de molho em água morna antes de comer."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, gunas, marcas] }
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [virya, vipaka] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+  confianca: media
+  notas: "Diretrizes: Vata evita a seca e favorece a fresca. Virya e vipaka: tâmara e leite têm o mesmo sabor, energia e vipaka."
+
+- id: uva-passa
+  nome: Uva-passa
+  sinonimos: [passas, uva passa]
+  grupo: frutas
+  durabilidade: longa
+  funcoes: [fruta, adocante]
+  rasa: [doce, azedo]
+  virya: frio
+  vipaka: doce
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Deixe de molho em água morna antes de comer."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: banyan-sabor-azedo, campos: [rasa] }
+    - { ref: banyan-dieta-vata, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, marcas] }
+  confianca: baixa
+  notas: "Banyan lista passas no sabor azedo; marca fruta_doce mantida pelo uso comum. Diretrizes: Vata favorece a de molho."
+
+- id: ameixa-seca
+  nome: Ameixa-seca
+  sinonimos: [ameixa preta, ameixa seca]
+  grupo: frutas
+  durabilidade: longa
+  funcoes: [fruta]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [seco, pesado]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Deixe de molho em água morna antes de comer."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [fruta_doce]
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, marcas] }
+    - { ref: banyan-dieta-vata, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: Vata evita a seca e favorece a de molho."
+
+# ---------- folhas ----------
+- id: couve
+  nome: Couve
+  sinonimos: [couve-manteiga, couve kale, couve crespa]
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [amargo]
+  virya: frio
+  vipaka: picante
+  gunas: [leve, seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem refogada, com azeite ou ghee e especiarias."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-amargo, campos: [rasa, gunas] }
+    - { ref: banyan-dieta-vata, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka] }
+  confianca: baixa
+  notas: "Efeito das diretrizes é de 'kale'; a couve-manteiga é mais próxima de 'collards', que a Banyan põe junto (amargo)."
+
+- id: espinafre
+  nome: Espinafre
+  sinonimos: []
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [picante, amargo]
+  virya: quente
+  vipaka: picante
+  gunas: [leve, seco, aspero]
+  efeito: { vata: 0, pitta: 1, kapha: -1 }
+  como_equilibrar:
+    vata: "Em porção moderada, refogado com azeite."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-picante, campos: [rasa] }
+    - { ref: banyan-sabor-amargo, campos: [rasa] }
+    - { ref: banyan-dieta-vata, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka] }
+  confianca: baixa
+  notas: "Banyan: espinafre cru é picante. Diretrizes: Vata 'em moderação'; Pitta evita."
+
+- id: alface
+  nome: Alface
+  sinonimos: [alface crespa, alface americana, alface lisa, alface-romana]
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [adstringente, amargo]
+  virya: frio
+  vipaka: picante
+  gunas: [frio, leve, seco]
+  efeito: { vata: 0, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Pouca e com um molho de azeite."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: banyan-dieta-vata, campos: [como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Vata 'em moderação'."
+
+- id: rucula
+  nome: Rúcula
+  sinonimos: []
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [picante, amargo]
+  virya: quente
+  vipaka: picante
+  gunas: [leve, seco, intenso]
+  efeito: { vata: 1, pitta: 1, kapha: -1 }
+  como_equilibrar:
+    vata: "Pouca, com azeite."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
+  confianca: baixa
+  notas: "Não aparece nas páginas abertas."
+
+- id: agriao
+  nome: Agrião
+  sinonimos: []
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [picante, amargo]
+  virya: quente
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  como_equilibrar:
+    pitta: "Em porção moderada."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes ('watercress'): Pitta 'em moderação'."
+
+- id: repolho
+  nome: Repolho
+  sinonimos: [repolho roxo, repolho verde]
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero, pesado]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Só cozido, com óleo e especiarias como cominho."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-adstringente, campos: [rasa, gunas] }
+    - { ref: banyan-dieta-vata, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: Vata evita cru e aceita cozido com moderação."
+
+- id: acelga
+  nome: Acelga
+  sinonimos: []
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [doce, amargo]
+  virya: frio
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem refogada, com azeite."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
+  confianca: baixa
+  notas: "Não aparece nas páginas abertas. No Brasil 'acelga' pode ser a acelga-chinesa (tipo repolho) ou a de talo."
+
+- id: escarola
+  nome: Escarola
+  sinonimos: [chicória]
+  grupo: folhas
+  durabilidade: curta
+  funcoes: [folha]
+  rasa: [amargo]
+  virya: frio
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Refogada no alho e azeite."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
+  confianca: baixa
+  notas: "Não aparece nas páginas abertas."

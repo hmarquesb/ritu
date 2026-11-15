@@ -77,3 +77,45 @@
   url: https://ayurveda.com/blog/discovering-your-ayurvedic-body-type/
   acessado_em: "2026-11-15"
   aprovada: true
+- ref: ayurveda-com-diretrizes-alimentares
+  titulo: "Ayurveda Food Guidelines: Diet Tips for Vata, Pitta & Kapha"
+  autor: The Ayurvedic Institute
+  url: https://ayurveda.com/food-guidelines/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: ayurveda-com-combinacao-alimentos
+  titulo: "Ayurvedic Food Combining: Principles to Balance Doshas & Digestion"
+  autor: The Ayurvedic Institute
+  url: https://ayurveda.com/incompatible-food-combining/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-sabor-doce
+  titulo: "Sweet Taste"
+  autor: Banyan Botanicals
+  url: https://banyanbotanicals.com/info/ayurvedic-living/living-ayurveda/diet/six-tastes/sweet-taste
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-sabor-azedo
+  titulo: "Sour Taste"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/info/ayurvedic-living/living-ayurveda/diet/six-tastes/sour-taste/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-sabor-adstringente
+  titulo: "Astringent Taste"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/info/ayurvedic-living/living-ayurveda/diet/six-tastes/astringent-taste/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-sabor-amargo
+  titulo: "Bitter Taste"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/info/ayurvedic-living/living-ayurveda/diet/six-tastes/bitter-taste/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-sabor-picante
+  titulo: "Pungent Taste"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/info/ayurvedic-living/living-ayurveda/diet/six-tastes/pungent-taste/
+  acessado_em: "2026-11-15"
+  aprovada: true

@@ -252,4 +252,62 @@ describe("createRunService", () => {
     expect(r.fim).toEqual({ tipo: "limite", motivo: "chamadas" })
     expect(r.run).toMatchObject({ passos: 6, latencia_ms: 6000, tokens_entrada: 600 })
   })
+
+  describe("comSpanDoRun", () => {
+    it("com executarRun dentro, gera um span run com os atributos finais", async () => {
+      const m = await montar([{ chamadas: [fin] }])
+      const run = await m.svc.iniciarRun(m.conta.id, {
+        caminho: "acompanhante",
+        intencoes: ["momento", "casa"],
+      })
+      await m.svc.comSpanDoRun(m.conta.id, run.id, () =>
+        m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() }),
+      )
+      const raizes = m.telemetry.spans.filter((s) => s.nome === "run")
+      expect(raizes).toHaveLength(1)
+      expect(raizes[0]?.atributos).toMatchObject({
+        "prompt.versao": "v1",
+        "run.caminho": "acompanhante",
+        "run.status": "running",
+        "run.intencoes": "momento,casa",
+      })
+      expect(m.telemetry.logs.filter((l) => l.codigo === "run_inicio")).toHaveLength(1)
+      const salvo = await m.stores.runs.buscar(m.conta.id, run.id)
+      expect(salvo?.prompt_versao).toBe("v1")
+      expect(salvo?.trace_id).toBeTruthy()
+    })
+
+    it("span interprete aberto dentro é filho do run", async () => {
+      const m = await montar([])
+      const run = await m.iniciar()
+      await m.svc.comSpanDoRun(m.conta.id, run.id, () =>
+        m.telemetry.span("interprete", {}, async () => undefined),
+      )
+      const spans = m.telemetry.spans
+      const iRun = spans.findIndex((s) => s.nome === "run")
+      const filho = spans.find((s) => s.nome === "interprete")
+      expect(filho?.pai).toBe(iRun)
+    })
+
+    it("erro no corpo sobe e tira o run do mapa", async () => {
+      const m = await montar([{ chamadas: [fin] }])
+      const run = await m.iniciar()
+      await expect(
+        m.svc.comSpanDoRun(m.conta.id, run.id, async () => {
+          throw new Error("falhou")
+        }),
+      ).rejects.toThrow("falhou")
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      expect(m.telemetry.spans.filter((s) => s.nome === "run")).toHaveLength(2)
+    })
+
+    it("sem comSpanDoRun, executarRun abre o seu span", async () => {
+      const m = await montar([{ chamadas: [fin] }])
+      const run = await m.iniciar()
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      const raizes = m.telemetry.spans.filter((s) => s.nome === "run")
+      expect(raizes).toHaveLength(1)
+      expect(raizes[0]?.atributos["prompt.versao"]).toBe("v1")
+    })
+  })
 })

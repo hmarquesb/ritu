@@ -40,6 +40,12 @@ type Deps = {
   telemetry: Telemetry
 }
 
+type OpcoesDoResponder = {
+  aoVivo?: (e: EventoAoVivo) => void
+  run?: Run
+  semModelo?: boolean
+}
+
 type Perfil = Awaited<ReturnType<Stores["profiles"]["ler"]>>
 type ClimaUsado = Record<string, unknown>
 
@@ -156,19 +162,27 @@ export function createCompanion(deps: Deps) {
     dados: DadosDoPreparo,
     perfil: Perfil,
     fuso: string | undefined,
+    dado?: Run,
   ): Promise<RespostaDoRun> {
-    const run = await runs.iniciarRun(contaId, {
-      caminho: "sem_modelo",
-      intencoes: entrada.intencoes,
-      fuso,
-    })
+    const run =
+      dado ??
+      (await runs.iniciarRun(contaId, {
+        caminho: "sem_modelo",
+        intencoes: entrada.intencoes,
+        fuso,
+      }))
     const saida = saidaSemModeloDe(kb, dados, perfil)
     telemetry.contador("ritu_fallback_sem_llm_total")
     await runs.encerrar(
       contaId,
       run.id,
       "done",
-      campos(dados, { saida, modelos: { decisao: [] }, trocas_de_modelo: 0 }),
+      campos(dados, {
+        saida,
+        modelos: { decisao: [] },
+        trocas_de_modelo: 0,
+        ...(dado ? { caminho: "sem_modelo" as const } : {}),
+      }),
     )
     return { run_id: run.id, status: "done", saida, fim: "sem_modelo" }
   }
@@ -229,15 +243,13 @@ export function createCompanion(deps: Deps) {
     if (saida.para_ter) telemetry.contador("ritu_para_ter_total", { etapa: "indicada" })
   }
 
-  async function comModelo(
+  async function abrirRun(
     contaId: string,
     entrada: EntradaDoAcompanhante,
-    dados: DadosDoPreparo,
-    perfil: Perfil,
-    opts?: { aoVivo?: (e: EventoAoVivo) => void },
-  ): Promise<RespostaDoRun> {
-    const cidade = cidadeDoPerfil(perfil)
-    const fuso = perfil.cidade_fuso ?? undefined
+    fuso: string | undefined,
+    dado?: Run,
+  ): Promise<Run> {
+    if (dado) return dado
     const run = await runs.iniciarRun(contaId, {
       caminho: "acompanhante",
       intencoes: entrada.intencoes,
@@ -246,7 +258,17 @@ export function createCompanion(deps: Deps) {
     for (const intencao of entrada.intencoes) {
       telemetry.contador("ritu_run_intencao_total", { intencao })
     }
-    const ctx: ToolContext = {
+    return run
+  }
+
+  async function montarCtx(
+    contaId: string,
+    entrada: EntradaDoAcompanhante,
+    dados: DadosDoPreparo,
+    perfil: Perfil,
+  ): Promise<ToolContext> {
+    const cidade = cidadeDoPerfil(perfil)
+    return {
       kb,
       filtro: dados.filtro,
       sinais: await sinaisDaPessoa(stores, contaId, dados),
@@ -255,9 +277,22 @@ export function createCompanion(deps: Deps) {
       contaId,
       stores,
       clock,
-      fuso,
+      fuso: perfil.cidade_fuso ?? undefined,
       telemetry,
+      ...(entrada.casa_da_mensagem ? { casaDaMensagem: entrada.casa_da_mensagem } : {}),
     }
+  }
+
+  async function comModelo(
+    contaId: string,
+    entrada: EntradaDoAcompanhante,
+    dados: DadosDoPreparo,
+    perfil: Perfil,
+    opts?: OpcoesDoResponder,
+  ): Promise<RespostaDoRun> {
+    const fuso = perfil.cidade_fuso ?? undefined
+    const run = await abrirRun(contaId, entrada, fuso, opts?.run)
+    const ctx = await montarCtx(contaId, entrada, dados, perfil)
     let climaUsado: ClimaUsado | undefined
     const modelos: string[] = []
     let trocas = 0
@@ -306,13 +341,18 @@ export function createCompanion(deps: Deps) {
   async function responder(
     contaId: string,
     entradaBruta: EntradaDoAcompanhante,
-    opts?: { aoVivo?: (e: EventoAoVivo) => void },
+    opts?: OpcoesDoResponder,
   ): Promise<RespostaDoRun> {
     const entrada = entradaDoAcompanhanteSchema.parse(entradaBruta)
-    const dados = await preparar({ stores, kb, clock, telemetry }, contaId, entrada)
+    const dados = await preparar(
+      { stores, kb, clock, telemetry },
+      contaId,
+      entrada,
+      opts?.run ? { runId: opts.run.id } : undefined,
+    )
     const perfil = await stores.profiles.ler(contaId)
-    if (!(await router.temModelo("decisao"))) {
-      return semModelo(contaId, entrada, dados, perfil, perfil.cidade_fuso ?? undefined)
+    if (opts?.semModelo || !(await router.temModelo("decisao"))) {
+      return semModelo(contaId, entrada, dados, perfil, perfil.cidade_fuso ?? undefined, opts?.run)
     }
     return comModelo(contaId, entrada, dados, perfil, opts)
   }

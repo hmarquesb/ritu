@@ -2,7 +2,7 @@ import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import type { FornecedorDeModelo } from "@/core/llm/fornecedor"
 import type { Stores, Transactor } from "@/core/stores"
-import type { Telemetry } from "@/core/telemetry/ports"
+import type { SpanAtivo, Telemetry } from "@/core/telemetry/ports"
 import { diaLocal } from "@/core/time/dia-local"
 import type { ToolContext } from "@/core/tools/tool"
 import type { AgentRuntime } from "./agent-runtime"
@@ -164,12 +164,62 @@ export function createRunService(deps: DepsDoServico) {
     return fim
   }
 
+  const spansAbertos = new Map<string, SpanAtivo>()
+
+  function fecharSpan(span: SpanAtivo, final: Run): void {
+    span.atribuir({
+      "run.status": final.status,
+      "run.passos": final.passos,
+      "run.caminho": final.caminho,
+      "run.intencoes": final.intencoes.join(","),
+    })
+  }
+
+  async function comSpanDoRun<T>(
+    contaId: string,
+    runId: string,
+    corpo: (span: SpanAtivo) => Promise<T>,
+  ): Promise<T> {
+    const run = await buscarOuFalhar(contaId, runId)
+    const conta = await stores.accounts.buscar(contaId)
+    const traceparent = run.trace_id ?? undefined
+    return telemetry.span(
+      "run",
+      {
+        "run.id": run.id,
+        "run.caminho": run.caminho,
+        ...(conta ? { "conta.tipo": conta.tipo } : {}),
+      },
+      async (span) => {
+        const id = traceparent ?? telemetry.traceparentAtual()
+        if (id) await stores.runs.atualizar(contaId, runId, { trace_id: id })
+        telemetry.log("info", "run_inicio", { "run.id": runId, ...(id ? { trace_id: id } : {}) })
+        spansAbertos.set(runId, span)
+        try {
+          const resultado = await corpo(span)
+          fecharSpan(span, await buscarOuFalhar(contaId, runId))
+          return resultado
+        } finally {
+          spansAbertos.delete(runId)
+        }
+      },
+      traceparent ? { traceparent } : undefined,
+    )
+  }
+
   async function dentroDoSpan(
     contaId: string,
     run: Run,
     p: Execucao,
     corpo: () => Promise<FimDoTrecho>,
   ): Promise<ResultadoDoRun> {
+    const aberto = spansAbertos.get(run.id)
+    if (aberto) {
+      aberto.atribuir({ "prompt.versao": p.agente.prompt_versao })
+      await stores.runs.atualizar(contaId, run.id, { prompt_versao: p.agente.prompt_versao })
+      const fim = await corpo()
+      return { run: await buscarOuFalhar(contaId, run.id), fim }
+    }
     const conta = await stores.accounts.buscar(contaId)
     const traceparent = run.trace_id ?? undefined
     const fim = await telemetry.span(
@@ -279,5 +329,5 @@ export function createRunService(deps: DepsDoServico) {
     })
   }
 
-  return { iniciarRun, executarRun, continuarRun, gravarEtapa, encerrar }
+  return { iniciarRun, executarRun, continuarRun, gravarEtapa, encerrar, comSpanDoRun }
 }

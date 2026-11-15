@@ -211,4 +211,77 @@ describe("createCompanion.responder", () => {
     expect(JSON.stringify(etapas)).not.toContain(TEXTO_DA_PESSOA)
     expect(tipos(etapas)).toContain("llm")
   })
+
+  describe("com run já criado", () => {
+    const iniciar = (m: Awaited<ReturnType<typeof montar>>, runs = m) =>
+      createRunService({
+        stores: runs.stores,
+        tx: runs.stores,
+        runtime: createScriptedRuntime([], runs.clock),
+        clock: runs.clock,
+        telemetry: runs.telemetry,
+      }).iniciarRun(m.conta.id, { caminho: "acompanhante", intencoes: ["pergunta"] })
+
+    it("opts.run não cria outro run, encerra o dado e não soma a intenção", async () => {
+      const m = await montar([finalizar(entregaOk)])
+      const run = await iniciar(m)
+      const r = await m.companion().responder(m.conta.id, entrada(), { run })
+      expect(r).toMatchObject({ run_id: run.id, status: "done", fim: "entregue" })
+      const salvo = await m.stores.runs.buscar(m.conta.id, run.id)
+      expect(salvo?.status).toBe("done")
+      expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_run_intencao_total")).toHaveLength(
+        0,
+      )
+    })
+
+    it("semModelo com run termina done com caminho sem_modelo", async () => {
+      const m = await montar([])
+      const run = await iniciar(m)
+      const r = await m.companion().responder(m.conta.id, entrada(), { run, semModelo: true })
+      expect(r).toMatchObject({ run_id: run.id, status: "done", fim: "sem_modelo" })
+      const salvo = await m.stores.runs.buscar(m.conta.id, run.id)
+      expect(salvo).toMatchObject({ status: "done", caminho: "sem_modelo" })
+      expect(
+        m.telemetry.metricas.filter((x) => x.nome === "ritu_fallback_sem_llm_total"),
+      ).toHaveLength(1)
+    })
+
+    it("sem opts.run, soma a intenção como antes", async () => {
+      const m = await montar([finalizar(entregaOk)])
+      await m.companion().responder(m.conta.id, entrada())
+      expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_run_intencao_total")).toHaveLength(
+        1,
+      )
+    })
+
+    it("o ToolContext recebe casaDaMensagem", async () => {
+      const m = await montar([finalizar(entregaOk)])
+      const run = await iniciar(m)
+      const casa = { tem: ["abobora"], acabou: [] }
+      let visto: unknown
+      const runs = createRunService({
+        stores: m.stores,
+        tx: m.stores,
+        runtime: createScriptedRuntime([finalizar(entregaOk)], m.clock),
+        clock: m.clock,
+        telemetry: m.telemetry,
+      })
+      const original = runs.executarRun
+      runs.executarRun = (contaId, runId, p) => {
+        visto = (p.ctx as { casaDaMensagem?: unknown }).casaDaMensagem
+        return original(contaId, runId, p)
+      }
+      const c = createCompanion({
+        stores: m.stores,
+        kb,
+        clock: m.clock,
+        weather: m.weather,
+        router: m.router,
+        runs,
+        telemetry: m.telemetry,
+      })
+      await c.responder(m.conta.id, entrada({ casa_da_mensagem: casa }), { run })
+      expect(visto).toEqual(casa)
+    })
+  })
 })

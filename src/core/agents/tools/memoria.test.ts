@@ -42,11 +42,16 @@ async function idDoItem(stores: ReturnType<typeof createMemoryStores>, alimentoI
 // Cria um run concluído, com ou sem momento, na hora atual do relógio.
 async function runConcluido(
   stores: ReturnType<typeof createMemoryStores>,
-  opts: { conta?: string; dia?: string; momento?: typeof MOMENTO | null } = {},
+  opts: {
+    conta?: string
+    dia?: string
+    momento?: typeof MOMENTO | null
+    caminho?: "acompanhante" | "casa"
+  } = {},
 ) {
   const conta = opts.conta ?? CONTA
   const run = await stores.runs.criar(conta, {
-    caminho: "casa",
+    caminho: opts.caminho ?? "acompanhante",
     intencoes: [],
     dia: opts.dia ?? "2026-01-15",
   })
@@ -380,5 +385,56 @@ describe("historico.recente", () => {
 
     await expect(historicoRecenteTool.execute({ dias: 0 }, ctx)).rejects.toBeInstanceOf(z.ZodError)
     await expect(historicoRecenteTool.execute({ dias: 8 }, ctx)).rejects.toBeInstanceOf(z.ZodError)
+  })
+})
+
+describe("casa.ler com casaDaMensagem", () => {
+  it("tem entra, incerto vira confirmado, acabou some e as contagens batem", async () => {
+    const { ctx, clock, stores } = ambiente()
+    await stores.pantry.registrar(
+      CONTA,
+      [{ alimento_id: "banana" }, { alimento_id: "canela" }],
+      "conversa",
+    )
+    clock.advance(6 * DIA_EM_MS)
+    const comMensagem: ToolContext = {
+      ...ctx,
+      casaDaMensagem: { tem: ["abobora", "banana"], acabou: ["canela"] },
+    }
+
+    const r = await casaLerTool.execute({}, comMensagem)
+
+    expect(r.itens.map((i) => [i.alimento_id, i.estado])).toEqual([
+      ["banana", "confirmado"],
+      ["abobora", "confirmado"],
+    ])
+    expect(r).toMatchObject({ confirmados: 2, incertos: 0 })
+    expect(r.itens.find((i) => i.alimento_id === "abobora")).toEqual({
+      alimento_id: "abobora",
+      nome: "Abóbora",
+      grupo: "legumes",
+      estado: "confirmado",
+      dias_desde_confirmacao: 0,
+      conhecido: true,
+    })
+  })
+
+  it("tem de alimento em evitar sempre não entra", async () => {
+    const { ctx } = ambiente({ ...filtroVazio, evitar: [{ tipo: "alimento", valor: "abobora" }] })
+    const r = await casaLerTool.execute(
+      {},
+      { ...ctx, casaDaMensagem: { tem: ["abobora"], acabou: [] } },
+    )
+    expect(r.itens).toEqual([])
+  })
+})
+
+describe("historico.recente e o caminho", () => {
+  it("não devolve run de caminho casa", async () => {
+    const { ctx, stores } = ambiente()
+    await runConcluido(stores, { caminho: "casa" })
+    await runConcluido(stores, { caminho: "acompanhante" })
+    const r = await historicoRecenteTool.execute({}, ctx)
+    expect(r.runs).toHaveLength(1)
   })
 })

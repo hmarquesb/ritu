@@ -78,6 +78,38 @@ function compararItens(a: ItemCasaLido, b: ItemCasaLido): number {
   return a.nome.localeCompare(b.nome, "pt-BR")
 }
 
+// O que a pessoa disse na mensagem vale no run: `tem` entra (ou deixa de ser incerto) e `acabou` sai.
+function ajustarPelaMensagem(lidos: ItemCasaLido[], ctx: ToolContext): ItemCasaLido[] {
+  const msg = ctx.casaDaMensagem
+  if (!msg) return lidos
+  const acabou = new Set(msg.acabou)
+  const tem = new Set(msg.tem.filter((id) => !acabou.has(id)))
+  const doRun = lidos
+    .filter((i) => i.alimento_id === null || !acabou.has(i.alimento_id))
+    .map((i): ItemCasaLido => {
+      const marcado = i.alimento_id !== null && tem.has(i.alimento_id)
+      return marcado && i.estado === "incerto" ? { ...i, estado: "confirmado" } : i
+    })
+  const presentes = new Set(doRun.map((i) => i.alimento_id))
+  const novos = [...tem].flatMap((id) => {
+    const alimento = ctx.kb.alimento(id)
+    if (presentes.has(id) || !alimento) return []
+    const passa = passaNoFiltro(alimento, ctx.filtro, ctx.kb)
+    if (!passa.passa && passa.motivo === "evitar_sempre") return []
+    return [
+      {
+        alimento_id: alimento.id,
+        nome: alimento.nome,
+        grupo: alimento.grupo,
+        estado: "confirmado" as const,
+        dias_desde_confirmacao: 0,
+        conhecido: true,
+      },
+    ]
+  })
+  return [...doRun, ...novos]
+}
+
 export const casaLerTool = definirTool({
   name: "casa.ler",
   description:
@@ -88,10 +120,12 @@ export const casaLerTool = definirTool({
   async executar(_entrada, ctx) {
     const agora = ctx.clock.now()
     const itens = await ctx.stores.pantry.listar(ctx.contaId)
-    const lidos = itens
-      .map((item) => lerItemDaCasa(item, ctx, agora))
-      .filter((item): item is ItemCasaLido => item !== undefined)
-      .sort(compararItens)
+    const lidos = ajustarPelaMensagem(
+      itens
+        .map((item) => lerItemDaCasa(item, ctx, agora))
+        .filter((item): item is ItemCasaLido => item !== undefined),
+      ctx,
+    ).sort(compararItens)
     const incertos = lidos.filter((item) => item.estado === "incerto").length
     return { itens: lidos, confirmados: lidos.length - incertos, incertos }
   },
@@ -185,7 +219,8 @@ export const historicoRecenteTool = definirTool({
     const dias = entrada.dias ?? DIAS_DO_HISTORICO
     const desde = new Date(ctx.clock.now().getTime() - dias * DIA_EM_MS)
     const runs = await ctx.stores.runs.recentes(ctx.contaId, desde, config.memoria.historicoLinhas)
-    const linhas = await Promise.all(runs.map((run) => linhaDoRun(run, ctx)))
+    const doAcompanhante = runs.filter((run) => run.caminho === "acompanhante")
+    const linhas = await Promise.all(doAcompanhante.map((run) => linhaDoRun(run, ctx)))
     return { runs: linhas.filter((linha): linha is LinhaDoRun => linha !== undefined) }
   },
 })

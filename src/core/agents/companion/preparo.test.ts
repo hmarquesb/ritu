@@ -176,4 +176,77 @@ describe("entregaveisEmCasa", () => {
     expect(dados.faltas_do_run).toEqual(expect.arrayContaining(["gengibre"]))
     expect(dados.candidatos.length).toBeGreaterThan(0)
   })
+
+  it("tem da mensagem entra em confirmados sem gravar na casa", async () => {
+    const { run, stores } = montar()
+    const dados = await run({
+      estados: ["com_frio"],
+      casa_da_mensagem: { tem: ["abobora"], acabou: [] },
+    })
+    expect(dados.casa.confirmados).toContain("abobora")
+    expect(dados.sinais.itens_confirmados_em_casa).toBe(dados.casa.confirmados.length)
+    expect(dados.casa_da_mensagem).toEqual({ tem: ["Abóbora"], acabou: [] })
+    expect(await stores.pantry.listar(CONTA)).toEqual([])
+  })
+
+  it("acabou tira de confirmados e de incertos; tem de item evitado não entra", async () => {
+    const { run, stores } = montar()
+    await stores.pantry.registrar(CONTA, [{ alimento_id: "canela" }], "conversa")
+    const dados = await run({
+      estados: ["com_frio"],
+      evitar_da_mensagem: ["gengibre"],
+      casa_da_mensagem: { tem: ["gengibre"], acabou: ["canela"] },
+    })
+    expect(dados.casa.confirmados).not.toContain("canela")
+    expect(dados.casa.incertos).not.toContain("canela")
+    expect(dados.casa.confirmados).not.toContain("gengibre")
+  })
+
+  it("não como e restrição da mensagem filtram no run e ficam no temporário do dia", async () => {
+    const { run, stores } = montar()
+    const dados = await run({
+      estados: ["com_frio"],
+      nao_come_da_mensagem: [{ alimento_id: "canela", nome: "canela" }, { nome: "coentro" }],
+      restricoes_da_mensagem: ["vegana"],
+    })
+    expect(dados.filtro.nao_come).toContain("canela")
+    expect(dados.filtro.restricoes).toContain("vegana")
+    const ids = dados.candidatos.flatMap((c) => c.itens.map((i) => i.alimento_id))
+    expect(ids).not.toContain("canela")
+    expect(ids).not.toContain("leite")
+    expect(await stores.profiles.evitarTemporario(CONTA, HOJE)).toEqual([
+      { tipo: "nao_come", valor: "canela" },
+      { tipo: "restricao", valor: "vegana" },
+    ])
+  })
+
+  it("mensagens_do_dia sem as do run atual e sem as de run alerta", async () => {
+    const { stores, telemetry } = montar()
+    const clock = createFixedClock("2026-11-15T18:00:00.000Z")
+    const deps = { stores, kb, clock, telemetry }
+    const mk = async (caminho: "acompanhante" | "alerta", texto: string) => {
+      const r = await stores.runs.criar(CONTA, { caminho, intencoes: [], dia: HOJE })
+      await stores.messages.gravar(CONTA, {
+        run_id: r.id,
+        autor: "pessoa",
+        texto,
+        com_incomodo: false,
+        dia: HOJE,
+      })
+      return r
+    }
+    for (const [caminho, texto] of [
+      ["acompanhante", "antiga"],
+      ["alerta", "barrada"],
+    ] as const) {
+      const r = await mk(caminho, texto)
+      await stores.runs.atualizar(CONTA, r.id, { status: "done" })
+    }
+    const atual = await mk("acompanhante", "atual")
+    const dados = await preparar(deps, CONTA, entrada({ estados: ["com_frio"] }), {
+      runId: atual.id,
+    })
+    expect(dados.mensagens_do_dia.map((m) => m.texto)).toEqual(["antiga"])
+    expect(dados.sinais.mensagens_hoje).toBe(3)
+  })
 })

@@ -1,5 +1,6 @@
 import { config } from "@config/index"
 import { z } from "zod"
+import type { ItemDoDia } from "@/core/accounts/ports"
 import type { Clock } from "@/core/clock"
 import type { Prakriti } from "@/core/knowledge/adequacao"
 import { type EvitarItem, type FiltroPessoa, passaNoFiltro } from "@/core/knowledge/filtros"
@@ -18,6 +19,7 @@ import {
   momentoDoDiaSchema,
   restricaoSchema,
 } from "@/core/knowledge/vocab"
+import { lerConversaDoDia } from "@/core/messages/para-o-prompt"
 import { estadoDoItem } from "@/core/pantry/estado"
 import type { Preferencia } from "@/core/preferences/ports"
 import { cortarParaOContexto, montarCandidatos } from "@/core/ranking/candidatos"
@@ -27,7 +29,12 @@ import type { Stores } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import { diaLocal, diasAtras } from "@/core/time/dia-local"
 import { horaLocal } from "@/core/weather/hora-local"
-import { type EntradaDoAcompanhante, intencaoSchema } from "./entrada"
+import {
+  casaDaMensagemSchema,
+  type EntradaDoAcompanhante,
+  intencaoSchema,
+  retornoDaMensagemSchema,
+} from "./entrada"
 import { montarFiltro } from "./filtro-da-pessoa"
 
 export type {
@@ -136,6 +143,9 @@ export const dadosDoPreparoSchema = z.object({
   resumo_de_rotina: z.string().optional(),
   padroes: z.array(z.string()),
   mensagens_do_dia: z.array(z.object({ autor: z.enum(["pessoa", "agente"]), texto: z.string() })),
+  casa_da_mensagem: casaDaMensagemSchema.optional(),
+  retorno: retornoDaMensagemSchema.optional(),
+  fato_de_rotina: z.string().optional(),
 })
 
 export type DadosDoPreparo = z.infer<typeof dadosDoPreparoSchema>
@@ -146,15 +156,50 @@ type Casa = DadosDoPreparo["casa"]
 const HORAS_DE_FOLGA = 36
 const LIMITE_DE_RUNS = 50
 
-async function gravarEvitarDaMensagem(
+function naoComeERestricaoDaMensagem(entrada: EntradaDoAcompanhante): ItemDoDia[] {
+  const naoCome = (entrada.nao_come_da_mensagem ?? []).flatMap((n) =>
+    n.alimento_id ? [{ tipo: "nao_come" as const, valor: n.alimento_id }] : [],
+  )
+  const restricoes = (entrada.restricoes_da_mensagem ?? []).map((valor) => ({
+    tipo: "restricao" as const,
+    valor,
+  }))
+  return [...naoCome, ...restricoes]
+}
+
+async function gravarDaMensagem(
   deps: Deps,
   contaId: string,
   dia: string,
-  textos: string[],
-): Promise<EvitarItem[]> {
-  const itens = textos.map((texto) => resolverEvitar(texto, deps.kb))
+  entrada: EntradaDoAcompanhante,
+): Promise<{ evitar: EvitarItem[]; doDia: ItemDoDia[] }> {
+  const evitar = entrada.evitar_da_mensagem.map((texto) => resolverEvitar(texto, deps.kb))
+  const doDia = naoComeERestricaoDaMensagem(entrada)
+  const itens: ItemDoDia[] = [...evitar, ...doDia]
   if (itens.length > 0) await deps.stores.profiles.acrescentarEvitarTemporario(contaId, dia, itens)
-  return itens
+  return { evitar, doDia }
+}
+
+// `tem` entra em confirmados (se passar no filtro) e sai de incertos; `acabou` sai das duas.
+function ajustarCasa(
+  casa: Casa,
+  entrada: EntradaDoAcompanhante,
+  deps: Deps,
+  filtro: FiltroPessoa,
+): Casa {
+  const msg = entrada.casa_da_mensagem
+  if (!msg) return casa
+  const acabou = new Set(msg.acabou)
+  const tem = msg.tem.filter((id) => {
+    const alimento = deps.kb.alimento(id)
+    return !acabou.has(id) && !!alimento && passaNoFiltro(alimento, filtro, deps.kb).passa
+  })
+  const entram = new Set(tem)
+  const fora = new Set([...acabou, ...entram])
+  return {
+    confirmados: [...new Set([...casa.confirmados.filter((id) => !acabou.has(id)), ...tem])],
+    incertos: casa.incertos.filter((id) => !fora.has(id)),
+  }
 }
 
 async function casaDaPessoa(deps: Deps, contaId: string, filtro: FiltroPessoa): Promise<Casa> {
@@ -209,6 +254,7 @@ type Contexto = {
   deps: Deps
   contaId: string
   entrada: EntradaDoAcompanhante
+  runId?: string
   dia: string
   filtro: FiltroPessoa
   prakriti?: Prakriti
@@ -309,16 +355,11 @@ async function lerContexto(
     stores.profiles.evitarTemporario(contaId, dia),
     stores.preferences.ler(contaId),
   ])
-  const evitarDaMensagem = await gravarEvitarDaMensagem(
-    deps,
-    contaId,
-    dia,
-    entrada.evitar_da_mensagem,
-  )
+  const daMensagem = await gravarDaMensagem(deps, contaId, dia, entrada)
   const { filtro, evitar_textos } = montarFiltro({
     perfil,
-    evitarDoDia,
-    evitarDaMensagem,
+    evitarDoDia: [...evitarDoDia, ...daMensagem.doDia],
+    evitarDaMensagem: daMensagem.evitar,
     preferencias,
   })
   const hora = horaLocal(agora, fuso ?? config.clima.fusoPadrao)
@@ -333,7 +374,7 @@ async function lerContexto(
     dia,
     filtro,
     prakriti: perfil.prakriti ?? undefined,
-    casa: await casaDaPessoa(deps, contaId, filtro),
+    casa: ajustarCasa(await casaDaPessoa(deps, contaId, filtro), entrada, deps, filtro),
     preferencias,
     sugeridos_hoje: await sugeridosDeHoje(deps, contaId, dia),
     qualidades,
@@ -346,9 +387,11 @@ export function preparar(
   deps: Deps,
   contaId: string,
   entrada: EntradaDoAcompanhante,
+  opts?: { runId?: string },
 ): Promise<DadosDoPreparo> {
   return deps.telemetry.span("preparo", {}, async (span) => {
     const { c, evitar_textos, perfil } = await lerContexto(deps, contaId, entrada)
+    c.runId = opts?.runId ?? ""
     const { candidatos, faltas } = candidatosEFaltas(c)
     const para_ter = await paraTerDoRun(c, faltas)
     const dados = await completar(c, { evitar_textos, perfil, candidatos, faltas, para_ter })
@@ -379,6 +422,13 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
     stores.patterns.listar(c.contaId, "confirmado"),
     stores.messages.doDia(c.contaId, c.dia),
   ])
+  const mensagensDoPrompt = await lerConversaDoDia(stores, {
+    contaId: c.contaId,
+    dia: c.dia,
+    agora: c.deps.clock.now(),
+    runAtualId: c.runId ?? "",
+    limite: config.memoria.mensagensDoDiaNoPrompt,
+  })
   const sinais: Sinais = {
     mensagens_hoje: mensagens.filter((x) => x.autor === "pessoa").length,
     itens_confirmados_em_casa: c.casa.confirmados.length,
@@ -416,8 +466,19 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
     },
     ...(resumo ? { resumo_de_rotina: resumo.texto } : {}),
     padroes: padroes.slice(0, config.memoria.padroesNoPrompt).map((p) => p.frase),
-    mensagens_do_dia: mensagens
-      .slice(-config.memoria.mensagensDoDiaNoPrompt)
-      .map((x) => ({ autor: x.autor, texto: x.texto })),
+    mensagens_do_dia: mensagensDoPrompt,
+    ...(entrada.casa_da_mensagem
+      ? { casa_da_mensagem: nomesDaCasaDaMensagem(entrada.casa_da_mensagem, kb) }
+      : {}),
+    ...(entrada.retorno ? { retorno: entrada.retorno } : {}),
+    ...(entrada.fato_de_rotina ? { fato_de_rotina: entrada.fato_de_rotina } : {}),
   }
+}
+
+function nomesDaCasaDaMensagem(
+  casa: { tem: string[]; acabou: string[] },
+  kb: KnowledgeBase,
+): { tem: string[]; acabou: string[] } {
+  const nomes = (ids: string[]) => ids.map((id) => kb.alimento(id)?.nome ?? id)
+  return { tem: nomes(casa.tem), acabou: nomes(casa.acabou) }
 }

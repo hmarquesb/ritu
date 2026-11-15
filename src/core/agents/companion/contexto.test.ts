@@ -120,4 +120,29 @@ describe("acompanhanteV1", () => {
       "Entregue a resposta pela tool finalizar. Texto solto não chega à pessoa.",
     )
   })
+
+  it("traz casa_da_mensagem, retorno e fato_de_rotina logo depois de intencoes", async () => {
+    const base = await dados()
+    const { json } = extrair(
+      montarMensagemInicial(
+        {
+          ...base,
+          casa_da_mensagem: { tem: ["Abóbora"], acabou: [] },
+          retorno: { resultado: "ajudou", registrado: true },
+          fato_de_rotina: "janto <tarde>",
+        },
+        "oi",
+      ),
+    )
+    const chaves = Object.keys(json)
+    expect(chaves.slice(0, 4)).toEqual([
+      "intencoes",
+      "casa_da_mensagem",
+      "retorno",
+      "fato_de_rotina",
+    ])
+    expect(json.fato_de_rotina).toBe("janto ‹tarde›")
+    const { json: sem } = extrair(montarMensagemInicial(base, "oi"))
+    expect(Object.keys(sem)).not.toContain("retorno")
+  })
 })

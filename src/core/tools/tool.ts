@@ -19,6 +19,8 @@ export type ToolContext = {
   clock: Clock
   fuso?: string
   telemetry: Telemetry
+  /** Ids de alimentos da base citados na mensagem; ajustam o que `casa.ler` devolve. */
+  casaDaMensagem?: { tem: string[]; acabou: string[] }
 }
 
 export type Tool<I, O> = {

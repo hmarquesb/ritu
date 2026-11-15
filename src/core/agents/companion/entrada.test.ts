@@ -32,4 +32,19 @@ describe("entradaDoAcompanhanteSchema", () => {
       entradaDoAcompanhanteSchema.safeParse({ ...minima, estados: ["estado-inventado"] }).success,
     ).toBe(false)
   })
+
+  it("aceita os campos vindos da mensagem e recusa restrição fora do vocabulário", () => {
+    const completa = {
+      ...minima,
+      casa_da_mensagem: { tem: ["abobora"], acabou: [] },
+      retorno: { resultado: "ajudou", titulo: "Chá", registrado: false },
+      fato_de_rotina: "janto tarde",
+      nao_come_da_mensagem: [{ alimento_id: "cenoura", nome: "cenoura" }, { nome: "coentro" }],
+      restricoes_da_mensagem: ["vegana"],
+    }
+    expect(entradaDoAcompanhanteSchema.safeParse(completa).success).toBe(true)
+    expect(
+      entradaDoAcompanhanteSchema.safeParse({ ...minima, restricoes_da_mensagem: ["xis"] }).success,
+    ).toBe(false)
+  })
 })

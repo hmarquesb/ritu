@@ -77,6 +77,9 @@ export function montarMensagemInicial(dados: DadosDoPreparo, texto?: string): st
   const semTexto = texto === undefined || texto === ""
   const contexto = compacto({
     intencoes: dados.intencoes,
+    casa_da_mensagem: dados.casa_da_mensagem,
+    retorno: dados.retorno,
+    fato_de_rotina: dados.fato_de_rotina ? neutralizar(dados.fato_de_rotina) : undefined,
     momento: momento(dados),
     geral: dados.geral ? true : undefined,
     fixos: compacto({

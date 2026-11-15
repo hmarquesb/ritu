@@ -1,0 +1,9 @@
+{
+  "path": ["src"],
+  "minTokens": 70,
+  "threshold": 0,
+  "ignore": ["**/*.test.ts", "**/*.test.tsx", "**/*.eval.ts", "src/infra/fakes/**"],
+  "reporters": ["console"],
+  "absolute": true,
+  "gitignore": true
+}

@@ -16,3 +16,7 @@ playwright-report/
 # apoio local, fora do repositório
 .local/
 .claude/settings.local.json
+
+# Ritu: só o que for dos artefatos de build e dependências locais
+*.tsbuildinfo
+next-env.d.ts

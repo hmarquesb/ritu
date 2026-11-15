@@ -6,6 +6,8 @@ import { qualidadesDoMomento } from "@/core/knowledge/momento"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
 import { getContainer } from "@/infra/container"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
+import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryStores } from "@/infra/fakes/memory-stores"
 
 const kb = getContainer().knowledge
 const ctx: ToolContext = {
@@ -13,6 +15,9 @@ const ctx: ToolContext = {
   filtro: filtroVazio,
   sinais: sinaisVazios,
   clima: { fonte: createFakeWeather() },
+  contaId: "conta-1",
+  stores: createMemoryStores(createFixedClock("2026-01-15T12:00:00Z")),
+  clock: createFixedClock("2026-01-15T12:00:00Z"),
 }
 
 const MINIMO_POR_TIPO = 3

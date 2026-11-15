@@ -4,6 +4,8 @@ import { filtroVazio } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
+import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import {
   alimentoTool,
@@ -22,6 +24,9 @@ function ctx(parcial: Partial<ToolContext> = {}): ToolContext {
     filtro: filtroVazio,
     sinais: sinaisVazios,
     clima: { fonte: createFakeWeather() },
+    contaId: "conta-1",
+    stores: createMemoryStores(createFixedClock("2026-01-15T12:00:00Z")),
+    clock: createFixedClock("2026-01-15T12:00:00Z"),
     ...parcial,
   }
 }

@@ -8,6 +8,7 @@ import { climaEmQualidades } from "@/core/weather/qualidades"
 import { tendenciaDasProximasHoras } from "@/core/weather/tendencia"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { climaAgoraTool, climaProximasHorasTool, climaTools } from "./clima"
 import type { Tool, ToolContext } from "./tool"
@@ -25,6 +26,9 @@ function ctx(fonte: WeatherSource, cidade?: CidadeDaPessoa): ToolContext {
     filtro: filtroVazio,
     sinais: sinaisVazios,
     clima: cidade ? { fonte, cidade } : { fonte },
+    contaId: "conta-1",
+    stores: createMemoryStores(createFixedClock("2026-01-15T12:00:00Z")),
+    clock: createFixedClock("2026-01-15T12:00:00Z"),
   }
 }
 

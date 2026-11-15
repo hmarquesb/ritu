@@ -1,4 +1,5 @@
 import { type AppConfig, config } from "@config/index"
+import { createCompanion } from "@/core/agents/companion/responder"
 import type { Clock } from "@/core/clock"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
@@ -40,6 +41,7 @@ export type Container = {
   telemetry: Telemetry
   runtime: AgentRuntime
   runs: ReturnType<typeof createRunService>
+  companion: ReturnType<typeof createCompanion>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -70,6 +72,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let telemetry: Telemetry | undefined
   let runtime: AgentRuntime | undefined
   let runs: ReturnType<typeof createRunService> | undefined
+  let companion: ReturnType<typeof createCompanion> | undefined
   let sdk: { encerrar(): Promise<void> } | undefined
   let telemetriaIniciada = false
   const container: Container = {
@@ -141,6 +144,18 @@ export function createContainer(overrides?: Partial<Container>): Container {
         telemetry: container.telemetry,
       })
       return runs
+    },
+    get companion() {
+      companion ??= createCompanion({
+        stores: container.stores,
+        kb: container.knowledge,
+        clock,
+        weather: container.weather,
+        router: container.router,
+        runs: container.runs,
+        telemetry: container.telemetry,
+      })
+      return companion
     },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {

@@ -65,10 +65,10 @@ Mensagens de runs de `alerta`, `fora` e `ofensa` não voltam ao prompt como conv
 O que roda em toda mensagem não é decisão, então não é tool:
 
 1. Converte o momento e o incômodo em qualidades (`KNOWLEDGE.md` §3 e §3.1).
-2. Filtra alimentos, preparos e práticas por qualidades, dosha, momento do dia, **"evitar sempre"** (guardado, do dia e o que o Intérprete acabou de apontar), restrições, "não como", "não gosto" e contraindicações. Preparo ou prática com qualquer ingrediente em "evitar sempre" sai inteiro, inclusive óleos de uso na pele.
-3. **Ordena** o que passou no filtro (§6, "Ordenação").
+2. Filtra alimentos, preparos e práticas por qualidades, dosha, momento do dia, **"evitar sempre"** (guardado, do dia e o que o Intérprete acabou de apontar), restrições, "não como", "não gosto", contraindicações, marcas a evitar no momento e o que já foi sugerido hoje. Preparo ou prática com qualquer ingrediente em "evitar sempre" sai inteiro, inclusive óleos de uso na pele. Prática sem momento do dia definido serve a qualquer momento. A casa que o preparo lê já passa pelo mesmo filtro.
+3. **Ordena** o que passou no filtro (§6, "Ordenação"). Só há candidatos quando a mensagem tem intenção `momento`, estados ou incômodo; nos outros casos a lista vai vazia.
 4. Calcula as **faltas** do run e escolhe o candidato a "vale ter em casa", se houver (§6, "Faltas").
-5. Monta o contexto do Acompanhante: fixos, resumo de rotina, padrões confirmados, últimas mensagens do dia, sinais (§6), os candidatos já ordenados e o candidato a "vale ter em casa".
+5. Monta o contexto do Acompanhante: fixos, resumo de rotina, padrões confirmados, últimas mensagens do dia, sinais (§6), os candidatos já ordenados e o candidato a "vale ter em casa". Para o contexto, o preparo guarda por tipo só os primeiros (4 chás, 3 refeições, 2 óleos, 4 práticas) e, em cada vaga de uma refeição, até 3 opções de alimento.
 
 Sinal de alerta encerra o run aqui, com a resposta de encaminhamento.
 
@@ -77,19 +77,26 @@ Sinal de alerta encerra o run aqui, com a resposta de encaminhamento.
 ```
 resposta      texto para a pessoa, em tom de conversa (até 900 caracteres)
 geral         true quando não há dosha
+origem        agente | segura | sem_modelo
+avisos[]      { tipo: incomodo | geral, texto }
 explicacao    { qualidades_do_momento[], qualidades_buscadas[] }
 sugestoes[]   até 3: { tipo: cha | refeicao | oleo | pratica,
                        pratica_id ou preparo_id,
-                       itens[]: { alimento_id, funcao, contribui[], linha_base, se_faltar },
-                       motivo, linhas_base[], novidade }
+                       titulo, como_fazer, verbos[], aviso?,
+                       itens[]: { alimento_id, nome, funcao, contribui[], verbos[],
+                                  linha_base, casa, se_faltar? },
+                       motivo (até 200 caracteres), linhas_base[], novidade }
 evitar[]      { texto, linha_base }
-incertos[]    o que a base não cobre
-citados[]     linhas da base de alimentos e práticas citados só no texto
-para_ter      opcional, no máximo um: { alimento_id, vezes, contribui[], linha_base }
+incertos[]    até 3, de até 120 caracteres: o que a base não cobre
+citados[]     até 5: linhas da base de alimentos e práticas citados só no texto
+para_ter      opcional, no máximo um: { alimento_id, nome, vezes, contribui[], verbos[],
+                                        linha_base, motivo }
 propostas[]   escritas a aprovar (§5)
 ```
 
-O modelo escreve o texto, as escolhas, os motivos e as linhas da base. O código completa o resto a partir da base: `geral`, o título de cada sugestão (o modelo `titulo` do preparo, preenchido com os ingredientes), nomes, verbos, modo de fazer, o motivo do `para_ter` e os avisos fixos (resposta geral e incômodo). Ingrediente incerto em casa só entra com `se_faltar`: um substituto confirmado, já pronto.
+O modelo entrega `resposta`, `explicacao`, as sugestões (tipo, id, itens com `alimento_id`, `funcao`, `contribui`, `linha_base` e `se_faltar`, motivo, `linhas_base`, `novidade`), `evitar` (só as linhas da base), `incertos`, `citados` e `para_ter` (`alimento_id`, `vezes`, `contribui`, `linha_base`). O código completa o resto a partir da base: `origem`, `geral`, `avisos` (resposta geral e incômodo, textos fixos), o título e o modo de fazer de cada sugestão (de um preparo: o modelo `titulo` e os passos, preenchidos com os ingredientes; de uma prática: nome, preparo e `aviso` da base), nomes, verbos, `casa` de cada item, a frase da troca em `se_faltar` (`{ alimento_id, nome, frase }`), o `texto` de cada `evitar` e o `nome`, os verbos e o motivo do `para_ter`. Ingrediente incerto em casa só entra com `se_faltar`: um substituto confirmado em casa, já pronto.
+
+`origem` é `agente` quando a resposta passou pelo validador em `finalizar`. A `segura` (texto fixo, sem sugestões nem avisos) sai quando o run termina por limite, erro ou saída fora do contrato; o run de saída fora do contrato fica `failed`. A `sem_modelo` é a resposta montada por código quando nenhum modelo de `decisao` está disponível: práticas da base e o texto de `BUSINESS.md` §14.
 
 A tela mostra `resposta` como a fala do agente e desenha `sugestoes` logo abaixo, como apoio (`BUSINESS.md` §8). Em respostas a perguntas e a relatos da vida, `sugestoes` pode vir vazio. Quando `para_ter` vem preenchido, a tela desenha a linha "Vale ter em casa" abaixo das sugestões.
 
@@ -132,18 +139,24 @@ Todas com entrada e saída em zod, determinísticas e testáveis sem LLM.
 
 **O validador** (função em código, chamada por `finalizar`) aponta:
 
-- alimento, preparo ou prática fora da base;
-- ingrediente que não está confirmado em casa, sem pergunta feita nem troca oferecida;
-- **"evitar sempre" violado** (alimento, ingrediente, óleo, troca ou `para_ter`);
-- restrição, "não como" ou "não gosto" violado;
-- contraindicação do momento; combinação incompatível;
-- repetição de uma sugestão já dada hoje;
-- motivo sem linha da base, ou linha que não existe;
-- qualidade do momento que não veio do preparo nem do clima que a tool devolveu;
-- mais de 3 sugestões, ou mais de uma novidade;
-- `para_ter` sem candidato no preparo, diferente do candidato, ou com `vezes` diferente da contagem;
-- alimento ou prática da base citado no texto da resposta e ausente da parte estruturada (sugestões, `para_ter` ou `citados`);
-- texto acima do tamanho.
+Cada violação tem um código, o lugar e uma mensagem. Os códigos são `fora_da_base`, `estrutura`, `fora_de_casa`, `evitar_sempre`, `restricao`, `nao_come`, `nao_gosta`, `contraindicacao`, `combinacao`, `repetida`, `linha_base`, `qualidades`, `novidade`, `para_ter`, `texto_sem_estrutura`, `tamanho` e `vazia`.
+
+- `fora_da_base`: alimento, preparo, prática, troca ou linha citada que não existe na base; sugestão sem exatamente um entre `pratica_id` e `preparo_id`; tipo que não bate;
+- `estrutura`: os itens de uma prática não são exatamente os ingredientes dela; item de um preparo fora de uma vaga ou que não serve à vaga; vaga obrigatória sem item; vaga acima do máximo;
+- `fora_de_casa`: ingrediente que não está em casa; ingrediente incerto sem `se_faltar`; troca que não está confirmada em casa ou que não substitui o item;
+- `evitar_sempre`, `restricao`, `nao_come`, `nao_gosta`: **"evitar sempre" violado** (alimento, ingrediente, óleo, troca, `para_ter` ou `citados`), e o mesmo para restrição, "não como" e "não gosto";
+- `contraindicacao`: contraindicação do momento; prática que nunca se sugere com uma restrição da pessoa; alimento com marca a evitar agora;
+- `combinacao`: combinação incompatível entre os itens da sugestão;
+- `repetida`: sugestão já dada hoje ou repetida na mesma resposta;
+- `linha_base`: motivo vazio; `linhas_base` vazio, com linha que não existe ou sem a linha da própria sugestão; `linha_base` de item diferente de `alimentos:<id>`; `evitar` com linha que não é do momento;
+- `qualidades`: qualidade do momento que não veio do preparo nem do clima que a tool devolveu; qualidade buscada que não veio do preparo nem do oposto do clima; item que contribui com uma qualidade que o alimento não tem ou que não se busca;
+- `novidade`: sugestão marcada como novidade que o preparo não marcou;
+- `para_ter`: campo sem candidato no preparo, diferente do candidato, com `vezes` diferente da contagem ou com outra linha da base;
+- `texto_sem_estrutura`: alimento ou prática da base citado no texto da resposta e ausente da parte estruturada (sugestões, trocas, `para_ter` ou `citados`);
+- `tamanho`: resposta vazia ou acima de 900 caracteres; mais de 3 sugestões, de 3 `incertos` ou de 5 `citados`; motivo acima de 200 caracteres; incerto acima de 120;
+- `vazia`: run de `momento` com candidatos no contexto e resposta sem sugestão nem `incertos`.
+
+O validador recebe o clima só se `clima.agora` devolveu `ok` no run.
 
 ### Escrita (viram proposta, §5)
 
@@ -184,7 +197,7 @@ As tools de proposta nunca gravam: validam o pedido e devolvem a proposta, que `
 
 ### Ordenação (código)
 
-Depois dos filtros, cada candidato recebe uma nota. Os pesos ficam em um arquivo de configuração e são testados sem LLM.
+Depois dos filtros, cada candidato recebe uma nota e é ordenado dentro do seu tipo (chá, refeição, óleo, prática); no empate, vale a adequação e depois o id. Os pesos ficam em `config/ranking.ts` e são testados sem LLM. Um preparo ou prática sem ingrediente recebe o ponto de "confirmado" inteiro; com ingredientes, vale a média dos pontos de casa deles.
 
 | Sinal | Efeito |
 |---|---|
@@ -192,10 +205,10 @@ Depois dos filtros, cada candidato recebe uma nota. Os pesos ficam em um arquivo
 | Está confirmado em casa | Sobe |
 | Está incerto em casa | Sobe menos |
 | A pessoa gosta | Sobe |
-| Ajudou antes | Sobe a cada "ajudou" |
-| Não ajudou | Desce; quando os dois retornos mais recentes foram "não ajudou", vai para o fim |
-| Já foi sugerido hoje | Sai |
-| Nunca foi sugerido e é bem adequado | Pode ocupar a vaga de **novidade** (no máximo uma por resposta) |
+| Ajudou antes | Sobe a cada "ajudou", até 3 |
+| Não ajudou | Desce a cada "não ajudou", até 2; quando os dois retornos mais recentes foram "não ajudou", vai para o fim do seu tipo |
+| Já foi sugerido hoje | Sai (filtro) |
+| Nunca foi sugerido, é bem adequado e tem todos os ingredientes em casa (confirmados ou incertos) | Pode ocupar a vaga de **novidade** (no máximo uma por resposta), no máximo na 3ª posição do seu tipo. Só há novidade quando a pessoa já recebeu alguma sugestão antes |
 
 "Evitar sempre", "não como", "não gosto" e restrições não são nota: são filtro.
 
@@ -210,19 +223,19 @@ Depois dos filtros, cada candidato recebe uma nota. Os pesos ficam em um arquivo
 
 ### Faltas e "vale ter em casa" (código)
 
-- Em todo run de `momento`, o preparo separa, entre os candidatos que passaram no filtro, os **5 mais adequados** só pela nota de adequação, sem os sinais de casa, gosto e resultado. Um preparo conta pelos seus ingredientes.
+- Em todo run em que o preparo monta candidatos (§3), ele separa, entre os que passaram no filtro e antes do corte para o contexto, os **5 mais adequados** só pela nota de adequação, sem os sinais de casa, gosto e resultado. Uma prática conta pelos seus ingredientes. Uma refeição conta pelo alimento mais adequado de cada vaga obrigatória.
 - Cada alimento desse grupo que **não está em casa** (nunca registrado, ou marcado como acabou) é uma falta `teria_entrado`. Item incerto não gera falta.
 - O toque "Não tenho", num ingrediente sugerido ou em resposta a `ask_user`, é uma falta `nao_tenho`, gravada pela rota de toque.
 - Uma falta por alimento por dia. As faltas `teria_entrado` são gravadas quando a resposta é entregue; run que falha não grava.
-- **Candidato:** o alimento com faltas em pelo menos **3 dias diferentes** nos últimos **30**, contando hoje. Precisa passar pelos filtros de hoje ("evitar sempre", restrições, "não como", "não gosto"), não estar na lista "Para ter em casa" e não ter tido a indicação recusada. Com mais de um, vale o de mais dias; no empate, o de falta mais recente.
-- O candidato só vai para o contexto em run de `momento` **sem incômodo**. O preparo entrega no máximo um.
+- **Candidato:** o alimento com faltas em pelo menos **3 dias diferentes** nos últimos **30**, contando hoje. Precisa passar pelos filtros de hoje ("evitar sempre", restrições, "não como", "não gosto"), não estar na lista "Para ter em casa" e não ter tido a indicação recusada. Com mais de um, vale o de mais dias; no empate, o de falta mais recente e depois o de nome menor na ordem alfabética.
+- O candidato só vai para o contexto em run com intenção `momento` **e sem incômodo**. O preparo entrega no máximo um, com `alimento_id`, `nome`, `vezes`, `contribui` (as qualidades buscadas que o alimento tem) e `linha_base`.
 - **O Acompanhante decide se a indicação cabe na resposta.** Se cabe, fecha o texto com uma frase sobre ela e preenche `para_ter`. O código escreve a linha de motivo ("fez falta N vezes nos últimos 30 dias") e gera a proposta de lista.
 - Quando o alimento é confirmado em casa, as faltas dele são apagadas e ele sai da lista. Faltas com mais de 30 dias são apagadas pela limpeza diária.
 - O tamanho do grupo, o mínimo de dias e a janela ficam em `config/ranking.ts` e são testados sem LLM.
 
 ### Sinais no contexto
 
-O prompt recebe contadores, não conteúdo: `mensagens_hoje`, `itens_confirmados_em_casa`, `itens_incertos_em_casa`, `registros_de_gosto`, `registros_de_resultado`, `retornos_pendentes`, `tem_cidade`. Com eles o agente decide se vale consultar cada tool, e o eval mede se decidiu bem.
+O prompt recebe contadores, não conteúdo: `mensagens_hoje` (só as da pessoa), `itens_confirmados_em_casa`, `itens_incertos_em_casa`, `registros_de_gosto`, `registros_de_resultado`, `retornos_pendentes`, `tem_cidade`. Com eles o agente decide se vale consultar cada tool, e o eval mede se decidiu bem.
 
 ### Rotina
 

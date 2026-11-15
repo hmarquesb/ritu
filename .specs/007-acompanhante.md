@@ -1,6 +1,7 @@
 ---
 title: Acompanhante
-status: approved
+status: implemented
+implemented: e0b585b
 entrega: 1
 created: 2026-11-14
 ---
@@ -49,26 +50,26 @@ Depois desta spec, `npm run demo -- --cenario frio-agitada` imprime as etapas, a
 
 ## Critérios de aceite
 
-- [ ] **Preparo:** para `estados: [com_frio, agitada]` com a base mínima, `qualidades.buscadas` contém `quente` e `estavel`, e nenhum candidato tem nota de adequação menor ou igual a zero, contraindicação para os estados, momento do dia diferente do atual ou ingrediente com marca em `evitar_marcas`.
-- [ ] **Evitar sempre:** item guardado no perfil, item de `evitar_temporario` do dia e item vindo em `evitar_da_mensagem` tiram do preparo os alimentos, os preparos sem alternativa na vaga obrigatória e as práticas (inclusive de óleo) que os contêm. O item da mensagem é gravado em `evitar_temporario` com o dia local, sem motivo. Item que não casa com a base segue como texto em `evitar_textos`.
-- [ ] **Ordenação:** candidato com tudo confirmado em casa fica acima do mesmo candidato com item incerto, e este acima do ausente; "gosta" sobe; cada "ajudou" sobe até o teto; os dois retornos mais recentes iguais a "não ajudou" mandam o candidato para o fim, mesmo com "ajudou" antigos; sugerido hoje sai; "não gosto" sai.
-- [ ] **Novidade:** no máximo um candidato sai marcado com `novidade: true`, só quando a pessoa já tem alguma sugestão registrada, e ele ocupa no máximo a 3ª posição do seu tipo.
-- [ ] **Faltas:** entre os 5 mais adequados só pela adequação, cada alimento ausente da casa entra em `faltas_do_run`; alimento confirmado ou incerto não entra; run de `pergunta` ou `vida` sem `momento` devolve lista vazia.
-- [ ] **Vale ter em casa:** com faltas em 3 dias diferentes nos últimos 30 (contando hoje), o preparo devolve um `para_ter`; com mais de um alimento, vale o de mais dias e, no empate, o de falta mais recente; alimento filtrado, já na lista ou com indicação recusada não é devolvido; run com incômodo não recebe `para_ter`.
-- [ ] **Contexto:** a mensagem inicial tem o bloco `<contexto>` em JSON válido com os campos de "Contratos" e, quando há texto, o bloco `<mensagem_da_pessoa>`; `<` e `>` do texto da pessoa são trocados por `‹` e `›`, na mensagem e nos campos de texto vindos da pessoa dentro do JSON.
-- [ ] **Validador:** cada código de violação de "Contratos" tem um teste em que só ele é apontado, e uma entrega correta não aponta nada.
-- [ ] **`finalizar`:** entrega com violação devolve `{ entregue: false, violacoes }` ao modelo e o loop continua; entrega correta termina o trecho com a `SaidaDoAcompanhante` completa (título preenchido, nomes, verbos, modo de fazer, `casa` de cada item).
-- [ ] **Autocorreção:** roteiro `finalizar` (com ingrediente fora de casa) → `finalizar` (corrigido) termina em `done`, com duas etapas `validacao` (a primeira `recusado`) e `origem: "agente"`.
-- [ ] **Resposta segura:** terceira entrega recusada, teto de chamadas, de tempo ou de tokens terminam com `origem: "segura"`, o texto aprovado, nenhuma sugestão e o run em `done`; erro do loop termina com a mesma saída e o run em `failed`.
-- [ ] **Sem modelo:** sem vaga para `decisao` antes do loop, o run nasce com caminho `sem_modelo`, a saída vem de `respostaSemModelo` com `origem: "sem_modelo"`, e `ritu_fallback_sem_llm_total` soma 1. O mesmo vale quando o loop devolve `sem_modelo`.
-- [ ] **Avisos:** run com incômodo sai com o aviso `incomodo`; pessoa sem prakriti sai com `geral: true` e o aviso `geral`. Os dois textos vêm de `textos.ts`, nunca do modelo.
-- [ ] **Lacunas:** `preencherLacunas` passa nos exemplos de "Contratos" (vaga opcional vazia, frase inteira sem alimento, três nomes na mesma vaga).
-- [ ] **Clima fora do ar e sem cidade:** roteiro com `clima.agora` devolvendo `indisponivel` ou `sem_cidade` termina em `done` com resposta do agente.
-- [ ] **Rastro:** o fake de telemetria recebe o span `preparo` (`candidatos.total`, `faltas.registradas`, `para_ter.candidato`) e um span `validacao` por chamada de `finalizar` (`validacao.ok`, `validacao.violacoes`, `validacao.tentativa`); `ritu_validacao_violacoes_total` soma por código; nenhum atributo leva texto da pessoa nem nome de alimento.
-- [ ] **Run gravado:** ao fim, `runs` tem `saida`, `momento`, `com_incomodo`, `clima_usado` (quando a tool foi chamada com `status: "ok"`), `prompt_versao`, `modelos` e `trocas_de_modelo`.
-- [ ] **Ao vivo:** o texto que o modelo escreve antes de uma chamada de tool chega a `aoVivo` como `pensamento`, cortado em 160 caracteres, e não aparece em `run_etapas`.
-- [ ] `npm run demo` sem argumento lista os cenários; `npm run demo -- --cenario <nome>` roda sem rede e imprime etapas, resposta, sugestões, avisos, o aviso "Não é orientação médica." e o resumo do run. Os cinco cenários terminam com código 0.
-- [ ] ⚠️ `npm run demo -- --cenario frio-agitada --llm` roda com o modelo real pelo `ModelRouter`; com `--esgotar decisao`, o resumo mostra a troca de modelo (conferência do orquestrador, anotada no relatório).
+- [x] **Preparo:** para `estados: [com_frio, agitada]` com a base mínima, `qualidades.buscadas` contém `quente` e `estavel`, e nenhum candidato tem nota de adequação menor ou igual a zero, contraindicação para os estados, momento do dia diferente do atual ou ingrediente com marca em `evitar_marcas`.
+- [x] **Evitar sempre:** item guardado no perfil, item de `evitar_temporario` do dia e item vindo em `evitar_da_mensagem` tiram do preparo os alimentos, os preparos sem alternativa na vaga obrigatória e as práticas (inclusive de óleo) que os contêm. O item da mensagem é gravado em `evitar_temporario` com o dia local, sem motivo. Item que não casa com a base segue como texto em `evitar_textos`.
+- [x] **Ordenação:** candidato com tudo confirmado em casa fica acima do mesmo candidato com item incerto, e este acima do ausente; "gosta" sobe; cada "ajudou" sobe até o teto; os dois retornos mais recentes iguais a "não ajudou" mandam o candidato para o fim, mesmo com "ajudou" antigos; sugerido hoje sai; "não gosto" sai.
+- [x] **Novidade:** no máximo um candidato sai marcado com `novidade: true`, só quando a pessoa já tem alguma sugestão registrada, e ele ocupa no máximo a 3ª posição do seu tipo.
+- [x] **Faltas:** entre os 5 mais adequados só pela adequação, cada alimento ausente da casa entra em `faltas_do_run`; alimento confirmado ou incerto não entra; run de `pergunta` ou `vida` sem `momento` devolve lista vazia.
+- [x] **Vale ter em casa:** com faltas em 3 dias diferentes nos últimos 30 (contando hoje), o preparo devolve um `para_ter`; com mais de um alimento, vale o de mais dias e, no empate, o de falta mais recente; alimento filtrado, já na lista ou com indicação recusada não é devolvido; run com incômodo não recebe `para_ter`.
+- [x] **Contexto:** a mensagem inicial tem o bloco `<contexto>` em JSON válido com os campos de "Contratos" e, quando há texto, o bloco `<mensagem_da_pessoa>`; `<` e `>` do texto da pessoa são trocados por `‹` e `›`, na mensagem e nos campos de texto vindos da pessoa dentro do JSON.
+- [x] **Validador:** cada código de violação de "Contratos" tem um teste em que só ele é apontado, e uma entrega correta não aponta nada.
+- [x] **`finalizar`:** entrega com violação devolve `{ entregue: false, violacoes }` ao modelo e o loop continua; entrega correta termina o trecho com a `SaidaDoAcompanhante` completa (título preenchido, nomes, verbos, modo de fazer, `casa` de cada item).
+- [x] **Autocorreção:** roteiro `finalizar` (com ingrediente fora de casa) → `finalizar` (corrigido) termina em `done`, com duas etapas `validacao` (a primeira `recusado`) e `origem: "agente"`.
+- [x] **Resposta segura:** terceira entrega recusada, teto de chamadas, de tempo ou de tokens terminam com `origem: "segura"`, o texto aprovado, nenhuma sugestão e o run em `done`; erro do loop termina com a mesma saída e o run em `failed`.
+- [x] **Sem modelo:** sem vaga para `decisao` antes do loop, o run nasce com caminho `sem_modelo`, a saída vem de `respostaSemModelo` com `origem: "sem_modelo"`, e `ritu_fallback_sem_llm_total` soma 1. O mesmo vale quando o loop devolve `sem_modelo`.
+- [x] **Avisos:** run com incômodo sai com o aviso `incomodo`; pessoa sem prakriti sai com `geral: true` e o aviso `geral`. Os dois textos vêm de `textos.ts`, nunca do modelo.
+- [x] **Lacunas:** `preencherLacunas` passa nos exemplos de "Contratos" (vaga opcional vazia, frase inteira sem alimento, três nomes na mesma vaga).
+- [x] **Clima fora do ar e sem cidade:** roteiro com `clima.agora` devolvendo `indisponivel` ou `sem_cidade` termina em `done` com resposta do agente.
+- [x] **Rastro:** o fake de telemetria recebe o span `preparo` (`candidatos.total`, `faltas.registradas`, `para_ter.candidato`) e um span `validacao` por chamada de `finalizar` (`validacao.ok`, `validacao.violacoes`, `validacao.tentativa`); `ritu_validacao_violacoes_total` soma por código; nenhum atributo leva texto da pessoa nem nome de alimento.
+- [x] **Run gravado:** ao fim, `runs` tem `saida`, `momento`, `com_incomodo`, `clima_usado` (quando a tool foi chamada com `status: "ok"`), `prompt_versao`, `modelos` e `trocas_de_modelo`.
+- [x] **Ao vivo:** o texto que o modelo escreve antes de uma chamada de tool chega a `aoVivo` como `pensamento`, cortado em 160 caracteres, e não aparece em `run_etapas`.
+- [x] `npm run demo` sem argumento lista os cenários; `npm run demo -- --cenario <nome>` roda sem rede e imprime etapas, resposta, sugestões, avisos, o aviso "Não é orientação médica." e o resumo do run. Os cinco cenários terminam com código 0.
+- [x] ⚠️ `npm run demo -- --cenario frio-agitada --llm` roda com o modelo real pelo `ModelRouter`; com `--esgotar decisao`, o resumo mostra a troca de modelo (conferência do orquestrador, anotada no relatório).
 - [ ] ⚠️ `npm run eval:llm -- --checkpoint c1-base` roda os 12 casos, um por vez, e grava `evals/resultados/c1-base.md` com as métricas de "Evals".
 
 ## O que fazer

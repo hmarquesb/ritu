@@ -106,3 +106,33 @@
 
 > 006 · ⚠️ `modelos:check` (2026-11-15): 3.5 Flash Lite, 3.1 Flash Lite e 3.6 Flash ok; 2.5 Flash Lite, 3 Flash e 2.5 Flash `indisponivel`; 3.8 Flash `timeout`. Registrado em `BLOQUEIOS.md`.
 > 006 · T10: o implementador incluiu `cat .env.local` num comando de leitura; o classificador negou e o arquivo não foi lido. Vai para o relatório da entrega.
+
+| Spec | Tarefa | Nível | Status | Commit |
+|---|---|---|---|---|
+| 007 | T1 · Add ranking and response config, the companion input schema and fixed texts | mecanica | concluida | 5f3179b |
+| 007 | T2 · Add telemetry to ToolContext and resumir to the read tools | mecanica | concluida | bed70d0 |
+| 007 | T3 · Add placeholder filling for preparation titles and steps | mecanica | concluida | 9aea31a |
+| 007 | T4 · Add the person filter builder | mecanica | concluida | cf05941 |
+| 007 | T5 · Add candidate building and ordering | mecanica | concluida | 7671601 |
+| 007 | T6 · Add shortages of the run and the worth-having pick | mecanica | concluida | da6ff11 |
+| 007 | T7 · Add preparar | nucleo | concluida | e294fba |
+| 007 | T8 · Add the companion prompt v1 and the initial message | nucleo | concluida | 7724a15 |
+| 007 | T9 · Add the delivery validator | nucleo | concluida | 517671f |
+| 007 | T10 · Add the companion output and its completion | nucleo | concluida | 58c1aaa |
+| 007 | T11 · Add the finalizar tool and the companion agent definition | nucleo | concluida | ff280f4 |
+| 007 | T12 · Add the responder service and wire companion in the container | nucleo | concluida | 8c0516f |
+| 007 | C2 · Test the companion getter and its override in the container | mecanica | concluida | 4672209 |
+| 007 | C3 · Tighten three c1 expectations | mecanica | concluida | f3e1ebe |
+| 007 | C4 · Fix the real-LLM run of frio-agitada (tool name, finalizar refused) | nucleo | concluida | 4b3e014 |
+| 007 | C5 · Keep unfillable meals out of the model's candidates | nucleo | concluida | e0b585b |
+| 007 | T13 · Add the demo scenarios | mecanica | concluida | f23219e |
+| 007 | T14 · Add the demo script and its report | mecanica | concluida | a8c17c3 |
+| 007 | T15 · Add the companion deterministic evals, part 1 | mecanica | concluida | a2024f4 |
+| 007 | T16 · Add the companion deterministic evals, part 2 | mecanica | concluida | bd400aa |
+| 007 | T17 · Add the minimal eval:llm runner and the 12 c1 cases | nucleo | concluida | 73c1495 |
+| 007 | C1 · Keep optional placeholders removable in the preparation texts | conteudo | concluida | 4cc3dbf |
+> 007 · C1: 23 `passos` de `data/preparos.yaml` reescritos (só redação; cada vaga opcional numa frase própria). Para o portão: kitchari, leguminosa-cozida e arroz-com-leguminosa passaram a temperar "numa panelinha à parte"; sopa, sopa-creme, caldo, arroz-papa, raiz-cozida, mingau e ovo-mexido ganharam "aquecer {gordura}" como passo próprio.
+
+> 007 · Fechamento: gates 1–6 verdes (916 testes, 366 evals det, dup 0, e2e 2, ⚠️ test:db 106). ⚠️ `demo --llm frio-agitada` (2026-11-15): `done`/`segura`/`limite:validacao`; o modelo chamou `ayurveda_checar_combinacao` (recusado) e `finalizar` foi recusado 3 vezes; 34 985 tokens. Abre C4.
+> 007 · C4/C5 (2026-11-15): causas do `demo --llm`: (1) o Mastra 1.83 troca `.` por `_` no nome das tools e não destroca; (2) o modelo errava formatos que o contrato não dizia; (3) o preparo oferecia refeição com vaga obrigatória sem opção em casa, que nenhuma entrega válida podia usar. Depois de C5: ⚠️ `demo --llm frio-agitada` → `done`/`agente`, 1 recusa e autocorreção, 3 passos, 25 196 tokens, trace `f2493135…`; com `--esgotar decisao` → troca para `gemini-3.1-flash-lite` (1 troca), `done`/`agente` na 1ª, 2 passos, 16 152 tokens, trace `197043f3…`. Chamadas reais na depuração: ~30. Para o portão: o modo de fazer diz "abóbora picado" (concordância da lacuna `{legume} picado`).
+| 007 | Fechamento (gates 1–6, ⚠️ test:db 106, ⚠️ demo --llm, ADR 0027, AI.md, AGENTS.md; sem push) | — | concluida | (este commit) |

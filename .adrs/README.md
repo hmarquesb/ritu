@@ -34,6 +34,7 @@
 | [0024](0024-clima-por-porta-com-cache-em-memoria.md) | Clima por porta, com cache em memória e sem nova tentativa | Aceito |
 | [0025](0025-suite-de-contrato-unica.md) | Suíte de contrato única para fakes e Postgres | Aceito |
 | [0026](0026-roteador-com-registro-de-uso-atomico.md) | Roteador de modelos com registro de uso atômico por janela | Aceito |
+| [0027](0027-cenarios-compartilhados-entre-demo-e-evals.md) | Cenários compartilhados entre demo, evals e eval:llm | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

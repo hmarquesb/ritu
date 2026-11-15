@@ -11,7 +11,7 @@ const CONECTOR_DEPOIS = /^(?: e |, )/
 const CONECTOR_ANTES = /(?: e |, )$/
 const PALAVRA_ANTES = /\S+\s*$/
 
-function lista(nomes: string[]): string {
+export function juntarNomes(nomes: string[]): string {
   const minusculos = nomes.map((nome) => nome.toLowerCase())
   const ultimo = minusculos.pop() ?? ""
   return minusculos.length === 0 ? ultimo : `${minusculos.join(", ")} e ${ultimo}`
@@ -20,7 +20,7 @@ function lista(nomes: string[]): string {
 function preencherComNomes(frase: string, nomes: Nomes): string {
   return frase.replace(LACUNA, (todo, funcao: Funcao) => {
     const preenchidos = nomes[funcao]
-    return preenchidos && preenchidos.length > 0 ? lista(preenchidos) : todo
+    return preenchidos && preenchidos.length > 0 ? juntarNomes(preenchidos) : todo
   })
 }
 

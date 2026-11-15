@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
-import { passosDoPreparo, preencherLacunas, tituloDoPreparo } from "./lacunas"
+import { juntarNomes, passosDoPreparo, preencherLacunas, tituloDoPreparo } from "./lacunas"
 import type { Preparo } from "./schemas"
 
 describe("preencherLacunas", () => {
@@ -76,5 +76,19 @@ describe("tituloDoPreparo e passosDoPreparo", () => {
       { alimento_id: "canela", funcao: "tempero" as const },
     ]
     expect(passosDoPreparo(arroz, itens, kb)).toBe("Finalize com ghee e, se quiser, canela.")
+  })
+})
+
+describe("juntarNomes", () => {
+  it("devolve um nome só, em minúsculas", () => {
+    expect(juntarNomes(["Abóbora"])).toBe("abóbora")
+  })
+
+  it("junta dois nomes com e", () => {
+    expect(juntarNomes(["Abóbora", "Ghee"])).toBe("abóbora e ghee")
+  })
+
+  it("junta três nomes com vírgula e e", () => {
+    expect(juntarNomes(["Abóbora", "Cenoura", "Chuchu"])).toBe("abóbora, cenoura e chuchu")
   })
 })

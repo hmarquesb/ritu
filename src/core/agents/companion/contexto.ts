@@ -1,10 +1,5 @@
+import { neutralizar } from "@/core/neutralizar"
 import type { Candidato, DadosDoPreparo, ItemDoCandidato } from "./preparo"
-
-const TROCAS: Record<string, string> = { "<": "‹", ">": "›" }
-
-function limpar(texto: string): string {
-  return texto.replace(/[<>]/g, (c) => TROCAS[c] ?? c)
-}
 
 function preenchido(valor: unknown): boolean {
   if (valor === undefined || valor === null) return false
@@ -86,15 +81,15 @@ export function montarMensagemInicial(dados: DadosDoPreparo, texto?: string): st
     geral: dados.geral ? true : undefined,
     fixos: compacto({
       ...dados.fixos,
-      evitar_sempre: dados.fixos.evitar_sempre.map(limpar),
-      nao_come: dados.fixos.nao_come.map(limpar),
+      evitar_sempre: dados.fixos.evitar_sempre.map(neutralizar),
+      nao_come: dados.fixos.nao_come.map(neutralizar),
     }),
-    evitar_textos: dados.evitar_textos.map(limpar),
-    resumo_de_rotina: dados.resumo_de_rotina ? limpar(dados.resumo_de_rotina) : undefined,
-    padroes: dados.padroes.map(limpar),
+    evitar_textos: dados.evitar_textos.map(neutralizar),
+    resumo_de_rotina: dados.resumo_de_rotina ? neutralizar(dados.resumo_de_rotina) : undefined,
+    padroes: dados.padroes.map(neutralizar),
     mensagens_do_dia: dados.mensagens_do_dia.map((m) => ({
       autor: m.autor,
-      texto: limpar(m.texto),
+      texto: neutralizar(m.texto),
     })),
     sinais: dados.sinais,
     candidatos: dados.candidatos.map(candidato),
@@ -103,5 +98,5 @@ export function montarMensagemInicial(dados: DadosDoPreparo, texto?: string): st
   })
   const blocoContexto = `<contexto>\n${JSON.stringify(contexto, null, 2)}\n</contexto>`
   if (semTexto) return blocoContexto
-  return `${blocoContexto}\n<mensagem_da_pessoa>\n${limpar(texto)}\n</mensagem_da_pessoa>`
+  return `${blocoContexto}\n<mensagem_da_pessoa>\n${neutralizar(texto)}\n</mensagem_da_pessoa>`
 }

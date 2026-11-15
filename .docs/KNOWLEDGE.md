@@ -52,7 +52,7 @@ Combinações conflitantes (ex.: "com calor" + "pesada") são resolvidas pelo ag
 
 O incômodo é mais um eixo do momento: vira qualidades e entra no mesmo cruzamento. Quando o mesmo incômodo tem variantes com qualidades opostas e a pessoa não disse qual é, o código pergunta antes de o agente rodar. ⚠️ Valores ilustrativos: cada linha precisa de fonte (§8).
 
-| Incômodo | Variante (pergunta do agente) | Qualidades presentes | Favorecer | Evitar |
+| Incômodo | Variante (pergunta do código) | Qualidades presentes | Favorecer | Evitar |
 |---|---|---|---|---|
 | Dor de cabeça | Latejante, com calor ou irritação | quente, intenso | frio, brando | picante, frito, sol forte |
 | | Tensa, com cansaço, ansiedade ou sono ruim | móvel, seco | estável, oleoso, quente | jejum longo, café, frio |

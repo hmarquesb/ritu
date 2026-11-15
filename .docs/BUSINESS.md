@@ -211,7 +211,7 @@ Validade por grupo, contada da última confirmação:
 Como a casa é atualizada:
 
 - **Pela conversa:** "comprei…", "acabou…". O agente propõe e a pessoa aprova.
-- **Respondendo a uma pergunta do agente:** Tenho e Não tenho são gravados na hora; o toque é o consentimento.
+- **Respondendo a uma pergunta do agente:** Tenho, Não tenho e Não gosto são gravados na hora, antes de o agente retomar; o toque é o consentimento. "Não como", na pergunta sobre um alimento, vale no mesmo run e vira proposta de anotação.
 - **Pela aba Minha casa:** a pessoa adiciona, tira, marca "sempre tenho" e resolve a seção "Ainda tem?" com um toque por item.
 - **Alimento que a base não conhece:** fica guardado na casa com a marca *"ainda não conheço este alimento"*. O agente não o usa em sugestões e diz isso quando for o caso.
 

@@ -44,7 +44,7 @@ run                         run.id, run.intencoes, run.caminho, conta.tipo, prom
 │  ├─ llm.chamada           llm.papel, gen_ai.request.model, llm.troca_de_modelo, gen_ai.usage.input_tokens, gen_ai.usage.output_tokens, llm.tentativas
 │  └─ tool.chamada          tool.nome, tool.status, cache.hit
 ├─ validacao                validacao.ok, validacao.violacoes, validacao.tentativa
-├─ pausa (evento)           pausa.tipo = pergunta | aprovacao
+├─ pausa (evento)           pausa.tipo = pergunta | aprovacao (a pergunta de código também emite)
 ├─ juiz                     juiz.aprovado, juiz.tentativa
 │  └─ llm.chamada
 └─ aprovacao.execucao       propostas.total, propostas.aprovadas
@@ -52,7 +52,7 @@ run                         run.id, run.intencoes, run.caminho, conta.tipo, prom
 
 Um run pausado continua **no mesmo trace** quando retoma: o `trace_id` fica salvo no run, e o trecho novo entra como filho do span raiz.
 
-`run` leva `prompt.versao` quando o caminho tem agente, e `run.intencoes` é a lista de ids de intenção do caminho escolhido (ADR 0029). Etapa `interprete`: `resumo` só com ids de intenção (ou `alerta`), nunca o texto. Caminhos `alerta` e `fora` gravam uma etapa `guardrail` com status `recusado` e nome `alerta_fisico`, `alerta_emocional`, `suspeito` ou `fora`, sem modelo nem tokens. `tool.chamada` das tools de clima leva `cache.hit`.
+`run` leva `prompt.versao` quando o caminho tem agente, e `run.intencoes` é a lista de ids de intenção do caminho escolhido (ADR 0029). Etapa `interprete`: `resumo` só com ids de intenção (ou `alerta`), nunca o texto. Etapa `pergunta`: `resumo` é `casa: N itens` (ou `casa: 1 item`), `come` ou `variante`, nunca os alimentos nem a resposta; o `nome` é `ask_user` na pergunta do agente e `variante` na do código. Caminhos `alerta` e `fora` gravam uma etapa `guardrail` com status `recusado` e nome `alerta_fisico`, `alerta_emocional`, `suspeito` ou `fora`, sem modelo nem tokens. `tool.chamada` das tools de clima leva `cache.hit`.
 
 Spans fora de um run: `toque` (`tipo`; na troca, `motivo` e `resultado`), `memoria.resumo` (`resumo.origem`) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`).
 

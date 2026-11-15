@@ -82,6 +82,7 @@ running → waiting_for_input → running → … → done
 ```
 
 - `waiting_for_input` e `waiting_for_approval` guardam o checkpoint. O run **não fica vivo** esperando: a resposta chega em outro pedido e retoma.
+- A resposta a uma pergunta entra por `continuar`, que confere conta, estado e prazo, troca `waiting_for_input` por `running` numa operação condicional, grava a resposta na hora e retoma o run (`AI.md` §7). Uma retomada pode pausar de novo.
 - Um run aberto por conta. Espera de mais de 30 min → `expired`.
 
 ### Rotas de toque (sem LLM)
@@ -147,7 +148,7 @@ A montagem acontece num único composition root (`src/infra/container.ts`). O te
 | `rotina_resumos` | `conta_id`, `versao`, `texto` (até 1200 caracteres), `criado_em` |
 | `padroes` | `id`, `conta_id`, `tipo`, `chave`, `frase`, `ocorrencias`, `status` (candidato, confirmado, recusado), `criado_em`, `decidido_em`. Um por conta, tipo e chave |
 | `mensagens` | `id`, `conta_id`, `run_id`, `autor` (pessoa, agente), `texto`, `com_incomodo`, `dia`, `criado_em` (apagadas depois de 7 dias; as de run com incômodo, no dia seguinte) |
-| `runs` | `id`, `conta_id`, `caminho` (acompanhante, casa, retorno, evitar, ajuda, ofensa, alerta, fora, sem_modelo), `intencoes[]`, `status`, `checkpoint`, `pendencia`, `momento` (campos estruturados, sem incômodo), `com_incomodo`, `clima_usado`, `saida`, `passos`, `tokens_entrada`, `tokens_saida`, `latencia_ms`, `modelos` (por papel), `trocas_de_modelo`, `prompt_versao`, `juiz_tentativas`, `juiz_aprovado`, `trace_id`, `dia`, `criado_em`, `atualizado_em`. No máximo um run aberto (`running`, `waiting_for_input`, `waiting_for_approval`) por conta |
+| `runs` | `id`, `conta_id`, `caminho` (acompanhante, casa, retorno, evitar, ajuda, ofensa, alerta, fora, sem_modelo), `intencoes[]`, `status`, `checkpoint`, `pendencia` (pergunta com `origem` agente ou código e as anotações da mensagem), `momento` (campos estruturados, sem incômodo), `com_incomodo`, `clima_usado`, `saida`, `passos`, `tokens_entrada`, `tokens_saida`, `latencia_ms`, `modelos` (por papel), `trocas_de_modelo`, `prompt_versao`, `juiz_tentativas`, `juiz_aprovado`, `trace_id`, `dia`, `criado_em`, `atualizado_em`. No máximo um run aberto (`running`, `waiting_for_input`, `waiting_for_approval`) por conta |
 | `run_etapas` | `run_id`, `ordem`, `tipo`, `nome`, `resumo`, `status`, `duracao_ms`, `modelo`, `tokens_entrada`, `tokens_saida` |
 | `propostas` | `id`, `run_id`, `conta_id`, `tool`, `conteudo`, `decisao` (pendente, aprovada, recusada, expirada), `decidida_em` |
 | `faltas` | `conta_id`, `alimento_id`, `dia`, `origem` (teria_entrado, nao_tenho), `run_id`. Uma linha por conta, alimento e dia; apagadas depois de 30 dias |

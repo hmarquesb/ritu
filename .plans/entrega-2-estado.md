@@ -3,6 +3,9 @@
 > Sem `git push` até a dona criar o repositório remoto (dona, 2026-11-15): só commits locais.
 > A dona edita em paralelo `.docs/ROADMAP.md`, `.specs/README.md`, `AGENTS.md`, `.specs/016..019`, `design/` e arquivos de skill/agentes: não reverter nem commitar as edições dela; nos fechamentos, commitar só os trechos do orquestrador (`git add -p` ou conferir o diff).
 > `npm run lint` pelo rtk dá falso erro de JSON: usar `rtk bypass npm run lint`.
+> `test:db` pendente: sem docker neste ambiente; `mudarStatusSe` no Postgres (009 T3) só conferido por leitura. Rodar onde houver Postgres antes do portão.
+> Para o relatório (dona decide): "Não tenho" de alimento nunca registrado em Minha casa vira só falta `nao_tenho` (`marcarAcabou` não faz upsert, como a spec 009 manda); não aparece como `acabou` em Minha casa.
+> Demo LLM da 009 (2026-11-15, `casa-incerta --llm --interativo`, respostas por pipe): o agente perguntou "Ainda tem abóbora e couve?" (casa, 2 itens); resposta Tenho abóbora · Não tenho couve; 1ª entrega recusada pelo validador, 2ª passou; status done, origem agente, 4 passos, 35.525 tokens (34.573 entrada, 952 saída), decisão gemini-3.5-flash-lite, apoio gemini-3.1-flash-lite, 0 trocas.
 > Flake visto: `eval:det` falhou 1 de 498 sob carga (não identificado).
 
 | Spec | Tarefa | Nível | Status | Commit |
@@ -33,3 +36,22 @@
 | 008 | L1 · Move the profile checks shared by conversation/textos.ts and companion/anotacoes.ts to accounts | mecanica | concluida | d7f758e |
 | 008 | L2 · registrarResultado: contar só quando o update condicional de responder mudou o retorno (evita contar duas vezes em chamadas concorrentes) — avaliar na 011 | nucleo | adiada para a 011 | |
 | 008 | L3 · Neutralize the message's house names and the return title before the prompt | mecanica | concluida | d88e4a9 |
+| 009 | T1 · Add the pauses config | mecanica | concluida | 2bf9f65 |
+| 009 | T2 · Add the question and answer types, texts and builders | mecanica | concluida | 4b8cdc5 |
+| 009 | T3 · Add the conditional status change, the code pause and the pause summary to runs | nucleo | concluida | 32fdbb3 |
+| 009 | T4 · Let meals with an askable ingredient reach the model | mecanica | concluida | 6cc8bbf |
+| 009 | T5 · Add aplicarResposta, the pending content and the "não como" note | mecanica | concluida | cd84b5d |
+| 009 | T6 · Add gravarResposta | nucleo | concluida | 505c0df |
+| 009 | T7 · Add the ask_user control tool | nucleo | concluida | e897ea6 |
+| 009 | T8 · Add the companion prompt v3 and give ask_user to the companion | mecanica | concluida | 19847ae |
+| 009 | T9 · Let the companion pause and continue | nucleo | concluida | adb3c67 |
+| 009 | T10 · Pause conversar for a variant and for the agent's question | nucleo | concluida | e447f97 |
+| 009 | T11 · Add the continuar service | nucleo | concluida | 013af13 |
+| 009 | T12 · Add the four pause scenarios | mecanica | concluida | f98a6e9 |
+| 009 | T13 · Show pauses in the demo and add the interactive mode | mecanica | concluida | 62c517a |
+| 009 | T14 · Add the pauses deterministic evals, part 1 | mecanica | concluida | 6e7d689 |
+| 009 | T15 · Add the pauses deterministic evals, part 2 | mecanica | concluida | 37b9368 |
+| 009 | T16 · Add the pauses deterministic evals, part 3 | mecanica | concluida | 7ea12a1 |
+| 009 | T17 · Let eval:llm conversation cases answer pauses and measure questions | mecanica | concluida | 89e47a4 |
+| 009 | T18 · Add the 8 question cases of c2 | mecanica | concluida | 2a8fecf |
+| 009 | L1 · Test the invalid pause branch of the run end | mecanica | concluida | 94aa69b |

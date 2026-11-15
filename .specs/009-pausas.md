@@ -1,6 +1,7 @@
 ---
 title: Pausas
-status: approved
+status: implemented
+implemented: 94aa69b
 entrega: 2
 created: 2026-11-14
 ---
@@ -46,24 +47,24 @@ A casa "não é a verdade absoluta" (`BUSINESS.md` §9): a comida acaba e a pess
 
 ## Critérios de aceite
 
-- [ ] **Pausa pelo agente:** roteiro `casa.ler` → `ask_user({ tipo: "casa", alimentos: ["abobora", "couve"] })` leva o run a `waiting_for_input`, com `pendencia` e `checkpoint` gravados, e `conversar` devolve `status: "waiting_for_input"` com a `pergunta` (texto e itens montados por código) e sem `saida`.
-- [ ] **Retomada:** `continuar` com Tenho para abóbora e Não tenho para couve retoma do checkpoint sem repetir chamada de modelo; o resultado da tool que o modelo recebe traz as duas respostas; a entrega com abóbora passa no validador e a com couve é recusada (`fora_de_casa`); o run termina em `done`.
-- [ ] **Gravação na hora:** depois desse `continuar`, e antes de o run terminar, a abóbora está em `casa` como `tem`, confirmada agora, com `origem: "pergunta"`; a couve está como `acabou` e há uma falta `nao_tenho` dela no dia, com o `run_id`; "Não gosto" grava `gosto: nao_gosta` e não mexe na casa; `ritu_gosto_total` e `ritu_faltas_total{origem: "nao_tenho"}` somam.
-- [ ] **Não gosto vale no run:** item respondido com Não gosto entra em `dados.filtro.nao_gosta`, e uma entrega com ele é recusada (`nao_gosta`).
-- [ ] **Pular:** `{ tipo: "pular" }`, ou item sem resposta, não grava nada; o item continua como estava e o modelo recebe `pulou`.
-- [ ] **Limite de perguntas:** a 3ª pergunta do run (contando a da variante) é recusada com `limite_de_perguntas`, o run não pausa e o loop continua.
-- [ ] **Recusas de `ask_user`:** cada código de "Contratos" tem um teste em que só ele é devolvido: mais de 5 itens, alimento fora da base, já confirmado, barrado pelo filtro da pessoa, marcado como acabou, fora dos candidatos, já perguntado neste run, `come` desnecessária.
-- [ ] **Variante por código:** mensagem com incômodo `dor-de-cabeca` sem variante pausa o run antes de qualquer chamada do papel `decisao`, com a pergunta e as opções de `incomodos.yaml`; `continuar` com `latejante` roda o preparo já com a variante e segue para o Acompanhante; com Pular, o preparo roda sem a variante e `precisa_variante` vai no contexto, como na 007.
-- [ ] **Incômodo de variante única ou com a variante já dita:** não há pausa.
-- [ ] **Expiração:** `continuar` mais de 30 minutos depois de a pergunta ser criada marca o run como `expired`, lança `RituError` com código `pergunta_expirada` e não grava nada. Com 30 minutos exatos, ainda vale.
-- [ ] **Resposta que não combina:** tipo diferente do da pergunta, alimento que não estava nela ou variante inexistente lança `resposta_invalida`; o run continua em `waiting_for_input` e nada é gravado.
-- [ ] `continuar` em run `done`, `expired`, `cancelled` ou de outra conta lança `RunNaoContinuavelError` e não muda nada.
-- [ ] **Mensagem nova com pergunta aberta:** o run antigo vira `cancelled` (005) e o que já foi respondido antes continua gravado.
-- [ ] **Mensagens:** o texto da pergunta é gravado como mensagem do agente e a resposta como mensagem da pessoa ("Tenho: abóbora · Não tenho: couve"), com o `run_id`; a pergunta da variante e a resposta dela nascem com `com_incomodo: true`.
-- [ ] **Rastro:** etapa `pergunta` com `resumo` `casa: 2 itens`, `come` ou `variante`; evento `pausa` com `pausa.tipo: "pergunta"`; `ritu_pausas_total` soma 1; o trecho retomado entra no mesmo trace. Nenhum span, métrica, log ou `resumo` leva nome de alimento, de incômodo ou texto da pessoa.
-- [ ] **Não como:** resposta "Não como" entra em `dados.filtro.nao_come`, vale no resto do run e sai na saída como anotação `nao_come`; nada vai para `perfis.nao_come`.
-- [ ] `npm run demo -- --cenario <nome>` roda os quatro cenários novos sem rede, respondendo com as `respostas` da fixture, e imprime a pergunta, a resposta dada e o resto do run; com `--interativo`, lê a resposta do terminal.
-- [ ] ⚠️ `npm run demo -- --cenario casa-incerta --llm --interativo` rodado uma vez pelo orquestrador (conferência anotada no relatório).
+- [x] **Pausa pelo agente:** roteiro `casa.ler` → `ask_user({ tipo: "casa", alimentos: ["abobora", "couve"] })` leva o run a `waiting_for_input`, com `pendencia` e `checkpoint` gravados, e `conversar` devolve `status: "waiting_for_input"` com a `pergunta` (texto e itens montados por código) e sem `saida`.
+- [x] **Retomada:** `continuar` com Tenho para abóbora e Não tenho para couve retoma do checkpoint sem repetir chamada de modelo; o resultado da tool que o modelo recebe traz as duas respostas; a entrega com abóbora passa no validador e a com couve é recusada (`fora_de_casa`); o run termina em `done`.
+- [x] **Gravação na hora:** depois desse `continuar`, e antes de o run terminar, a abóbora está em `casa` como `tem`, confirmada agora, com `origem: "pergunta"`; a couve está como `acabou` e há uma falta `nao_tenho` dela no dia, com o `run_id`; "Não gosto" grava `gosto: nao_gosta` e não mexe na casa; `ritu_gosto_total` e `ritu_faltas_total{origem: "nao_tenho"}` somam.
+- [x] **Não gosto vale no run:** item respondido com Não gosto entra em `dados.filtro.nao_gosta`, e uma entrega com ele é recusada (`nao_gosta`).
+- [x] **Pular:** `{ tipo: "pular" }`, ou item sem resposta, não grava nada; o item continua como estava e o modelo recebe `pulou`.
+- [x] **Limite de perguntas:** a 3ª pergunta do run (contando a da variante) é recusada com `limite_de_perguntas`, o run não pausa e o loop continua.
+- [x] **Recusas de `ask_user`:** cada código de "Contratos" tem um teste em que só ele é devolvido: mais de 5 itens, alimento fora da base, já confirmado, barrado pelo filtro da pessoa, marcado como acabou, fora dos candidatos, já perguntado neste run, `come` desnecessária.
+- [x] **Variante por código:** mensagem com incômodo `dor-de-cabeca` sem variante pausa o run antes de qualquer chamada do papel `decisao`, com a pergunta e as opções de `incomodos.yaml`; `continuar` com `latejante` roda o preparo já com a variante e segue para o Acompanhante; com Pular, o preparo roda sem a variante e `precisa_variante` vai no contexto, como na 007.
+- [x] **Incômodo de variante única ou com a variante já dita:** não há pausa.
+- [x] **Expiração:** `continuar` mais de 30 minutos depois de a pergunta ser criada marca o run como `expired`, lança `RituError` com código `pergunta_expirada` e não grava nada. Com 30 minutos exatos, ainda vale.
+- [x] **Resposta que não combina:** tipo diferente do da pergunta, alimento que não estava nela ou variante inexistente lança `resposta_invalida`; o run continua em `waiting_for_input` e nada é gravado.
+- [x] `continuar` em run `done`, `expired`, `cancelled` ou de outra conta lança `RunNaoContinuavelError` e não muda nada.
+- [x] **Mensagem nova com pergunta aberta:** o run antigo vira `cancelled` (005) e o que já foi respondido antes continua gravado.
+- [x] **Mensagens:** o texto da pergunta é gravado como mensagem do agente e a resposta como mensagem da pessoa ("Tenho: abóbora · Não tenho: couve"), com o `run_id`; a pergunta da variante e a resposta dela nascem com `com_incomodo: true`.
+- [x] **Rastro:** etapa `pergunta` com `resumo` `casa: 2 itens`, `come` ou `variante`; evento `pausa` com `pausa.tipo: "pergunta"`; `ritu_pausas_total` soma 1; o trecho retomado entra no mesmo trace. Nenhum span, métrica, log ou `resumo` leva nome de alimento, de incômodo ou texto da pessoa.
+- [x] **Não como:** resposta "Não como" entra em `dados.filtro.nao_come`, vale no resto do run e sai na saída como anotação `nao_come`; nada vai para `perfis.nao_come`.
+- [x] `npm run demo -- --cenario <nome>` roda os quatro cenários novos sem rede, respondendo com as `respostas` da fixture, e imprime a pergunta, a resposta dada e o resto do run; com `--interativo`, lê a resposta do terminal.
+- [x] ⚠️ `npm run demo -- --cenario casa-incerta --llm --interativo` rodado uma vez pelo orquestrador (conferência anotada no relatório).
 
 ## O que fazer
 

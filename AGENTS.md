@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 em construção: 008 implementada, 009 a 015 aprovadas.
+> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 em construção: 008 e 009 implementadas, 010 a 015 aprovadas.
 
 ## O que é o projeto
 
@@ -68,8 +68,8 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run cleanup` | Roda a limpeza diária no banco do `DATABASE_URL` e imprime as contagens |
 | `npm run loop:demo` | Roda o loop com o runtime roteirizado e os stores em memória, num cenário com pausa e retomada, sem LLM. Com `OTEL_EXPORTER_OTLP_ENDPOINT`, exporta o trace para o LGTM |
 | `npm run cotas` | Imprime, por modelo, pedidos e tokens do minuto e do dia, o limite e a porcentagem usada. Precisa do Postgres no ar |
-| `npm run demo` | Sem argumento, lista os cenários. `-- --cenario <nome>` roda o acompanhante num cenário com o runtime roteirizado, sem rede, e imprime etapas (com o pensamento), resposta, sugestões, avisos e o resumo do run. Cenários com mensagem passam por `conversar`, com o Intérprete roteirizado, e o relatório mostra "Entendi" e "Posso anotar". `-- --esgotar decisao` esgota o modelo principal do papel antes, para mostrar a troca |
-| ⚠️ `npm run demo -- --cenario <nome> --llm` | O mesmo cenário com o runtime da Mastra e LLM real; o Intérprete também chama o modelo real; registro de uso em memória |
+| `npm run demo` | Sem argumento, lista os cenários. `-- --cenario <nome>` roda o acompanhante num cenário com o runtime roteirizado, sem rede, e imprime etapas (com o pensamento), resposta, sugestões, avisos e o resumo do run. Cenários com mensagem passam por `conversar`, com o Intérprete roteirizado, e o relatório mostra "Entendi" e "Posso anotar". Cenários com pausa imprimem a pergunta com as opções numeradas e a resposta usada. `-- --interativo` lê a resposta do terminal: na pergunta de casa, `t`, `n`, `g` ou Enter por item; nas outras, o número da opção ou Enter. `-- --esgotar decisao` esgota o modelo principal do papel antes, para mostrar a troca |
+| ⚠️ `npm run demo -- --cenario <nome> --llm` | O mesmo cenário com o runtime da Mastra e LLM real; o Intérprete também chama o modelo real; combina com `--interativo`; registro de uso em memória |
 | `npm run eval:llm -- --checkpoint <nome> --listar` | Lista os casos do checkpoint (pasta, id, tipo, título), sem modelo, sem rede e sem chave |
 | ⚠️ `npm run eval:llm -- --checkpoint <nome>` | Roda os casos do checkpoint (`evals/llm/checkpoints.ts`: `c1-base`, `c2-conversa`), um por vez, com LLM real, e grava `evals/resultados/<nome>.md`. Só nos checkpoints |
 | ⚠️ `npm run modelos:check` | Uma chamada mínima por modelo de `config/llm-cotas.ts`, passando pelo registro de uso; diz `ok` ou o código do erro. Só à mão |

@@ -55,6 +55,20 @@ Lacunas e contradições encontradas na spec, com a opção mais conservadora. C
 - **D17 · Respostas que acabam no `demo` e no runner.** Decidido: pausa sem resposta sobrando na fixture (ou no caso do `eval:llm`) é respondida com `{ tipo: "pular" }`, no máximo 3 retomadas por run. Desfazer: falhar o cenário.
 - **D18 · Rodada ⚠️ com `--interativo`.** Decidido: o orquestrador roda `npm run demo -- --cenario casa-incerta --llm --interativo` uma vez, com as respostas digitadas (ou passadas por pipe, `printf 't\nn\n' | …`), e anota no relatório. Desfazer: nenhum.
 
+## Notas de construção (o que mudou depois do plano; vale para todas as tarefas)
+
+- `citadoNoPerfilDoNaoCome` e `itemNoPerfilDoEvitar` moram em `src/core/accounts/no-perfil.ts`.
+- T2: textos exportados `TEXTOS_DA_PERGUNTA` e `ROTULOS_DA_RESPOSTA` em `src/core/runs/pergunta-textos.ts`.
+- T4/T5: `DadosDoPreparo` tem `perguntas`, `nao_come_do_run`, `candidatos_completos` e `acabou` (default `[]`, fora do prompt; Minha casa `acabou` ∪ `casa_da_mensagem.acabou`). `aplicarResposta` usa `dados.acabou` ∪ o `acabou` do D2 e acrescenta a `perguntas.alimentos` os ids respondidos numa resposta de casa.
+- T5: `montarAnotacoes` não devolve nada com `alerta` ou `suspeito`, nem o "não como" do run.
+- T7: `ask_user` recusa `acabou` por `dados.acabou` ∪ Minha casa `acabou`.
+- T9: `RespostaDoRun.saida` é opcional (ausente na pausa); o fim do run mora em `src/core/agents/companion/fim-do-run.ts`; `companion.continuar` existe. Em `src/core/conversation/conversar.ts` há um helper provisório `saidaDoRun` que lança `RituError("run_pausado")` sem saída: a T10 trata a pausa antes dele (remova-o ou deixe só como guarda).
+- T10: `RespostaDaConversa.saida` é opcional; pausa de código em `src/core/conversation/pausa-de-codigo.ts`. Nota: em `conversar.ts`, `com_incomodo` da mensagem do agente na pausa usa `pergunta.tipo === "variante"`.
+- T11: `conversation.continuar` existe (`src/core/conversation/continuar.ts`); os totais do run na retomada são a soma dos tokens das etapas (`fixarTotais`). A variante conta como 1ª pergunta.
+- T12: os quatro cenários de pausa ficam em `cenariosComPausa` (`test/fixtures/cenarios/index.ts`), separados de `cenariosDeConversa` (que `montar.test.ts` trava em sete); `rodarCenario` responde às pausas. `scripts/demo.ts` e os evals das T14–T16 precisam importar `cenariosComPausa`; `evals/det/conversa/privacidade.eval.ts` deve passar a cobri-los (a T14–T16 que tocar privacidade, ou o fechamento).
+- Pendente para o fechamento: avaliar idempotência de `gravarResposta` num retry depois de falha ao gravar a mensagem da pessoa (casa/gosto já gravados); teste direto do ramo `pausa_invalida` de `fim-do-run.ts`.
+- Ambiente: rtk em `/opt/homebrew/bin`; node em `/Users/helena.batista/.nvm/versions/node/v24.22.2/bin`; sem docker (não há `test:db`).
+
 ## Tarefas
 
 ### T1 · Add the pauses config
@@ -545,6 +559,19 @@ Lacunas e contradições encontradas na spec, com a opção mais conservadora. C
 - comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test`; `npm run eval:llm -- --checkpoint c2-conversa --listar` (sem rede, código 0, 40 casos). **Não** rode a rodada com modelo.
 - pronto quando: os testes passam e a listagem mostra os 40 casos.
 - fora: rodada ⚠️ do `c2-conversa` (fechamento da 011).
+
+### L1 · Test the invalid pause branch of the run end
+- nivel: mecanica
+- objetivo: cobrir por teste o ramo `pausa_invalida` de `src/core/agents/companion/fim-do-run.ts` (conteúdo de pausa que não passa em `conteudoDaPendenciaSchema` leva o run a `failed` com a etapa `pausa_invalida` e a saída segura).
+- arquivos: `src/core/agents/companion/fim-do-run.test.ts` (novo). Só teste; não mude código de produção. Se o ramo não for alcançável sem mudar produção, pare e diga por quê.
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos: os de `fim-do-run.ts` como estão (`criarFimDoRun().tratar`). Monte as dependências com `createMemoryStores`, `createMemoryTelemetry`, `createFixedClock` e o serviço de runs, como `responder.test.ts` faz.
+- testes primeiro: (1) fim `pausa` com conteúdo inválido → run `failed`, etapa `pausa_invalida`, resposta com `origem: "segura"` e o aviso "Não é orientação médica"; (2) fim `pausa` com conteúdo válido → run `waiting_for_input`, sem `saida`.
+- comandos: `npm run lint` (ou `rtk bypass npm run lint`), `npm run typecheck`, `npm test`
+- pronto quando: os dois testes passam.
+- fora: qualquer arquivo além do teste novo.
 
 ## Fechamento
 

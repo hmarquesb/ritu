@@ -52,3 +52,29 @@
 - Decidi: usar `coentro-fresco` (nome "Coentro"); o outro item é `coentro-em-grao` (semente).
 - Por quê: "não como coentro" no uso comum é a folha.
 - Desfazer: trocar o id em `evals/llm/casos/c2/intencao/20-nao-como-coentro.ts`.
+
+## 009 · T4 · `acabou` inclui o que a mensagem diz que acabou
+- Faltava: o contrato de `preparar` lia `acabou` só de Minha casa; um item citado como "acabou" na mensagem atual podia virar opção perguntável no mesmo turno ("Você ainda tem X?").
+- Decidi: `acabou` = ids de Minha casa com `estado: "acabou"` ∪ `casa_da_mensagem.acabou`.
+- Por quê: mais conservador; não pergunta o que a pessoa acabou de responder.
+- Desfazer: voltar a ler só de Minha casa em `src/core/agents/companion/preparo.ts`.
+
+## 009 · T5 · `acabou` de Minha casa guardado nos dados do run
+- Faltava: na nova rodada de `entregaveis` depois de uma resposta (D2), `acabou` só tinha os ids já perguntados; um item marcado "acabou" em Minha casa podia virar perguntável na retomada.
+- Decidi: `DadosDoPreparo.acabou` (default `[]`, fora do prompt), gravado por `preparar`; `aplicarResposta` usa `dados.acabou` ∪ o `acabou` do D2.
+- Por quê: não perguntar o que a pessoa já disse que acabou.
+- Desfazer: tirar o campo e voltar ao `acabou` só do D2.
+
+## 009 · T5 · Sem anotação no alerta, inclusive o "não como" do run
+- Decidi: `montarAnotacoes` mantém o retorno antecipado com `alerta` ou `suspeito`, também para `nao_come_do_run`.
+- Por quê: critério da 008 ("nenhuma anotação" no alerta).
+- Desfazer: aplicar o "não como" do run antes do retorno antecipado.
+
+## 009 · T17 · Caso `conversa` que não para de pausar no `eval:llm`
+- Faltava: o que fazer quando o run ainda pausa depois das 3 retomadas.
+- Decidi: o caso vira falho com motivo "pausou mais de 3 vezes" e a rodada segue.
+- Por quê: não perder uma rodada inteira (cota de modelo) por um caso.
+- Desfazer: voltar a lançar erro em `scripts/lib/eval-llm-casos.ts`.
+
+## 009 · fechamento · Risco da 005 · T5 resolvido
+- O risco anotado na 005 · T5 (`continuarRun` lia e atualizava o run sem condição) foi resolvido na 009 · T3 (D3): `RunRepository.mudarStatusSe` e `continuarRun` com troca condicional. A conferência contra o Postgres (`test:db`) segue pendente por falta de docker neste ambiente.

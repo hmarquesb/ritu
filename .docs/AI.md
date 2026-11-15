@@ -74,6 +74,7 @@ O que roda em toda mensagem não é decisão, então não é tool:
 2. Filtra alimentos, preparos e práticas por qualidades, dosha, momento do dia, **"evitar sempre"** (guardado, do dia e o que o Intérprete acabou de apontar), restrições, "não como", "não gosto", contraindicações, marcas a evitar no momento e o que já foi sugerido hoje. Preparo ou prática com qualquer ingrediente em "evitar sempre" sai inteiro, inclusive óleos de uso na pele. Prática sem momento do dia definido serve a qualquer momento. A casa que o preparo lê já passa pelo mesmo filtro.
 3. **Ordena** o que passou no filtro (§6, "Ordenação"). Só há candidatos quando a mensagem tem intenção `momento`, estados ou incômodo; nos outros casos a lista vai vazia.
 4. Calcula as **faltas** do run e escolhe o candidato a "vale ter em casa", se houver (§6, "Faltas").
+   `entregaveis` separa o que pode ir ao modelo: refeição com vaga obrigatória sem opção em casa nem perguntável sai do contexto e do validador. A que só fica por causa de uma opção que ainda dá para perguntar vai com `depende_de_pergunta`, e só as 2 primeiras refeições assim (`maxRefeicoesAPerguntar`). Sem perguntas restantes no run, ninguém depende de pergunta. Chá, óleo e prática passam.
 5. Monta o contexto do Acompanhante: fixos, resumo de rotina, padrões confirmados, últimas mensagens do dia, sinais (§6), os candidatos já ordenados e o candidato a "vale ter em casa". Para o contexto, o preparo guarda por tipo só os primeiros (4 chás, 3 refeições, 2 óleos, 4 práticas) e, em cada vaga de uma refeição, até 3 opções de alimento.
 
 Sinal de alerta encerra o run aqui, com a resposta de encaminhamento.
@@ -140,8 +141,10 @@ Todas com entrada e saída em zod, determinísticas e testáveis sem LLM.
 
 | Tool | Faz |
 |---|---|
-| `ask_user` | Pausa o run com uma pergunta de um de dois tipos fechados: se a pessoa tem um alimento em casa (até 5 numa pergunta só) ou se come um alimento. O agente escolhe o tipo e os alimentos; o texto é montado por código. No máximo 2 perguntas por run. Pedido sobre o que já se sabe, sobre o que o filtro da pessoa barra ou fora dos candidatos é recusado |
+| `ask_user` | Pausa o run com uma pergunta de um de dois tipos fechados: se a pessoa tem um alimento em casa (até 5 numa pergunta só) ou se come um alimento. O agente escolhe o tipo e os alimentos; o texto é montado por código. No máximo 2 perguntas por run, contando a da variante (§7). Na retomada, o resultado da tool traz a resposta de cada item (`tenho`, `nao_tenho`, `nao_gosto` ou `pulou`; no tipo `come`, `como`, `nao_como` ou `pulou`) e, no tipo `casa`, os `candidatos_retirados`, o que saiu dos candidatos por causa da resposta |
 | `finalizar` | Recebe a saída, roda o validador e entrega. Com violações, devolve a lista e não entrega |
+
+**Recusa de `ask_user`:** o pedido é conferido em código, nesta ordem, e a recusa volta como resultado da tool (`perguntou: false`, `motivo` e, quando cabe, os `alimentos` que a causaram), sem pausar. Conta no teto de recusas do loop. Os códigos são `limite_de_perguntas` (já houve 2), `muitos_itens` (nenhum ou mais de 5), `fora_da_base`, `ja_confirmado` (já está em casa), `filtrado` (o filtro da pessoa barra), `acabou`, `fora_dos_candidatos`, `ja_perguntado` e `come_desnecessaria` (tipo `come` sobre alimento que a pessoa já gosta ou que já ajudou, ou que já está em casa).
 
 **O validador** (função em código, chamada por `finalizar`) aponta:
 
@@ -149,7 +152,7 @@ Cada violação tem um código, o lugar e uma mensagem. Os códigos são `fora_d
 
 - `fora_da_base`: alimento, preparo, prática, troca ou linha citada que não existe na base; sugestão sem exatamente um entre `pratica_id` e `preparo_id`; tipo que não bate;
 - `estrutura`: os itens de uma prática não são exatamente os ingredientes dela; item de um preparo fora de uma vaga ou que não serve à vaga; vaga obrigatória sem item; vaga acima do máximo;
-- `fora_de_casa`: ingrediente que não está em casa; ingrediente incerto sem `se_faltar`; troca que não está confirmada em casa ou que não substitui o item;
+- `fora_de_casa`: ingrediente que não está em casa; ingrediente incerto sem `se_faltar`; troca que não está confirmada em casa ou que não substitui o item. Quando o ingrediente falta numa refeição marcada com `depende_de_pergunta`, a mensagem manda perguntar antes com `ask_user` (tipo `casa`) ou usar outro candidato; sem pergunta restante, manda usar outro candidato;
 - `evitar_sempre`, `restricao`, `nao_come`, `nao_gosta`: **"evitar sempre" violado** (alimento, ingrediente, óleo, troca, `para_ter` ou `citados`), e o mesmo para restrição, "não como" e "não gosto";
 - `contraindicacao`: contraindicação do momento; prática que nunca se sugere com uma restrição da pessoa; alimento com marca a evitar agora;
 - `combinacao`: combinação incompatível entre os itens da sugestão;
@@ -270,14 +273,16 @@ A página "O que sei sobre você" mostra todos os níveis. A pessoa corrige e ap
 | Onde | O quê | Quem dispara |
 |---|---|---|
 | Durante o run | "Ainda tem abóbora e couve?", "Você come ovo?" | O agente, via `ask_user`, só quando a resposta muda a recomendação e não está na memória |
-| Antes do agente | "A dor é latejante, tensa ou pesada?" | O código, quando a base diz que o incômodo tem variantes e a pessoa não disse qual é. Conta como uma das 2 perguntas |
+| Antes do agente | "A dor é latejante, tensa ou pesada?" | O código, quando a base diz que o incômodo tem variantes e a pessoa não disse qual é. A pausa sai sem agente e sem checkpoint, com a entrada do Acompanhante na pendência; conta como uma das 2 perguntas |
 | Na pergunta sobre um item | Tenho · Não tenho · Não gosto · Pular | A pessoa responde e a resposta é gravada na hora: Tenho confirma o item em casa, Não tenho marca que acabou e conta uma falta, Não gosto vira registro de gosto |
 | Fim do run | Bloco de aprovação das propostas | O agente propõe; a pessoa decide |
 | Na sugestão | Trocar · Não tenho · Não gosto, por ingrediente | A pessoa, quando quiser; resolvido por código |
 | Em "Como ficou?" | Ajudou · Não ajudou · Não fiz | A pessoa, quando quiser |
 | Na resposta | 👍 / 👎 | A pessoa; sinal de qualidade |
 
-Pausa: o run é salvo como `waiting_for_input` ou `waiting_for_approval`, com o checkpoint. A resposta chega em outro pedido e retoma do checkpoint. Um run aberto por pessoa; espera de mais de 30 min expira.
+Pausa: o run é salvo como `waiting_for_input` ou `waiting_for_approval`, com o checkpoint. A pendência de pergunta guarda a pergunta, a `origem` (`agente` ou `codigo`) e as anotações da mensagem (ADR 0030). A resposta chega em outro pedido, por `continuar`, e retoma do checkpoint. Um run aberto por pessoa; espera de mais de 30 min expira.
+
+`continuar` confere, nesta ordem: o run existe, é da conta e está em `waiting_for_input`; a espera não passou de 30 min (senão o run vira `expired`); a resposta combina com a pergunta (senão o run continua esperando). Só então troca o status para `running` numa operação condicional, de modo que só um de dois pedidos simultâneos segue (ADR 0032). A resposta é gravada na hora, numa transação, sem bloco de aprovação: Tenho confirma o item em casa, Não tenho marca que acabou e registra uma falta, Não gosto vira registro de gosto; a mensagem da pessoa entra no histórico. Se a gravação falha, o run volta a `waiting_for_input`. Com a pergunta do agente, o loop retoma do checkpoint com os dados já atualizados e o resultado da tool; com a da variante, o Acompanhante roda com o incômodo já com a variante escolhida. Uma retomada pode pausar de novo, até o teto de 2 perguntas. Pular não grava nada e segue.
 
 ## 8. Guardrails
 

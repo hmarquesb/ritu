@@ -37,6 +37,9 @@
 | [0027](0027-cenarios-compartilhados-entre-demo-e-evals.md) | Cenários compartilhados entre demo, evals e eval:llm | Aceito |
 | [0028](0028-o-que-a-mensagem-traz-vale-no-mesmo-run.md) | O que a mensagem traz vale no mesmo run, sem gravar | Aceito |
 | [0029](0029-run-nasce-antes-do-interprete.md) | O run nasce antes do Intérprete e o span `run` cobre o run inteiro | Aceito |
+| [0030](0030-formato-do-checkpoint-e-da-pendencia.md) | Formato do checkpoint e da pendência de pergunta | Aceito |
+| [0031](0031-perguntas-fechadas-montadas-por-codigo.md) | Perguntas fechadas, com texto montado por código, e variante perguntada antes do agente | Aceito |
+| [0032](0032-resposta-gravada-antes-de-retomar.md) | Resposta à pergunta gravada na hora, antes de retomar, com troca de status condicional | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

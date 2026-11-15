@@ -76,8 +76,14 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - O registro de uso vira o dia à meia-noite do Pacífico.
 
 **Pausas e aprovação**
-- `ask_user` leva o run a `waiting_for_input`; `continue` retoma do checkpoint; resposta a run expirado é recusada.
-- Mais de 2 perguntas no mesmo run são recusadas; pergunta sobre a casa agrupa até 5 itens.
+- `ask_user` leva o run a `waiting_for_input`; `continuar` retoma do checkpoint; resposta a run expirado é recusada (`evals/det/pausas/`).
+- Mais de 2 perguntas no mesmo run são recusadas, contando a da variante; pergunta sobre a casa agrupa até 5 itens; cada código de recusa de `ask_user` volta como resultado da tool, sem pausar.
+- Pergunta com até 30 min vale; resposta que não combina com a pergunta é recusada e o run segue esperando, sem gravar nada.
+- A resposta é gravada na hora: Tenho confirma o item em casa; Não tenho marca que acabou e gera a falta; Não gosto vira gosto; Pular não grava. As mensagens da pessoa e do agente entram no histórico do dia.
+- Refeição que depende de pergunta sai marcada com `depende_de_pergunta`, no máximo 2; sem opção em casa nem perguntável, não chega ao modelo nem ao validador.
+- A pergunta da variante sai por código, antes do agente, sem checkpoint; com a variante já dita, não há pausa.
+- "Não como" respondido numa pergunta vale no mesmo run e é proposto como anotação.
+- Etapas e resumos da pergunta (`casa: N itens`, `come`, `variante`) e a telemetria não levam alimento, resposta nem texto da pessoa.
 - **Zero escrita sem aprovação:** rodar um run com propostas e não aprovar deixa o banco igual.
 - Aprovação parcial grava só os itens aprovados.
 
@@ -124,7 +130,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 | **Explicação** | A resposta diz o que o momento pede, o que cada item traz e por que combinam | Acerto pelo juiz do eval |
 | **Trajetória** | Tools obrigatórias chamadas; tools proibidas não chamadas; chamadas sem necessidade | Trajetória correta; chamadas desnecessárias por run |
 | **Autocorreção** | Válida na 1ª tentativa; corrigiu depois de violação | Duas taxas |
-| **Perguntas** | Perguntou quando faltava; não perguntou quando sabia | Necessárias feitas; desnecessárias evitadas |
+| **Perguntas** | Perguntou quando faltava; não perguntou quando sabia; a variante sai antes de qualquer chamada de modelo; o código recusa pedidos que não cabem | Necessárias feitas; desnecessárias evitadas; recusas de `ask_user` por run |
 | **Casa** | Usa o que está confirmado; pergunta ou oferece troca para o incerto; não usa o que acabou | Acerto |
 | **Propostas** | Propôs o que fazia sentido (casa, rotina, lista) e nada além | Propostas corretas |
 | **Para ter em casa** | Indica o candidato quando ele cabe na resposta; não indica sem candidato; fala como algo para as próximas vezes, sem marca, loja ou preço | Acerto |
@@ -144,7 +150,7 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 | Checkpoint | Quando | O que já dá para medir |
 |---|---|---|
 | `c1-base` | Fim da entrega 1 | Conteúdo, fidelidade, explicação, trajetória, autocorreção, custo |
-| `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 20 casos de intenção do `c2`. Mede Intenção (acerto e falsos alertas), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1` |
+| `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 28 do `c2` (20 de intenção e 8 de perguntas), 40 no total. Mede Intenção (acerto e falsos alertas), Perguntas (necessárias feitas, desnecessárias evitadas e recusas de `ask_user` por run), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1`. Nos casos de pergunta, o runner responde às pausas (até 3 por run) |
 | `c3-confiavel` | Fim da entrega 2 | Todas as famílias |
 | `c4-site` | Fim da entrega 3 | Todas, pelas rotas reais do site |
 | `c5-publico` | Fim da entrega 4 | Todas, com os prompts e a configuração de produção |

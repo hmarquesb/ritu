@@ -20,16 +20,14 @@ import { createScriptedRuntime } from "@/infra/fakes/scripted-runtime"
 const MENSAGEM = "Estou cansada e sem fome. O que eu como?"
 
 // Tool de exemplo: consulta um item na casa da pessoa (aqui, sempre encontrado).
-const consultar = {
-  ...definirTool({
-    name: "consultar",
-    description: "Diz se um item está em casa.",
-    input: z.object({ item: z.string() }),
-    output: z.object({ encontrado: z.boolean() }),
-    executar: () => ({ encontrado: true }),
-  }),
-  resumir: (saida: { encontrado: boolean }) => (saida.encontrado ? "item em casa" : "item fora"),
-}
+const consultar = definirTool({
+  name: "consultar",
+  description: "Diz se um item está em casa.",
+  input: z.object({ item: z.string() }),
+  output: z.object({ encontrado: z.boolean() }),
+  resumir: (saida) => (saida.encontrado ? "item em casa" : "item fora"),
+  executar: () => ({ encontrado: true }),
+})
 
 // Tool de controle que pausa e pergunta à pessoa.
 const perguntar: ToolDeControle<unknown> = {

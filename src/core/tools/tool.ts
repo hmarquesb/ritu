@@ -35,6 +35,7 @@ export function definirTool<I, O>(def: {
   description: string
   input: z.ZodType<I>
   output: z.ZodType<O>
+  resumir?(saida: O): string
   executar: (entrada: I, ctx: ToolContext) => O | Promise<O>
 }): Tool<I, O> {
   return {
@@ -42,6 +43,7 @@ export function definirTool<I, O>(def: {
     description: def.description,
     input: def.input,
     output: def.output,
+    ...(def.resumir ? { resumir: def.resumir } : {}),
     async execute(entrada, ctx) {
       const dados = def.input.parse(entrada)
       return def.output.parse(await def.executar(dados, ctx))

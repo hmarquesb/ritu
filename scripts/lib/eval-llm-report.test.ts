@@ -262,3 +262,116 @@ describe("casos do checkpoint c1-base", () => {
     expect(contaId).toBeTruthy()
   })
 })
+
+function interprete(parcial: Partial<ResultadoDoCaso> & { id: string }): ResultadoDoCaso {
+  return caso({
+    tipo: "interprete",
+    explicacao: undefined,
+    uso: { apoio: { chamadas: 1, tokens_entrada: 100, tokens_saida: 10 } },
+    ...parcial,
+  })
+}
+
+describe("Intérprete no relatório", () => {
+  const casos = [
+    caso({ id: "a" }),
+    interprete({ id: "i1", latenciaMs: 100 }),
+    interprete({
+      id: "i2",
+      latenciaMs: 300,
+      deve: [{ descricao: "x", ok: false }],
+      falsoAlerta: true,
+      alertou: true,
+      uso: { apoio: { chamadas: 1, tokens_entrada: 100, tokens_saida: 10 } },
+    }),
+  ]
+  const r = resumir(casos)
+
+  it("separa o Intérprete das respostas: as métricas de resposta não contam os seus casos", () => {
+    expect(r.casos).toBe(1)
+    expect(r.uso.decisao?.chamadas).toBe(3)
+  })
+
+  it("conta intenção, falsos alertas e custo do apoio com p50 e p95", () => {
+    expect(r.interprete.casos).toBe(2)
+    expect(r.interprete.intencao).toBe(1)
+    expect(r.interprete.falsosAlertas).toBe(1)
+    expect(r.interprete.marcadosFalsoAlerta).toBe(1)
+    expect(r.interprete.chamadas).toBe(2)
+    expect(r.interprete.tokensEntrada).toBe(200)
+    expect(r.interprete.tokensSaida).toBe(20)
+    expect(r.interprete.latenciaP50).toBe(100)
+    expect(r.interprete.latenciaP95).toBe(300)
+  })
+
+  it("um erro do Intérprete não entra na latência", () => {
+    const comErro = resumir([interprete({ id: "e", erro: "sem_modelo", latenciaMs: 0 })])
+    expect(comErro.interprete.intencao).toBe(0)
+    expect(comErro.interprete.latenciaP50).toBe(0)
+  })
+
+  it("mostra a seção Intenção com a tabela por caso, o total e os falsos alertas", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "x",
+      totalDeCasos: 3,
+      casos,
+    })
+    expect(texto).toContain("## Intenção")
+    expect(texto).toContain("| i1 | 1/1 | 1/1 | sim | 100 ms |")
+    expect(texto).toContain("| i2 | 0/1 | 1/1 | não | 300 ms |")
+    expect(texto).toContain("- Intenção: 1/2 (50%)")
+    expect(texto).toContain("- Falsos alertas: 1 de 1 casos marcados")
+    expect(texto).toContain("### Custo do papel apoio")
+    expect(texto).toContain("| 2 | 200 | 20 | 100 ms | 300 ms |")
+  })
+})
+
+describe("violações da primeira entrega", () => {
+  it("soma por código, só nas respostas", () => {
+    const r = resumir([
+      caso({ id: "a", violacoesDaPrimeira: ["fora_da_base", "fora_da_base", "estrutura"] }),
+      caso({ id: "b", violacoesDaPrimeira: ["fora_da_base"] }),
+      interprete({ id: "i", violacoesDaPrimeira: ["linha_base"] }),
+    ])
+    expect(r.violacoes).toEqual({ fora_da_base: 3, estrutura: 1 })
+  })
+
+  it("aparece no relatório ao lado das métricas, com Nenhuma quando não há", () => {
+    const rodada = { checkpoint: "c1-base", promptVersao: "acompanhante.v2", totalDeCasos: 1 }
+    const com = formatarRelatorio({
+      ...rodada,
+      casos: [caso({ id: "a", violacoesDaPrimeira: ["fora_da_base"] })],
+    })
+    expect(com).toContain("## Violações da 1ª entrega")
+    expect(com).toContain("| fora_da_base | 1 |")
+    const sem = formatarRelatorio({ ...rodada, casos: [caso({ id: "a" })] })
+    expect(sem).toContain("## Violações da 1ª entrega\n\nNenhuma.")
+  })
+})
+
+describe("seções sem caso do tipo não aparecem", () => {
+  it("só com Intérprete, não há Métricas, Casos nem Violações", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "interprete.v1",
+      totalDeCasos: 1,
+      casos: [interprete({ id: "i" })],
+    })
+    expect(texto).not.toContain("## Métricas")
+    expect(texto).not.toContain("## Casos")
+    expect(texto).not.toContain("## Violações")
+    expect(texto).toContain("## Intenção")
+  })
+
+  it("só com acompanhante, não há Intenção nem custo do apoio", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c1-base",
+      promptVersao: "acompanhante.v2",
+      totalDeCasos: 1,
+      casos: [caso({ id: "a" })],
+    })
+    expect(texto).not.toContain("## Intenção")
+    expect(texto).not.toContain("Custo do papel apoio")
+  })
+})

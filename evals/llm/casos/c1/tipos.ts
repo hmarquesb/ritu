@@ -26,6 +26,8 @@ export type Trajetoria = {
 }
 
 export type CasoC1 = {
+  // Ausente = acompanhante.
+  tipo?: "acompanhante"
   id: string
   titulo: string
   cenario: CenarioDoCaso

@@ -10,9 +10,13 @@ export type Explicacao = {
 
 export type UsoDoPapel = { chamadas: number; tokens_entrada: number; tokens_saida: number }
 
+// Ausente = acompanhante. O Intérprete não tem trajetória nem validação: só entra na seção Intenção.
+export type TipoDoCaso = "acompanhante" | "interprete" | "conversa"
+
 export type ResultadoDoCaso = {
   id: string
   titulo: string
+  tipo?: TipoDoCaso
   deve: ChecagemDeExpectativa[]
   naoPode: ChecagemDeExpectativa[]
   trajetoriaOk: boolean
@@ -25,6 +29,12 @@ export type ResultadoDoCaso = {
   explicacaoNaoAvaliada?: boolean
   /** Erro inesperado no caso: só a classe/código, nunca o texto. */
   erro?: string
+  /** Caso interprete com falsoAlerta: true. */
+  falsoAlerta?: boolean
+  /** A interpretação veio com alerta. */
+  alertou?: boolean
+  /** Códigos de violação da primeira validação (acompanhante e conversa). */
+  violacoesDaPrimeira?: string[]
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaMs: number
@@ -56,6 +66,25 @@ export const porcentagem = (parte: number, total: number): string =>
 
 const todosOk = (c: ChecagemDeExpectativa[]): boolean => c.every((x) => x.ok)
 
+const ehInterprete = (c: ResultadoDoCaso): boolean => c.tipo === "interprete"
+const respostasDe = (casos: ResultadoDoCaso[]): ResultadoDoCaso[] =>
+  casos.filter((c) => !ehInterprete(c))
+const interpretesDe = (casos: ResultadoDoCaso[]): ResultadoDoCaso[] => casos.filter(ehInterprete)
+
+const intencaoOk = (c: ResultadoDoCaso): boolean => !c.erro && todosOk(c.deve) && todosOk(c.naoPode)
+
+export type ResumoDoInterprete = {
+  casos: number
+  intencao: number
+  falsosAlertas: number
+  marcadosFalsoAlerta: number
+  chamadas: number
+  tokensEntrada: number
+  tokensSaida: number
+  latenciaP50: number
+  latenciaP95: number
+}
+
 export type ResumoDaRodada = {
   casos: number
   conteudoDeve: number
@@ -68,6 +97,8 @@ export type ResumoDaRodada = {
   explicacaoCompleta: number
   comExplicacao: number
   explicacaoNaoAvaliada: number
+  violacoes: Record<string, number>
+  interprete: ResumoDoInterprete
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaP50: number
@@ -90,19 +121,47 @@ function somarUso(casos: ResultadoDoCaso[]): Record<string, UsoDoPapel> {
   return total
 }
 
-export function resumir(casos: ResultadoDoCaso[]): ResumoDaRodada {
-  const latencias = casos.filter((c) => !c.erro).map((c) => c.latenciaMs)
-  const semErro = casos.filter((c) => !c.erro)
-  const comExplicacao = casos.filter((c) => c.explicacao)
+function violacoesPorCodigo(respostas: ResultadoDoCaso[]): Record<string, number> {
+  const total: Record<string, number> = {}
+  for (const c of respostas) {
+    for (const codigo of c.violacoesDaPrimeira ?? []) {
+      total[codigo] = (total[codigo] ?? 0) + 1
+    }
+  }
+  return total
+}
+
+function resumoDoInterprete(casos: ResultadoDoCaso[]): ResumoDoInterprete {
+  const lista = interpretesDe(casos)
+  const latencias = lista.filter((c) => !c.erro).map((c) => c.latenciaMs)
+  const apoio = somarUso(lista).apoio ?? { chamadas: 0, tokens_entrada: 0, tokens_saida: 0 }
   return {
-    casos: casos.length,
+    casos: lista.length,
+    intencao: lista.filter(intencaoOk).length,
+    falsosAlertas: lista.filter((c) => c.falsoAlerta && c.alertou).length,
+    marcadosFalsoAlerta: lista.filter((c) => c.falsoAlerta).length,
+    chamadas: apoio.chamadas,
+    tokensEntrada: apoio.tokens_entrada,
+    tokensSaida: apoio.tokens_saida,
+    latenciaP50: percentil(latencias, 50),
+    latenciaP95: percentil(latencias, 95),
+  }
+}
+
+export function resumir(casos: ResultadoDoCaso[]): ResumoDaRodada {
+  const respostas = respostasDe(casos)
+  const latencias = respostas.filter((c) => !c.erro).map((c) => c.latenciaMs)
+  const semErro = respostas.filter((c) => !c.erro)
+  const comExplicacao = respostas.filter((c) => c.explicacao)
+  return {
+    casos: respostas.length,
     conteudoDeve: semErro.filter((c) => todosOk(c.deve)).length,
     conteudoNaoPode: semErro.filter((c) => todosOk(c.naoPode)).length,
-    trajetoriaCorreta: casos.filter((c) => c.trajetoriaOk).length,
-    chamadasDesnecessarias: soma(casos.map((c) => c.chamadasDesnecessarias)),
-    validaNa1a: casos.filter((c) => c.validaNa1a).length,
-    comViolacao: casos.filter((c) => c.houveViolacao).length,
-    corrigiuAposViolacao: casos.filter((c) => c.houveViolacao && c.corrigiuAposViolacao).length,
+    trajetoriaCorreta: respostas.filter((c) => c.trajetoriaOk).length,
+    chamadasDesnecessarias: soma(respostas.map((c) => c.chamadasDesnecessarias)),
+    validaNa1a: respostas.filter((c) => c.validaNa1a).length,
+    comViolacao: respostas.filter((c) => c.houveViolacao).length,
+    corrigiuAposViolacao: respostas.filter((c) => c.houveViolacao && c.corrigiuAposViolacao).length,
     explicacaoCompleta: comExplicacao.filter(
       (c) =>
         c.explicacao?.diz_o_que_o_momento_pede &&
@@ -110,7 +169,9 @@ export function resumir(casos: ResultadoDoCaso[]): ResumoDaRodada {
         c.explicacao.texto_bate_com_sugestoes,
     ).length,
     comExplicacao: comExplicacao.length,
-    explicacaoNaoAvaliada: casos.filter((c) => c.explicacaoNaoAvaliada).length,
+    explicacaoNaoAvaliada: respostas.filter((c) => c.explicacaoNaoAvaliada).length,
+    violacoes: violacoesPorCodigo(respostas),
+    interprete: resumoDoInterprete(casos),
     uso: somarUso(casos),
     trocas: soma(casos.map((c) => c.trocas)),
     latenciaP50: percentil(latencias, 50),
@@ -138,6 +199,13 @@ function tabelaDeMetricas(r: ResumoDaRodada): string[] {
   ]
 }
 
+function tabelaDeViolacoes(violacoes: Record<string, number>): string[] {
+  const linhas = Object.entries(violacoes)
+    .sort(([a, x], [b, y]) => y - x || a.localeCompare(b))
+    .map(([codigo, n]) => `| ${codigo} | ${n} |`)
+  return linhas.length > 0 ? ["| Código | Casos |", "|---|---|", ...linhas] : ["Nenhuma."]
+}
+
 function tabelaDeCusto(uso: Record<string, UsoDoPapel>): string[] {
   const linhas = Object.entries(uso)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -147,6 +215,38 @@ function tabelaDeCusto(uso: Record<string, UsoDoPapel>): string[] {
     "|---|---|---|---|",
     ...linhas,
   ]
+}
+
+function tabelaDeIntencao(casos: ResultadoDoCaso[]): string[] {
+  const linhas = interpretesDe(casos).map((c) => {
+    if (c.erro) return `| ${c.id} | erro: ${c.erro} | erro | não | ${c.latenciaMs} ms |`
+    const deve = c.deve.filter((x) => x.ok).length
+    const nao = c.naoPode.filter((x) => x.ok).length
+    return `| ${c.id} | ${deve}/${c.deve.length} | ${nao}/${c.naoPode.length} | ${sim(intencaoOk(c))} | ${c.latenciaMs} ms |`
+  })
+  return ["| Caso | Deve | Não pode | Intenção | Latência |", "|---|---|---|---|---|", ...linhas]
+}
+
+function secaoDoInterprete(casos: ResultadoDoCaso[], i: ResumoDoInterprete): string[] {
+  const linhas = [
+    "## Intenção",
+    "",
+    ...tabelaDeIntencao(casos),
+    "",
+    `- Intenção: ${i.intencao}/${i.casos} (${porcentagem(i.intencao, i.casos)})`,
+  ]
+  if (i.marcadosFalsoAlerta > 0) {
+    linhas.push(`- Falsos alertas: ${i.falsosAlertas} de ${i.marcadosFalsoAlerta} casos marcados`)
+  }
+  linhas.push(
+    "",
+    "### Custo do papel apoio",
+    "",
+    "| Chamadas | Tokens de entrada | Tokens de saída | Latência p50 | Latência p95 |",
+    "|---|---|---|---|---|",
+    `| ${i.chamadas} | ${i.tokensEntrada} | ${i.tokensSaida} | ${i.latenciaP50} ms | ${i.latenciaP95} ms |`,
+  )
+  return linhas
 }
 
 function linhaDoCaso(c: ResultadoDoCaso): string {
@@ -174,9 +274,7 @@ function falhasDoCaso(c: ResultadoDoCaso): string[] {
   return falhas.map((f) => `- ${c.id}: ${f}`)
 }
 
-export function formatarRelatorio(rodada: Rodada): string {
-  const r = resumir(rodada.casos)
-  const falhas = rodada.casos.flatMap(falhasDoCaso)
+function cabecalho(rodada: Rodada, r: ResumoDaRodada): string[] {
   const linhas = [
     `# Eval com LLM: ${rodada.checkpoint}`,
     "",
@@ -185,16 +283,41 @@ export function formatarRelatorio(rodada: Rodada): string {
     `- Casos rodados: ${rodada.casos.length} de ${rodada.totalDeCasos}`,
   ]
   if (rodada.interrompidaPor) linhas.push(`- Rodada interrompida: ${rodada.interrompidaPor}`)
-  linhas.push("", "## Métricas", "", ...tabelaDeMetricas(r))
-  linhas.push("", "## Custo por papel", "", ...tabelaDeCusto(r.uso))
-  linhas.push(
+  return linhas
+}
+
+function secaoDeRespostas(r: ResumoDaRodada): string[] {
+  return [
+    "",
+    "## Métricas",
+    "",
+    ...tabelaDeMetricas(r),
+    "",
+    "## Violações da 1ª entrega",
+    "",
+    ...tabelaDeViolacoes(r.violacoes),
+  ]
+}
+
+function secaoDeCasos(casos: ResultadoDoCaso[]): string[] {
+  return [
     "",
     "## Casos",
     "",
     "| Caso | Deve | Não pode | Trajetória | Válida na 1ª | Explicação | Latência |",
     "|---|---|---|---|---|---|---|",
-    ...rodada.casos.map(linhaDoCaso),
-  )
+    ...respostasDe(casos).map(linhaDoCaso),
+  ]
+}
+
+export function formatarRelatorio(rodada: Rodada): string {
+  const r = resumir(rodada.casos)
+  const falhas = rodada.casos.flatMap(falhasDoCaso)
+  const linhas = cabecalho(rodada, r)
+  if (r.casos > 0) linhas.push(...secaoDeRespostas(r))
+  if (r.interprete.casos > 0) linhas.push("", ...secaoDoInterprete(rodada.casos, r.interprete))
+  linhas.push("", "## Custo por papel", "", ...tabelaDeCusto(r.uso))
+  if (r.casos > 0) linhas.push(...secaoDeCasos(rodada.casos))
   linhas.push("", "## Falhas", "", ...(falhas.length > 0 ? falhas : ["Nenhuma."]))
   return `${linhas.join("\n")}\n`
 }

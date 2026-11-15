@@ -13,7 +13,12 @@ export type FiltroPessoa = {
 export type MotivoFiltro = "evitar_sempre" | "restricao" | "nao_come" | "nao_gosta"
 export type ResultadoFiltro = { passa: boolean; motivo?: MotivoFiltro }
 
-export const filtroVazio: FiltroPessoa = { evitar: [], restricoes: [], nao_come: [], nao_gosta: [] }
+export const filtroVazio: Readonly<FiltroPessoa> = Object.freeze({
+  evitar: Object.freeze([] as EvitarItem[]) as EvitarItem[],
+  restricoes: Object.freeze([] as Restricao[]) as Restricao[],
+  nao_come: Object.freeze([] as string[]) as string[],
+  nao_gosta: Object.freeze([] as string[]) as string[],
+})
 
 // Ordem de desempate: o primeiro da lista vence quando dois motivos empatam.
 const ORDEM_MOTIVOS: MotivoFiltro[] = ["evitar_sempre", "restricao", "nao_come", "nao_gosta"]
@@ -55,7 +60,11 @@ function resultadoPratica(
   return { passa: true }
 }
 
-function candidatos(vaga: Vaga, kb: KnowledgeBase): Alimento[] {
+// Alimentos que servem a uma função (e, se houver, a um dos grupos da vaga).
+export function candidatosDaVaga(
+  vaga: Pick<Vaga, "funcao" | "grupos">,
+  kb: KnowledgeBase,
+): Alimento[] {
   return kb.alimentos.filter(
     (a) => a.funcoes.includes(vaga.funcao) && (!vaga.grupos || vaga.grupos.includes(a.grupo)),
   )
@@ -81,7 +90,7 @@ function vagaVazia(
   kb: KnowledgeBase,
 ): { vazia: false } | { vazia: true; motivo?: MotivoFiltro } {
   const motivos: MotivoFiltro[] = []
-  for (const alimento of candidatos(vaga, kb)) {
+  for (const alimento of candidatosDaVaga(vaga, kb)) {
     const motivo = motivoDoAlimento(alimento, filtro)
     if (!motivo) return { vazia: false }
     motivos.push(motivo)

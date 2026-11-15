@@ -14,6 +14,8 @@ O loop do agente precisa de teto de chamadas, de tempo e de tokens, de pausa e r
 2. Cada passo (uma chamada de modelo com tools) é executado pela Mastra, atrás da porta `AgentRuntime`.
 3. O estado das pausas (`waiting_for_input`, `waiting_for_approval`) fica no banco, como checkpoint. O run não fica vivo esperando: a resposta chega em outro pedido e retoma.
 4. Para testes há um `AgentRuntime` roteirizado, que define a sequência de tools de cada cenário.
+5. O adaptador (`src/infra/mastra/runtime.ts`, `@mastra/core` 1.x) faz exatamente uma chamada por passo: tools declaradas com `createTool` sem `execute`, `maxSteps: 1`, `maxRetries: 0`, sem memória. O modelo chega pronto como `google/<id>`, com o provider do Gemini embutido na Mastra, e a chave vem de `GEMINI_API_KEY`. A captura de entrada e saída pelo tracing da Mastra fica desligada (`hideInput`, `hideOutput`), e o logger da biblioteca é silenciado (`noopLogger`), porque o erro do provedor carrega o prompt.
+6. Os erros do passo viram `LlmError` (`src/core/llm/errors.ts`): 429 → `rate_limit`, estouro do timeout próprio do adaptador → `timeout`, 5xx → `indisponivel`, resposta sem texto nem chamada → `resposta_invalida`. Os demais erros também viram `indisponivel`, guardando só o nome da classe.
 
 ## Alternativas consideradas
 

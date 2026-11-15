@@ -68,3 +68,21 @@
 | 004 | T10 · Memory evals + CI db job | mecanica | concluida | 4e223b4 |
 | 004 | C1 · Test db:migrate idempotence | mecanica | concluida | 855506c |
 | 004 | Fechamento (gates 1–6, ⚠️ test:db 97 ok, ADR 0025, docs; sem push) | — | concluida | (este commit) |
+
+| Spec | Tarefa | Nível | Status | Commit |
+|---|---|---|---|---|
+| 005 | T1 · Loop config, ports, checkpoint, states | mecanica | concluida | a27a924 |
+| 005 | T2 · Telemetry port, names, memory/null | mecanica | concluida | 55fe073 |
+| 005 | T3 · Scripted runtime and fixed model | mecanica | concluida | 0becb27 |
+| 005 | T4 · Agent loop | nucleo | concluida | f7b2c67 |
+| 005 | T5 · Run service | nucleo | concluida | dc07700 |
+| 005 | T6 · OTel adapter, instrumentation, container telemetry | nucleo | concluida | 5387e4f |
+| 005 | T7 · Mastra runtime, container runtime/runs, runtime:real | nucleo | concluida | d74f24e |
+| 005 | T8 · loop:demo and loop evals | mecanica | concluida | 63371fd |
+| 005 | C1 · definirTool forwards resumir | mecanica | concluida | e52714c |
+| 005 | C2 · Start OTel node SDK for scripts | nucleo | concluida | 3a9ea65 |
+| 005 | Fechamento (gates 1–6, test:db, Grafana ok, ⚠️ runtime:real, ADR 0005; sem push) | — | concluida | (este commit) |
+
+> 005 · ⚠️ `runtime:real gemini-3.5-flash-lite` (2026-11-15): o modelo pediu `hora_atual` com `{}`; 42 tokens de entrada, 10 de saída. Antes disso, `gemini-2.5-flash` devolveu `APICallError` 4xx (modelo provavelmente fora de linha): a 006 deve conferir a lista de modelos de `AI.md` §10 antes de fixá-la. Diagnóstico com 2 chamadas extras (`gemini-3.5-flash-lite` e `gemini-3-flash-preview`, ambas ok).
+> 005 · Primeira conferência do `loop:demo` no LGTM: nenhum trace chegou ao Tempo, porque nenhum script ligava o SDK do Node. Correção C2.
+> 005 · LGTM (2026-11-15): com `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` explícito, o `loop:demo` gerou o trace `ad1c2e6c…` no Tempo: 14 spans (2 `run`, o inicial e o retomado no mesmo trace; 4 `agente.passo`; 4 `llm.chamada`; 4 `tool.chamada`), o evento `pausa` e só atributos permitidos. Com o valor do `.env.local` (que não foi lido), nada chegou: **a dona deve conferir se ele aponta para `http://localhost:4318`** (OTLP por HTTP), e não para a porta 4317 (gRPC).

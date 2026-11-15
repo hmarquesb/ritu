@@ -1,0 +1,345 @@
+# Plano · Spec 005 · Runtime e rastro
+
+Spec: `.specs/005-runtime-e-rastro.md`. Nível: `nucleo` para loop, serviço do run, OTel e Mastra; `mecanica` para tipos, nomes, fakes, scripts e evals. Ficam com o orquestrador, no fechamento: `AI.md` §3, ADR 0005, `AGENTS.md`, a conferência do `loop:demo` no Grafana e a rodada única do ⚠️ `runtime:real`.
+
+## Regras comuns a todas as tarefas
+
+- **Contratos:** os contratos estão na seção "Contratos" da spec (linhas 101 a 295). Nomes de tipos, campos, funções e erros ficam **exatamente** como lá, em português; o resto do código fica em inglês. A tarefa diz qual parte ler.
+- **Reúso, sem duplicar:**
+  - `RituError` (`@/core/errors`), `Clock` (`@/core/clock`) e `createFixedClock` (`@/infra/fakes/fixed-clock`, que tem `advance`).
+  - `Tool`, `ToolContext` e `definirTool` (`@/core/agents/tools/tool`).
+  - `Stores` e `Transactor` (`@/core/stores`).
+  - De `@/core/runs/ports`: `Run`, `RunEtapa`, `NovaEtapa`, `RunMutavel`, `Caminho` e `StatusRun`. **Não redefina `NovaEtapa`**: a spec a repete em `run-service.ts`. Se faltar campo ou valor de `TipoDeEtapa`, ajuste o tipo existente.
+  - `RunAbertoError` (`@/core/runs/errors`), `createMemoryStores` (`@/infra/fakes/memory-stores`) e `diaLocal` (`@/core/time/dia-local`).
+  - `requireEnv` e `optionalEnv` (`@/infra/env`).
+- **Camadas:** `src/core/` só importa `src/core/`, `@config/*` e `zod`. `@mastra/*` e `@ai-sdk/*` só entram em `src/infra/mastra/`; `@opentelemetry/*` e `@vercel/otel`, só em `src/infra/otel/` e `src/instrumentation.ts` (regra R5). Scripts e evals só importam de infra `@/infra/container`, `@/infra/env` e `@/infra/fakes/**` (regra R6). No core não entra `new Date()` sem argumento nem `Date.now()` (regra R8).
+- **Privacidade:** nenhum texto da pessoa, instrução, argumento ou resultado de tool, nem nome de cidade, vai para span, métrica, log ou `resumo` de etapa. O pensamento só vai para `aoVivo`.
+- **Testes:** os padrão rodam sem rede, banco nem chave. Nenhum teste chama a Gemini.
+- **Qualidade:** complexidade cognitiva ≤ 15 por função, `npm run dup` com 0 clones e Biome. Rode `./node_modules/.bin/biome check --write <arquivos>`. Se o filtro do `npm run lint` falhar ("JSON parse failed"), use `rtk bypass npm run lint`.
+- **Limites:**
+  - Não leia `.env.local` e não abra pastas fora do repositório, exceto as indicadas no campo `referencia` e só para ler.
+  - Arquivos temporários só no scratchpad, nunca em `/tmp` nem em `$TMPDIR`.
+  - Arquivo fora da lista da tarefa: pare e diga qual.
+  - Não commite.
+
+## Decisões do plano
+
+- **D1 · `ToolContext`.** O loop recebe o `ToolContext` pronto e não acrescenta campos. As tools do catálogo executam com `tool.execute(args, ctx)`, ou com o equivalente que `definirTool` expõe. A validação zod dos argumentos é do loop: ele valida antes de executar, para distinguir `argumentos_invalidos` de `falhou`.
+- **D2 · Etapas do loop.** Uma etapa `llm` por chamada de modelo, com `nome` = id do modelo e `tokens_*`. Uma etapa por chamada de tool:
+  - tool do catálogo: `tipo: "tool"`;
+  - tool de controle que recusa: `tipo: "validacao"`, `status: "recusado"`;
+  - tool de controle que pausa: `tipo: "pergunta"` se `pendencia.tipo === "pergunta"`, ou `"proposta"` se for `"aprovacao"`;
+  - tool de controle que entrega: `tipo: "validacao"`, `status: "ok"`;
+  - erro de modelo que encerra: `tipo: "erro"`;
+  - troca de modelo: `tipo: "troca_de_modelo"`.
+
+  `resumo` = `tool.resumir?.(saida)` (corte em 80) ou nada.
+- **D3 · Tempo ativo.** `ativo_ms` acumula `clock.now()` do fim menos o do início de cada trecho. O loop confere o limite antes de cada passo: `ativo_ms + (agora - inicioDoTrecho) > timeoutTrechoMs` dá fim `limite: tempo`. O `timeoutMs` do pedido é `min(timeoutPassoMs, restante do trecho)`.
+- **D4 · Erros do runtime.**
+  - `rate_limit`: chama `modelo.falhou(...)` e pede `modelo.proximo()` de novo, sem contar chamada. Se vier `null`, o fim é `sem_modelo`.
+  - `timeout`, `indisponivel` e `resposta_invalida`: uma nova tentativa no mesmo modelo, que conta chamada. Na segunda falha, o fim é `{ tipo: "erro", codigo }`.
+  - Quando `proximo()` traz `troca`, grava a etapa `troca_de_modelo`. Ela vira o atributo `llm.troca_de_modelo` no span.
+- **D5 · `traceparent`.** O serviço abre o span `run` com `telemetry.span("run", …)` e guarda `telemetry.traceparentAtual()` em `runs.trace_id`. `continuarRun` abre o span do trecho retomado com `{ traceparent: run.trace_id }`.
+
+---
+
+### T1 · Add loop config, runtime and model ports, control-tool and checkpoint types, run states
+- nivel: mecanica
+- objetivo: criar `config/loop.ts` e os contratos puros do core (tipos, schema zod do checkpoint, transições de estado e erros).
+- arquivos: `config/loop.ts`, `config/index.ts`, `config/index.test.ts`, `src/core/runs/agent-runtime.ts`, `src/core/llm/fornecedor.ts`, `src/core/runs/agente.ts`, `src/core/runs/checkpoint.ts`, `src/core/runs/checkpoint.test.ts`, `src/core/runs/estados.ts`, `src/core/runs/estados.test.ts`, `src/core/runs/errors.ts`, `src/core/runs/errors.test.ts`, `src/core/runs/ports.ts`, `src/core/agents/tools/tool.ts`
+- leitura: spec 005, "Contratos": "Configuração", "Porta do runtime", "Fornecedor de modelo", "Tools de controle e definição do agente", "Checkpoint" e "Estados e serviço do run" (só a tabela de transições, `NovaEtapa`, `TipoDeEtapa` e `RunNaoContinuavelError`)
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - Os tipos da spec, como lá.
+  - `LlmError extends RituError` tem um `code` dentre `"rate_limit" | "timeout" | "indisponivel" | "resposta_invalida"`, tipado como `CodigoLlm`.
+  - `checkpoint.ts` exporta:
+    - `checkpointSchema`: zod, com `versao: z.literal(1)` e `mensagens` em união discriminada por `papel`;
+    - `lerCheckpoint(json: unknown): Checkpoint`, que lança `RituError("checkpoint_invalido")`;
+    - `pendenciaSchema`.
+  - `estados.ts` exporta `podeIr(de: StatusRun, para: StatusRun): boolean`, pela tabela.
+  - `RunNaoContinuavelError` vai em `errors.ts`, com `code "run_nao_continuavel"`.
+  - Em `ports.ts`, `TipoDeEtapa` passa a ser a união fechada da spec, e `NovaEtapa.tipo` passa a usar esse tipo. Se a mudança quebrar o fake ou o Postgres, ajuste só o tipo, sem mudar comportamento.
+  - `Tool` ganha `resumir?(saida: O): string`.
+- testes primeiro:
+  - `podeIr`: todas as transições da tabela dão `true`; `done → running`, `waiting_for_approval → running` e `expired → cancelled` dão `false`.
+  - `lerCheckpoint`: aceita um checkpoint válido com as quatro formas de mensagem; recusa `versao: 2`, `papel` desconhecido e `chamadas_de_modelo` negativo.
+  - `config.loop.maxChamadasDeModelo === 6`.
+  - `new LlmError("rate_limit", "x").code === "rate_limit"`.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:db` (o Docker está no ar; confira que a mudança de tipo não quebrou nada)
+- pronto quando: os testes passam.
+- fora: loop, serviço, telemetria, adaptadores.
+
+### T2 · Add the telemetry port, closed names, memory and null telemetry
+- nivel: mecanica
+- objetivo: criar a porta `Telemetry`, a lista fechada de spans, métricas e atributos, o fake em memória que trava atributos fora da lista e a telemetria nula.
+- arquivos: `src/core/telemetry/ports.ts`, `src/core/telemetry/nomes.ts`, `src/core/telemetry/nomes.test.ts`, `src/infra/fakes/memory-telemetry.ts`, `src/infra/fakes/memory-telemetry.test.ts`, `src/infra/otel/null-telemetry.ts`, `src/infra/otel/null-telemetry.test.ts`
+- leitura: spec 005, "Contratos" → "Telemetria"; `.docs/OBSERVABILITY.md` §3, só "Árvore de spans de um run" e "Métricas"
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - `nomes.ts` exporta, todos `as const`:
+    - `SPANS`: os 10 nomes da spec;
+    - `METRICAS`: todas as da tabela "Métricas" de `OBSERVABILITY.md` §3;
+    - `ATRIBUTOS_PERMITIDOS`: todos os atributos da árvore e todos os rótulos da tabela, mais `run.id`, `erro.codigo` e `trace_id`.
+  - Exporta também os tipos `NomeDeSpan`, `NomeDeMetrica` e `AtributoPermitido`, e `MAX_TEXTO_ATRIBUTO = 64`. Inclua `pausa.tipo`.
+  - `ports.ts` define a interface da spec.
+  - `createMemoryTelemetry()` devolve `Telemetry & { spans; eventos; metricas; logs }`:
+    - cada span guarda `{ nome, atributos, pai?: number, trace: string, falha?: string }`;
+    - `span` aninha pela pilha assíncrona (`AsyncLocalStorage` é aceitável em infra);
+    - `traceparentAtual()` devolve `00-<trace>-<span>-01`;
+    - `span` com `opts.traceparent` reusa o `trace` dele;
+    - atributo fora da lista, ou texto com mais de 64 caracteres, lança `Error("atributo_proibido: …")`.
+  - `createNullTelemetry()` executa `fn` com um `SpanAtivo` que não faz nada, e os demais métodos também não fazem nada.
+- testes primeiro:
+  - span aninhado registra `pai`;
+  - `traceparent` de um span é reaproveitado por outro span raiz, que fica no mesmo `trace`;
+  - atributo `"texto"` lança; valor de 65 caracteres lança;
+  - `nomes`: cada métrica começa com `ritu_`; `SPANS` contém `agente.passo`;
+  - a telemetria nula devolve o valor de `fn`.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`
+- pronto quando: os testes passam.
+- fora: OTel de verdade, loop.
+
+### T3 · Add the scripted runtime and fixed model fakes
+- nivel: mecanica
+- objetivo: criar o fake roteirizado de `AgentRuntime` e o fornecedor de modelo fixo.
+- arquivos: `src/infra/fakes/scripted-runtime.ts`, `src/infra/fakes/scripted-runtime.test.ts`, `src/infra/fakes/fixed-model.ts`, `src/infra/fakes/fixed-model.test.ts`
+- leitura: spec 005, "Contratos": "Porta do runtime", "Fornecedor de modelo" e "Fake roteirizado"
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - `createScriptedRuntime(roteiro, clock?)`:
+    - cada `passo` consome o próximo item do roteiro, guarda o pedido em `pedidos` e avança o relógio em `demoraMs`, se houver;
+    - com `erro`, lança `LlmError(erro)`;
+    - as chamadas recebem ids `c1`, `c2`, …, sequenciais por fake;
+    - os tokens padrão são 100 de entrada e 20 de saída;
+    - com o roteiro esgotado, lança `Error("roteiro esgotado")`.
+  - `createFixedModel(modelos = ["modelo-a", "modelo-b"])` devolve `FornecedorDeModelo & { usos; falhas }`:
+    - `proximo()` devolve o modelo atual;
+    - `falhou(m, e)` com `e.code === "rate_limit"` avança para o próximo modelo, e o `proximo()` seguinte traz `troca: { de: m, motivo: "429" }`;
+    - sem próximo modelo, `proximo()` devolve `null`;
+    - `usou` acumula.
+- testes primeiro:
+  - o roteiro de 2 passos devolve os dois na ordem e guarda os pedidos;
+  - `demoraMs` avança o relógio;
+  - `erro` lança `LlmError` com o código;
+  - o roteiro esgotado lança;
+  - o modelo fixo troca depois de um `rate_limit` e devolve `null` sem próximo.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`
+- pronto quando: os testes passam.
+- fora: loop.
+
+### T4 · Write the agent loop with limits, control tools, errors and checkpoint resume
+- nivel: nucleo
+- objetivo: implementar `executarTrecho`, `novoCheckpoint` e `retomarCheckpoint` no core, testados só com fakes.
+- arquivos: `src/core/runs/loop.ts`, `src/core/runs/loop.test.ts`, `src/core/runs/loop-passo.ts` (só se precisar dividir para manter a complexidade ≤ 15)
+- leitura: spec 005, "Critérios de aceite" (os do loop), "Decisões", "Contratos" → "Loop" (com a "Ordem de um passo") e "Edge cases e modos de falha"; `.docs/AI.md` §3 "O loop" e §8 "Entre os passos"
+- skills: nenhuma
+- referencia: `.local/REFERENCIAS.md` §2, linha "Loop de execução com rastro" (só leitura)
+- contratos:
+  - Decisões D1 a D4. Os contratos de `loop.ts` são os da spec.
+  - Spans:
+    - `agente.passo` (`passo.ordem`) envolve cada passo;
+    - `llm.chamada` envolve `runtime.passo`, com `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `llm.tentativas` e `llm.troca_de_modelo`;
+    - `tool.chamada` envolve cada tool, com `tool.nome` e `tool.status`;
+    - o evento `pausa` leva `pausa.tipo`.
+  - Métricas: `ritu_tool_chamadas_total` (rótulos `tool.nome` e `tool.status`), `ritu_llm_erros_total` (rótulo `erro.codigo`) e `ritu_pausas_total`.
+  - As mensagens do loop guardam o resultado de tool como **dado** (`{ papel: "tool", resultado }`). Ele é cortado em `maxResultadoDeToolCaracteres` pelo tamanho do `JSON.stringify`; quando há corte, o resultado vira `{ cortado: true, parcial: "<string cortada>" }`.
+  - Passo sem chamada de tool: acrescenta `{ papel: "sistema", conteudo: agente.lembreteDeEntrega }` e segue.
+  - Mais de `maxToolsPorPasso` chamadas: as excedentes recebem `{ erro: "muitas_tools" }`. Depois de um `entregar` ou `pausar`, as restantes recebem `{ ignorada: true }`.
+  - `pensamento`: quando o passo traz `texto` e chamadas, emite `aoVivo({ tipo: "pensamento", texto: texto.slice(0, 160) })`.
+  - `etapa_iniciada` sai antes de cada chamada de modelo e de cada tool; `etapa_concluida` sai depois de cada etapa gravada.
+  - Limite atingido no mesmo passo que entrega: a entrega vale.
+  - `retomarCheckpoint(estado, pendencia, resultadoDaTool)` acrescenta a mensagem `tool` com `chamada_id: pendencia.chamada_id` e o resultado, e soma 1 em `pausas`.
+  - O loop não lança. Exceção inesperada vira `{ tipo: "erro", codigo: "inesperado" }`.
+- testes primeiro (fakes `createScriptedRuntime`, `createFixedModel`, `createMemoryTelemetry` e `createFixedClock`; tools de exemplo definidas no teste): os critérios de aceite do loop, um a um.
+  - `A → B → entregar`: 3 chamadas e as etapas na ordem.
+  - Teto de 6 chamadas.
+  - Timeout: `demoraMs` alto passa de 25 s.
+  - Teto de tokens.
+  - 3 recusas encerram com `limite: validacao`.
+  - Tool desconhecida.
+  - Argumento inválido.
+  - Tool que lança.
+  - Passo sem tool recebe o lembrete.
+  - Pausa e retomada sem repetir pedidos ao runtime (`pedidos.length`).
+  - `rate_limit` troca de modelo sem contar chamada; sem próximo modelo, fim `sem_modelo`.
+  - `timeout` duas vezes encerra com erro.
+  - Mais de 4 tools num passo.
+  - Resultado cortado.
+  - Duas tools de controle no mesmo passo.
+  - Pensamento cortado em 160 e ausente das etapas e dos spans.
+  - A árvore de spans no fake de telemetria.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run dup`
+- pronto quando: todos os critérios do loop passam.
+- fora: o serviço do run (banco), adaptadores reais.
+
+### T5 · Add the run service with lifecycle, pause, resume and stale-run handling
+- nivel: nucleo
+- objetivo: implementar `createRunService`, com o ciclo de vida do run, a gravação de etapas, a pausa e a retomada pelo banco, e o fechamento de run em espera.
+- arquivos: `src/core/runs/run-service.ts`, `src/core/runs/run-service.test.ts`
+- leitura: spec 005, "Critérios de aceite" (pausa, `continuarRun`, checkpoint inválido, mensagem nova com run aberto, `aoGravarEtapa`, spans no mesmo trace), "Contratos" → "Estados e serviço do run" (com o parágrafo "Como cada fim vira estado") e "Edge cases" (`continuarRun` duplo, checkpoint incompatível)
+- skills: nenhuma
+- referencia: `.local/REFERENCIAS.md` §2, linha "Human-in-the-loop com `waiting_for_input` e `continue`" (só leitura)
+- contratos:
+  - D5. A assinatura é a da spec.
+  - `iniciarRun`:
+    - se houver um run aberto da conta em `running`, lança `RunAbertoError`;
+    - em `waiting_for_input`, o run antigo vira `cancelled`;
+    - em `waiting_for_approval`, o run antigo vira `done` e as propostas pendentes dele viram `expirada` (`proposals.expirarDosRuns([id])`);
+    - depois, `runs.criar` com `dia = diaLocal(clock.now(), fuso)`.
+  - Toda mudança de status passa por `podeIr`. Transição inválida lança `RituError("transicao_invalida")`.
+  - `executarRun`:
+    - abre o span `run` e grava `trace_id`;
+    - chama `executarTrecho`, com `gravarEtapa` gravando pelo `runs.acrescentarEtapa` e chamando `aoGravarEtapa`;
+    - trata o fim conforme a spec;
+    - atualiza `passos` (chamadas de modelo), `tokens_entrada`, `tokens_saida` e `latencia_ms` (= `ativo_ms`);
+    - exceção inesperada → `failed`.
+  - `continuarRun`:
+    - lança `RunNaoContinuavelError` sem mudar nada quando o run não existe na conta ou não está em `waiting_for_input`;
+    - lê o checkpoint com `lerCheckpoint`; inválido → `failed` com etapa `erro`, sem exceção;
+    - `agente` ou `prompt_versao` diferente da definição → `failed`, com código `checkpoint_incompativel`;
+    - caso contrário, passa a `running`, aplica `retomarCheckpoint` com `controle.aoRetomar?.(resposta, estado) ?? resposta`, executa o trecho no mesmo trace e trata o fim como `executarRun`.
+  - A pausa grava `checkpoint`, `pendencia` (com `criada_em` = agora e o `chamada_id`) e o status `waiting_for_input`, e emite o evento `pausa`.
+  - Métricas: `ritu_run_duracao_ms`, `ritu_run_passos`. Logs `info`: `run_inicio` e `run_fim`, com `run.id` e `trace_id`.
+  - Fim `entregue`: grava `saida` e devolve o fim sem encerrar. `encerrar` existe para quem chama.
+- testes primeiro (`createMemoryStores`, fakes da T2 e T3 e `createFixedClock`):
+  - o fluxo inteiro até `done`, via `encerrar`, com `saida`, `passos` e tokens;
+  - pausa e continuar até `done`, com spans do trecho retomado no mesmo `trace`;
+  - `continuarRun` em `done`, `expired` e de outra conta lança e não muda nada;
+  - checkpoint corrompido (`runs.atualizar` com `checkpoint: { versao: 9 }`) vira `failed`;
+  - `prompt_versao` diferente vira `failed` com `checkpoint_incompativel`;
+  - mensagem nova com run em `waiting_for_input` cancela o antigo; com run em `waiting_for_approval`, o antigo vira `done` e a proposta pendente, `expirada`; com run em `running`, lança;
+  - `aoGravarEtapa` é chamado na ordem;
+  - nenhum atributo de span contém a mensagem inicial do cenário.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run dup`
+- pronto quando: os critérios do serviço passam.
+- fora: OTel real, Mastra, container.
+
+### T6 · Add the OpenTelemetry adapter, node SDK, Next instrumentation and container telemetry
+- nivel: nucleo
+- objetivo: implementar `createOtelTelemetry`, o SDK para scripts, `src/instrumentation.ts` e a telemetria do container (OTel com endpoint, nula sem).
+- arquivos: `package.json`, `package-lock.json`, `src/infra/otel/telemetry.ts`, `src/infra/otel/telemetry.test.ts`, `src/infra/otel/node-sdk.ts`, `src/instrumentation.ts`, `src/infra/container.ts`, `src/infra/container.test.ts`
+- leitura: spec 005, "Contratos" → "Telemetria" e o critério "Sem `OTEL_EXPORTER_OTLP_ENDPOINT`…"; `.docs/OBSERVABILITY.md` §3, só "Ambientes" e "Privacidade"
+- skills: nenhuma
+- referencia: `.local/REFERENCIAS.md` §2, linha "OpenTelemetry com LGTM" (só leitura)
+- contratos:
+  - Instale as versões estáveis mais recentes de `@opentelemetry/api`, `@opentelemetry/sdk-node`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/exporter-metrics-otlp-http`, `@opentelemetry/exporter-logs-otlp-http` e `@vercel/otel`. Instale só o que usar de fato.
+  - `createOtelTelemetry()`:
+    - usa `@opentelemetry/api` (trace, metrics, propagation e context);
+    - abre os spans com `startActiveSpan`;
+    - `opts.traceparent` vira o contexto pai via `propagation.extract` com o carrier `{ traceparent }`;
+    - `traceparentAtual()` usa `propagation.inject`;
+    - valida cada atributo contra `ATRIBUTOS_PERMITIDOS` e `MAX_TEXTO_ATRIBUTO`: em produção **descarta** o atributo inválido e registra `warn` com `erro.codigo: "atributo_proibido"`, sem lançar;
+    - `falhar` marca o status `ERROR` com `erro.codigo`;
+    - os logs vão pelo `@opentelemetry/api-logs`, se o pacote estiver instalado; se não, pelo `console`, em JSON, só com os campos permitidos.
+  - `node-sdk.ts`: `iniciarOtelNode(): { encerrar(): Promise<void> } | undefined` liga o `NodeSDK` com exportadores OTLP HTTP só quando há `OTEL_EXPORTER_OTLP_ENDPOINT` (via `optionalEnv`), com `serviceName` de `OTEL_SERVICE_NAME` ou `"ritu"`.
+  - `src/instrumentation.ts`: `export async function register()` chama `registerOTel` de `@vercel/otel` só com o endpoint definido.
+  - Container:
+    - `telemetry` é preguiçoso: com o endpoint, `createOtelTelemetry()`; sem ele, `createNullTelemetry()`;
+    - aceita override;
+    - ganha `encerrar(): Promise<void>`, que chama `telemetry.encerrar()` e `closeDatabase()`;
+    - importar o container não carrega `@opentelemetry/sdk-node`: use `import()` dinâmico dentro do getter, ou só em `node-sdk.ts`, que o container não importa.
+- testes primeiro (sem rede):
+  - com `InMemorySpanExporter` (de `@opentelemetry/sdk-trace-base`, devDependency se precisar), um span com `traceparent` cai no mesmo trace;
+  - um atributo proibido é descartado;
+  - sem endpoint, `container.telemetry` é a nula, e nenhum módulo `@opentelemetry/sdk-node` está em `require.cache`/import (ou o equivalente que dê para conferir);
+  - o build do Next continua passando.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`
+- pronto quando: os testes passam e o build passa.
+- fora: Mastra, scripts.
+
+### T7 · Add the Mastra runtime adapter, container runtime and runs, and runtime:real
+- nivel: nucleo
+- objetivo: implementar `createMastraRuntime`, que executa **uma** chamada de modelo por passo sem executar tools, e ligar `runtime` e `runs` no container, com o script ⚠️ `runtime:real`.
+- arquivos: `package.json`, `package-lock.json`, `src/infra/mastra/runtime.ts`, `src/infra/mastra/runtime.test.ts`, `src/infra/container.ts`, `src/infra/container.test.ts`, `src/architecture.test.ts`, `scripts/runtime-real.ts`
+- leitura: spec 005, "O que fazer", "O que não fazer", "Decisões" (provider do Gemini), "Contratos" → "Porta do runtime", "Adaptador Mastra", "Container" e "Teste de arquitetura", e os critérios `runtime:real` e "captura de entrada e saída… desligada"; "Riscos" (o item sobre declarar tool sem execução)
+- skills: `mastra` (obrigatória; siga a documentação da versão **instalada** em `node_modules`)
+- referencia: `.local/REFERENCIAS.md` §2, linha "Mastra como runtime" (só leitura)
+- contratos:
+  - Instale `@mastra/core` e o provider do Gemini que a versão instalada indicar, nas versões estáveis mais recentes.
+  - `createMastraRuntime({ apiKey })`:
+    - converte `MensagemDoLoop[]` para as mensagens da biblioteca e as `tools` (nome, descrição, schema zod) para declarações **sem execução automática**;
+    - faz exatamente uma chamada com o `modelo` recebido e `timeoutMs` (por `AbortSignal`);
+    - devolve `texto`, `chamadas` (id, nome, argumentos) e os tokens;
+    - mapeia erro 429 → `rate_limit`, aborto → `timeout`, 5xx → `indisponivel` e resposta sem texto nem chamada → `resposta_invalida`;
+    - não escolhe modelo, não guarda memória e não tenta de novo;
+    - deixa desligada a captura de entrada e saída pelo exporter de observabilidade da Mastra, e o teste confere essa configuração.
+  - Se a versão instalada não deixar declarar tool sem execução, siga o item de "Riscos": registre uma execução que só devolve um marcador e limite a um passo.
+  - `architecture.test.ts`: o mapa de R5 ganha `"@ai-sdk": ["src/infra/mastra/"]`, e `@mastra` continua lá.
+  - Container:
+    - `runtime` é preguiçoso, `createMastraRuntime({ apiKey: () => requireEnv("GEMINI_API_KEY") })`, e a chave só é lida na primeira chamada;
+    - `runs` é preguiçoso: `createRunService({ stores, tx, runtime, clock, telemetry })`;
+    - os dois aceitam override.
+  - `scripts/runtime-real.ts <modelo>`:
+    - leva a marca ⚠️ no comentário do topo;
+    - sem argumento, imprime o uso e sai com 2;
+    - com o modelo, faz **uma** chamada `getContainer().runtime.passo(...)` com uma tool de exemplo (`hora_atual`, entrada `{}`) e a mensagem "Que horas são? Use a tool.";
+    - imprime as chamadas pedidas e os tokens, e chama `container.encerrar()`.
+  - Script `"runtime:real": "node --env-file-if-exists=.env.local --import tsx scripts/runtime-real.ts"`.
+  - **Não rode o script**: ele chama a rede.
+- testes primeiro (sem rede: mock do modelo da biblioteca, ou do `fetch`, conforme a documentação da versão instalada):
+  - um passo com chamada de tool devolve `chamadas` com nome e argumentos e não executa a tool;
+  - os tokens são devolvidos;
+  - 429 vira `rate_limit`; o aborto vira `timeout`; uma resposta vazia vira `resposta_invalida`;
+  - a captura de I/O está desligada;
+  - o container sem `GEMINI_API_KEY` cria `runtime` sem lançar.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`
+- pronto quando: os testes passam e o build passa.
+- fora: escolha de modelo (006), scripts de demo.
+
+### T8 · Add loop:demo and the loop deterministic evals
+- nivel: mecanica
+- objetivo: criar o script `loop:demo` (roteirizado, sem LLM) e os 5 evals de `evals/det/loop/`.
+- arquivos: `scripts/loop-demo.ts`, `package.json`, `evals/det/loop/limites.eval.ts`, `evals/det/loop/entrega.eval.ts`, `evals/det/loop/tools.eval.ts`, `evals/det/loop/pausa.eval.ts`, `evals/det/loop/rastro.eval.ts`
+- leitura: spec 005, "Evals" e "Contratos" → "Scripts"
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - `loop:demo` (`"loop:demo": "node --env-file-if-exists=.env.local --import tsx scripts/loop-demo.ts"`):
+    - monta `createRunService` com `createMemoryStores`, `createScriptedRuntime` (4 passos: tool → pausa → (retomada) tool → entregar), `createFixedModel` e `getContainer().telemetry`, que é OTel com endpoint e nula sem;
+    - cria uma conta demo, roda até a pausa, imprime as etapas, continua com uma resposta fixa, imprime as etapas e o status final, e chama `getContainer().encerrar()`;
+    - as tools de exemplo ficam no próprio script.
+  - Os evals usam só os fakes e o core, sem rede nem banco, e cobrem a lista da spec. `rastro` confere a árvore `run` → `agente.passo` → `llm.chamada`/`tool.chamada`, o evento `pausa`, e que nenhum atributo contém o texto da mensagem do cenário. `rastro` também confere as métricas `ritu_pausas_total` e `ritu_llm_erros_total` (num cenário com `rate_limit`), que o teste do loop não assere.
+- testes primeiro: os próprios evals.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run eval:det`, `npm run loop:demo` (sem endpoint, para conferir que roda e imprime)
+- pronto quando: os evals passam e o `loop:demo` imprime o cenário com pausa e retomada, terminando em `done`.
+- fora: Grafana (orquestrador).
+
+### C1 · Make definirTool forward resumir
+- nivel: mecanica
+- objetivo: `definirTool` passa adiante o campo opcional `resumir` da definição; hoje ele se perde, e o loop nunca gera `resumo` de etapa.
+- arquivos: `src/core/tools/tool.ts`, `src/core/tools/tool.test.ts` (criar se não existir), `scripts/loop-demo.ts` (tirar o contorno com spread, se ele deixar de ser necessário)
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos: `Tool<I, O>` tem `resumir?(saida: O): string`. A tool devolvida por `definirTool({ ..., resumir })` expõe o mesmo `resumir`. Sem `resumir`, o campo fica ausente.
+- testes primeiro:
+  - uma tool definida com `resumir: (s) => "ok " + s.n` expõe `resumir({ n: 2 }) === "ok 2"`;
+  - uma tool definida sem `resumir` tem `resumir === undefined`.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run eval:det`, `OTEL_EXPORTER_OTLP_ENDPOINT= npm run loop:demo`
+- pronto quando: os testes passam e o demo continua terminando em `done`.
+- fora: o loop (ele já usa `tool.resumir?.(saida)`).
+
+### C2 · Start the OTel node SDK for scripts through the container
+- nivel: nucleo
+- objetivo: fazer os scripts exportarem spans de verdade. Hoje `iniciarOtelNode()` (`src/infra/otel/node-sdk.ts`) não é chamado por ninguém; sem SDK registrado, a `@opentelemetry/api` não faz nada, e o `loop:demo` com o endpoint definido não manda trace nenhum ao Tempo.
+- arquivos: `src/infra/container.ts`, `src/infra/container.test.ts`, `src/infra/otel/node-sdk.ts` (só se precisar de ajuste), `scripts/loop-demo.ts`, `scripts/runtime-real.ts`
+- leitura: spec 005, "O que fazer" (item "Garantir o envio dos spans… antes de o script sair") e "Contratos" → "Telemetria" e "Container"
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - O `Container` ganha `iniciarTelemetria(): Promise<void>`.
+    - Com `OTEL_EXPORTER_OTLP_ENDPOINT` definido e fora do Next (`process.env.NEXT_RUNTIME` ausente), faz `import()` dinâmico de `@/infra/otel/node-sdk` e chama `iniciarOtelNode()` uma vez só. Chamar de novo não faz nada.
+    - Sem endpoint, não faz nada.
+  - `encerrar()` encerra o SDK, se ele foi iniciado (flush), depois de `telemetry.encerrar()` e antes de `closeDatabase()`.
+  - Importar o container continua sem carregar `@opentelemetry/sdk-node`.
+  - `scripts/loop-demo.ts` e `scripts/runtime-real.ts` chamam `await getContainer().iniciarTelemetria()` antes de qualquer span.
+- testes primeiro (sem rede):
+  - sem endpoint, `iniciarTelemetria()` não carrega `@opentelemetry/sdk-node` (o mesmo `vi.doMock` com espião que o teste da T6 usa);
+  - com endpoint, ela chama o `iniciarOtelNode` mockado uma vez só, mesmo chamada duas vezes;
+  - `encerrar()` chama o `encerrar` do SDK.
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `OTEL_EXPORTER_OTLP_ENDPOINT= npm run loop:demo`
+- pronto quando: os testes passam, o build passa e o demo sem endpoint termina em `done`. A conferência com o LGTM é do orquestrador.
+- fora: o adaptador `telemetry.ts`.

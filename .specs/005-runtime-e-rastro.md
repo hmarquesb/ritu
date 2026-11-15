@@ -1,6 +1,7 @@
 ---
 title: Runtime e rastro
-status: approved
+status: implemented
+implemented: 3a9ea65
 entrega: 1
 created: 2026-11-14
 ---
@@ -41,27 +42,27 @@ Depois desta spec, dá para definir um agente (instruções, tools, tools de con
 
 ## Critérios de aceite
 
-- [ ] Com o fake roteirizado: roteiro `tool A → tool B → entregar` termina com o run em `done`, 3 chamadas de modelo contadas, 2 etapas `tool`, 3 etapas `llm` e a saída gravada em `runs.saida`.
-- [ ] **Teto de chamadas:** roteiro que nunca entrega para na 6ª chamada de modelo, com fim `limite: chamadas`; o run não fica em `running`.
-- [ ] **Timeout:** com o relógio fixo avançando além de 25 s de trabalho ativo, o trecho termina com `limite: tempo`. O tempo em pausa não conta.
-- [ ] **Teto de tokens:** somando mais que o teto de `config/loop.ts`, o trecho termina com `limite: tokens`.
-- [ ] **Entrega recusada:** tool de controle que recusa devolve o motivo ao modelo como resultado de tool e o loop continua; a 3ª recusa termina com `limite: validacao`.
-- [ ] **Tool fora do catálogo** vira resultado `{ erro: "tool_desconhecida" }`, etapa com status `recusado`, e o loop continua.
-- [ ] **Argumento inválido** (zod) vira `{ erro: "argumentos_invalidos" }` e etapa `recusado`; **tool que lança** vira `{ erro: "falhou" }` e etapa `falhou`. Nos dois casos o run termina bem.
-- [ ] **Passo sem chamada de tool:** o loop acrescenta o lembrete de entregar pela tool de entrega e segue; conta como chamada de modelo.
-- [ ] **Pausa:** tool de controle que pausa leva o run a `waiting_for_input`, com `checkpoint` e `pendencia` gravados, e a função retorna. `continuarRun` com a resposta retoma do checkpoint, sem repetir chamadas de modelo anteriores, e termina em `done`.
-- [ ] `continuarRun` em run `expired`, `done` ou de outra conta lança `RunNaoContinuavelError` e não muda nada.
-- [ ] Checkpoint com formato inválido (zod) leva o run a `failed`, sem exceção solta.
-- [ ] **Mensagem nova com run aberto:** em `waiting_for_input`, o antigo vira `cancelled`; em `waiting_for_approval`, vira `done` e as propostas pendentes viram `expirada`; em `running`, `iniciarRun` lança `RunAbertoError`.
-- [ ] Erro `rate_limit` do runtime chama `modelo.falhou` e tenta de novo com o próximo modelo, sem contar chamada; sem próximo modelo, fim `sem_modelo`.
-- [ ] Cada etapa gravada dispara `aoGravarEtapa` na ordem.
-- [ ] **Ao vivo:** `aoVivo` recebe `etapa_iniciada` antes de cada chamada de modelo e de cada tool, `etapa_concluida` depois de cada etapa gravada e `pensamento` quando o passo traz texto junto com chamadas de tool. O pensamento é cortado em 160 caracteres e não vai para `run_etapas`, span, métrica nem log.
-- [ ] **Spans:** o fake de telemetria recebe `run` → `agente.passo` (1..n) → `llm.chamada` e `tool.chamada`, e o evento `pausa`, com os atributos de "Contratos". O trecho retomado entra no **mesmo** trace do run.
-- [ ] O fake de telemetria lança erro de teste para atributo fora da lista permitida ou valor de texto com mais de 64 caracteres.
-- [ ] Sem `OTEL_EXPORTER_OTLP_ENDPOINT`, o container entrega uma telemetria que não faz nada e nenhum pacote de OTel abre conexão.
-- [ ] `npm run loop:demo` roda um cenário roteirizado com pausa e retomada e imprime as etapas; com o LGTM no ar e o endpoint definido, o trace aparece no Grafana local com a árvore completa (conferência manual, anotada no relatório da entrega).
-- [ ] ⚠️ `npm run runtime:real` faz **uma** chamada real pelo adaptador Mastra, com uma tool de exemplo, e imprime a chamada de tool pedida pelo modelo e os tokens.
-- [ ] A captura de entrada e saída do modelo pelo exporter da Mastra está desligada (teste do adaptador confere a configuração).
+- [x] Com o fake roteirizado: roteiro `tool A → tool B → entregar` termina com o run em `done`, 3 chamadas de modelo contadas, 2 etapas `tool`, 3 etapas `llm` e a saída gravada em `runs.saida`.
+- [x] **Teto de chamadas:** roteiro que nunca entrega para na 6ª chamada de modelo, com fim `limite: chamadas`; o run não fica em `running`.
+- [x] **Timeout:** com o relógio fixo avançando além de 25 s de trabalho ativo, o trecho termina com `limite: tempo`. O tempo em pausa não conta.
+- [x] **Teto de tokens:** somando mais que o teto de `config/loop.ts`, o trecho termina com `limite: tokens`.
+- [x] **Entrega recusada:** tool de controle que recusa devolve o motivo ao modelo como resultado de tool e o loop continua; a 3ª recusa termina com `limite: validacao`.
+- [x] **Tool fora do catálogo** vira resultado `{ erro: "tool_desconhecida" }`, etapa com status `recusado`, e o loop continua.
+- [x] **Argumento inválido** (zod) vira `{ erro: "argumentos_invalidos" }` e etapa `recusado`; **tool que lança** vira `{ erro: "falhou" }` e etapa `falhou`. Nos dois casos o run termina bem.
+- [x] **Passo sem chamada de tool:** o loop acrescenta o lembrete de entregar pela tool de entrega e segue; conta como chamada de modelo.
+- [x] **Pausa:** tool de controle que pausa leva o run a `waiting_for_input`, com `checkpoint` e `pendencia` gravados, e a função retorna. `continuarRun` com a resposta retoma do checkpoint, sem repetir chamadas de modelo anteriores, e termina em `done`.
+- [x] `continuarRun` em run `expired`, `done` ou de outra conta lança `RunNaoContinuavelError` e não muda nada.
+- [x] Checkpoint com formato inválido (zod) leva o run a `failed`, sem exceção solta.
+- [x] **Mensagem nova com run aberto:** em `waiting_for_input`, o antigo vira `cancelled`; em `waiting_for_approval`, vira `done` e as propostas pendentes viram `expirada`; em `running`, `iniciarRun` lança `RunAbertoError`.
+- [x] Erro `rate_limit` do runtime chama `modelo.falhou` e tenta de novo com o próximo modelo, sem contar chamada; sem próximo modelo, fim `sem_modelo`.
+- [x] Cada etapa gravada dispara `aoGravarEtapa` na ordem.
+- [x] **Ao vivo:** `aoVivo` recebe `etapa_iniciada` antes de cada chamada de modelo e de cada tool, `etapa_concluida` depois de cada etapa gravada e `pensamento` quando o passo traz texto junto com chamadas de tool. O pensamento é cortado em 160 caracteres e não vai para `run_etapas`, span, métrica nem log.
+- [x] **Spans:** o fake de telemetria recebe `run` → `agente.passo` (1..n) → `llm.chamada` e `tool.chamada`, e o evento `pausa`, com os atributos de "Contratos". O trecho retomado entra no **mesmo** trace do run.
+- [x] O fake de telemetria lança erro de teste para atributo fora da lista permitida ou valor de texto com mais de 64 caracteres.
+- [x] Sem `OTEL_EXPORTER_OTLP_ENDPOINT`, o container entrega uma telemetria que não faz nada e nenhum pacote de OTel abre conexão.
+- [x] `npm run loop:demo` roda um cenário roteirizado com pausa e retomada e imprime as etapas; com o LGTM no ar e o endpoint definido, o trace aparece no Grafana local com a árvore completa (conferência manual, anotada no relatório da entrega).
+- [x] ⚠️ `npm run runtime:real` faz **uma** chamada real pelo adaptador Mastra, com uma tool de exemplo, e imprime a chamada de tool pedida pelo modelo e os tokens.
+- [x] A captura de entrada e saída do modelo pelo exporter da Mastra está desligada (teste do adaptador confere a configuração).
 
 ## O que fazer
 

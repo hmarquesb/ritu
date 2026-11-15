@@ -66,6 +66,8 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run db:migrate` | Aplica as migrações pendentes de `db/migrations/` no banco do `DATABASE_URL`. Precisa do Postgres no ar |
 | ⚠️ `npm run test:db` | Roda as suítes de contrato das portas contra o Postgres do `docker compose`, no schema `ritu_test`, recriado a cada rodada |
 | `npm run cleanup` | Roda a limpeza diária no banco do `DATABASE_URL` e imprime as contagens |
+| `npm run loop:demo` | Roda o loop com o runtime roteirizado e os stores em memória, num cenário com pausa e retomada, sem LLM. Com `OTEL_EXPORTER_OTLP_ENDPOINT`, exporta o trace para o LGTM |
+| ⚠️ `npm run runtime:real -- <modelo>` | Uma chamada real pelo adaptador Mastra, com uma tool de exemplo; imprime a chamada pedida e os tokens |
 | `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |
 | `docker compose up -d` | Postgres (`5432`) e Grafana LGTM (`3001`, OTLP `4317`/`4318`) |
 

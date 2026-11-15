@@ -12,7 +12,7 @@ export type Pendencia = {
 export type ResultadoDeControle =
   | { tipo: "entregar"; saida: unknown }
   | { tipo: "recusar"; resultado: unknown } // volta ao modelo como resultado da tool
-  | { tipo: "pausar"; pendencia: Omit<Pendencia, "criada_em" | "chamada_id"> }
+  | { tipo: "pausar"; pendencia: Omit<Pendencia, "criada_em" | "chamada_id">; resumo?: string }
 
 export type ToolDeControle<I> = {
   name: string

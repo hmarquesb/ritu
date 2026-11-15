@@ -93,6 +93,8 @@ export interface RunRepository {
   buscar(contaId: string, runId: string): Promise<Run | undefined>
   aberto(contaId: string): Promise<Run | undefined>
   atualizar(contaId: string, runId: string, campos: Partial<RunMutavel>): Promise<void>
+  /** Troca o status numa operação só (update … where status = de); devolve se trocou. */
+  mudarStatusSe(contaId: string, runId: string, de: StatusRun, para: StatusRun): Promise<boolean>
   /** ordem = última + 1. */
   acrescentarEtapa(contaId: string, runId: string, etapa: NovaEtapa): Promise<RunEtapa>
   etapas(contaId: string, runId: string): Promise<RunEtapa[]>

@@ -113,6 +113,14 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
       await sql`update runs set ${sql(valores)} where id = ${runId} and conta_id = ${contaId}`
     },
 
+    async mudarStatusSe(contaId, runId, de, para) {
+      const linhas = await sql`
+        update runs set status = ${para}, atualizado_em = ${clock.now()}
+        where id = ${runId} and conta_id = ${contaId} and status = ${de}
+        returning id`
+      return linhas.length > 0
+    },
+
     async acrescentarEtapa(contaId, runId, etapa: NovaEtapa) {
       return numaTransacao(sql, async (tx) => {
         await garantirRunDaConta(tx, contaId, runId)

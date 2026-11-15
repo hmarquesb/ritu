@@ -68,6 +68,50 @@ export function runsContract(make: () => Promise<ContractEnv> | ContractEnv): vo
       })
     })
 
+    it("mudarStatusSe troca quando o status bate e devolve true", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const run = await abrir(env.stores, a)
+      await env.stores.runs.atualizar(a, run.id, { status: "waiting_for_input" })
+
+      expect(await env.stores.runs.mudarStatusSe(a, run.id, "waiting_for_input", "running")).toBe(
+        true,
+      )
+      expect((await env.stores.runs.buscar(a, run.id))?.status).toBe("running")
+    })
+
+    it("mudarStatusSe com status diferente devolve false e não muda", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const run = await abrir(env.stores, a)
+
+      expect(await env.stores.runs.mudarStatusSe(a, run.id, "waiting_for_input", "done")).toBe(
+        false,
+      )
+      expect((await env.stores.runs.buscar(a, run.id))?.status).toBe("running")
+    })
+
+    it("mudarStatusSe de outra conta devolve false e não muda", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const run = await abrir(env.stores, a)
+
+      expect(await env.stores.runs.mudarStatusSe(b, run.id, "running", "done")).toBe(false)
+      expect((await env.stores.runs.buscar(a, run.id))?.status).toBe("running")
+    })
+
+    it("mudarStatusSe duas vezes seguidas: só a primeira devolve true", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const run = await abrir(env.stores, a)
+      await env.stores.runs.atualizar(a, run.id, { status: "waiting_for_input" })
+
+      const primeira = await env.stores.runs.mudarStatusSe(
+        a,
+        run.id,
+        "waiting_for_input",
+        "running",
+      )
+      const segunda = await env.stores.runs.mudarStatusSe(a, run.id, "waiting_for_input", "running")
+      expect([primeira, segunda]).toEqual([true, false])
+    })
+
     it.each(["running", "waiting_for_input", "waiting_for_approval"] as const)(
       "criar com outro run em %s na conta lança RunAbertoError",
       async (status: StatusRun) => {

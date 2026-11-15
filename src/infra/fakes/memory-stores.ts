@@ -791,6 +791,12 @@ function criarRuns(db: Db, clock: Clock): RunRepository {
       if (campos.momento) momentoSchema.parse(campos.momento)
       Object.assign(run, campos, { atualizado_em: agoraIso(clock) })
     },
+    async mudarStatusSe(contaId, runId, de, para) {
+      const run = runDaConta(contaId, runId)
+      if (run?.status !== de) return false
+      Object.assign(run, { status: para, atualizado_em: agoraIso(clock) })
+      return true
+    },
     async acrescentarEtapa(contaId, runId, etapa) {
       if (!runDaConta(contaId, runId))
         throw new RituError("run_nao_encontrado", "Run não encontrado")

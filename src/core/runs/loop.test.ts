@@ -72,6 +72,18 @@ const perguntar: ToolDeControle<unknown> = {
     return { tipo: "pausar", pendencia: { tipo: "pergunta", conteudo: { q: 1 } } }
   },
 }
+const perguntarComResumo: ToolDeControle<unknown> = {
+  name: "perguntar_resumo",
+  description: "pergunta com resumo",
+  input: z.object({}),
+  async tratar() {
+    return {
+      tipo: "pausar",
+      pendencia: { tipo: "pergunta", conteudo: { q: 1 } },
+      resumo: `casa: 2 itens${"x".repeat(100)}`,
+    }
+  },
+}
 const aprovar: ToolDeControle<unknown> = {
   name: "aprovar",
   description: "aprovação",
@@ -86,7 +98,7 @@ const agente: DefinicaoDoAgente = {
   instrucoes: "instr",
   prompt_versao: "v1",
   tools: [toolA, toolB, toolQuebra, toolGrande, toolComResumo] as never,
-  controle: [finalizar, perguntar, aprovar],
+  controle: [finalizar, perguntar, perguntarComResumo, aprovar],
   lembreteDeEntrega: "entregue por finalizar",
 }
 
@@ -347,6 +359,17 @@ describe("executarTrecho", () => {
       { ignorada: true },
     ])
     expect(m.etapas.filter((e) => e.tipo === "pergunta" || e.tipo === "tool")).toHaveLength(0)
+  })
+
+  it("a pausa leva o resumo (cortado em 80) para a etapa pergunta; sem resumo, null", async () => {
+    const com = montar([{ chamadas: [{ nome: "perguntar_resumo", argumentos: {} }] }])
+    await executarTrecho(agente, inicio(), ctx, com.deps)
+    const etapaCom = com.etapas.find((e) => e.tipo === "pergunta")
+    expect(etapaCom?.resumo).toHaveLength(80)
+    expect(etapaCom?.resumo?.startsWith("casa: 2 itens")).toBe(true)
+    const sem = montar([{ chamadas: [{ nome: "perguntar", argumentos: {} }] }])
+    await executarTrecho(agente, inicio(), ctx, sem.deps)
+    expect(sem.etapas.find((e) => e.tipo === "pergunta")?.resumo).toBeNull()
   })
 
   it("resume com 80 caracteres no máximo", async () => {

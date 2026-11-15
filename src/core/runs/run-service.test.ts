@@ -130,6 +130,66 @@ describe("createRunService", () => {
     expect((await m.stores.runs.buscar(m.conta.id, run.id))?.status).toBe("waiting_for_input")
   })
 
+  it("continuarRun em running sem reservado lança e não muda nada", async () => {
+    const m = await montar([])
+    const run = await m.iniciar()
+    await expect(
+      m.svc.continuarRun(m.conta.id, run.id, { ...m.exec, resposta: "x" }),
+    ).rejects.toBeInstanceOf(RunNaoContinuavelError)
+    expect((await m.stores.runs.buscar(m.conta.id, run.id))?.status).toBe("running")
+  })
+
+  it("continuarRun reservado em running retoma do checkpoint sem repetir passo", async () => {
+    const m = await montar([{ chamadas: [perg] }, { chamadas: [fin] }])
+    const run = await m.iniciar()
+    await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+    expect(
+      await m.stores.runs.mudarStatusSe(m.conta.id, run.id, "waiting_for_input", "running"),
+    ).toBe(true)
+    const c = await m.svc.continuarRun(m.conta.id, run.id, {
+      ...m.exec,
+      resposta: "sim",
+      reservado: true,
+    })
+    expect(c.fim.tipo).toBe("entregue")
+    expect(c.run.passos).toBe(2)
+  })
+
+  it("continuarRun reservado em waiting_for_input lança e não muda nada", async () => {
+    const m = await montar([{ chamadas: [perg] }])
+    const run = await m.iniciar()
+    await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+    await expect(
+      m.svc.continuarRun(m.conta.id, run.id, { ...m.exec, resposta: "x", reservado: true }),
+    ).rejects.toBeInstanceOf(RunNaoContinuavelError)
+    expect((await m.stores.runs.buscar(m.conta.id, run.id))?.status).toBe("waiting_for_input")
+  })
+
+  describe("pausarSemAgente", () => {
+    const pendencia = { tipo: "pergunta" as const, conteudo: { q: 1 } }
+
+    it("deixa o run em waiting_for_input, sem checkpoint, com evento e métrica", async () => {
+      const m = await montar([])
+      const run = await m.iniciar()
+      const r = await m.svc.pausarSemAgente(m.conta.id, run.id, pendencia)
+      expect(r).toMatchObject({ status: "waiting_for_input", checkpoint: null })
+      expect(r.pendencia).toEqual({ ...pendencia, criada_em: "2026-01-01T12:00:00.000Z" })
+      expect((await m.stores.runs.buscar(m.conta.id, run.id))?.status).toBe("waiting_for_input")
+      expect(m.telemetry.eventos).toHaveLength(1)
+      expect(m.telemetry.eventos[0]).toMatchObject({ nome: "pausa" })
+      expect(
+        m.telemetry.metricas.filter((x) => x.nome === "ritu_pausas_total").map((x) => x.valor),
+      ).toEqual([1])
+    })
+
+    it("em run done lança", async () => {
+      const m = await montar([])
+      const run = await m.iniciar()
+      await m.svc.encerrar(m.conta.id, run.id, "done")
+      await expect(m.svc.pausarSemAgente(m.conta.id, run.id, pendencia)).rejects.toThrow()
+    })
+  })
+
   it("checkpoint corrompido vira failed, sem exceção", async () => {
     const m = await montar([{ chamadas: [perg] }])
     const run = await m.iniciar()

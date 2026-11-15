@@ -308,11 +308,14 @@ export function createRunService(deps: DepsDoServico) {
   async function continuarRun(
     contaId: string,
     runId: string,
-    p: Execucao & { resposta: unknown },
+    p: Execucao & { resposta: unknown; reservado?: true },
   ): Promise<ResultadoDoRun> {
+    if (!p.reservado) {
+      const trocou = await stores.runs.mudarStatusSe(contaId, runId, "waiting_for_input", "running")
+      if (!trocou) throw new RunNaoContinuavelError()
+    }
     const run = await stores.runs.buscar(contaId, runId)
-    if (run?.status !== "waiting_for_input") throw new RunNaoContinuavelError()
-    await mudarStatus(stores, contaId, run, "running")
+    if (run?.status !== "running") throw new RunNaoContinuavelError()
     const lido = lerEstado(run, p.agente)
     if (typeof lido === "string") {
       const falho = await falhar(contaId, runId, lido)
@@ -329,5 +332,28 @@ export function createRunService(deps: DepsDoServico) {
     })
   }
 
-  return { iniciarRun, executarRun, continuarRun, gravarEtapa, encerrar, comSpanDoRun }
+  async function pausarSemAgente(
+    contaId: string,
+    runId: string,
+    pendencia: Omit<Pendencia, "criada_em" | "chamada_id">,
+  ): Promise<Run> {
+    const run = await buscarOuFalhar(contaId, runId)
+    await mudarStatus(stores, contaId, run, "waiting_for_input", {
+      pendencia: { ...pendencia, criada_em: clock.now().toISOString() },
+      checkpoint: null,
+    })
+    telemetry.evento("pausa", { "pausa.tipo": pendencia.tipo })
+    telemetry.contador("ritu_pausas_total", { tipo: pendencia.tipo })
+    return buscarOuFalhar(contaId, runId)
+  }
+
+  return {
+    iniciarRun,
+    executarRun,
+    continuarRun,
+    pausarSemAgente,
+    gravarEtapa,
+    encerrar,
+    comSpanDoRun,
+  }
 }

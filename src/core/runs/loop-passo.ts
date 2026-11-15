@@ -92,7 +92,7 @@ function despachoDeControle(r: ResultadoDeControle, nome: string): Despacho {
   if (r.tipo === "recusar")
     return despacho("validacao", nome, "recusado", r.resultado, undefined, r)
   const tipo = r.pendencia.tipo === "pergunta" ? "pergunta" : "proposta"
-  return despacho(tipo, nome, "ok", null, undefined, r)
+  return despacho(tipo, nome, "ok", null, r.resumo?.slice(0, 80), r)
 }
 
 async function rodarControle(

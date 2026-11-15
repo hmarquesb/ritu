@@ -62,12 +62,13 @@
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, suave]
   passos: "Aquecer {gordura} e soltar o aroma de {tempero}. Juntar {legume} e {folha} picados, cobrir com bastante água e cozinhar em fogo baixo até o caldo pegar sabor. Coar e tomar quente, aos golinhos."
-  momento: [jantar]
+  momento: [jantar, noite]
   contraindicacoes: []
   fontes:
     - { ref: banyan-caldo-folhas, campos: [vagas, passos, gunas_do_preparo] }
     - { ref: banyan-dieta-vata, campos: [momento] }
-  confianca: media
+    - { ref: a_confirmar, campos: [momento] }
+  confianca: baixa
 
 - id: arroz-papa
   nome: Arroz papa
@@ -255,3 +256,266 @@
     - { ref: ayurveda-com-guia-dieta, campos: [gunas_do_preparo] }
     - { ref: banyan-dieta-vata, campos: [momento] }
   confianca: media
+
+- id: salada-morna
+  nome: Salada morna
+  titulo: "Salada morna de {legume} com {folha}"
+  vagas:
+    - { funcao: legume, obrigatoria: true, maximo: 3 }
+    - { funcao: folha, obrigatoria: false }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [leve, oleoso]
+  passos: "Cozinhar {legume} em pedaços no vapor até ficar macio. Deixar amornar e misturar com {folha} picada. Temperar com {gordura}, {tempero} e sal e servir morna ou em temperatura ambiente."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-salada-verao, campos: [vagas, passos] }
+    - { ref: banyan-modos-de-preparo, campos: [passos, gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [momento] }
+  confianca: media
+
+- id: salada-crua
+  nome: Salada crua
+  titulo: "Salada crua de {folha} com {legume}"
+  vagas:
+    - { funcao: folha, obrigatoria: true, maximo: 2 }
+    - { funcao: legume, obrigatoria: false, maximo: 2, grupos: [legumes, raizes] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [frio, leve, seco, aspero]
+  passos: "Lavar bem {folha} e {legume}. Fatiar {legume} bem fino e rasgar {folha} com as mãos. Temperar com {gordura}, {tempero} e sal na hora de servir. Comer com calma, no meio do dia."
+  momento: [almoco]
+  contraindicacoes: [com_frio]
+  fontes:
+    - { ref: banyan-salada-pepino-abacate, campos: [vagas, passos, momento] }
+    - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo, contraindicacoes] }
+    - { ref: banyan-alimentos-vata, campos: [gunas_do_preparo, momento, contraindicacoes] }
+  confianca: media
+
+- id: fruta-cozida-com-especiaria
+  nome: Fruta cozida com especiaria
+  titulo: "{fruta} cozida com {tempero}"
+  vagas:
+    - { funcao: fruta, obrigatoria: true, maximo: 2, grupos: [frutas] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: adocante, obrigatoria: false, grupos: [frutas, adocantes] }
+  gunas_do_preparo: [quente, oleoso, estavel]
+  passos: "Descascar {fruta} se preciso e cortar em pedaços. Levar à panela com um pouco de água, {tempero} e {adocante} e cozinhar em fogo baixo, tampado, até ficar bem macia. Finalizar com {gordura} e comer morna, sozinha."
+  momento: [manha, tarde]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-lanches-por-dosha, campos: [vagas, momento] }
+    - { ref: banyan-alimentos-vata, campos: [gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [gunas_do_preparo] }
+    - { ref: banyan-modos-de-preparo, campos: [passos, gunas_do_preparo] }
+    - { ref: banyan-mingau-aveia, campos: [vagas, momento] }
+  confianca: media
+
+- id: fruta-assada
+  nome: Fruta assada
+  titulo: "{fruta} assada com {tempero}"
+  vagas:
+    - { funcao: fruta, obrigatoria: true, grupos: [frutas] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+    - { funcao: adocante, obrigatoria: false, grupos: [frutas, adocantes] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos, oleaginosas] }
+  gunas_do_preparo: [leve, seco]
+  passos: "Lavar {fruta}, tirar o miolo e rechear com {adocante}, {tempero} e {gordura}. Pôr numa assadeira com um pouco de água no fundo, cobrir e assar no forno até ficar macia. Servir morna."
+  momento: [manha, tarde]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-maca-assada, campos: [vagas, passos, momento] }
+    - { ref: banyan-lanches-por-dosha, campos: [vagas, momento] }
+    - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo] }
+  confianca: media
+
+- id: fruta-fresca
+  nome: Fruta fresca
+  titulo: "Fruta fresca: {fruta}, sozinha"
+  vagas:
+    - { funcao: fruta, obrigatoria: true, grupos: [frutas] }
+  gunas_do_preparo: [frio, leve]
+  passos: "Lavar {fruta}, descascar se for o caso e comer sozinha, sem misturar com outros alimentos. Melhor um pouco antes de uma refeição ou bem depois dela, quando bater a fome da tarde."
+  momento: [manha, tarde]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [vagas, passos] }
+    - { ref: banyan-lanches-por-dosha, campos: [momento] }
+    - { ref: banyan-dieta-pitta, campos: [gunas_do_preparo, momento] }
+    - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo] }
+  confianca: media
+
+- id: ovo-mexido
+  nome: Mexido
+  titulo: "Mexido de {proteina} com {tempero}"
+  vagas:
+    - { funcao: proteina, obrigatoria: true, grupos: [ovos, leguminosas] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: folha, obrigatoria: false }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso]
+  passos: "Aquecer {gordura} em fogo baixo e soltar o aroma de {tempero}. Juntar {folha} picada até murchar. Acrescentar {proteina} e mexer sem parar até firmar, sem deixar dourar. Servir quente."
+  momento: [manha]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [vagas, momento] }
+    - { ref: banyan-alimentos-kapha, campos: [passos] }
+    - { ref: a_confirmar, campos: [passos, gunas_do_preparo] }
+  confianca: baixa
+
+- id: omelete-com-legume
+  nome: Omelete com legume
+  titulo: "Omelete de {proteina} com {legume}"
+  vagas:
+    - { funcao: proteina, obrigatoria: true, grupos: [ovos, leguminosas] }
+    - { funcao: legume, obrigatoria: true, maximo: 2 }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso]
+  passos: "Picar {legume} bem miúdo e amaciar em {gordura} com {tempero}. Bater {proteina} com sal, despejar por cima e cozinhar tampado em fogo baixo até firmar. Virar ou dobrar e servir quente."
+  momento: [manha]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-dieta-pitta, campos: [vagas, momento] }
+    - { ref: a_confirmar, campos: [passos, gunas_do_preparo] }
+  confianca: baixa
+
+- id: iogurte-batido-com-especiaria
+  nome: Iogurte batido com especiaria
+  titulo: "{proteina} batido com água e {tempero}"
+  vagas:
+    - { funcao: proteina, obrigatoria: true, grupos: [laticinios] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+    - { funcao: adocante, obrigatoria: false, grupos: [adocantes] }
+  gunas_do_preparo: [frio]
+  passos: "Bater {proteina} com bastante água, {tempero} e {adocante} no liquidificador até ficar leve e espumante. Acertar o doce ao gosto. Tomar em temperatura ambiente, no fim da refeição ou num lanche da tarde."
+  momento: [almoco, tarde]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-masala-lassi, campos: [vagas, passos, momento] }
+    - { ref: banyan-lanches-por-dosha, campos: [momento] }
+    - { ref: banyan-dieta-pitta, campos: [gunas_do_preparo] }
+  confianca: media
+
+- id: tapioca-recheada
+  nome: Tapioca recheada
+  titulo: "Tapioca recheada com {legume} e {proteina}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: legume, obrigatoria: true }
+    - { funcao: proteina, obrigatoria: false, grupos: [laticinios, ovos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [leve, seco]
+  passos: "Espalhar {base} hidratada numa frigideira seca e quente até firmar como um disco. Rechear com {legume} já cozido, {proteina} e {tempero}, dobrar e deixar mais um pouco no fogo. Servir quente."
+  momento: [manha]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-guia-inverno, campos: [vagas, momento] }
+    - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo] }
+    - { ref: a_confirmar, campos: [passos] }
+  confianca: baixa
+
+- id: cuscuz-no-vapor
+  nome: Cuscuz no vapor
+  titulo: "Cuscuz de {base} com {legume}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: legume, obrigatoria: false, maximo: 2 }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [leve, oleoso]
+  passos: "Umedecer {base} com água e sal e deixar descansar até hidratar. Misturar {legume} picado e {tempero}, pôr na cuscuzeira e cozinhar no vapor até ficar macio e soltinho. Servir quente com {gordura}."
+  momento: [manha, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo] }
+    - { ref: banyan-alimentos-kapha, campos: [vagas] }
+    - { ref: a_confirmar, campos: [passos, momento] }
+  confianca: baixa
+
+- id: torrada-com-gordura
+  nome: Torrada com gordura
+  titulo: "Torrada de {base} com {gordura}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: gordura, obrigatoria: true, grupos: [oleos, laticinios] }
+    - { funcao: tempero, obrigatoria: false, grupos: [especiarias] }
+    - { funcao: adocante, obrigatoria: false, grupos: [adocantes] }
+  gunas_do_preparo: [leve, seco]
+  passos: "Tostar {base} na frigideira ou no forno até dourar. Passar {gordura} ainda quente e finalizar com {tempero} ou {adocante}. Servir na hora."
+  momento: [manha]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [vagas, momento] }
+    - { ref: banyan-ayurveda-nos-alimentos, campos: [vagas, momento] }
+    - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo] }
+  confianca: media
+
+- id: macarrao-com-legume
+  nome: Macarrão com legume
+  titulo: "Macarrão de {base} com {legume}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: legume, obrigatoria: true, maximo: 3 }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso]
+  passos: "Cozinhar {base} em água fervente e escorrer. Aquecer {gordura}, soltar o aroma de {tempero} e juntar {legume} em pedaços. Pingar água, tampar e cozinhar no vapor da panela até ficar macio. Misturar tudo e servir quente."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-macarrao-com-legumes, campos: [vagas, passos, momento, gunas_do_preparo] }
+    - { ref: banyan-modos-de-preparo, campos: [passos, gunas_do_preparo] }
+  confianca: media
+
+- id: polenta-mole
+  nome: Polenta mole
+  titulo: "Polenta mole de {base} com {tempero}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [quente, suave]
+  passos: "Dissolver {base} em água fria com sal, levar ao fogo baixo e mexer sem parar até engrossar e ficar cremosa. Terminar com {gordura} e {tempero} e servir quente."
+  momento: [manha, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-guia-inverno, campos: [vagas, momento] }
+    - { ref: banyan-alimentos-kapha, campos: [vagas] }
+    - { ref: a_confirmar, campos: [passos, gunas_do_preparo, momento] }
+  confianca: baixa
+
+- id: oleaginosas-de-molho
+  nome: Oleaginosas de molho
+  titulo: "{proteina} de molho, sem pele"
+  vagas:
+    - { funcao: proteina, obrigatoria: true, maximo: 2, grupos: [oleaginosas] }
+  gunas_do_preparo: [oleoso, suave]
+  passos: "Deixar {proteina} de molho em água de um dia para o outro. De manhã, escorrer e tirar a pele, que sai fácil esfregando com os dedos. Comer aos poucos, como lanche."
+  momento: [manha, tarde]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-leite-de-amendoa, campos: [passos, momento] }
+    - { ref: banyan-lanches-por-dosha, campos: [vagas, passos, momento] }
+    - { ref: banyan-alimentos-kapha, campos: [vagas, passos] }
+    - { ref: a_confirmar, campos: [gunas_do_preparo] }
+  confianca: baixa
+
+- id: leite-morno-com-especiaria
+  nome: Leite morno com especiaria
+  titulo: "{liquido} morno com {tempero}"
+  vagas:
+    - { funcao: liquido, obrigatoria: true, grupos: [laticinios] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+  gunas_do_preparo: [quente, suave, pesado]
+  passos: "Levar {liquido} ao fogo até ferver de leve. Juntar {tempero} e {gordura}, mexer e deixar amornar. Tomar aos golinhos, antes de deitar."
+  momento: [noite]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-sono-insuficiente, campos: [vagas, passos, momento] }
+    - { ref: banyan-dieta-vata, campos: [gunas_do_preparo] }
+    - { ref: a_confirmar, campos: [gunas_do_preparo] }
+  confianca: baixa

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { casosC1 } from "../../evals/llm/casos/c1"
+import { semPalavrasInteiras, trazGuna } from "../../evals/llm/casos/c1/expectativas"
+import type { ResultadoDoRun } from "../../evals/llm/casos/c1/tipos"
 import { entradaDoAcompanhanteSchema } from "../../src/core/agents/companion/entrada"
+import type { SaidaDoAcompanhante } from "../../src/core/agents/companion/saida"
+import type { Guna } from "../../src/core/knowledge/vocab"
 import { montarCenario } from "../../test/fixtures/cenarios"
 import {
   formatarRelatorio,
@@ -9,6 +13,111 @@ import {
   type ResultadoDoCaso,
   resumir,
 } from "./eval-llm-report"
+
+type Sugestao = SaidaDoAcompanhante["sugestoes"][number]
+
+function runDe(saida: Partial<SaidaDoAcompanhante>): ResultadoDoRun {
+  return {
+    saida: {
+      origem: "agente",
+      resposta: "",
+      geral: false,
+      avisos: [],
+      explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
+      sugestoes: [],
+      evitar: [],
+      incertos: [],
+      citados: [],
+      ...saida,
+    },
+    status: "done",
+    tools: [],
+    chamadasDeModelo: 1,
+    validacoes: ["ok"],
+  }
+}
+
+function sugestaoCom(alimentos: string[], contribui: Guna[] = []): Sugestao {
+  return {
+    tipo: "cha",
+    titulo: "Chá",
+    como_fazer: "Ferva e coa.",
+    motivo: "Motivo",
+    verbos: [],
+    linhas_base: [],
+    novidade: false,
+    itens: alimentos.map((alimento_id) => ({
+      alimento_id,
+      nome: alimento_id,
+      contribui,
+      verbos: [],
+      linha_base: "",
+      casa: "confirmado",
+    })),
+  }
+}
+
+function casoPorId(id: string) {
+  const achado = casosC1.find((c) => c.id === id)
+  if (!achado) throw new Error(`caso ${id} ausente`)
+  return achado
+}
+
+describe("trazGuna", () => {
+  it("não passa só com qualidades_buscadas: precisa de item sugerido que contribui", () => {
+    const r = runDe({
+      sugestoes: [sugestaoCom(["gengibre"], [])],
+      explicacao: { qualidades_do_momento: [], qualidades_buscadas: ["leve"] },
+    })
+    expect(trazGuna("Algo leve", ["leve"]).confere(r)).toBe(false)
+  })
+
+  it("passa quando um item sugerido contribui a qualidade", () => {
+    const r = runDe({ sugestoes: [sugestaoCom(["gengibre"], ["leve"])] })
+    expect(trazGuna("Algo leve", ["leve"]).confere(r)).toBe(true)
+  })
+})
+
+describe("semPalavrasInteiras", () => {
+  it("procura e contrata não disparam cura nem trata", () => {
+    const proibidas = ["trata", "cura"]
+    expect(
+      semPalavrasInteiras("x", proibidas).confere(runDe({ resposta: "Você procura um chá." })),
+    ).toBe(true)
+    expect(
+      semPalavrasInteiras("x", proibidas).confere(runDe({ resposta: "Ela contrata ajuda." })),
+    ).toBe(true)
+  })
+
+  it("cura isolada dispara", () => {
+    const proibidas = ["trata", "cura"]
+    expect(semPalavrasInteiras("x", proibidas).confere(runDe({ resposta: "Isso é a cura." }))).toBe(
+      false,
+    )
+  })
+
+  it("caso 12 usa a variante por palavra inteira na promessa de tratamento", () => {
+    const naoPode = casoPorId("c1-12-estomago-pesado").naoPode
+    const ok = runDe({ resposta: "Um chá morno ajuda a procurar conforto." })
+    const ruim = runDe({ resposta: "Este chá trata o estômago." })
+    expect(naoPode.every((e) => e.confere(ok))).toBe(true)
+    expect(naoPode.every((e) => e.confere(ruim))).toBe(false)
+  })
+})
+
+describe("caso 03, nada doce na parte estruturada", () => {
+  it("mel como ingrediente sugerido falha", () => {
+    const naoPode = casoPorId("c1-03-pesada-depois-do-almoco").naoPode
+    const comMel = runDe({ sugestoes: [sugestaoCom(["mel"])] })
+    expect(naoPode.every((e) => e.confere(comMel))).toBe(false)
+  })
+
+  it("sem adoçante entre os itens continua passando", () => {
+    const naoPode = casoPorId("c1-03-pesada-depois-do-almoco").naoPode
+    const semDoce = runDe({ sugestoes: [sugestaoCom(["gengibre", "hortela"])] })
+    expect(naoPode.every((e) => e.confere(semDoce))).toBe(true)
+  })
+})
 
 function caso(parcial: Partial<ResultadoDoCaso> & { id: string }): ResultadoDoCaso {
   return {

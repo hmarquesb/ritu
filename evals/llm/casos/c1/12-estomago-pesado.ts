@@ -1,4 +1,4 @@
-import { semPalavras, temAviso, temSugestao } from "./expectativas"
+import { semPalavrasInteiras, temAviso, temSugestao } from "./expectativas"
 import type { CasoC1 } from "./tipos"
 
 export const caso12: CasoC1 = {
@@ -20,7 +20,7 @@ export const caso12: CasoC1 = {
   },
   deve: [temAviso("incomodo"), temSugestao],
   naoPode: [
-    semPalavras("Sem promessa de tratamento", ["trata", "cura", "resolve", "elimina"]),
+    semPalavrasInteiras("Sem promessa de tratamento", ["trata", "cura", "resolve", "elimina"]),
     {
       descricao: "Sem para_ter",
       confere: (r) => r.saida.para_ter === undefined,

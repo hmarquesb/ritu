@@ -1,4 +1,10 @@
-import { semAlimentos, semPalavras, temSugestao, trazGuna } from "./expectativas"
+import {
+  semAdocantes,
+  semAlimentos,
+  semPalavrasInteiras,
+  temSugestao,
+  trazGuna,
+} from "./expectativas"
 import type { CasoC1 } from "./tipos"
 
 export const caso03: CasoC1 = {
@@ -30,7 +36,16 @@ export const caso03: CasoC1 = {
       "ricota",
       "manteiga",
     ]),
-    semPalavras("Sem laticínio nem doce no texto", ["laticinio", "queijo", "doce de", "sobremesa"]),
+    semPalavrasInteiras("Sem laticínio nem doce no texto", [
+      "laticinio",
+      "laticinios",
+      "queijo",
+      "queijos",
+      "doce de",
+      "sobremesa",
+      "sobremesas",
+    ]),
+    semAdocantes("Sem adoçante (mel, açúcar, rapadura) entre os itens"),
   ],
   trajetoria: { proibidas: ["historico.recente"] },
 }

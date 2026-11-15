@@ -145,4 +145,35 @@ describe("acompanhanteV1", () => {
     const { json: sem } = extrair(montarMensagemInicial(base, "oi"))
     expect(Object.keys(sem)).not.toContain("retorno")
   })
+
+  it("neutraliza < e > em casa_da_mensagem e no título do retorno", async () => {
+    const base = await dados()
+    const msg = montarMensagemInicial(
+      {
+        ...base,
+        casa_da_mensagem: { tem: ["<x>"], acabou: [] },
+        retorno: { resultado: "ajudou", titulo: "<b>chá</b>", registrado: true },
+      },
+      "oi",
+    )
+    expect(msg).toContain("‹x›")
+    expect(msg).toContain("‹b›chá‹/b›")
+    expect(msg).not.toContain("<x>")
+    expect(msg).not.toContain("<b>")
+    const { json } = extrair(msg)
+    expect(json.casa_da_mensagem).toEqual({ tem: ["‹x›"], acabou: [] })
+    expect(json.retorno).toEqual({ resultado: "ajudou", titulo: "‹b›chá‹/b›", registrado: true })
+  })
+
+  it("não cria a chave titulo quando o retorno não tem título", async () => {
+    const base = await dados()
+    const { json } = extrair(
+      montarMensagemInicial(
+        { ...base, retorno: { resultado: "nao_fez", registrado: false } },
+        "oi",
+      ),
+    )
+    expect(json.retorno).toEqual({ resultado: "nao_fez", registrado: false })
+    expect(Object.keys(json.retorno as object)).not.toContain("titulo")
+  })
 })

@@ -61,6 +61,18 @@ function momento(dados: DadosDoPreparo): Record<string, unknown> {
   })
 }
 
+function casaDaMensagem(dados: DadosDoPreparo): Record<string, unknown> | undefined {
+  const c = dados.casa_da_mensagem
+  if (!c) return undefined
+  return { tem: c.tem.map(neutralizar), acabou: c.acabou.map(neutralizar) }
+}
+
+function retornoDaMensagem(dados: DadosDoPreparo): Record<string, unknown> | undefined {
+  const r = dados.retorno
+  if (!r) return undefined
+  return compacto({ ...r, titulo: r.titulo ? neutralizar(r.titulo) : undefined })
+}
+
 function paraTer(dados: DadosDoPreparo): Record<string, unknown> | undefined {
   const p = dados.para_ter
   if (!p) return undefined
@@ -77,8 +89,8 @@ export function montarMensagemInicial(dados: DadosDoPreparo, texto?: string): st
   const semTexto = texto === undefined || texto === ""
   const contexto = compacto({
     intencoes: dados.intencoes,
-    casa_da_mensagem: dados.casa_da_mensagem,
-    retorno: dados.retorno,
+    casa_da_mensagem: casaDaMensagem(dados),
+    retorno: retornoDaMensagem(dados),
     fato_de_rotina: dados.fato_de_rotina ? neutralizar(dados.fato_de_rotina) : undefined,
     momento: momento(dados),
     geral: dados.geral ? true : undefined,

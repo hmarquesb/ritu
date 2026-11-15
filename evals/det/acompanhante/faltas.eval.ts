@@ -135,6 +135,54 @@ describe("falta só para alimento ausente entre os mais adequados", () => {
   })
 })
 
+describe("refeição com vaga obrigatória só ausente de casa", () => {
+  it("sai dos candidatos do preparo, mas o alimento ausente continua nas faltas", async () => {
+    const { stores, run } = montar()
+    const confirmados = ["arroz-branco", "abobora", "ghee"]
+    await stores.pantry.registrar(
+      CONTA,
+      confirmados.map((alimento_id) => ({ alimento_id })),
+      "tela",
+    )
+    const dados = await run()
+
+    const qualidades = qualidadesDoMomento({ estados: [...ESTADOS] }, kb)
+    const todos = montarCandidatos(
+      {
+        qualidades,
+        estados: [...ESTADOS],
+        momento_do_dia: "jantar",
+        filtro: filtroVazio,
+        restricoes: [],
+        casa: { confirmados, incertos: [] },
+        preferencias: [],
+        sugeridos_hoje: [],
+      },
+      kb,
+    )
+    const completa = todos.find((c) => c.id === "arroz-com-leguminosa")
+    expect(completa, "a lista completa traz a refeição sem proteína em casa").toBeDefined()
+    expect(dados.candidatos.map((c) => c.id)).not.toContain("arroz-com-leguminosa")
+
+    const faltasDaLista = faltasDoRun(
+      {
+        candidatos: todos,
+        casa: { confirmados, incertos: [] },
+        buscadas: qualidades.buscadas,
+      },
+      kb,
+    )
+    expect(dados.faltas_do_run).toEqual(faltasDaLista)
+    const ausentes = (completa ? itensDoCandidato(completa) : [])
+      .filter((i) => i.casa === "ausente")
+      .map((i) => i.alimento_id)
+    expect(
+      ausentes.some((id) => dados.faltas_do_run.includes(id)),
+      "um alimento ausente da refeição filtrada continua contado como falta",
+    ).toBe(true)
+  })
+})
+
 describe("para ter: candidato com três dias de falta em trinta", () => {
   async function faltaDeHoje(): Promise<string> {
     const { run } = montar()

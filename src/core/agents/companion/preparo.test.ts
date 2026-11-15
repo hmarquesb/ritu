@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest"
+import type { Candidato } from "@/core/ranking/tipos"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import type { EntradaDoAcompanhante } from "./entrada"
-import { dadosDoPreparoSchema, preparar } from "./preparo"
+import { dadosDoPreparoSchema, entregaveisEmCasa, preparar } from "./preparo"
 
 const CONTA = "conta-1"
 const HOJE = "2026-11-15"
@@ -119,5 +120,60 @@ describe("preparar", () => {
     expect(span?.atributos["faltas.registradas"]).toBe(dados.faltas_do_run.length)
     expect(typeof span?.atributos["para_ter.candidato"]).toBe("boolean")
     expect(JSON.stringify(span?.atributos)).not.toContain("gengibre")
+  })
+})
+
+describe("entregaveisEmCasa", () => {
+  const item = (alimento_id: string, casa: "confirmado" | "incerto" | "ausente") => ({
+    alimento_id,
+    nome: alimento_id,
+    casa,
+    contribui: [],
+    linha_base: "",
+  })
+  const refeicao = (opcoes: Candidato["opcoes"]): Candidato => ({
+    tipo: "refeicao",
+    id: "pure-de-raiz",
+    nome: "Purê de raiz",
+    itens: [],
+    opcoes,
+    contribui: [],
+    linha_base: "",
+    adequacao: 1,
+    nota: 1,
+    gosta: false,
+    ajudou: 0,
+    novidade: false,
+    no_fim: false,
+  })
+  const vazia = { confirmados: [], incertos: [] }
+
+  it("sai a refeição cuja vaga obrigatória só tem opção ausente de casa", () => {
+    const c = refeicao({
+      base: [item("abobora", "ausente")],
+      gordura: [item("ghee", "confirmado")],
+    })
+    expect(entregaveisEmCasa([c], { confirmados: ["ghee"], incertos: [] }, kb)).toEqual([])
+  })
+
+  it("fica com opção confirmada ou incerta em cada vaga obrigatória", () => {
+    const c = refeicao({
+      base: [item("abobora", "ausente"), item("cenoura", "incerto")],
+      gordura: [item("ghee", "confirmado")],
+    })
+    const casa = { confirmados: ["ghee"], incertos: ["cenoura"] }
+    expect(entregaveisEmCasa([c], casa, kb)).toEqual([c])
+  })
+
+  it("não mexe em chá, óleo nem prática", () => {
+    const cha = { ...refeicao({}), tipo: "cha" as const, id: "cha-gengibre" }
+    expect(entregaveisEmCasa([cha], vazia, kb)).toEqual([cha])
+  })
+
+  it("as faltas e o para_ter não mudam com o filtro", async () => {
+    const { run } = montar()
+    const dados = await run({ estados: ["com_frio"] })
+    expect(dados.faltas_do_run).toEqual(expect.arrayContaining(["gengibre"]))
+    expect(dados.candidatos.length).toBeGreaterThan(0)
   })
 })

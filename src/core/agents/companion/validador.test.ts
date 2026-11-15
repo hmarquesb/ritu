@@ -169,6 +169,23 @@ describe("validarEntrega", () => {
       expect(codigos(comSugestao({ itens: [] }))).toEqual(["estrutura"])
     })
 
+    it("a mensagem da prática sem ingredientes manda deixar itens vazio", () => {
+      const e = comSugestao({
+        tipo: "pratica",
+        pratica_id: "respiracao-lenta",
+        itens: [{ alimento_id: "respiracao-lenta", contribui: [], linha_base: "x" }],
+      } as never)
+      const v = validarEntrega(e, { dados: dados(), kb, sinais }).filter(
+        (x) => x.codigo === "estrutura",
+      )
+      expect(v[0]?.mensagem).toContain("deixe itens vazio")
+    })
+
+    it("a mensagem da prática com ingredientes lista os ids esperados", () => {
+      const v = validarEntrega(comSugestao({ itens: [] }), { dados: dados(), kb, sinais })
+      expect(v.find((x) => x.codigo === "estrutura")?.mensagem).toContain("gengibre")
+    })
+
     it("vaga obrigatória sem item", () => {
       const e = entrega({ sugestoes: [{ ...refeicao, itens: [refeicao.itens[0] as never] }] })
       expect(codigos(e)).toEqual(["estrutura"])

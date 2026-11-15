@@ -219,6 +219,26 @@ type Contexto = {
   momento_do_dia: DadosDoPreparo["momento_do_dia"]
 }
 
+// Candidato de refeição com vaga obrigatória sem opção em casa (confirmada ou incerta) não vai
+// ao modelo nem ao validador: qualquer entrega com ele seria recusada.
+export function entregaveisEmCasa(
+  candidatos: Candidato[],
+  casa: Casa,
+  kb: KnowledgeBase,
+): Candidato[] {
+  const emCasa = new Set([...casa.confirmados, ...casa.incertos])
+  return candidatos.filter((candidato) => {
+    if (candidato.tipo !== "refeicao") return true
+    const preparo = kb.preparo(candidato.id)
+    if (!preparo) return true
+    return preparo.vagas
+      .filter((vaga) => vaga.obrigatoria)
+      .every((vaga) =>
+        (candidato.opcoes?.[vaga.funcao] ?? []).some((item) => emCasa.has(item.alimento_id)),
+      )
+  })
+}
+
 function candidatosEFaltas(c: Contexto): { candidatos: Candidato[]; faltas: string[] } {
   const { entrada, deps } = c
   const querCandidatos =
@@ -242,7 +262,7 @@ function candidatosEFaltas(c: Contexto): { candidatos: Candidato[]; faltas: stri
     { candidatos: todos, casa: c.casa, prakriti: c.prakriti, buscadas: c.qualidades.buscadas },
     deps.kb,
   )
-  return { candidatos: cortarParaOContexto(todos), faltas }
+  return { candidatos: cortarParaOContexto(entregaveisEmCasa(todos, c.casa, deps.kb)), faltas }
 }
 
 async function paraTerDoRun(c: Contexto, faltas: string[]): Promise<ParaTer | undefined> {

@@ -34,6 +34,15 @@ function montar(iso = JANTAR) {
   return { stores, run }
 }
 
+// Uma refeição inteira em casa (arroz-com-legume): só entra nos candidatos quem tem as vagas obrigatórias.
+async function guardarCasa(stores: ReturnType<typeof montar>["stores"]): Promise<void> {
+  await stores.pantry.registrar(
+    CONTA,
+    [{ alimento_id: "arroz-branco" }, { alimento_id: "abobora" }, { alimento_id: "ghee" }],
+    "tela",
+  )
+}
+
 const itensDoCandidato = (c: Candidato) => [
   ...c.itens,
   ...Object.values(c.opcoes ?? {}).flatMap((itens) => itens ?? []),
@@ -45,6 +54,7 @@ const idsDosCandidatos = (dados: DadosDoPreparo): string[] =>
 describe("evitar sempre de grupo: nenhum candidato traz alimento do grupo", () => {
   it.each(GRUPOS)("grupo %s", async (grupo) => {
     const { stores, run } = montar()
+    await guardarCasa(stores)
     await stores.profiles.acrescentarEvitarSempre(CONTA, [{ tipo: "grupo", valor: grupo }])
     const dados = await run()
 
@@ -70,7 +80,8 @@ describe("evitar sempre de grupo: nenhum candidato traz alimento do grupo", () =
   })
 
   it("controle: sem o grupo leite, algum candidato traz alimento de leite", async () => {
-    const { run } = montar()
+    const { stores, run } = montar()
+    await guardarCasa(stores)
     const dados = await run()
     const comLeite = idsDosCandidatos(dados).filter((id) =>
       (kb.alimento(id)?.grupos_evitar ?? []).includes("leite"),

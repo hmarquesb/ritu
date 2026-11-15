@@ -103,14 +103,12 @@ function checarEstruturaDaPratica(ctx: Ctx, s: Sugestao, pratica: Pratica, onde:
     itens.size === s.itens.length &&
     itens.size === pratica.ingredientes.length &&
     pratica.ingredientes.every((id) => itens.has(id))
-  if (!iguais) {
-    apontar(
-      ctx,
-      "estrutura",
-      onde,
-      `os itens de ${pratica.id} devem ser exatamente os ingredientes dela`,
-    )
-  }
+  if (iguais) return
+  const esperado =
+    pratica.ingredientes.length === 0
+      ? "deixe itens vazio, a prática não tem ingredientes"
+      : `os itens devem ser exatamente ${pratica.ingredientes.join(", ")}`
+  apontar(ctx, "estrutura", onde, `${pratica.id}: ${esperado}`)
 }
 
 function checarItemDaRefeicao(ctx: Ctx, preparo: Preparo, item: Item, onde: string): void {

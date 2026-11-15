@@ -1,6 +1,6 @@
+import { citadoNoPerfilDoNaoCome, itemNoPerfilDoEvitar } from "@/core/accounts/no-perfil"
 import type { Perfil } from "@/core/accounts/types"
 import type { EvitarItem } from "@/core/knowledge/filtros"
-import { normalizar } from "@/core/knowledge/identificar"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { juntarNomes } from "@/core/knowledge/lacunas"
 import { rotulosDeRestricao } from "@/core/knowledge/rotulos"
@@ -76,18 +76,6 @@ function nomeDoEvitar(item: EvitarItem, kb: KnowledgeBase): string {
     return kb.gruposEvitar.find((grupo) => grupo.id === item.valor)?.nome ?? item.valor
   }
   return neutralizar(item.valor)
-}
-
-function citadoNoPerfilDoNaoCome(citado: Citado, perfil: Perfil): boolean {
-  const tipo = citado.alimento_id ? "alimento" : "texto"
-  const valor = citado.alimento_id ?? normalizar(citado.nome)
-  return perfil.nao_come.some((item) => item.tipo === tipo && item.valor === valor)
-}
-
-function itemNoPerfilDoEvitar(item: EvitarItem, perfil: Perfil): boolean {
-  return perfil.evitar_sempre.some(
-    (guardado) => guardado.tipo === item.tipo && guardado.valor === item.valor,
-  )
 }
 
 export function textoDeCasa(itens: ItemDeCasaCitado[], kb: KnowledgeBase): string {

@@ -1,7 +1,7 @@
+import { citadoNoPerfilDoNaoCome, itemNoPerfilDoEvitar } from "@/core/accounts/no-perfil"
 import type { Perfil } from "@/core/accounts/types"
 import type { Interpretacao, ItemDeCasaCitado } from "@/core/agents/interpreter/interpretacao"
-import { type EvitarItem, type FiltroPessoa, passaNoFiltro } from "@/core/knowledge/filtros"
-import { normalizar } from "@/core/knowledge/identificar"
+import { type FiltroPessoa, passaNoFiltro } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { Preferencia } from "@/core/preferences/ports"
 import type { Anotacao } from "./saida"
@@ -15,17 +15,6 @@ function copiaDoCitado(c: Citado): Citado {
 
 function itensDaAcao(i: Interpretacao, acao: ItemDeCasaCitado["acao"]): Citado[] {
   return i.itens_casa.filter((c) => c.acao === acao).map(copiaDoCitado)
-}
-
-function evitarGuardado(item: EvitarItem, perfil: Perfil): boolean {
-  return perfil.evitar_sempre.some((g) => g.tipo === item.tipo && g.valor === item.valor)
-}
-
-// Mesma comparação do texto de "não como" (conversation/textos.ts): por id, ou pelo nome normalizado.
-function naoComeGuardado(c: Citado, perfil: Perfil): boolean {
-  const tipo = c.alimento_id ? "alimento" : "texto"
-  const valor = c.alimento_id ?? normalizar(c.nome)
-  return perfil.nao_come.some((item) => item.tipo === tipo && item.valor === valor)
 }
 
 // Só o id conta no filtro de alimentos: o "não como" livre não tem id e não filtra.
@@ -54,12 +43,12 @@ function candidatas(i: Interpretacao, perfil: Perfil, extra: Extra): Anotacao[] 
     {
       tipo: "evitar_sempre",
       itens: i.evitar
-        .filter((e) => !evitarGuardado(e, perfil))
+        .filter((e) => !itemNoPerfilDoEvitar(e, perfil))
         .map((e) => ({ tipo: e.tipo, valor: e.valor })),
     },
     {
       tipo: "nao_come",
-      itens: i.nao_come.filter((c) => !naoComeGuardado(c, perfil)).map(copiaDoCitado),
+      itens: i.nao_come.filter((c) => !citadoNoPerfilDoNaoCome(c, perfil)).map(copiaDoCitado),
     },
     {
       tipo: "gosta",

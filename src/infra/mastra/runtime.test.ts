@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { z } from "zod"
+import { RituError } from "@/core/errors"
 import { LlmError } from "@/core/llm/errors"
 import type { PedidoDePasso } from "@/core/runs/agent-runtime"
 import { createMastraRuntime, OPCOES_DE_TRACE } from "./runtime"
@@ -61,6 +62,47 @@ describe("createMastraRuntime", () => {
     const resultado = await runtimeCom(modeloFalso(partesDeTool(), chamadas)).passo(pedido())
     expect(resultado.chamadas).toEqual([{ id: "c1", nome: "hora_atual", argumentos: {} }])
     expect(chamadas).toHaveLength(1)
+  })
+
+  it("nomes com ponto vão ao modelo com _ e voltam com o nome original", async () => {
+    const chamadas: { tools?: { name: string }[]; prompt: unknown[] }[] = []
+    const partes = [
+      { type: "tool-call", toolCallId: "c1", toolName: "ayurveda_checar_combinacao", input: "{}" },
+    ]
+    const resultado = await runtimeCom(modeloFalso(partes, chamadas)).passo(
+      pedido({
+        tools: [
+          { name: "ayurveda.checar_combinacao", description: "x", input: z.object({}) },
+          { name: "clima.agora", description: "y", input: z.object({}) },
+        ],
+        mensagens: [
+          { papel: "pessoa", conteudo: "oi" },
+          { papel: "agente", chamadas: [{ id: "h1", nome: "clima.agora", argumentos: {} }] },
+          { papel: "tool", chamada_id: "h1", nome: "clima.agora", resultado: { status: "ok" } },
+        ],
+      }),
+    )
+    expect(resultado.chamadas[0]?.nome).toBe("ayurveda.checar_combinacao")
+    const nomes = chamadas[0]?.tools?.map((t) => t.name)
+    expect(nomes).toEqual(["ayurveda_checar_combinacao", "clima_agora"])
+    expect(JSON.stringify(chamadas[0]?.prompt)).not.toContain("clima.agora")
+  })
+
+  it("duas tools que viram o mesmo nome codificado falham alto, com os dois nomes", async () => {
+    const erro = await runtimeCom(modeloFalso(partesDeTool()))
+      .passo(
+        pedido({
+          tools: [
+            { name: "a.b", description: "x", input: z.object({}) },
+            { name: "a_b", description: "y", input: z.object({}) },
+          ],
+        }),
+      )
+      .catch((e) => e)
+    expect(erro).toBeInstanceOf(RituError)
+    expect(erro.code).toBe("tool_nome_colide")
+    expect(erro.message).toContain("a.b")
+    expect(erro.message).toContain("a_b")
   })
 
   it("devolve os tokens do provedor", async () => {

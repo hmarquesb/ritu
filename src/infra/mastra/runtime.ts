@@ -1,6 +1,7 @@
 import { Agent } from "@mastra/core/agent"
 import { noopLogger } from "@mastra/core/logger"
 import { createTool } from "@mastra/core/tools"
+import { RituError } from "@/core/errors"
 import { LlmError } from "@/core/llm/errors"
 import type {
   AgentRuntime,
@@ -26,6 +27,12 @@ function modeloPadrao(modelo: string, apiKey: string): ModeloDaBiblioteca {
   return { id: id as `${string}/${string}`, apiKey }
 }
 
+// A biblioteca troca por "_" todo caractere fora de [a-zA-Z0-9_-] no nome da tool e devolve o nome trocado:
+// a troca é feita aqui, para o nome original voltar ao loop.
+export function nomeParaModelo(nome: string): string {
+  return nome.replace(/[^a-zA-Z0-9_-]/g, "_")
+}
+
 function paraMensagem(mensagem: MensagemDoLoop): MensagemDaBiblioteca {
   switch (mensagem.papel) {
     case "pessoa":
@@ -41,7 +48,7 @@ function paraMensagem(mensagem: MensagemDoLoop): MensagemDaBiblioteca {
           ...mensagem.chamadas.map((c) => ({
             type: "tool-call",
             toolCallId: c.id,
-            toolName: c.nome,
+            toolName: nomeParaModelo(c.nome),
             input: c.argumentos,
           })),
         ],
@@ -53,7 +60,7 @@ function paraMensagem(mensagem: MensagemDoLoop): MensagemDaBiblioteca {
           {
             type: "tool-result",
             toolCallId: mensagem.chamada_id,
-            toolName: mensagem.nome,
+            toolName: nomeParaModelo(mensagem.nome),
             output: { type: "json", value: mensagem.resultado ?? null },
           },
         ],
@@ -63,10 +70,26 @@ function paraMensagem(mensagem: MensagemDoLoop): MensagemDaBiblioteca {
 
 // Declaração sem `execute`: a biblioteca para no passo em que o modelo chama a tool. Quem executa é o loop.
 function declararTools(tools: PedidoDePasso["tools"]) {
+  const vistos = new Map<string, string>()
+  for (const t of tools) {
+    const codificado = nomeParaModelo(t.name)
+    const outro = vistos.get(codificado)
+    if (outro !== undefined) {
+      throw new RituError(
+        "tool_nome_colide",
+        `As tools ${outro} e ${t.name} viram o mesmo nome para o modelo: ${codificado}`,
+      )
+    }
+    vistos.set(codificado, t.name)
+  }
   return Object.fromEntries(
     tools.map((t) => [
-      t.name,
-      createTool({ id: t.name, description: t.description, inputSchema: t.input as never }),
+      nomeParaModelo(t.name),
+      createTool({
+        id: nomeParaModelo(t.name),
+        description: t.description,
+        inputSchema: t.input as never,
+      }),
     ]),
   )
 }
@@ -103,14 +126,18 @@ function traduzirErro(erro: unknown, abortou: boolean): LlmError {
 
 type ChamadaDaBiblioteca = { payload: { toolCallId: string; toolName: string; args: unknown } }
 
-function montarResultado(saida: {
-  text?: string
-  toolCalls?: ChamadaDaBiblioteca[]
-  usage?: { inputTokens?: number; outputTokens?: number }
-}): ResultadoDePasso {
+function montarResultado(
+  saida: {
+    text?: string
+    toolCalls?: ChamadaDaBiblioteca[]
+    usage?: { inputTokens?: number; outputTokens?: number }
+  },
+  tools: PedidoDePasso["tools"],
+): ResultadoDePasso {
+  const originais = new Map(tools.map((t) => [nomeParaModelo(t.name), t.name]))
   const chamadas = (saida.toolCalls ?? []).map((c) => ({
     id: c.payload.toolCallId,
-    nome: c.payload.toolName,
+    nome: originais.get(c.payload.toolName) ?? c.payload.toolName,
     argumentos: c.payload.args,
   }))
   const texto = saida.text?.trim() ? saida.text : undefined
@@ -130,6 +157,8 @@ export function createMastraRuntime(deps: DepsDoRuntimeMastra): AgentRuntime {
   const resolverModelo = deps.modeloDe ?? modeloPadrao
   return {
     async passo(p: PedidoDePasso): Promise<ResultadoDePasso> {
+      // Falha de programação (nomes que colidem): sai antes do try, sem virar erro de modelo.
+      const tools = declararTools(p.tools)
       const controle = new AbortController()
       let abortou = false
       const relogio = setTimeout(() => {
@@ -142,7 +171,7 @@ export function createMastraRuntime(deps: DepsDoRuntimeMastra): AgentRuntime {
           name: "ritu",
           instructions: p.instrucoes,
           model: resolverModelo(p.modelo, deps.apiKey()),
-          tools: declararTools(p.tools),
+          tools,
         })
         // O logger padrão imprime o erro do provedor, que carrega o prompt: fica mudo.
         agente.__registerPrimitives({ logger: noopLogger })
@@ -154,7 +183,7 @@ export function createMastraRuntime(deps: DepsDoRuntimeMastra): AgentRuntime {
         })
         // A biblioteca engole o aborto e devolve uma saída vazia: o relógio do passo é a fonte da verdade.
         if (abortou) throw new LlmError("timeout", "Tempo do passo esgotado")
-        return montarResultado(saida as never)
+        return montarResultado(saida as never, p.tools)
       } catch (erro) {
         throw traduzirErro(erro, abortou)
       } finally {

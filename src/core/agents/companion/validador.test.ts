@@ -574,3 +574,33 @@ describe("validarEntrega", () => {
     expect(v[0]?.mensagem).toContain("gengibre")
   })
 })
+
+describe("mensagens que dizem o valor aceito", () => {
+  const mensagens = (e: EntregaDoModelo) =>
+    validarEntrega(e, { dados: dados(), kb, sinais }).map((v) => v.mensagem)
+
+  it("evitar fora das linhas lista as linhas aceitas", () => {
+    const m = mensagens(entrega({ evitar: ["gelados e crus"] }))
+    expect(m.some((x) => x.includes("estados:com_frio"))).toBe(true)
+  })
+
+  it("citado sem tabela explica o formato tabela:id", () => {
+    const m = mensagens(entrega({ citados: ["gengibre"] }))
+    expect(m.some((x) => x.includes("alimentos:gengibre"))).toBe(true)
+  })
+
+  it("qualidade fora do momento lista as aceitas", () => {
+    const m = mensagens(
+      entrega({
+        explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["quente"] },
+      }),
+    )
+    expect(m.some((x) => x.includes("frio"))).toBe(true)
+  })
+
+  it("prática e preparo juntos ou ausentes dizem para usar só um", () => {
+    const base = { ...cha, pratica_id: undefined }
+    const m = mensagens(entrega({ sugestoes: [base] }))
+    expect(m.some((x) => x.includes("pratica_id") && x.includes("preparo_id"))).toBe(true)
+  })
+})

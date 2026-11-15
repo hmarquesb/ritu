@@ -68,7 +68,12 @@ function linhaDaSugestao(s: Sugestao): string | undefined {
 function resolverAlvo(ctx: Ctx, s: Sugestao, onde: string): Alvo | undefined {
   const { kb } = ctx
   if ((s.pratica_id === undefined) === (s.preparo_id === undefined)) {
-    apontar(ctx, "fora_da_base", onde, "informe exatamente um entre pratica_id e preparo_id")
+    apontar(
+      ctx,
+      "fora_da_base",
+      onde,
+      "informe exatamente um entre pratica_id (chá, óleo, prática) e preparo_id (refeição), nunca os dois nem nenhum",
+    )
     return undefined
   }
   if (s.preparo_id !== undefined) {
@@ -126,7 +131,12 @@ function checarVagasDaRefeicao(ctx: Ctx, s: Sugestao, preparo: Preparo, onde: st
   for (const vaga of preparo.vagas) {
     const total = s.itens.filter((i) => i.funcao === vaga.funcao).length
     if (vaga.obrigatoria && total === 0) {
-      apontar(ctx, "estrutura", onde, `falta item para a vaga obrigatória ${vaga.funcao}`)
+      apontar(
+        ctx,
+        "estrutura",
+        onde,
+        `falta item para a vaga obrigatória ${vaga.funcao}: preencha com um alimento confirmado em casa ou escolha outro candidato`,
+      )
     }
     if (total > vaga.maximo) {
       apontar(ctx, "estrutura", onde, `a vaga ${vaga.funcao} aceita no máximo ${vaga.maximo} item`)
@@ -328,7 +338,7 @@ function checarQualidadesGerais(ctx: Ctx): void {
       ctx,
       "qualidades",
       "explicacao.qualidades_do_momento",
-      `${foraMomento} não é do momento`,
+      `${foraMomento} não é do momento; use só: ${permitidasDoMomento.join(", ") || "nenhuma"}`,
     )
   }
   const foraBuscada = buscadas.find((g) => !permitidasBuscadas.includes(g))
@@ -337,7 +347,7 @@ function checarQualidadesGerais(ctx: Ctx): void {
       ctx,
       "qualidades",
       "explicacao.qualidades_buscadas",
-      `${foraBuscada} não é buscada agora`,
+      `${foraBuscada} não é buscada agora; use só: ${permitidasBuscadas.join(", ") || "nenhuma"}`,
     )
   }
 }
@@ -350,7 +360,7 @@ function checarEvitar(ctx: Ctx): void {
         ctx,
         "linha_base",
         `evitar[${i}]`,
-        `${linha} não está entre as linhas de evitar do momento`,
+        `${linha} não está entre as linhas de evitar do momento; copie o linha_base de qualidades.evitar do contexto (${permitidas.join(", ") || "nenhuma: deixe evitar vazio"})`,
       )
     }
   })
@@ -368,7 +378,10 @@ function checarCitados(ctx: Ctx): void {
   ctx.entrega.citados.forEach((linha, i) => {
     const onde = `citados[${i}]`
     if (ctx.kb.linha(linha) === undefined) {
-      apontar(ctx, "fora_da_base", onde, `${linha} não existe na base`)
+      const dica = linha.includes(":")
+        ? ""
+        : `; cite como tabela:id, por exemplo alimentos:${linha} ou praticas:${linha}`
+      apontar(ctx, "fora_da_base", onde, `${linha} não existe na base${dica}`)
       return
     }
     for (const id of alimentosDaLinha(ctx.kb, linha)) checarFiltroDoAlimento(ctx, id, onde)

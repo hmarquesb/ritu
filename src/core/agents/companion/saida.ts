@@ -18,8 +18,11 @@ const itemDaEntregaSchema = z.object({
 
 const sugestaoDaEntregaSchema = z.object({
   tipo: z.enum(["cha", "refeicao", "oleo", "pratica"]),
-  pratica_id: z.string().optional(),
-  preparo_id: z.string().optional(),
+  pratica_id: z
+    .string()
+    .optional()
+    .describe("Id de chá, óleo ou prática. Nunca junto com preparo_id."),
+  preparo_id: z.string().optional().describe("Id de refeição. Nunca junto com pratica_id."),
   itens: z.array(itemDaEntregaSchema),
   motivo: z.string(),
   linhas_base: z.array(z.string()),
@@ -30,13 +33,19 @@ const sugestaoDaEntregaSchema = z.object({
 export const entregaDoModeloSchema = z.object({
   resposta: z.string(),
   explicacao: z.object({
-    qualidades_do_momento: z.array(gunaSchema),
-    qualidades_buscadas: z.array(gunaSchema),
+    qualidades_do_momento: z
+      .array(gunaSchema)
+      .describe("Só as de qualidades.presentes do contexto (e as do clima)."),
+    qualidades_buscadas: z.array(gunaSchema).describe("Só as de qualidades.buscadas do contexto."),
   }),
   sugestoes: z.array(sugestaoDaEntregaSchema),
-  evitar: z.array(z.string()),
+  evitar: z
+    .array(z.string())
+    .describe("Só o linha_base dos itens de qualidades.evitar do contexto. Nunca texto livre."),
   incertos: z.array(z.string()),
-  citados: z.array(z.string()),
+  citados: z
+    .array(z.string())
+    .describe("Linhas completas tabela:id, como alimentos:arroz-branco. Nunca o id solto."),
   para_ter: z
     .object({
       alimento_id: z.string(),

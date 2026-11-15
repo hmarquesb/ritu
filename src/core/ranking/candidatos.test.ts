@@ -265,7 +265,7 @@ describe("ordenação dentro do tipo", () => {
     expect(ids(candidatos)).toEqual(["b", "a"])
   })
 
-  it("opções de uma vaga: a de casa confirmada vem primeiro e a lista tem até 3", () => {
+  it("opções de uma vaga: a de casa confirmada vem primeiro; o corte para 3 é no contexto", () => {
     const refeicao = preparo({
       id: "refeicao",
       gunas_do_preparo: ["quente"],
@@ -287,7 +287,11 @@ describe("ordenação dentro do tipo", () => {
       kbCom([], [refeicao]),
     )
     expect(candidato?.itens[0]?.alimento_id).toBe("ghee")
-    expect(candidato?.opcoes?.gordura?.map((i) => i.alimento_id)).toEqual([
+    // montarCandidatos não corta: a vaga guarda todas as opções, ordenadas.
+    expect(candidato?.opcoes?.gordura?.length).toBeGreaterThan(3)
+    expect(candidato?.opcoes?.gordura?.[0]?.alimento_id).toBe("ghee")
+    const cortado = candidato ? cortarParaOContexto([candidato])[0] : undefined
+    expect(cortado?.opcoes?.gordura?.map((i) => i.alimento_id)).toEqual([
       "ghee",
       "manteiga",
       "oleo-de-gergelim",

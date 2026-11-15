@@ -136,13 +136,12 @@ function compararOpcoes(a: Opcao, b: Opcao): number {
   return b.pontos - a.pontos || a.item.alimento_id.localeCompare(b.item.alimento_id)
 }
 
-// Opções de uma vaga: passam no filtro, sem marca evitada, ordenadas e até `opcoesPorVaga`.
+// Opções de uma vaga: passam no filtro, sem marca evitada, ordenadas. O corte para o contexto é em `cortarParaOContexto`.
 function opcoesDaVaga(vaga: Vaga, ctx: Contexto): Opcao[] {
   return candidatosDaVaga(vaga, ctx.kb)
     .filter((a) => !temMarcaEvitada(a, ctx) && passaNoFiltro(a, ctx.entrada.filtro, ctx.kb).passa)
     .map((a) => avaliarOpcao(a, vaga.funcao, ctx))
     .sort(compararOpcoes)
-    .slice(0, ranking.noContexto.opcoesPorVaga)
 }
 
 function opcoesDoPreparo(vagas: VagaComOpcoes[]): Candidato["opcoes"] {

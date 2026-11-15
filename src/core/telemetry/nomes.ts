@@ -1,0 +1,103 @@
+// Lista fechada de spans, métricas e atributos (OBSERVABILITY.md §3).
+// Qualquer nome fora daqui é recusado pelo fake de telemetria: é a trava de privacidade.
+
+export const SPANS = [
+  "run",
+  "guardrail.entrada",
+  "interprete",
+  "preparo",
+  "agente.passo",
+  "llm.chamada",
+  "tool.chamada",
+  "validacao",
+  "juiz",
+  "aprovacao.execucao",
+] as const
+
+export type NomeDeSpan = (typeof SPANS)[number]
+
+export const METRICAS = [
+  "ritu_run_duracao_ms",
+  "ritu_run_passos",
+  "ritu_run_intencao_total",
+  "ritu_tokens_total",
+  "ritu_llm_chamadas_total",
+  "ritu_llm_cota_usada",
+  "ritu_llm_troca_de_modelo_total",
+  "ritu_tool_chamadas_total",
+  "ritu_validacao_violacoes_total",
+  "ritu_juiz_reprovacoes_total",
+  "ritu_pausas_total",
+  "ritu_propostas_total",
+  "ritu_llm_erros_total",
+  "ritu_fallback_sem_llm_total",
+  "ritu_feedback_total",
+  "ritu_retorno_total",
+  "ritu_troca_ingrediente_total",
+  "ritu_gosto_total",
+  "ritu_faltas_total",
+  "ritu_para_ter_total",
+] as const
+
+export type NomeDeMetrica = (typeof METRICAS)[number]
+
+export const ATRIBUTOS_PERMITIDOS = [
+  // atributos da árvore de spans
+  "run.id",
+  "run.intencoes",
+  "run.caminho",
+  "conta.tipo",
+  "prompt.versao",
+  "run.status",
+  "run.passos",
+  "guardrail.resultado",
+  "llm.papel",
+  "gen_ai.request.model",
+  "llm.troca_de_modelo",
+  "gen_ai.usage.input_tokens",
+  "gen_ai.usage.output_tokens",
+  "llm.tentativas",
+  "candidatos.total",
+  "faltas.registradas",
+  "para_ter.candidato",
+  "passo.ordem",
+  "tool.nome",
+  "tool.status",
+  "cache.hit",
+  "validacao.ok",
+  "validacao.violacoes",
+  "validacao.tentativa",
+  "pausa.tipo",
+  "juiz.aprovado",
+  "juiz.tentativa",
+  "propostas.total",
+  "propostas.aprovadas",
+  // rótulos da tabela de métricas
+  "caminho",
+  "status",
+  "intencao",
+  "modelo",
+  "papel",
+  "direcao",
+  "janela",
+  "de",
+  "para",
+  "motivo",
+  "tool",
+  "violacao",
+  "tipo",
+  "decisao",
+  "codigo",
+  "voto",
+  "resultado",
+  "origem",
+  "gosto",
+  "etapa",
+  // extras
+  "erro.codigo",
+  "trace_id",
+] as const
+
+export type AtributoPermitido = (typeof ATRIBUTOS_PERMITIDOS)[number]
+
+export const MAX_TEXTO_ATRIBUTO = 64

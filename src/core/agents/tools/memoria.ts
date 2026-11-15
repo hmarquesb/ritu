@@ -84,6 +84,7 @@ export const casaLerTool = definirTool({
     "Leia o que a pessoa tem em casa, com o estado de cada item (confirmado, incerto ou sempre tenho). Itens que acabaram e os que ela pediu para evitar não aparecem.",
   input: entradaVaziaSchema,
   output: casaSaidaSchema,
+  resumir: (saida) => `${saida.confirmados} confirmados, ${saida.incertos} incertos`,
   async executar(_entrada, ctx) {
     const agora = ctx.clock.now()
     const itens = await ctx.stores.pantry.listar(ctx.contaId)
@@ -123,6 +124,7 @@ export const preferenciasLerTool = definirTool({
     "Leia as preferências já registradas para alguns alimentos, práticas ou preparos: se gosta, e quantas vezes ajudou, não ajudou ou não foi feito. Itens sem registro não aparecem.",
   input: preferenciasEntradaSchema,
   output: preferenciasSaidaSchema,
+  resumir: (saida) => `${saida.itens.length} registros`,
   async executar(entrada, ctx) {
     const lidas = await ctx.stores.preferences.ler(ctx.contaId, entrada.itens)
     return {
@@ -178,6 +180,7 @@ export const historicoRecenteTool = definirTool({
     "Leia os momentos e as sugestões dos últimos dias (até 7), com o que a pessoa disse de cada uma: ajudou, não ajudou, não fez ou ainda aguardando. Não traz o texto da conversa.",
   input: historicoEntradaSchema,
   output: historicoSaidaSchema,
+  resumir: (saida) => `${new Set(saida.runs.map((r) => r.dia)).size} dias`,
   async executar(entrada, ctx) {
     const dias = entrada.dias ?? DIAS_DO_HISTORICO
     const desde = new Date(ctx.clock.now().getTime() - dias * DIA_EM_MS)

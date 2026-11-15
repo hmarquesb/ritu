@@ -5,6 +5,7 @@ import type { FiltroPessoa } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { SinaisPessoa } from "@/core/knowledge/substitutos"
 import type { Stores } from "@/core/stores"
+import type { Telemetry } from "@/core/telemetry/ports"
 import type { CidadeDaPessoa, WeatherSource } from "@/core/weather/ports"
 
 export type ToolContext = {
@@ -17,6 +18,7 @@ export type ToolContext = {
   stores: Pick<Stores, "pantry" | "preferences" | "runs" | "outcomes">
   clock: Clock
   fuso?: string
+  telemetry: Telemetry
 }
 
 export type Tool<I, O> = {

@@ -7,6 +7,7 @@ import { getContainer } from "@/infra/container"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 
 const kb = getContainer().knowledge
 
@@ -19,6 +20,7 @@ function ctx(parcial: Partial<ToolContext> = {}): ToolContext {
     contaId: "conta-1",
     stores: createMemoryStores(createFixedClock("2026-01-15T12:00:00Z")),
     clock: createFixedClock("2026-01-15T12:00:00Z"),
+    telemetry: createMemoryTelemetry(),
     ...parcial,
   }
 }

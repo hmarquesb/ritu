@@ -6,6 +6,7 @@ import type { ToolContext } from "@/core/tools/tool"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 
 const CONTA = "conta-1"
@@ -21,6 +22,7 @@ function ambiente(filtro: FiltroPessoa) {
     contaId: CONTA,
     stores,
     clock,
+    telemetry: createMemoryTelemetry(),
   }
   return { ctx, stores }
 }

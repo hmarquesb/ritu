@@ -7,6 +7,7 @@ import type { ToolContext } from "@/core/tools/tool"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import {
   alimentoTool,
@@ -27,9 +28,43 @@ function ctx(parcial: Partial<ToolContext> = {}): ToolContext {
     contaId: "conta-1",
     stores: createMemoryStores(createFixedClock("2026-01-15T12:00:00Z")),
     clock: createFixedClock("2026-01-15T12:00:00Z"),
+    telemetry: createMemoryTelemetry(),
     ...parcial,
   }
 }
+
+describe("resumir das tools de ayurveda", () => {
+  it("ayurveda.alimento resume o número de alimentos, sem os nomes", async () => {
+    const r = await alimentoTool.execute({ alimentos: ["banana", "canela"] }, ctx())
+
+    expect(alimentoTool.resumir?.(r)).toBe("2 alimentos")
+    expect(alimentoTool.resumir?.(r)).not.toMatch(/banana|canela/i)
+  })
+
+  it("ayurveda.candidatos resume o número de candidatos, sem os nomes", async () => {
+    const r = await candidatosTool.execute({ tipo: "pratica", buscadas: ["quente"] }, ctx())
+
+    expect(r.candidatos.length).toBeGreaterThan(0)
+    expect(candidatosTool.resumir?.(r)).toBe(`${r.candidatos.length} candidatos`)
+    expect(candidatosTool.resumir?.(r)).not.toContain(r.candidatos[0]?.nome ?? "")
+  })
+
+  it("ayurveda.substitutos resume o número de substitutos", async () => {
+    const r = await substitutosTool.execute({ alimento_id: "canela" }, ctx())
+
+    expect(r.substitutos.length).toBeGreaterThan(0)
+    expect(substitutosTool.resumir?.(r)).toBe(`${r.substitutos.length} substitutos`)
+  })
+
+  it("ayurveda.checar_combinacao resume compatível ou o número de conflitos", async () => {
+    const conflito = await checarCombinacaoTool.execute({ itens: ["leite", "limao"] }, ctx())
+    const compativel = { compativel: true, conflitos: [], desconhecidos: [] }
+
+    expect(conflito.conflitos.length).toBeGreaterThan(0)
+    expect(checarCombinacaoTool.resumir?.(conflito)).toBe(`${conflito.conflitos.length} conflitos`)
+    expect(checarCombinacaoTool.resumir?.(compativel)).toBe("compatível")
+  })
+})
 
 describe("ayurveda.alimento", () => {
   it("identifica alimentos por nome e sinônimo, sem repetir o mesmo alimento", async () => {

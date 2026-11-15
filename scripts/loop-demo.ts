@@ -101,6 +101,7 @@ async function main(): Promise<void> {
       contaId: conta.id,
       stores,
       clock,
+      telemetry: container.telemetry,
     }
     const run = await svc.iniciarRun(conta.id, { caminho: "acompanhante", intencoes: [] })
 

@@ -94,6 +94,7 @@ export const alimentoTool = definirTool({
     "Consulte as qualidades e o efeito de alimentos citados pela pessoa ou que você pensa em sugerir.",
   input: alimentoEntradaSchema,
   output: alimentoSaidaSchema,
+  resumir: (saida) => `${saida.alimentos.length} alimentos`,
   executar({ alimentos }, ctx) {
     const { alimentos: achados, desconhecidos } = identificarNomes(alimentos, ctx.kb)
     return { alimentos: achados.map((a) => paraSaidaAlimento(a, ctx.kb)), desconhecidos }
@@ -207,6 +208,7 @@ export const candidatosTool = definirTool({
     "Busque alimentos, preparos ou práticas que atendem às qualidades buscadas, já filtrados para a pessoa.",
   input: candidatosEntradaSchema,
   output: candidatosSaidaSchema,
+  resumir: (saida) => `${saida.candidatos.length} candidatos`,
   executar(entrada, ctx) {
     return { candidatos: candidatosDaEntrada(entrada, ctx) }
   },
@@ -243,6 +245,7 @@ export const substitutosTool = definirTool({
   description: "Ache um substituto para um ingrediente que a pessoa não tem ou não quer.",
   input: substitutosEntradaSchema,
   output: substitutosSaidaSchema,
+  resumir: (saida) => `${saida.substitutos.length} substitutos`,
   executar(entrada, ctx) {
     return {
       substitutos: substitutos(
@@ -285,6 +288,7 @@ export const checarCombinacaoTool = definirTool({
   description: "Confira se os alimentos de uma sugestão combinam entre si antes de entregar.",
   input: checarEntradaSchema,
   output: checarSaidaSchema,
+  resumir: (saida) => (saida.compativel ? "compatível" : `${saida.conflitos.length} conflitos`),
   executar({ itens }, ctx) {
     const { compativel, conflitos } = checarCombinacao(itens, ctx.kb)
     return {

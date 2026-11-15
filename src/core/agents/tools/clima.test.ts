@@ -10,6 +10,7 @@ import { tendenciaDasProximasHoras } from "@/core/weather/tendencia"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { climaAgoraTool, climaProximasHorasTool, climaTools } from "./clima"
 
@@ -29,6 +30,7 @@ function ctx(fonte: WeatherSource, cidade?: CidadeDaPessoa): ToolContext {
     contaId: "conta-1",
     stores: createMemoryStores(createFixedClock("2026-01-15T12:00:00Z")),
     clock: createFixedClock("2026-01-15T12:00:00Z"),
+    telemetry: createMemoryTelemetry(),
   }
 }
 
@@ -177,6 +179,36 @@ describe("clima.proximas_horas", () => {
       chuva: false,
       ate: "2026-01-15T12:00:00-03:00",
     })
+  })
+})
+
+describe("resumir das tools de clima", () => {
+  it("clima.agora resume ok, sem cidade ou indisponível, sem o nome da cidade", async () => {
+    const fora = createFakeWeather()
+    fora.foraDoAr(true)
+
+    const aberto = await climaAgoraTool.execute({}, ctx(createFakeWeather(), RIO))
+    const semCidade = await climaAgoraTool.execute({}, ctx(createFakeWeather()))
+    const indisponivel = await climaAgoraTool.execute({}, ctx(fora, RIO))
+
+    expect(climaAgoraTool.resumir?.(aberto)).toBe("ok")
+    expect(climaAgoraTool.resumir?.(semCidade)).toBe("sem cidade")
+    expect(climaAgoraTool.resumir?.(indisponivel)).toBe("indisponível")
+    expect(climaAgoraTool.resumir?.(aberto)).not.toMatch(/Rio/)
+  })
+
+  it("clima.proximas_horas resume ok, sem cidade ou indisponível, sem o nome da cidade", async () => {
+    const fora = createFakeWeather()
+    fora.foraDoAr(true)
+
+    const aberto = await climaProximasHorasTool.execute({}, ctx(createFakeWeather(), RIO))
+    const semCidade = await climaProximasHorasTool.execute({}, ctx(createFakeWeather()))
+    const indisponivel = await climaProximasHorasTool.execute({}, ctx(fora, RIO))
+
+    expect(climaProximasHorasTool.resumir?.(aberto)).toBe("ok")
+    expect(climaProximasHorasTool.resumir?.(semCidade)).toBe("sem cidade")
+    expect(climaProximasHorasTool.resumir?.(indisponivel)).toBe("indisponível")
+    expect(climaProximasHorasTool.resumir?.(aberto)).not.toMatch(/Rio/)
   })
 })
 

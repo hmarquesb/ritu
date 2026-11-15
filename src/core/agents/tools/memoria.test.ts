@@ -6,6 +6,7 @@ import type { ToolContext } from "@/core/tools/tool"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { casaLerTool, historicoRecenteTool, memoriaTools, preferenciasLerTool } from "./memoria"
 
@@ -28,6 +29,7 @@ function ambiente(filtro: FiltroPessoa = filtroVazio) {
     contaId: CONTA,
     stores,
     clock,
+    telemetry: createMemoryTelemetry(),
   }
   return { ctx, clock, stores }
 }
@@ -62,6 +64,75 @@ describe("memoriaTools", () => {
       "preferencias.ler",
       "historico.recente",
     ])
+  })
+})
+
+describe("resumir das tools de memória", () => {
+  it("casa.ler resume as contagens, sem nome de alimento", async () => {
+    const { ctx, stores } = ambiente()
+    await stores.pantry.registrar(
+      CONTA,
+      [{ alimento_id: "banana" }, { alimento_id: "canela" }],
+      "conversa",
+    )
+
+    const r = await casaLerTool.execute({}, ctx)
+
+    expect(casaLerTool.resumir?.(r)).toBe("2 confirmados, 0 incertos")
+    expect(casaLerTool.resumir?.(r)).not.toMatch(/banana|canela/i)
+  })
+
+  it("preferencias.ler resume o número de registros, sem os ids", () => {
+    const r = {
+      itens: [
+        {
+          tipo: "alimento" as const,
+          id: "banana",
+          gosto: "gosta" as const,
+          ajudou: 1,
+          nao_ajudou: 0,
+          nao_fez: 0,
+        },
+        {
+          tipo: "pratica" as const,
+          id: "caminhada",
+          gosto: null,
+          ajudou: 0,
+          nao_ajudou: 1,
+          nao_fez: 0,
+        },
+      ],
+    }
+
+    expect(preferenciasLerTool.resumir?.(r)).toBe("2 registros")
+    expect(preferenciasLerTool.resumir?.(r)).not.toMatch(/banana|caminhada/)
+  })
+
+  it("historico.recente resume o número de dias, sem o título das sugestões", () => {
+    const linha = {
+      dia: "2026-01-14",
+      momento_do_dia: "manha" as const,
+      estados: ["sem_energia" as const],
+      sugestoes: [{ titulo: "Chá de gengibre", resultado: "ajudou" as const }],
+    }
+
+    const r = { runs: [linha, { ...linha, dia: "2026-01-13" }, { ...linha, dia: "2026-01-12" }] }
+
+    expect(historicoRecenteTool.resumir?.(r)).toBe("3 dias")
+    expect(historicoRecenteTool.resumir?.(r)).not.toMatch(/gengibre/i)
+  })
+
+  it("historico.recente conta dias distintos: dois momentos no mesmo dia são um dia", () => {
+    const linha = {
+      dia: "2026-01-14",
+      momento_do_dia: "manha" as const,
+      estados: ["sem_energia" as const],
+      sugestoes: [{ titulo: "Chá de gengibre", resultado: "ajudou" as const }],
+    }
+
+    const r = { runs: [linha, { ...linha, momento_do_dia: "tarde" as const }] }
+
+    expect(historicoRecenteTool.resumir?.(r)).toBe("1 dias")
   })
 })
 

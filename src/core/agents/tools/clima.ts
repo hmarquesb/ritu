@@ -39,6 +39,12 @@ const proximasHorasSaidaSchema = z.discriminatedUnion("status", [
 
 const umaCasa = (n: number): number => Math.round(n * 10) / 10
 
+function resumoDeClima(saida: { status: "ok" | "sem_cidade" | "indisponivel" }): string {
+  if (saida.status === "ok") return "ok"
+  if (saida.status === "sem_cidade") return "sem cidade"
+  return "indisponível"
+}
+
 // Erro de qualquer tipo vira "indisponivel": a tool nunca lança por causa do clima.
 async function climaDaCidade(ctx: ToolContext, cidade: CidadeDaPessoa): Promise<Clima | undefined> {
   try {
@@ -54,6 +60,7 @@ export const climaAgoraTool = definirTool({
     "Consulte a temperatura aparente e a umidade da cidade da pessoa, já em qualidades. Faz sentido em mensagens de momento; é dispensável em pergunta conceitual.",
   input: entradaSchema,
   output: agoraSaidaSchema,
+  resumir: resumoDeClima,
   async executar(_entrada, ctx) {
     const cidade = ctx.clima.cidade
     if (!cidade) return { status: "sem_cidade" }
@@ -76,6 +83,7 @@ export const climaProximasHorasTool = definirTool({
     "Consulte a tendência das próximas 6 horas (esquenta, esfria, chove). Só quando a ação é para mais tarde ou depende de sair de casa.",
   input: entradaSchema,
   output: proximasHorasSaidaSchema,
+  resumir: resumoDeClima,
   async executar(_entrada, ctx) {
     const cidade = ctx.clima.cidade
     if (!cidade) return { status: "sem_cidade" }

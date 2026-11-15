@@ -1208,3 +1208,483 @@
     - { ref: a_confirmar, campos: [vipaka] }
   confianca: baixa
   notas: "Diretrizes: Vata e Pitta evitam cru e aceitam cozido; efeito 0. Banyan pede que Vata e Pitta reduzam."
+
+# ---------- graos ----------
+- id: arroz-branco
+  nome: Arroz branco
+  sinonimos: [arroz, arroz agulhinha, arroz basmati, arroz jasmim]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, suave]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Prefira o basmati, em pequena porção."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, virya, vipaka, gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
+  confianca: media
+  notas: "Diretrizes: Vata favorece todo arroz; Pitta favorece branco e basmati; Kapha evita o branco e aceita o basmati com moderação. Gunas são as do sabor doce."
+
+- id: arroz-integral
+  nome: Arroz integral
+  sinonimos: [arroz cateto]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado]
+  efeito: { vata: -1, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    pitta: "Prefira o arroz branco ou o basmati."
+    kapha: "Prefira o basmati, em pequena porção."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, vipaka, gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya] }
+  confianca: baixa
+  notas: "Virya quente do redator: o sabor doce é frio, mas as diretrizes pedem que Pitta evite o integral (só raramente). Kapha evita o integral."
+
+- id: aveia
+  nome: Aveia
+  sinonimos: [aveia em flocos, farelo de aveia, mingau de aveia]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, suave]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar:
+    vata: "Prefira cozida, em mingau quente."
+    pitta: "Prefira cozida, em mingau."
+    kapha: "Prefira a aveia seca, em flocos, ao mingau."
+  restricoes: [sem_gluten]
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-guia-dieta, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-dieta-vata, campos: [como_equilibrar] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: cozida favorece Vata e Pitta e agrava Kapha; seca agrava Vata e Pitta e favorece Kapha. Kapha 0 pela divergência. 'Suave' vem do cereal quente na página Kapha."
+
+- id: fuba
+  nome: Fubá
+  sinonimos: [farinha de milho, polenta, angu]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [leve, seco]
+  efeito: { vata: 1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Efeito de 'corn' e 'polenta': Vata e Pitta evitam (polenta só raramente); Kapha favorece. Virya e gunas do redator; o sabor doce seria frio."
+
+- id: cuscuz-de-milho
+  nome: Cuscuz de milho
+  sinonimos: [cuscuz, cuscuz nordestino, flocão, flocos de milho]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [leve, seco]
+  efeito: { vata: 1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "É o de flocos de milho, não o marroquino (de trigo). Efeito de 'corn' nas diretrizes. Virya e gunas do redator."
+
+- id: canjica
+  nome: Canjica
+  sinonimos: [canjica branca, mungunzá, milho de canjica]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, suave]
+  efeito: { vata: 1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Não aparece nas páginas; efeito copiado de 'corn'. Cozida por horas fica pesada e macia, o que conflita com o milho seco. Gunas do redator."
+
+- id: tapioca
+  nome: Tapioca
+  sinonimos: [goma de tapioca, polvilho doce, fécula de mandioca, beiju, sagu]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [leve, seco]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Efeito de 'tapioca' (Vata evita; Pitta e Kapha favorecem). O artigo de combinações desaconselha tapioca com frutas, feijões e uva-passa."
+
+- id: farinha-de-mandioca
+  nome: Farinha de mandioca
+  sinonimos: [farinha, farinha de mesa, farinha d'água, farofa]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: 0, kapha: 0 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito] }
+  confianca: baixa
+  notas: "Não aparece nas páginas abertas. Todos os valores do redator, pela textura seca e áspera."
+
+- id: pao
+  nome: Pão
+  sinonimos: [pão francês, pão de forma, pão integral, pãozinho, cacetinho]
+  grupo: graos
+  durabilidade: media
+  funcoes: [base]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: 1, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    vata: "Prefira pão sem fermento."
+    pitta: "Prefira pão sem fermento."
+    kapha: "Prefira pão sem fermento, e pouco."
+  restricoes: [sem_gluten]
+  grupos_evitar: [trigo]
+  marcas: [fermentado]
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [marcas] }
+  confianca: media
+  notas: "Efeito de 'bread (with yeast)', que os três doshas evitam; o trigo em si é favorecido por Vata e Pitta. Rasa e virya do trigo no sabor doce."
+
+- id: macarrao
+  nome: Macarrão
+  sinonimos: [massa, espaguete, talharim, parafuso, penne]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado]
+  efeito: { vata: 1, pitta: -1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: [sem_gluten]
+  grupos_evitar: [trigo]
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+  confianca: media
+  notas: "Diretrizes: Vata e Kapha só raramente (marcado na coluna evitar, por isso +1); Pitta favorece. Vipaka doce é o do trigo; o adstringente teria picante."
+
+- id: quinoa
+  nome: Quinoa
+  sinonimos: [quinua]
+  grupo: graos
+  durabilidade: longa
+  funcoes: [base]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [leve]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar:
+    kapha: "Em pequena porção."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-guia-dieta, campos: [rasa, gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka] }
+  confianca: baixa
+  notas: "Guia: grãos têm sabor doce; quinoa é 'grão leve' para Kapha. Diretrizes: Kapha com moderação."
+
+# ---------- leguminosas ----------
+- id: feijao-preto
+  nome: Feijão-preto
+  sinonimos: [feijão preto]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem cozido, com azeite e especiarias."
+    kapha: "Com especiarias que aquecem."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [rasa, gunas, como_equilibrar] }
+    - { ref: banyan-sabor-adstringente, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+  confianca: media
+  notas: "Banyan descreve feijões como secos e ásperos; a página do sabor adstringente diz 'pesado' e a de Kapha 'um pouco leve': pesado/leve ficou de fora."
+
+- id: feijao-carioca
+  nome: Feijão-carioca
+  sinonimos: [feijão carioquinha, feijão rajado]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem cozido, com azeite e especiarias."
+    kapha: "Com especiarias que aquecem."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [rasa, gunas, como_equilibrar] }
+    - { ref: banyan-sabor-adstringente, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+  confianca: media
+  notas: "Valores de 'pinto beans', o mais parecido com o carioca."
+
+- id: feijao-fradinho
+  nome: Feijão-fradinho
+  sinonimos: [feijão-de-corda, feijão-macassar, feijão fradinho]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem cozido, com azeite e especiarias."
+    kapha: "Com especiarias que aquecem."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-vata, campos: [rasa, gunas, como_equilibrar] }
+    - { ref: banyan-sabor-adstringente, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+  confianca: media
+  notas: "Valores de 'black-eyed peas'."
+
+- id: lentilha
+  nome: Lentilha
+  sinonimos: [lentilha marrom, lentilha comum]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem cozida, com azeite e especiarias."
+    kapha: "Com especiarias que aquecem."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-pitta, campos: [rasa] }
+    - { ref: banyan-sabor-adstringente, campos: [virya, vipaka] }
+    - { ref: banyan-dieta-kapha, campos: [rasa, gunas, como_equilibrar] }
+    - { ref: banyan-dieta-vata, campos: [como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+  confianca: media
+  notas: "Efeito de 'lentils (brown)'."
+
+- id: lentilha-vermelha
+  nome: Lentilha vermelha
+  sinonimos: [lentilha rosa, masoor dal]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: doce
+  gunas: [leve, seco]
+  efeito: { vata: 0, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    kapha: "Com especiarias que aquecem."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, virya] }
+    - { ref: banyan-dieta-pitta, campos: [rasa] }
+    - { ref: ayurveda-com-guia-dieta, campos: [gunas] }
+    - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Doce na página do sabor doce, adstringente como lentilha. Vipaka diverge (doce x picante). Vata com moderação."
+
+- id: grao-de-bico
+  nome: Grão-de-bico
+  sinonimos: [grão de bico]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem cozido, com azeite e especiarias."
+    kapha: "Com especiarias que aquecem."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa] }
+    - { ref: banyan-dieta-vata, campos: [rasa, gunas, como_equilibrar] }
+    - { ref: banyan-sabor-adstringente, campos: [virya] }
+    - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Aparece como doce e como adstringente; vipaka diverge (doce x picante), ficou picante. Homus leva gergelim (tahine)."
+
+- id: feijao-mungo
+  nome: Feijão-mungo
+  sinonimos: [feijão-moyashi, feijão-mungo-verde, moong, mung dal]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [leve, seco]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar:
+    kapha: "Com especiarias que aquecem."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, virya, vipaka] }
+    - { ref: ayurveda-com-guia-dieta, campos: [gunas] }
+    - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+  confianca: media
+  notas: "Diretrizes: Vata e Pitta favorecem; Kapha com moderação. Guia: Kapha pede leguminosas leves, secas e que aquecem, citando o mungo."
+
+- id: ervilha-partida
+  nome: Ervilha partida
+  sinonimos: [ervilha seca, ervilha amarela, ervilha verde seca]
+  grupo: leguminosas
+  durabilidade: longa
+  funcoes: [proteina]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, aspero]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem cozida, com azeite e especiarias."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-dieta-vata, campos: [como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Efeito de 'split peas'. Rasa, virya, vipaka e gunas copiados dos feijões; as páginas não citam ervilha seca."
+
+- id: tofu
+  nome: Tofu
+  sinonimos: [queijo de soja]
+  grupo: leguminosas
+  durabilidade: media
+  funcoes: [proteina]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, suave]
+  efeito: { vata: 0, pitta: -1, kapha: 0 }
+  como_equilibrar:
+    vata: "Em porção moderada, quente."
+    kapha: "Sempre quente, nunca gelado."
+  restricoes: []
+  grupos_evitar: [soja]
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, virya, vipaka, gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+  confianca: media
+  notas: "Diretrizes: Vata com moderação; Pitta favorece; Kapha favorece quente (com moderação) e evita frio."

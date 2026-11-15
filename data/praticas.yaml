@@ -354,3 +354,433 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: a_confirmar, campos: [favorece_estados] }
   confianca: baixa
+- id: oleo-pes-gergelim
+  tipo: oleo
+  nome: Massagem nos pés com óleo de gergelim
+  ingredientes: [oleo-de-gergelim]
+  preparo: "Use óleo de gergelim prensado a frio, só para a pele. Amorne o frasco em água quente, massageie com calma as solas dos pés antes de dormir e calce meias velhas para proteger o lençol."
+  gunas: [quente, oleoso, pesado]
+  favorece_estados: [seca, com_frio, agitada]
+  efeito: { vata: -2, pitta: 1, kapha: 0 }
+  momento: [noite]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: []
+  aviso: "Evite em pele irritada ou machucada."
+  fontes:
+    - {
+        ref: banyan-oleo-de-gergelim,
+        campos: [preparo, gunas, favorece_estados, momento, contraindicacoes],
+      }
+    - { ref: banyan-automassagem-oleo, campos: [preparo, efeito, aviso] }
+    - { ref: banyan-ansiedade, campos: [preparo, favorece_estados] }
+  confianca: media
+- id: oleo-pes-coco
+  tipo: oleo
+  nome: Massagem nos pés com óleo de coco
+  ingredientes: [oleo-de-coco]
+  preparo: "Use óleo de coco prensado a frio, só para a pele. Massageie com calma as solas dos pés antes de dormir, com o óleo fresco ou só levemente morno, e calce meias velhas para proteger o lençol."
+  gunas: [frio, oleoso]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: 0, pitta: -1, kapha: 1 }
+  momento: [noite]
+  contraindicacoes: [com_frio, pesada]
+  nunca_sugerir_se: []
+  aviso: "Evite em pele irritada ou machucada."
+  fontes:
+    - {
+        ref: banyan-automassagem-oleo,
+        campos: [preparo, gunas, momento, efeito, contraindicacoes, aviso],
+      }
+    - { ref: banyan-equilibrar-pitta, campos: [favorece_estados, efeito] }
+  confianca: media
+- id: oleo-barriga-gergelim
+  tipo: oleo
+  nome: Massagem na barriga com óleo de gergelim
+  ingredientes: [oleo-de-gergelim]
+  preparo: "Use óleo de gergelim prensado a frio, só para a pele. Amorne o frasco em água quente e massageie a barriga com movimentos largos e circulares, no sentido horário."
+  gunas: [quente, oleoso, pesado]
+  favorece_estados: [seca, com_frio]
+  efeito: { vata: -2, pitta: 1, kapha: 0 }
+  momento: [manha, noite]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: []
+  aviso: "Deixe para outro dia durante a menstruação, na gestação, com pele irritada ou em dias de mal-estar."
+  fontes:
+    - { ref: banyan-automassagem-oleo, campos: [preparo, momento, efeito, aviso] }
+    - { ref: banyan-oleo-de-gergelim, campos: [gunas, favorece_estados, contraindicacoes] }
+  confianca: media
+- id: oleo-corpo-gergelim
+  tipo: oleo
+  nome: Massagem no corpo com óleo de gergelim
+  ingredientes: [oleo-de-gergelim]
+  preparo: "Use óleo de gergelim prensado a frio, só para a pele. Amorne o frasco em água quente, espalhe o óleo pelo corpo com calma, sem esquecer os pés, e depois tome um banho morno."
+  gunas: [quente, oleoso, pesado]
+  favorece_estados: [seca, com_frio, agitada]
+  efeito: { vata: -2, pitta: 1, kapha: 0 }
+  momento: [manha]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: []
+  aviso: "Deixe para outro dia durante a menstruação, na gestação, com pele irritada ou em dias de mal-estar."
+  fontes:
+    - { ref: ayurveda-com-rotina-diaria, campos: [preparo, efeito] }
+    - { ref: banyan-automassagem-oleo, campos: [preparo, momento, efeito, aviso] }
+    - { ref: banyan-oleo-de-gergelim, campos: [gunas, favorece_estados, contraindicacoes] }
+    - { ref: banyan-ansiedade, campos: [favorece_estados] }
+  confianca: media
+- id: oleo-corpo-coco
+  tipo: oleo
+  nome: Massagem no corpo com óleo de coco
+  ingredientes: [oleo-de-coco]
+  preparo: "Use óleo de coco prensado a frio, só para a pele. Amorne o frasco só de leve em água morna, espalhe o óleo pelo corpo com calma e depois tome um banho morno."
+  gunas: [frio, oleoso]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: 0, pitta: -1, kapha: 1 }
+  momento: [manha]
+  contraindicacoes: [com_frio, pesada]
+  nunca_sugerir_se: []
+  aviso: "Deixe para outro dia durante a menstruação, na gestação, com pele irritada ou em dias de mal-estar."
+  fontes:
+    - {
+        ref: banyan-automassagem-oleo,
+        campos: [preparo, gunas, momento, efeito, contraindicacoes, aviso],
+      }
+    - { ref: banyan-equilibrar-pitta, campos: [favorece_estados, efeito] }
+    - { ref: ayurveda-com-rotina-diaria, campos: [efeito] }
+  confianca: media
+- id: oleo-corpo-girassol
+  tipo: oleo
+  nome: Massagem no corpo com óleo de girassol
+  ingredientes: [oleo-de-girassol]
+  preparo: "Use óleo de girassol prensado a frio, só para a pele. Amorne o frasco só de leve em água morna, espalhe o óleo pelo corpo com calma e depois tome um banho morno."
+  gunas: [frio, leve, oleoso]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: 0, pitta: -1, kapha: -1 }
+  momento: [manha]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: "Deixe para outro dia durante a menstruação, na gestação, com pele irritada ou em dias de mal-estar."
+  fontes:
+    - { ref: banyan-automassagem-oleo, campos: [preparo, gunas, favorece_estados, momento, aviso] }
+    - { ref: ayurveda-com-rotina-diaria, campos: [efeito] }
+  confianca: media
+- id: oleo-couro-cabeludo-coco
+  tipo: oleo
+  nome: Massagem no couro cabeludo com óleo de coco
+  ingredientes: [oleo-de-coco]
+  preparo: "Use óleo de coco prensado a frio, só para a pele. Massageie o couro cabeludo com a ponta dos dedos antes de dormir, com o óleo fresco no calor e levemente morno no frio."
+  gunas: [frio, oleoso]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: 0, pitta: -1, kapha: 1 }
+  momento: [noite]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: "Evite no couro cabeludo irritado ou machucado."
+  fontes:
+    - { ref: banyan-automassagem-oleo, campos: [preparo, gunas, momento, aviso] }
+    - { ref: ayurveda-com-rotina-diaria, campos: [preparo, efeito] }
+    - { ref: banyan-equilibrar-pitta, campos: [favorece_estados, efeito] }
+  confianca: media
+- id: agua-morna-ao-acordar
+  tipo: pratica
+  nome: Água morna ao acordar
+  ingredientes: []
+  preparo: "Ao acordar, depois de escovar os dentes e limpar a língua, beba água morna devagar, em goles."
+  gunas: [quente, leve]
+  favorece_estados: [pesada, sem_energia, com_frio]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [manha]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-vata, campos: [preparo, momento] }
+    - { ref: banyan-rotina-diaria-tradicional, campos: [preparo, momento] }
+    - { ref: banyan-sete-praticas-diarias, campos: [preparo, momento] }
+    - { ref: banyan-digestao, campos: [preparo] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, efeito] }
+  confianca: baixa
+- id: agua-morna-ao-longo-do-dia
+  tipo: pratica
+  nome: Água morna ao longo do dia
+  ingredientes: []
+  preparo: "Ao longo do dia, beba água morna ou em temperatura ambiente, em goles, e deixe a água gelada de lado."
+  gunas: [quente, leve]
+  favorece_estados: [com_frio, pesada]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [manha, almoco, tarde]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-guia-inverno, campos: [preparo, favorece_estados] }
+    - { ref: banyan-digestao, campos: [preparo] }
+    - { ref: ayurveda-com-vata, campos: [preparo] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, efeito, momento] }
+  confianca: baixa
+- id: caminhada-leve-apos-refeicao
+  tipo: pratica
+  nome: Caminhada leve depois de comer
+  ingredientes: []
+  preparo: "Depois da refeição, caminhe devagar por pouco tempo, sem pressa e sem se cansar."
+  gunas: [leve, movel]
+  favorece_estados: [pesada, sem_energia]
+  efeito: { vata: 0, pitta: 0, kapha: -1 }
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-diaria-tradicional, campos: [preparo, momento] }
+    - { ref: banyan-digestao, campos: [preparo, favorece_estados] }
+    - { ref: a_confirmar, campos: [gunas, efeito] }
+  confianca: baixa
+- id: caminhada-leve-de-manha
+  tipo: pratica
+  nome: Caminhada leve de manhã
+  ingredientes: []
+  preparo: "De manhã, faça uma caminhada leve, em ritmo tranquilo, sem forçar."
+  gunas: [leve, quente]
+  favorece_estados: [sem_energia, pesada, agitada]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [manha]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-manha-energia, campos: [preparo, momento, favorece_estados] }
+    - { ref: banyan-guia-inverno, campos: [momento, favorece_estados] }
+    - { ref: banyan-ansiedade, campos: [favorece_estados] }
+    - { ref: ayurveda-com-vata, campos: [preparo] }
+    - { ref: a_confirmar, campos: [gunas, efeito] }
+  confianca: baixa
+- id: respiracao-lenta
+  tipo: pratica
+  nome: Respiração lenta
+  ingredientes: []
+  preparo: "Sente-se de um jeito confortável, em silêncio, e respire devagar e fundo pelo nariz, sem forçar, prestando atenção no ar que entra e sai."
+  gunas: [estavel, brando]
+  favorece_estados: [agitada]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [manha, tarde, noite]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-vata, campos: [preparo, momento] }
+    - { ref: banyan-sono-noite, campos: [favorece_estados, momento] }
+    - { ref: ayurveda-com-vata, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+- id: pausa-em-silencio
+  tipo: pratica
+  nome: Pausa em silêncio
+  ingredientes: []
+  preparo: "Pare um pouco, sente-se num lugar tranquilo, feche os olhos e fique em silêncio, só observando a respiração."
+  gunas: [estavel, brando]
+  favorece_estados: [agitada]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  momento: [manha, tarde, noite]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-diaria-tradicional, campos: [preparo] }
+    - { ref: banyan-rotina-vata, campos: [preparo] }
+    - { ref: ayurveda-com-rotina-diaria, campos: [favorece_estados, momento] }
+    - { ref: a_confirmar, campos: [gunas, efeito] }
+  confianca: baixa
+- id: alongamento-leve
+  tipo: pratica
+  nome: Alongamento leve
+  ingredientes: []
+  preparo: "Alongue o corpo devagar, sem forçar, respirando com calma em cada movimento."
+  gunas: [estavel]
+  favorece_estados: [agitada, sem_energia]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [manha, noite]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-vata, campos: [preparo, favorece_estados] }
+    - { ref: banyan-rotina-manha-energia, campos: [preparo, momento, favorece_estados] }
+    - { ref: banyan-sete-praticas-diarias, campos: [momento] }
+    - { ref: ayurveda-com-vata, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+- id: pes-aquecidos
+  tipo: pratica
+  nome: Pés aquecidos
+  ingredientes: []
+  preparo: "Mantenha os pés aquecidos com meias e evite ficar descalça no chão frio."
+  gunas: [quente, estavel]
+  favorece_estados: [com_frio]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [manha, tarde, noite]
+  contraindicacoes: [com_calor]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: ayurveda-com-vata, campos: [favorece_estados, efeito] }
+    - { ref: a_confirmar, campos: [preparo, gunas, momento] }
+  confianca: baixa
+- id: escalda-pes-morno
+  tipo: pratica
+  nome: Escalda-pés morno
+  ingredientes: []
+  preparo: "Deixe os pés de molho numa bacia com água morna, sem estar quente demais, e seque bem antes de calçar meias."
+  gunas: [quente, estavel]
+  favorece_estados: [com_frio, agitada]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [noite]
+  contraindicacoes: [com_calor]
+  nunca_sugerir_se: []
+  aviso: "Confira a temperatura da água com a mão antes de pôr os pés."
+  fontes:
+    - {
+        ref: a_confirmar,
+        campos: [preparo, gunas, favorece_estados, efeito, momento, contraindicacoes, aviso],
+      }
+  confianca: baixa
+- id: banho-morno
+  tipo: pratica
+  nome: Banho morno
+  ingredientes: []
+  preparo: "Tome um banho morno, com calma, deixando a água aquecer o corpo devagar."
+  gunas: [quente, estavel]
+  favorece_estados: [agitada, com_frio]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [noite]
+  contraindicacoes: [com_calor]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-sono-insuficiente, campos: [preparo, favorece_estados, momento] }
+    - { ref: banyan-ansiedade, campos: [favorece_estados] }
+    - { ref: ayurveda-com-vata, campos: [favorece_estados, efeito] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+- id: rosto-com-agua-fresca
+  tipo: pratica
+  nome: Rosto lavado com água fresca
+  ingredientes: []
+  preparo: "Lave o rosto com água fresca, sem estar gelada, para refrescar e despertar."
+  gunas: [frio, leve]
+  favorece_estados: [sem_energia, com_calor]
+  efeito: { vata: 0, pitta: -1, kapha: 0 }
+  momento: [manha, tarde]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-diaria-tradicional, campos: [preparo, momento, favorece_estados] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, efeito, contraindicacoes] }
+  confianca: baixa
+- id: bolsa-morna-na-barriga
+  tipo: pratica
+  nome: Bolsa morna na barriga
+  ingredientes: []
+  preparo: "Apoie uma bolsa de água morna, envolvida num pano, sobre a barriga e descanse um pouco."
+  gunas: [quente, estavel]
+  favorece_estados: [com_frio]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [tarde, noite]
+  contraindicacoes: [com_calor]
+  nunca_sugerir_se: []
+  aviso: "Use a bolsa morna, nunca quente demais, sempre com um pano entre ela e a pele."
+  fontes:
+    - {
+        ref: a_confirmar,
+        campos: [preparo, gunas, favorece_estados, efeito, momento, contraindicacoes, aviso],
+      }
+  confianca: baixa
+- id: comer-sentada-sem-tela
+  tipo: pratica
+  nome: Comer sentada e sem tela
+  ingredientes: []
+  preparo: "Coma sentada, com calma, longe da televisão e do celular, prestando atenção na comida."
+  gunas: [estavel]
+  favorece_estados: [agitada]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [manha, almoco, jantar]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-comer-com-atencao, campos: [preparo] }
+    - { ref: banyan-digestao, campos: [preparo] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, efeito, momento] }
+  confianca: baixa
+- id: almoco-como-refeicao-principal
+  tipo: pratica
+  nome: Almoço como refeição principal
+  ingredientes: []
+  preparo: "Faça do almoço a refeição mais completa do dia, quando a digestão está mais forte."
+  gunas: [estavel]
+  favorece_estados: [sem_energia]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  momento: [almoco]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-diaria-tradicional, campos: [preparo, momento] }
+    - { ref: banyan-rotina-vata, campos: [preparo, momento] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, efeito] }
+  confianca: baixa
+- id: jantar-leve-e-cedo
+  tipo: pratica
+  nome: Jantar leve e cedo
+  ingredientes: []
+  preparo: "Jante algo mais leve que o almoço, cedo, e deixe um bom intervalo entre o jantar e a hora de dormir."
+  gunas: [leve]
+  favorece_estados: [pesada, agitada]
+  efeito: { vata: 0, pitta: 0, kapha: -1 }
+  momento: [jantar]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-rotina-diaria-tradicional, campos: [preparo, momento] }
+    - { ref: banyan-rotina-vata, campos: [preparo] }
+    - { ref: banyan-sono-insuficiente, campos: [preparo] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, efeito] }
+  confianca: baixa
+- id: telas-desligadas-antes-de-dormir
+  tipo: pratica
+  nome: Telas desligadas antes de dormir
+  ingredientes: []
+  preparo: "Desligue celular, computador e televisão bem antes de dormir e troque por algo calmo, como um chá morno ou uma conversa tranquila."
+  gunas: [estavel, brando]
+  favorece_estados: [agitada, irritada]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  momento: [noite]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-sono-noite, campos: [preparo, favorece_estados, efeito] }
+    - { ref: banyan-sono-insuficiente, campos: [preparo] }
+    - { ref: banyan-sete-praticas-diarias, campos: [preparo, momento] }
+    - { ref: banyan-equilibrar-pitta, campos: [favorece_estados, efeito] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+- id: dormir-cedo
+  tipo: pratica
+  nome: Dormir cedo
+  ingredientes: []
+  preparo: "Vá para a cama cedo, no começo da noite, e tente manter o mesmo horário para dormir e acordar."
+  gunas: [estavel]
+  favorece_estados: [sem_energia, agitada]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  momento: [noite]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-sono-noite, campos: [preparo, momento] }
+    - { ref: banyan-rotina-diaria-tradicional, campos: [preparo] }
+    - { ref: banyan-sono-insuficiente, campos: [preparo] }
+    - { ref: banyan-equilibrar-pitta, campos: [preparo] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, efeito] }
+  confianca: baixa

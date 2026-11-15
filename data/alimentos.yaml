@@ -2191,3 +2191,633 @@
     - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
   confianca: baixa
   notas: "Diretrizes: Pitta e Kapha favorecem (Kapha com pouco óleo); Vata cai em 'most other oils'; Banyan favorece para Vata. Rasa a gunas sem página."
+
+- id: gengibre
+  nome: Gengibre
+  sinonimos: [gengibre fresco, raiz de gengibre]
+  grupo: especiarias
+  durabilidade: media
+  funcoes: [tempero]
+  rasa: [picante, doce]
+  virya: quente
+  vipaka: doce
+  gunas: [quente, leve, intenso]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    pitta: "Prefira o gengibre fresco ao seco em pó, que esquenta mais."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-gengibre, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+  notas: "Efeito do gengibre fresco: Diretrizes e Banyan favorecem para Pitta só o fresco; o seco em pó Pitta evita. Gunas sem página."
+
+- id: canela
+  nome: Canela
+  sinonimos: [canela em pau, canela em pó]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, doce, amargo]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, leve, seco]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  como_equilibrar:
+    pitta: "Usar pouca, como toque no preparo."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [rasa, virya] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: favorece nos três (especiaria), mas como chá Vata só raramente; Banyan: Pitta só em pouca quantidade, daí Pitta 0. Vipaka e gunas sem página."
+
+- id: cardamomo
+  nome: Cardamomo
+  sinonimos: [cardamomo em grão, bagas de cardamomo]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [doce, picante]
+  virya: frio
+  vipaka: doce
+  gunas: [leve, suave]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-ervas-verao, campos: [rasa, virya] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-ervas-cozinha, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka, gunas] }
+  confianca: baixa
+  notas: "Divergência: Banyan (ervas de verão) dá virya frio; a página do sabor picante lista cardamomo entre os picantes. Diretrizes: Pitta em moderação."
+
+- id: cominho
+  nome: Cominho
+  sinonimos: [cominho em grão, cominho em pó]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, amargo]
+  virya: quente
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-arte-especiarias, campos: [rasa, efeito] }
+    - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
+    - { ref: banyan-alimentos-pitta, campos: [virya] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka, gunas] }
+  confianca: baixa
+  notas: "Banyan: aquece, mas é bem-vindo para Pitta. Vipaka e gunas sem página."
+
+- id: coentro-em-grao
+  nome: Coentro em grão
+  sinonimos: [semente de coentro, coentro em pó]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [adstringente, amargo, picante, doce]
+  virya: frio
+  vipaka: doce
+  gunas: [leve, oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-ervas-verao, campos: [rasa, virya, efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka, gunas] }
+  confianca: baixa
+  notas: "Banyan: equilibra os três, sobretudo Pitta. Vipaka e gunas sem página."
+
+- id: erva-doce
+  nome: Erva-doce
+  sinonimos: [funcho, semente de funcho]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [doce, picante, amargo]
+  virya: frio
+  vipaka: doce
+  gunas: [leve, oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-ervas-verao, campos: [rasa, virya] }
+    - { ref: banyan-ervas-cozinha, campos: [virya, efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka, gunas] }
+  confianca: baixa
+  notas: "Valores de fennel. Diretrizes: Kapha em moderação; Banyan diz que equilibra os três. No Brasil 'erva-doce' também nomeia o anis."
+
+- id: curcuma
+  nome: Cúrcuma
+  sinonimos: [açafrão-da-terra]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [amargo, adstringente, picante]
+  virya: quente
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
+    - { ref: banyan-ervas-cozinha, campos: [rasa, virya, efeito] }
+    - { ref: banyan-curcuma, campos: [vipaka] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+  notas: "Banyan: em excesso pode agravar Pitta e Vata. Gunas sem página."
+
+- id: pimenta-do-reino
+  nome: Pimenta-do-reino
+  sinonimos: [pimenta preta, pimenta-do-reino moída]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, seco, movel]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  como_equilibrar:
+    pitta: "Usar pouca, só para dar sabor."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [rasa, virya, gunas] }
+    - { ref: banyan-sabor-picante, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Diretrizes e Banyan: Pitta só em pouca quantidade. Vipaka sem página."
+
+- id: cravo
+  nome: Cravo
+  sinonimos: [cravo-da-índia]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, amargo]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, leve]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
+    - { ref: banyan-sabor-picante, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Virya, vipaka e gunas sem página."
+
+- id: noz-moscada
+  nome: Noz-moscada
+  sinonimos: []
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, amargo, adstringente]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, leve]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "A página do sabor doce também lista noz-moscada. Virya, vipaka e gunas sem página."
+
+- id: mostarda-em-grao
+  nome: Mostarda em grão
+  sinonimos: [semente de mostarda]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, oleoso, intenso]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-picante, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Virya, vipaka e gunas sem página."
+
+- id: louro
+  nome: Louro
+  sinonimos: [folha de louro]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [adstringente, doce]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, leve]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: banyan-sabor-doce, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Virya, vipaka e gunas sem página."
+
+- id: anis-estrelado
+  nome: Anis-estrelado
+  sinonimos: [badiana, estrela-de-anis]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, doce]
+  virya: quente
+  vipaka: doce
+  gunas: [quente, leve]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Só o efeito tem página (Diretrizes: 'Star anise'). Rasa a gunas sem página."
+
+- id: pimenta-fresca
+  nome: Pimenta fresca
+  sinonimos: [pimenta dedo-de-moça, pimenta malagueta, pimenta vermelha]
+  grupo: especiarias
+  durabilidade: curta
+  funcoes: [tempero]
+  rasa: [picante]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, seco, intenso]
+  efeito: { vata: 0, pitta: 1, kapha: -1 }
+  como_equilibrar:
+    vata: "Pouca e cozida no preparo, sem deixar o prato ardido."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-picante, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-vata, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Vata em moderação (chili peppers*), mas evita 'peppers, hot'; Banyan: Vata pouca, em excesso evita. Virya a gunas sem página."
+
+- id: hortela
+  nome: Hortelã
+  sinonimos: [menta, hortelã-pimenta]
+  grupo: especiarias
+  durabilidade: curta
+  funcoes: [tempero]
+  rasa: [doce, picante]
+  virya: frio
+  vipaka: picante
+  gunas: [frio, leve]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa] }
+    - { ref: banyan-alimentos-pitta, campos: [virya, efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes favorecem mint, peppermint e spearmint nos três, como tempero e como chá. 'Picante' no rasa, vipaka e gunas sem página."
+
+- id: camomila
+  nome: Camomila
+  sinonimos: [flor de camomila, macela]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [amargo, doce]
+  virya: frio
+  vipaka: doce
+  gunas: [leve, suave]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Efeito da seção de chás de ervas das Diretrizes (favorece nos três). Rasa a gunas sem página."
+
+- id: capim-limao
+  nome: Capim-limão
+  sinonimos: [capim-santo, capim-cidreira]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, amargo]
+  virya: frio
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Efeito da seção de chás de ervas das Diretrizes ('Lemon grass', favorece nos três). Rasa a gunas sem página."
+
+- id: erva-cidreira
+  nome: Erva-cidreira
+  sinonimos: [melissa]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [amargo, picante]
+  virya: frio
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Valores de 'lemon balm' (melissa). Diretrizes: Vata só raramente (**), virou +1. No Brasil o nome também cobre a Lippia alba."
+
+- id: coentro-fresco
+  nome: Coentro
+  sinonimos: [coentro fresco, folha de coentro]
+  grupo: especiarias
+  durabilidade: curta
+  funcoes: [tempero]
+  rasa: [amargo, adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [frio, leve]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-alimentos-pitta, campos: [virya, efeito] }
+    - { ref: banyan-alimentos-vata, campos: [efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Vata favorece 'cilantro' (legumes) e põe 'coriander leaves' em moderação; Banyan favorece. Rasa, vipaka e gunas sem página."
+
+- id: salsinha
+  nome: Salsinha
+  sinonimos: [salsa]
+  grupo: especiarias
+  durabilidade: curta
+  funcoes: [tempero]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [leve, seco]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-vata, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes dividem: Vata favorece (especiarias) e modera (legumes); Pitta o inverso. Banyan favorece nos dois. Virya a gunas sem página."
+
+- id: cebolinha
+  nome: Cebolinha
+  sinonimos: [cebolinha-verde, cebola de folha]
+  grupo: especiarias
+  durabilidade: curta
+  funcoes: [tempero]
+  rasa: [picante]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, leve]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Valores de 'scallions' (condimentos nas Diretrizes). Rasa a gunas sem página."
+
+- id: manjericao
+  nome: Manjericão
+  sinonimos: [manjericão fresco]
+  grupo: especiarias
+  durabilidade: curta
+  funcoes: [tempero]
+  rasa: [doce, adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [leve, suave]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar:
+    pitta: "Prefira as folhas frescas ao manjericão seco."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa] }
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Efeito do manjericão fresco; o seco Pitta evita. Virya, vipaka e gunas sem página."
+
+- id: alecrim
+  nome: Alecrim
+  sinonimos: []
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, adstringente]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, seco, movel]
+  efeito: { vata: 0, pitta: 1, kapha: -1 }
+  como_equilibrar:
+    vata: "Pouco, junto com uma gordura boa, porque resseca."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-arte-especiarias, campos: [rasa, virya, gunas, efeito, como_equilibrar] }
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Divergência: Diretrizes favorecem para Vata; Banyan pede pouco quando Vata está alto, daí Vata 0. Vipaka sem página."
+
+- id: oregano
+  nome: Orégano
+  sinonimos: []
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [adstringente, picante]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, seco]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-adstringente, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Só 'adstringente' tem página no rasa. Virya, vipaka e gunas sem página."
+
+- id: alho
+  nome: Alho
+  sinonimos: [dente de alho]
+  grupo: especiarias
+  durabilidade: media
+  funcoes: [tempero]
+  rasa: [picante]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, oleoso]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-gengibre-e-alho, campos: [rasa, virya, gunas, efeito] }
+    - { ref: banyan-sabor-picante, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Banyan: 'um pouco oleoso'. Vipaka sem página."
+
+- id: cebola
+  nome: Cebola
+  sinonimos: [cebola roxa, cebola branca]
+  grupo: especiarias
+  durabilidade: media
+  funcoes: [tempero, legume]
+  rasa: [picante]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, intenso]
+  efeito: { vata: 0, pitta: 0, kapha: -1 }
+  como_equilibrar:
+    vata: "Bem cozida; crua tende a desequilibrar."
+    pitta: "Cozida; crua esquenta demais."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-picante, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-vata, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Crua: Vata e Pitta evitam; cozida: Vata em moderação, Pitta favorece. Virou 0 nos dois. Virya a gunas sem página."
+
+- id: sal
+  nome: Sal
+  sinonimos: [sal de cozinha, sal marinho, sal grosso]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [salgado]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso, quente]
+  efeito: { vata: -1, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    pitta: "Pouco, só o que o prato pede."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-salgado, campos: [rasa, virya, vipaka, gunas, efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+  confianca: media
+  notas: "Diretrizes: Pitta evita sal nas especiarias e só em excesso nos condimentos (lá aparece em moderação)."

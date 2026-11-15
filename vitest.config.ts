@@ -11,6 +11,8 @@ export default defineConfig({
   test: {
     environment: "node",
     passWithNoTests: true,
+    // O teste de arquitetura e o do container importam o grafo inteiro; sob carga passam de 5 s.
+    testTimeout: 20_000,
     include: [
       "src/**/*.test.ts",
       "src/**/*.test.tsx",

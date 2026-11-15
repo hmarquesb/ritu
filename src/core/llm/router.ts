@@ -8,7 +8,7 @@ import type { Limites, UsageLedger, UsoDoModelo } from "./ledger"
 
 export { diaDaCota, janelaDoMinuto } from "./janelas"
 
-type Troca = { papel: Papel; de: string; para: string; motivo: "cota" | "429" }
+export type Troca = { papel: Papel; de: string; para: string; motivo: "cota" | "429" }
 
 export interface ModelRouter {
   paraPapel(

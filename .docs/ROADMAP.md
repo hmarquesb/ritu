@@ -4,11 +4,12 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Documentação, skills, subagentes e backlog prontos nesta pasta. Specs 001 a 009 escritas e aprovadas; 010 escrita, à espera da aprovação; 011 a 024 a escrever. Nenhum código ainda.
+Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, à espera do portão 1 da dona. O relatório e o roteiro de conferência estão em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Specs 008 e 009 aprovadas; 010 escrita, à espera da aprovação; 011 a 024 a escrever.
 
 **Próximos passos, na ordem:**
-1. `/construir-entrega 1` (specs 001 a 007, todas aprovadas).
-2. Em paralelo: aprovar a 010 e escrever as specs 011 a 015, para a entrega 2.
+1. Portão 1: a dona segue o roteiro do relatório e responde "aprovado" ou lista ajustes.
+2. Bloqueio aberto: conferir no AI Studio os modelos que deram `indisponivel` ou `timeout` (`.plans/BLOQUEIOS.md`).
+3. Aprovar a 010 e escrever as specs 011 a 015; depois, `/construir-entrega 2`.
 
 ## 1. Entregas
 

@@ -70,7 +70,7 @@ Depois desta spec, `npm run demo -- --cenario frio-agitada` imprime as etapas, a
 - [x] **Ao vivo:** o texto que o modelo escreve antes de uma chamada de tool chega a `aoVivo` como `pensamento`, cortado em 160 caracteres, e não aparece em `run_etapas`.
 - [x] `npm run demo` sem argumento lista os cenários; `npm run demo -- --cenario <nome>` roda sem rede e imprime etapas, resposta, sugestões, avisos, o aviso "Não é orientação médica." e o resumo do run. Os cinco cenários terminam com código 0.
 - [x] ⚠️ `npm run demo -- --cenario frio-agitada --llm` roda com o modelo real pelo `ModelRouter`; com `--esgotar decisao`, o resumo mostra a troca de modelo (conferência do orquestrador, anotada no relatório).
-- [ ] ⚠️ `npm run eval:llm -- --checkpoint c1-base` roda os 12 casos, um por vez, e grava `evals/resultados/c1-base.md` com as métricas de "Evals".
+- [x] ⚠️ `npm run eval:llm -- --checkpoint c1-base` roda os 12 casos, um por vez, e grava `evals/resultados/c1-base.md` com as métricas de "Evals".
 
 ## O que fazer
 

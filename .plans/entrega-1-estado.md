@@ -136,3 +136,10 @@
 > 007 · Fechamento: gates 1–6 verdes (916 testes, 366 evals det, dup 0, e2e 2, ⚠️ test:db 106). ⚠️ `demo --llm frio-agitada` (2026-11-15): `done`/`segura`/`limite:validacao`; o modelo chamou `ayurveda_checar_combinacao` (recusado) e `finalizar` foi recusado 3 vezes; 34 985 tokens. Abre C4.
 > 007 · C4/C5 (2026-11-15): causas do `demo --llm`: (1) o Mastra 1.83 troca `.` por `_` no nome das tools e não destroca; (2) o modelo errava formatos que o contrato não dizia; (3) o preparo oferecia refeição com vaga obrigatória sem opção em casa, que nenhuma entrega válida podia usar. Depois de C5: ⚠️ `demo --llm frio-agitada` → `done`/`agente`, 1 recusa e autocorreção, 3 passos, 25 196 tokens, trace `f2493135…`; com `--esgotar decisao` → troca para `gemini-3.1-flash-lite` (1 troca), `done`/`agente` na 1ª, 2 passos, 16 152 tokens, trace `197043f3…`. Chamadas reais na depuração: ~30. Para o portão: o modo de fazer diz "abóbora picado" (concordância da lacuna `{legume} picado`).
 | 007 | Fechamento (gates 1–6, ⚠️ test:db 106, ⚠️ demo --llm, ADR 0027, AI.md, AGENTS.md; sem push) | — | concluida | (este commit) |
+
+| Entrega | Tarefa | Nível | Status | Commit |
+|---|---|---|---|---|
+| 1 | C6 · eval:llm runner keeps going and always writes the report | nucleo | concluida | 2bf435e |
+> Entrega 1 · ⚠️ `eval:llm c1-base` (2026-11-15), 1ª tentativa: casos 1–4 ok; no caso 5 um `LlmError` `timeout` derrubou o runner sem gravar o relatório (~20 chamadas gastas). Abre C6; a rodada é refeita inteira no mesmo dia (a 1ª não produziu resultado).
+> Entrega 1 · ⚠️ `eval:llm c1-base` refeito (2026-11-15): 12/12 casos; deve 83%, não pode 100%, trajetória 67%, válida na 1ª 17%, corrigiu 100%, explicação 73% (1 não avaliada). Gates finais: 933 testes, 367 evals det, 106 test:db, e2e 2/2, dup 0, build ok, base:check ok.
+| 1 | Fechamento da entrega (gates, c1-base, relatório, ROADMAP §0, tag `entrega-1`; sem push) | — | concluida | (este commit) |

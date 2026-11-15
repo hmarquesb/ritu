@@ -222,6 +222,40 @@ describe("regra 6 · vaga com poucos alimentos possíveis", () => {
     const resultado = validarBase(dados({ alimentos, preparos: [preparo()] }), semCobertura)
     expect(resultado.erros).toEqual([])
   })
+
+  describe("vaga listada em excecoesMinAlimentosPorVaga", () => {
+    const leiteMorno = () =>
+      preparo({
+        id: "leite-morno-com-especiaria",
+        titulo: "{liquido} morno com especiaria",
+        vagas: [{ funcao: "liquido", obrigatoria: true, maximo: 1, grupos: ["laticinios"] }],
+      })
+    const leite = alimento({
+      id: "leite",
+      nome: "Leite",
+      grupo: "laticinios",
+      funcoes: ["liquido"],
+      grupos_evitar: ["leite"],
+    })
+
+    it("aceita a vaga com 1 alimento possível", () => {
+      const resultado = validarBase(
+        dados({ alimentos: [leite, gengibre], preparos: [leiteMorno()] }),
+        semCobertura,
+      )
+      expect(resultado.erros.some((e) => e.includes("poucos alimentos possíveis"))).toBe(false)
+    })
+
+    it("continua exigindo ao menos 1 alimento possível", () => {
+      const resultado = validarBase(
+        dados({ alimentos: [gengibre], preparos: [leiteMorno()] }),
+        semCobertura,
+      )
+      expect(resultado.erros).toContain(
+        'preparos:leite-morno-com-especiaria:vagas vaga "liquido" tem poucos alimentos possíveis (0, mínimo 1)',
+      )
+    })
+  })
 })
 
 describe("regra 7 · prática de óleo sem óleo", () => {

@@ -3,6 +3,7 @@ export const base = {
   minPreparos: 30,
   minPraticas: { cha: 20, oleo: 7, pratica: 17 },
   minAlimentosPorVaga: 3,
+  excecoesMinAlimentosPorVaga: ["leite-morno-com-especiaria:liquido"],
   minPraticasPorEstado: 3, // práticas com o estado em favorece_estados
   minPreparosPorEstado: 3, // preparos não contraindicados com alguma qualidade favorecida
   minPreparosPorMomento: 2,

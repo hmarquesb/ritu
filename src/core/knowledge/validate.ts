@@ -230,14 +230,20 @@ function regraLacunas(d: DadosDaBase): string[] {
 }
 
 // Regra 6
+function minimoDaVaga(preparoId: string, funcao: string): number {
+  const excecoes: readonly string[] = config.base.excecoesMinAlimentosPorVaga
+  return excecoes.includes(`${preparoId}:${funcao}`) ? 1 : config.base.minAlimentosPorVaga
+}
+
+// Regra 6
 function regraVagas(d: DadosDaBase): string[] {
-  const minimo = config.base.minAlimentosPorVaga
   return d.preparos.flatMap((preparo) =>
     preparo.vagas.flatMap((vaga) => {
       const possiveis = d.alimentos.filter(
         (alimento) =>
           alimento.funcoes.includes(vaga.funcao) && (vaga.grupos?.includes(alimento.grupo) ?? true),
       ).length
+      const minimo = minimoDaVaga(preparo.id, vaga.funcao)
       return possiveis < minimo
         ? [
             `preparos:${preparo.id}:vagas vaga "${vaga.funcao}" tem poucos alimentos possíveis (${possiveis}, mínimo ${minimo})`,

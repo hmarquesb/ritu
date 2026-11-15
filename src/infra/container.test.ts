@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { createFakeCities } from "@/infra/fakes/fake-cities"
+import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 
@@ -74,6 +76,30 @@ describe("container", () => {
 
     expect(container.knowledge).toBe(container.knowledge)
     expect(load).toHaveBeenCalledTimes(1)
+  })
+
+  it("createContainer aceita uma fonte de clima e de cidades de teste", async () => {
+    const { createContainer } = await import("./container")
+    const weather = createFakeWeather()
+    const cities = createFakeCities()
+
+    const container = createContainer({ weather, cities })
+
+    expect(container.weather).toBe(weather)
+    expect(container.cities).toBe(cities)
+  })
+
+  it("criar o container e ler weather e cities não chama fetch", async () => {
+    const { createContainer } = await import("./container")
+    const espiao = vi.fn(async () => new Response("{}", { status: 500 }))
+    vi.stubGlobal("fetch", espiao)
+
+    const container = createContainer()
+    expect(container.weather).toBe(container.weather)
+    expect(container.cities).toBe(container.cities)
+    expect(typeof container.weather.buscar).toBe("function")
+
+    expect(espiao).not.toHaveBeenCalled()
   })
 
   it("createContainer aceita uma base de conhecimento de teste", async () => {

@@ -3,12 +3,14 @@ import type { Prakriti } from "@/core/knowledge/adequacao"
 import type { FiltroPessoa } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { SinaisPessoa } from "@/core/knowledge/substitutos"
+import type { CidadeDaPessoa, WeatherSource } from "@/core/weather/ports"
 
 export type ToolContext = {
   kb: KnowledgeBase
   filtro: FiltroPessoa
   sinais: SinaisPessoa
   prakriti?: Prakriti
+  clima: { fonte: WeatherSource; cidade?: CidadeDaPessoa }
 }
 
 export type Tool<I, O> = {
@@ -19,13 +21,13 @@ export type Tool<I, O> = {
   execute(input: I, ctx: ToolContext): Promise<O>
 }
 
-// Valida entrada e saída com zod em volta da lógica pura da tool.
+// Valida entrada e saída com zod em volta da lógica da tool (síncrona ou assíncrona).
 export function definirTool<I, O>(def: {
   name: string
   description: string
   input: z.ZodType<I>
   output: z.ZodType<O>
-  executar: (entrada: I, ctx: ToolContext) => O
+  executar: (entrada: I, ctx: ToolContext) => O | Promise<O>
 }): Tool<I, O> {
   return {
     name: def.name,
@@ -34,7 +36,7 @@ export function definirTool<I, O>(def: {
     output: def.output,
     async execute(entrada, ctx) {
       const dados = def.input.parse(entrada)
-      return def.output.parse(def.executar(dados, ctx))
+      return def.output.parse(await def.executar(dados, ctx))
     },
   }
 }

@@ -4,11 +4,18 @@ import type { ToolContext } from "@/core/agents/tools/tool"
 import { filtroVazio } from "@/core/knowledge/filtros"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
 import { getContainer } from "@/infra/container"
+import { createFakeWeather } from "@/infra/fakes/fake-weather"
 
 const kb = getContainer().knowledge
 
 function ctx(parcial: Partial<ToolContext> = {}): ToolContext {
-  return { kb, filtro: filtroVazio, sinais: sinaisVazios, ...parcial }
+  return {
+    kb,
+    filtro: filtroVazio,
+    sinais: sinaisVazios,
+    clima: { fonte: createFakeWeather() },
+    ...parcial,
+  }
 }
 
 describe("substitutos da canela", () => {

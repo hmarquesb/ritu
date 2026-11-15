@@ -5,9 +5,15 @@ import { filtroVazio } from "@/core/knowledge/filtros"
 import { qualidadesDoMomento } from "@/core/knowledge/momento"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
 import { getContainer } from "@/infra/container"
+import { createFakeWeather } from "@/infra/fakes/fake-weather"
 
 const kb = getContainer().knowledge
-const ctx: ToolContext = { kb, filtro: filtroVazio, sinais: sinaisVazios }
+const ctx: ToolContext = {
+  kb,
+  filtro: filtroVazio,
+  sinais: sinaisVazios,
+  clima: { fonte: createFakeWeather() },
+}
 
 const MINIMO_POR_TIPO = 3
 

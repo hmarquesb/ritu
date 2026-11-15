@@ -3,6 +3,7 @@ import { z } from "zod"
 import { filtroVazio } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { sinaisVazios } from "@/core/knowledge/substitutos"
+import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import {
   alimentoTool,
@@ -16,7 +17,13 @@ import type { ToolContext } from "./tool"
 const kb: KnowledgeBase = createMiniKnowledge()
 
 function ctx(parcial: Partial<ToolContext> = {}): ToolContext {
-  return { kb, filtro: filtroVazio, sinais: sinaisVazios, ...parcial }
+  return {
+    kb,
+    filtro: filtroVazio,
+    sinais: sinaisVazios,
+    clima: { fonte: createFakeWeather() },
+    ...parcial,
+  }
 }
 
 describe("ayurveda.alimento", () => {

@@ -20,4 +20,15 @@ describe("config", () => {
     expect(config.momentoDoDia.manha).toEqual({ inicio: 5, fim: 10 })
     expect(config.momentoDoDia.noite).toEqual({ inicio: 21, fim: 4 })
   })
+
+  it("expõe as faixas e os limites do clima com os valores da spec", () => {
+    expect(config.clima.temperaturaAparente).toEqual({ frioAbaixoDe: 20, quenteAcimaDe: 27 })
+    expect(config.clima.umidade).toEqual({ secoAbaixoDe: 50, umidoAcimaDe: 75 })
+    expect(config.clima.tendencia).toEqual({ horas: 6, variacaoMinima: 3 })
+    expect(config.clima.chuva).toEqual({ probabilidadeMinima: 50 })
+    expect(config.clima.cacheMinutos).toBe(60)
+    expect(config.clima.timeoutMs).toBe(4000)
+    expect(config.clima.fusoPadrao).toBe("America/Sao_Paulo")
+    expect(config.clima.busca).toEqual({ minimoCaracteres: 2, maximoResultados: 5, idioma: "pt" })
+  })
 })

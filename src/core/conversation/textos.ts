@@ -3,11 +3,11 @@ import type { EvitarItem } from "@/core/knowledge/filtros"
 import { normalizar } from "@/core/knowledge/identificar"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { juntarNomes } from "@/core/knowledge/lacunas"
+import { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 import type { Restricao } from "@/core/knowledge/vocab"
 import { neutralizar } from "@/core/neutralizar"
-import { rotulosDeRestricao } from "./rotulos"
 
-export { rotulosDeRestricao } from "./rotulos"
+export { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 
 // Formas estruturais do que vem do Intérprete. Não importamos de agents: agents já importa conversation (R9).
 // Interpretacao, ItemDeCasaCitado e RetornoCitado atendem a estes tipos sem conversão.

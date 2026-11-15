@@ -1,6 +1,6 @@
 import { config } from "@config/index"
-import { rotulosDeRestricao } from "@/core/conversation/rotulos"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
+import { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 import type { Incomodo } from "@/core/knowledge/schemas"
 import type { Estado } from "@/core/knowledge/vocab"
 import type { MensagemNoPrompt } from "@/core/messages/para-o-prompt"

@@ -5,8 +5,8 @@ import type {
   ItemDeCasaCitado,
   RetornoCitado,
 } from "@/core/agents/interpreter/interpretacao"
+import { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
-import { rotulosDeRestricao } from "./rotulos"
 import {
   rotulosDeRestricao as reexportado,
   textoDeCasa,

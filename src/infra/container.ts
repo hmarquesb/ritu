@@ -1,6 +1,8 @@
 import { type AppConfig, config } from "@config/index"
 import { createCompanion } from "@/core/agents/companion/responder"
+import { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { Clock } from "@/core/clock"
+import { createConversation } from "@/core/conversation/conversar"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
 import type { LlmClient } from "@/core/llm/client"
@@ -42,6 +44,8 @@ export type Container = {
   runtime: AgentRuntime
   runs: ReturnType<typeof createRunService>
   companion: ReturnType<typeof createCompanion>
+  interpreter: ReturnType<typeof createInterpreter>
+  conversation: ReturnType<typeof createConversation>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -73,6 +77,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let runtime: AgentRuntime | undefined
   let runs: ReturnType<typeof createRunService> | undefined
   let companion: ReturnType<typeof createCompanion> | undefined
+  let interpreter: ReturnType<typeof createInterpreter> | undefined
+  let conversation: ReturnType<typeof createConversation> | undefined
   let sdk: { encerrar(): Promise<void> } | undefined
   let telemetriaIniciada = false
   const container: Container = {
@@ -156,6 +162,29 @@ export function createContainer(overrides?: Partial<Container>): Container {
         telemetry: container.telemetry,
       })
       return companion
+    },
+    get interpreter() {
+      interpreter ??= createInterpreter({
+        router: container.router,
+        client: container.llm,
+        kb: container.knowledge,
+        telemetry: container.telemetry,
+        clock,
+      })
+      return interpreter
+    },
+    get conversation() {
+      conversation ??= createConversation({
+        stores: container.stores,
+        tx: container.tx,
+        kb: container.knowledge,
+        clock,
+        telemetry: container.telemetry,
+        runs: container.runs,
+        interpreter: container.interpreter,
+        companion: container.companion,
+      })
+      return conversation
     },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {

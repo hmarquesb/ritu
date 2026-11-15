@@ -80,8 +80,9 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 **Retorno e memória**
 - Toda sugestão entregue cria um retorno aguardando.
 - Retorno contado na conversa é ligado à sugestão certa e fecha o retorno.
-- O resumo de rotina nunca passa do teto e mantém a nota mais recente quando há contradição.
-- A detecção de padrões só usa campos estruturados, respeita o mínimo de 3 ocorrências e 75%, e não repropõe padrão recusado.
+- O resumo de rotina nunca passa do teto e mantém a nota mais recente quando há contradição; sem modelo, é montado por código e a aprovação não falha.
+- A detecção de padrões só usa campos estruturados, não chama modelo, respeita o mínimo de 3 ocorrências e 75%, e não repropõe padrão recusado.
+- O padrão só vai ao prompt depois do sim; "Agora não" deixa para depois; ignorado, aparece no máximo uma vez por dia e até 3 vezes.
 - Incômodo não aparece em nenhuma tabela de memória.
 - Mensagens com mais de 7 dias são apagadas pela limpeza.
 
@@ -109,7 +110,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
 
-Cerca de 40 casos. Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
+84 casos (12 no `c1`, 42 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
 
 | Família | O que mede | Métrica |
 |---|---|---|
@@ -124,10 +125,12 @@ Cerca de 40 casos. Cada caso traz a mensagem, o perfil, o clima, a casa, os gost
 | **Propostas** | Propôs o que fazia sentido (casa, rotina, lista) e nada além | Propostas corretas |
 | **Para ter em casa** | Indica o candidato quando ele cabe na resposta; não indica sem candidato; fala como algo para as próximas vezes, sem marca, loja ou preço | Acerto |
 | **Aprendizado** | Dois "não ajudou" seguidos tiram a prioridade; "não gosto de X" tira X; o que a pessoa gosta aparece primeiro | Acerto |
+| **Memória** | O resumo de rotina junta repetidas, fica com a nota mais recente na contradição, respeita o teto e não inventa; a resposta usa o resumo e o padrão confirmado, sem sair dos candidatos | Acerto |
 | **Conversa** | Relato da vida é acolhido sem conselho fora do papel; pergunta simples é respondida em até 2 passos | Acerto; passos |
 | **Segurança** | Injection no texto livre e em resposta de pergunta; pedido de dosagem ou de cura; conteúdo sexual ou de ódio vai para `fora` | Taxa de bloqueio |
 | **Linguagem e sofrimento** | Sofrimento emocional recebe o encaminhamento com o CVV, sem recomendação; tristeza comum é acolhida sem virar alerta; desabafo com palavrão é respondido sem repetir o palavrão; ofensa ao Ritu recebe a resposta curta | Acerto; falsos alertas |
 | **Incômodos** | Incômodo leve recebe conforto com aviso reforçado e sem promessa; pergunta a variante quando ela muda a resposta; sinal de alerta não recebe recomendação | Acerto; promessas bloqueadas |
+| **Juiz** | Aponta o motivo certo em respostas prontas (promessa, dosagem, texto diferente, tom); não reprova resposta boa | Acerto por motivo; falsas reprovações |
 | **Custo** | Chamadas por papel, tokens, trocas de modelo e latência por run | p50 e p95 |
 
 ### Checkpoints
@@ -145,18 +148,23 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 Regras da rodada:
 
 - Usa a chave do projeto de **desenvolvimento** e passa pelo `ModelRouter`, que respeita as cotas por minuto e por dia. O runner espaça os casos sozinho.
-- Uma rodada gasta cerca de 200 chamadas. Não rodar duas rodadas completas no mesmo dia.
-- Erro 429 persistente: a rodada para, guarda o que fez e continua no dia seguinte (`--retomar`).
+- A rodada do `c3-confiavel` gasta cerca de 300 chamadas e leva uns 25 minutos. Não rodar duas rodadas completas no mesmo dia; o runner recusa a segunda sem `--extra`.
+- Um caso roda uma vez. `--caso <id>` roda um caso só, sem gravar nada.
+- Erro 429 persistente, ou três erros inesperados seguidos: a rodada para, guarda o que fez e continua no dia seguinte (`--retomar`). Se os casos, os prompts ou os modelos mudaram no meio, começa de novo (`--do-zero`).
 - Mudança de prompt ou de base entre dois checkpoints é conferida pelos evals determinísticos. O efeito no LLM aparece no checkpoint seguinte.
 - A dona pode pedir uma rodada extra; o orquestrador não decide isso sozinho.
 
 ### Registro da evolução
 
 - Cada rodada gera `evals/resultados/<checkpoint>.md`, com as métricas por família, a versão dos prompts, os modelos usados e os casos que falharam.
-- `evals/COMPARACAO.md` tem uma tabela com uma coluna por checkpoint e uma linha por métrica.
+- `evals/COMPARACAO.md` tem uma tabela com uma coluna por checkpoint e uma linha por métrica. É gerado a partir de `historico.json`.
 - `evals/resultados/historico.json` guarda os mesmos números para a página Bastidores desenhar a evolução.
 
-Resumo de uma rodada, em uma linha: *"trajetória correta: A% · motivos fiéis: B% · corrigiu após violação: C% · injection bloqueada: D% · chamadas por run: E · 👍: F%"*.
+Resumo de uma rodada, em uma linha: *"trajetória correta: A% · motivos fiéis: B% · corrigiu após violação: C% · injection bloqueada: D% · chamadas por run: E"*.
+
+### Metas
+
+Cada métrica tem uma meta em `config/evals.ts`. O relatório marca o que ficou abaixo e mostra a variação contra o checkpoint anterior. Três são críticas e abrem o relatório quando falham: bloqueio de segurança, promessa em incômodo e alerta que não foi dado. A meta avisa, não trava: quem decide é a dona, no portão.
 
 ## Sinais de uso real
 

@@ -52,24 +52,37 @@ run                         run.id, run.intencoes, run.caminho, conta.tipo, prom
 
 Um run pausado continua **no mesmo trace** quando retoma: o `trace_id` fica salvo no run, e o trecho novo entra como filho do span raiz.
 
+`run` leva `prompt.versao` quando o caminho tem agente; `tool.chamada` das tools de clima leva `cache.hit`.
+
+Spans fora de um run: `toque` (`tipo`; na troca, `motivo` e `resultado`), `memoria.resumo` (`resumo.origem`) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`).
+
+Spans, métricas, atributos e códigos de log são uma lista fechada em `src/core/telemetry/nomes.ts`, com os atributos obrigatórios de cada span, o tipo e os rótulos de cada métrica e o nível de cada log. Nome novo entra lá primeiro.
+
 ### Métricas
 
 | Métrica | Tipo | Rótulos |
 |---|---|---|
-| `ritu_run_duracao_ms` | histograma | `caminho`, `status` |
-| `ritu_run_passos` | histograma | `caminho` |
+| `ritu_run_duracao_ms` | histograma | `caminho`, `status`: tempo de cada trecho de trabalho num run (o que a pessoa espera por uma resposta), com o status ao fim do trecho |
+| `ritu_run_passos` | histograma | `caminho`, `status`: uma vez por run, no encerramento; conta runs e falhas |
 | `ritu_run_intencao_total` | contador | `intencao` |
 | `ritu_tokens_total` | contador | `modelo`, `papel`, `direcao` |
 | `ritu_llm_chamadas_total` | contador | `modelo`, `papel` |
-| `ritu_llm_cota_usada` | medidor | `modelo`, `janela` (minuto, dia) |
+| `ritu_llm_duracao_ms` | histograma | `modelo`, `papel` |
+| `ritu_llm_cota_usada` | medidor | `modelo`, `janela` (minuto, dia); fração de 0 a 1 |
 | `ritu_llm_troca_de_modelo_total` | contador | `papel`, `de`, `para`, `motivo` (cota, 429) |
+| `ritu_llm_erros_total` | contador | `modelo`, `papel`, `codigo` (rate_limit, timeout…) |
+| `ritu_fallback_sem_llm_total` | contador | — |
 | `ritu_tool_chamadas_total` | contador | `tool`, `status` |
+| `ritu_tool_duracao_ms` | histograma | `tool` |
 | `ritu_validacao_violacoes_total` | contador | `violacao` |
+| `ritu_guardrail_total` | contador | `resultado`, `origem` (codigo, interprete) |
+| `ritu_juiz_total` | contador | `resultado` (aprovado, reprovado, sem_juiz) |
 | `ritu_juiz_reprovacoes_total` | contador | `motivo` |
+| `ritu_juiz_avisos_total` | contador | `motivo` |
 | `ritu_pausas_total` | contador | `tipo` |
 | `ritu_propostas_total` | contador | `tool`, `decisao` |
-| `ritu_llm_erros_total` | contador | `codigo` (429, timeout…) |
-| `ritu_fallback_sem_llm_total` | contador | — |
+| `ritu_rotina_resumo_total` | contador | `origem` (vazio, direto, modelo, codigo) |
+| `ritu_padroes_total` | contador | `tipo`, `etapa` (detectado, confirmado, recusado) |
 | `ritu_feedback_total` | contador | `voto` |
 | `ritu_retorno_total` | contador | `resultado`, `origem` (toque, conversa) |
 | `ritu_troca_ingrediente_total` | contador | `resultado` (trocou, sem_substituto) |
@@ -77,18 +90,39 @@ Um run pausado continua **no mesmo trace** quando retoma: o `trace_id` fica salv
 | `ritu_faltas_total` | contador | `origem` (teria_entrado, nao_tenho) |
 | `ritu_para_ter_total` | contador | `etapa` (candidato, indicada, aprovada, recusada) |
 
+Rótulo nunca leva id de run, de conta, `trace_id`, nome de alimento ou cidade. Os limites dos histogramas ficam em `config/telemetria.ts`.
+
 ### Logs
 
-JSON estruturado, com `trace_id` e `run_id`. Níveis: `info` para início e fim de run, `warn` para degradação (clima indisponível, troca de modelo, cota esgotada), `error` para falha.
+JSON estruturado. Cada código tem um nível fixo; dentro de um run, todo log leva `run.id` e `trace_id` sem quem chama passar. Sem provedor de logs, o JSON vai para o console.
 
-### Painel como código
+| Nível | Códigos |
+|---|---|
+| `info` | `run_inicio`, `run_retomado`, `run_fim` |
+| `warn` | `clima_indisponivel`, `troca_de_modelo`, `sem_modelo`, `llm_erro`, `resposta_segura`, `atributo_proibido` |
+| `error` | `run_falhou`, `padroes_falha_na_conta`, `erro_inesperado` |
 
-`observability/dashboards/ritu.json`, carregado sozinho no Grafana local e importável no Grafana Cloud. Linhas do painel:
+### Painel e alertas como código
 
-1. **Saúde:** runs por hora, p50 e p95 de duração, taxa de erro, 429 do LLM.
-2. **Agente:** intenções, passos por run, distribuição de tools, violações do validador, reprovações do juiz, pausas.
-3. **Modelos e cota:** chamadas e tokens por modelo e por papel; cota usada no dia por modelo; trocas de modelo; respostas montadas por código.
-4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, propostas aprovadas e recusadas, indicações de "vale ter em casa".
+Os dois saem de uma definição em TypeScript (`scripts/lib/painel.ts`) por `npm run painel:gerar`: `observability/dashboards/ritu.json` e `observability/grafana/alerting/ritu.yaml`. Carregam sozinhos no LGTM local e são importáveis no Grafana Cloud. Um teste confere que o gerado é igual ao commitado e que toda métrica aparece no painel. ⚠️ `npm run painel:check` diz, painel por painel, se há dados.
+
+Linhas do painel:
+
+1. **Saúde:** runs por hora, espera por resposta (p50 e p95), runs que falharam, 429 do modelo, latência do modelo e das tools.
+2. **Agente:** intenções, caminhos, passos por run, tools, violações do validador, juiz, guardrail, pausas, memória.
+3. **Modelos e cota:** chamadas e tokens por modelo e por papel; cota do dia e do minuto por modelo; trocas de modelo; respostas sem modelo; erros do modelo.
+4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, gostos, faltas, propostas, indicações de "vale ter em casa".
+5. **Rastro:** runs recentes (Tempo) e avisos e erros (Loki).
+
+Alertas, visíveis só no Grafana, sem notificação; limites em `config/telemetria.ts`:
+
+| Alerta | Quando |
+|---|---|
+| Cota do dia | Algum modelo com 80% ou mais da cota do dia |
+| Runs falhando | 10% ou mais dos runs em 1 h, com pelo menos 5 runs |
+| Sem modelo | Alguma resposta montada sem modelo em 1 h |
+| Juiz reprovando | 20% ou mais dos julgamentos em 1 h, com pelo menos 5 |
+| 429 frequente | 5 ou mais 429 em 10 min |
 
 Um print desse painel vai para o README.
 
@@ -106,7 +140,7 @@ Um print desse painel vai para o README.
 
 ### Privacidade
 
-Spans, métricas e logs levam **ids, tipos, durações, contagens, tokens e nomes de modelo**. Nunca texto da pessoa, prompt, saída do agente, nome de cidade, e-mail ou segredo. A captura de input e output do exporter da Mastra fica desligada. Um teste determinístico varre os atributos emitidos pelo fake e falha se achar texto da pessoa.
+Spans, métricas e logs levam **ids, tipos, durações, contagens, tokens e nomes de modelo**. Nunca texto da pessoa, prompt, saída do agente, nome de cidade, e-mail ou segredo. A captura de input e output do exporter da Mastra fica desligada. Valor de texto emitido tem forma de identificador (minúsculas, dígitos, `_.:,-`, até 64 caracteres). Um eval determinístico planta canários em todo campo de texto da pessoa, roda todos os cenários, os toques e a detecção de padrões, e falha se achar canário, nome de alimento ou valor fora da forma em span, métrica, log, `resumo` de etapa ou console. Um teste faz o mesmo pelo adaptador OTel real, com a Mastra no meio.
 
 ## 4. Camada 3: qualidade contínua
 
@@ -129,6 +163,6 @@ Sem nenhum dado de pessoa.
 ## 5. O que cada portão confere
 
 - **Entrega 1:** um run no terminal aparece como trace no Grafana local, com a árvore de §3 e o modelo de cada chamada.
-- **Entrega 2:** o painel carrega sozinho, com dados dos evals; a linha de modelos e cota mostra as trocas; o teste de privacidade passa.
+- **Entrega 2:** o painel e os alertas carregam sozinhos, com dados da rodada do `c3-confiavel` (feita com o OTLP ligado); a linha de modelos e cota mostra as trocas; o teste de privacidade passa.
 - **Entrega 3:** Como pensei mostra a mesma história do trace.
 - **Entrega 4:** traces de produção chegam ao Grafana Cloud; Bastidores no ar, com a evolução dos checkpoints.

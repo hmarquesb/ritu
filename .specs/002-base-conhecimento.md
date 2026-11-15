@@ -417,6 +417,26 @@ As specs seguintes acrescentam campos a `ToolContext`; nenhuma tool lê nada for
 
 - Spec 001: `RituError`, `Container` e `createContainer`, `config/index.ts`, scripts `test` e `eval:det`, teste de arquitetura (R1 e R5).
 
+### Correção C13: alimentos aceitos por vaga
+
+Pendente; entra antes da spec 008.
+
+```ts
+// vagaSchema ganha
+alimentos: z.array(idSchema).min(1).optional()
+```
+
+- Com `alimentos`, as opções da vaga são só esses ids (ainda passando pelo filtro da pessoa); `grupos` não pode vir junto.
+- Validação: cada id existe e tem a `funcao` da vaga. O mínimo de 3 alimentos por vaga vale também aqui; `excecoesMinAlimentosPorVaga` continua.
+- Conteúdo (`data/preparos.yaml`), vaga a vaga:
+  - `base` de `kitchari`, `arroz-papa` e de todo preparo cozido em grão: só grãos em grão (arroz e os demais cereais inteiros da base). Pão, macarrão, tapioca e farinhas ficam só nos preparos em que são a base de fato.
+  - `tempero` de sopas, caldos e cozidos: especiarias e ervas de cozinha. Camomila, capim-limão, erva-cidreira e as outras ervas de chá saem.
+  - `mingau` ganha a vaga `liquido` (obrigatória) com água, leite e as bebidas vegetais da base.
+  - `leite-morno-com-especiaria:liquido` passa a `alimentos: [leite]` e segue na lista de exceções do mínimo.
+- Redação dos `passos`: lacuna seguida de adjetivo não pode pedir concordância ("{legume} picado" vira "{legume} em pedaços").
+- Eval novo em `evals/det/base/vagas.eval.ts`: nenhuma vaga `base` de preparo cozido em grão aceita pão, macarrão, tapioca ou farinha; nenhuma vaga `tempero` aceita erva marcada só para chá; nenhum `passos` tem lacuna seguida de adjetivo no masculino ou no feminino.
+- Nível: `mecanica` (schema, validação, eval) e `conteudo` (listas e redação). Gates e `base:check` verdes; os evals da 007 continuam passando.
+
 ## Evals (quando a spec toca agente, prompt, tool ou base)
 
 Determinísticos, em `evals/det/base/`, com a base real pelo container:

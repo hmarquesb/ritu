@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** construção da entrega 1. Specs 001 a 009 escritas e aprovadas.
+> **Status:** entrega 1 construída e aprovada no portão 1. Specs da entrega 2 (008 a 015) aprovadas.
 
 ## O que é o projeto
 

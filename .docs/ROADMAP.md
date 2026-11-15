@@ -4,12 +4,11 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, à espera do portão 1 da dona. O relatório e o roteiro de conferência estão em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Specs 008 e 009 aprovadas; 010 escrita, à espera da aprovação; 011 a 024 a escrever.
+Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Specs 008 a 015 aprovadas (entrega 2 toda especificada); 016 a 024 a escrever.
 
 **Próximos passos, na ordem:**
-1. Portão 1: a dona segue o roteiro do relatório e responde "aprovado" ou lista ajustes.
-2. Bloqueio aberto: conferir no AI Studio os modelos que deram `indisponivel` ou `timeout` (`.plans/BLOQUEIOS.md`).
-3. Aprovar a 010 e escrever as specs 011 a 015; depois, `/construir-entrega 2`.
+1. `/construir-entrega 2` (antes da 008, a correção C13 da 002).
+2. Fechamento da entrega 2: rodada do `c3-confiavel` com o OTLP ligado e o painel no relatório do portão 2.
 
 ## 1. Entregas
 

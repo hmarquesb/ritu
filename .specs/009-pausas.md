@@ -91,6 +91,7 @@ A casa "não é a verdade absoluta" (`BUSINESS.md` §9): a comida acaba e a pess
 | Quem pergunta a variante | O código, antes do agente | Decisão da dona. A base diz quando a pergunta é necessária; o preparo já roda com a variante certa e nenhuma chamada é gasta |
 | Resposta sobre a casa | Gravada na hora, sem bloco de aprovação | Decisão da dona. O toque é o consentimento, como em "Não gosto" e "Ajudou" |
 | Sobre quais alimentos perguntar | Qualquer ingrediente dos candidatos do run, incerto ou nunca registrado | Decisão da dona. A resposta acerta mais; o custo é perguntar mais vezes |
+| Refeição com ingrediente obrigatório fora de casa | Vai ao modelo quando o ingrediente é perguntável (nunca registrado e ainda há pergunta disponível); no máximo 2 refeições assim por run. Sai quando a pessoa responde "Não tenho" e a vaga fica sem opção | Decisão da dona. Quem chega com a casa vazia recebe pergunta e refeição, e não só chá e prática. Candidato que nenhuma entrega pode usar continua fora |
 | Item marcado como acabou | Não é perguntado | A pessoa acabou de dizer que não tem; quando comprar, ela conta |
 | Pular | Toda pergunta tem "Pular"; na de casa, item sem resposta conta como pulado | Ninguém fica preso numa pergunta que não sabe ou não quer responder |
 | Texto digitado com pergunta aberta | É mensagem nova: cancela o run em espera (005) | Uma regra só. O que já foi respondido fica gravado |
@@ -110,7 +111,7 @@ A casa "não é a verdade absoluta" (`BUSINESS.md` §9): a comida acaba e a pess
 **Configuração (`config/pausas.ts`, em `config/index.ts`)**
 
 ```ts
-export const pausas = { maxPerguntasPorRun: 2, maxItensPorPergunta: 5 } as const
+export const pausas = { maxPerguntasPorRun: 2, maxItensPorPergunta: 5, maxRefeicoesAPerguntar: 2 } as const
 ```
 
 O prazo de espera é `memoria.esperaMinutos` (004).
@@ -202,6 +203,23 @@ perguntas: { feitas: number; alimentos: string[] }      // começa em { feitas: 
 nao_come_do_run: string[]                               // ids respondidos com "Não como"
 ```
 
+**Candidatos que vão ao modelo (mudança na 007)**
+
+`entregaveisEmCasa` passa a ser:
+
+```ts
+// src/core/agents/companion/preparo.ts
+export function entregaveis(candidatos: Candidato[], p: { casa: Casa; acabou: string[]; perguntasRestantes: number }, kb: KnowledgeBase): Candidato[]
+```
+
+- Um alimento é **perguntável** quando não está em `casa.confirmados` nem em `casa.incertos`, não está em `acabou` e `perguntasRestantes > 0`.
+- A refeição fica quando cada vaga obrigatória tem ao menos uma opção confirmada, incerta ou perguntável.
+- A refeição que só fica por causa de opção perguntável leva `depende_de_pergunta: true` (campo novo de `Candidato`, no contexto do modelo). Ficam as `maxRefeicoesAPerguntar` primeiras pela ordem; as outras saem.
+- `acabou` são os itens de Minha casa com `estado: acabou`; `perguntasRestantes` é `maxPerguntasPorRun − perguntas.feitas`.
+- `faltasDoRun` e o candidato a "vale ter em casa" continuam calculados sobre a lista completa, que fica em `dados.candidatos_completos`.
+
+No validador, `fora_de_casa` em item de candidato com `depende_de_pergunta` devolve a mensagem "pergunte antes com ask_user (tipo casa) ou use outro candidato"; sem pergunta disponível, "use outro candidato".
+
 ```ts
 // src/core/runs/pergunta.ts
 export function aplicarResposta(dados: DadosDoPreparo, pergunta: Pergunta, resposta: RespostaDaPessoa): DadosDoPreparo
@@ -214,6 +232,8 @@ export function aplicarResposta(dados: DadosDoPreparo, pergunta: Pergunta, respo
 | `nao_gosto` | Entra em `filtro.nao_gosta`; sai das duas listas de casa |
 | `nao_come` | Entra em `filtro.nao_come` e em `nao_come_do_run` |
 | `como`, `pulou`, `pular` | Nada |
+
+Depois de aplicar as respostas, `aplicarResposta` roda `entregaveis` de novo sobre `dados.candidatos` (com o `nao_tenho` contando como `acabou`): a refeição que ficou sem opção numa vaga obrigatória sai, e o resultado da tool que volta ao modelo traz `candidatos_retirados: [ids]`.
 
 **Gravação da resposta (`src/core/runs/gravar-resposta.ts`)**
 
@@ -254,7 +274,7 @@ Mudanças em `conversar` (008), no caminho `acompanhante`:
 
 Ordem de `continuar`:
 
-1. Busca o run. Fora de `waiting_for_input`, ou de outra conta: `RunNaoContinuavelError`.
+1. Busca o run. Fora de `waiting_for_input`, ou de outra conta: `RunNaoContinuavelError`. A saída de `waiting_for_input` é feita com `runs.mudarStatusSe` (010): com duas chamadas ao mesmo tempo, só uma segue.
 2. `pendencia.criada_em` há mais de `esperaMinutos`: run `expired`, erro `pergunta_expirada`.
 3. `validarResposta`; inválida: erro `resposta_invalida`, sem mudar nada.
 4. `gravarResposta`. Grava a mensagem da pessoa (`textoDaResposta`; `com_incomodo: true` na da variante).
@@ -267,11 +287,12 @@ Ordem de `continuar`:
 
 Cópia de `acompanhante.v2` com `versao: "acompanhante.v3"` e uma troca em "O QUE VALE SEMPRE".
 
-A linha que começa com "- Ingrediente:" é substituída por estas quatro:
+A linha que começa com "- Ingrediente:" é substituída por estas cinco:
 
 ```text
 - Ingrediente: só o que está "confirmado" em casa. Para usar um que está "incerto" ou "ausente", pergunte antes com ask_user (tipo casa) e só use se a resposta for "tenho". Sem perguntar, "incerto" só entra com se_faltar preenchido por um substituto confirmado em casa (ayurveda.substitutos), e "ausente" não entra.
 - ask_user: no máximo 2 perguntas, e só quando a resposta muda o que você vai sugerir. Se já dá para sugerir bem com o que está confirmado, não pergunte. Junte até 5 alimentos numa pergunta só. Só pergunte sobre ingrediente dos candidatos. Nunca pergunte sobre o que já está confirmado nem sobre o que está em evitar_sempre, restrições, "não como" ou "não gosto".
+- Candidato com depende_de_pergunta: só entregue depois de um "tenho" para o ingrediente que falta. Se a pergunta não couber, use outro candidato.
 - ask_user tipo come: só quando um alimento de origem animal entraria na sugestão e nada no contexto diz se a pessoa come.
 - Depois da resposta: "tenho" pode entrar; "nao_tenho", "nao_gosto" e "nao_come" não entram; "pulou" fica como estava. Não comente a resposta: use.
 ```
@@ -283,7 +304,7 @@ A linha que começa com "- Ingrediente:" é substituída por estas quatro:
 | Cenário | Mostra | Roteiro |
 |---|---|---|
 | `casa-incerta` | Abóbora e couve incertas; a pessoa tem uma e não tem a outra | `casa.ler` → `ask_user` casa → (Tenho, Não tenho) → `finalizar` com a abóbora |
-| `casa-vazia` | Primeira conversa, nada em Minha casa | `casa.ler` → `ask_user` casa com 5 itens → (três Tenho, um Não gosto, um pulado) → `finalizar` |
+| `casa-vazia` | Primeira conversa, nada em Minha casa | `casa.ler` → `ask_user` casa com 5 itens, entre eles os de uma refeição com `depende_de_pergunta` → (três Tenho, um Não gosto, um pulado) → `finalizar` com a refeição feita do que ela tem |
 | `dor-de-cabeca` | "tô com dor de cabeça, o que como no almoço?" | Pausa de código → (`latejante`) → `clima.agora` → `finalizar` com o aviso de incômodo |
 | `pergunta-recusada` | O agente tenta perguntar sobre item já confirmado | `ask_user` (recusada) → `finalizar` |
 
@@ -304,6 +325,7 @@ Determinísticos, em `evals/det/pausas/`:
 - `pausa-casa.eval.ts`: pausa, retomada sem repetir chamadas, resultado da tool com as respostas, validador com os dados atualizados.
 - `gravacao.eval.ts`: Tenho, Não tenho e Não gosto gravam o esperado na hora; Pular e item sem resposta não gravam; registrar em casa apaga as faltas do alimento.
 - `recusas.eval.ts`: um caso por código, e um pedido limpo.
+- `entregaveis.eval.ts`: casa vazia leva ao modelo no máximo 2 refeições, com `depende_de_pergunta`; item com `acabou` não segura refeição; sem pergunta disponível, nenhuma refeição perguntável; "Não tenho" para a única opção tira a refeição e avisa em `candidatos_retirados`; as faltas seguem contadas sobre a lista completa.
 - `limite.eval.ts`: 3ª pergunta recusada; a da variante conta; mais de 5 itens recusado.
 - `variante.eval.ts`: pausa sem chamada de `decisao`; cada variante dá candidatos diferentes; Pular segue com `precisa_variante`; variante única não pausa.
 - `expiracao.eval.ts`: 30 minutos vale, 31 expira; resposta a run expirado não grava; mensagem nova cancela a espera.

@@ -12,7 +12,7 @@ created: 2026-11-14
 
 ## Contexto
 
-O Ritu roda só no plano gratuito, em que cada modelo tem cota própria por minuto e por dia (`AI.md` §10). Dois modelos carregam o volume (500 pedidos por dia cada) e os modelos Flash são escassos (20 por dia cada). Sem um ponto único que conte e distribua as chamadas, o produto para no meio do dia ou gasta os modelos fortes à toa. E quando tudo acaba, a pessoa não pode ficar sem resposta.
+O Ritu roda só no plano gratuito, em que cada modelo tem cota própria por minuto e por dia (`AI.md` §10). Dois modelos carregam o volume (500 pedidos por dia cada) e o modelo Flash é escasso (20 por dia). Sem um ponto único que conte e distribua as chamadas, o produto para no meio do dia ou gasta os modelos fortes à toa. E quando tudo acaba, a pessoa não pode ficar sem resposta.
 
 ## Objetivo
 
@@ -37,11 +37,11 @@ Depois desta spec, nenhuma parte do código escolhe modelo: pede um papel ao `Mo
 
 ## Necessidade de negócio
 
-"Só planos gratuitos" é uma regra do projeto. O roteador é o que transforma várias cotas pequenas em um produto que aguenta o dia, com o Acompanhante e o Juiz em modelos diferentes e os modelos fortes guardados para a segunda tentativa de uma resposta reprovada.
+"Só planos gratuitos" é uma regra do projeto. O roteador é o que transforma várias cotas pequenas em um produto que aguenta o dia, com o Acompanhante e o Juiz em modelos diferentes e o modelo forte guardado para a segunda tentativa de uma resposta reprovada.
 
 ## Critérios de aceite
 
-- [x] Com cota livre, `paraPapel("decisao").proximo()` devolve `gemini-3.5-flash-lite`; `apoio`, `gemini-3.1-flash-lite`; `reforco`, `gemini-3.8-flash`.
+- [x] Com cota livre, `paraPapel("decisao").proximo()` devolve `gemini-3.5-flash-lite`; `apoio`, `gemini-3.1-flash-lite`; `reforco`, `gemini-3.6-flash`.
 - [x] Com a cota do **minuto** do modelo principal cheia (pedidos ou tokens), `proximo()` devolve o segundo da lista do papel, com `troca: { de, motivo: "cota" }`; no minuto seguinte volta ao principal.
 - [x] Com a cota do **dia** cheia, o modelo fica fora até a virada do dia da cota.
 - [x] O dia da cota vira à meia-noite de `America/Los_Angeles`: com o relógio fixo, um pedido às 23h59 e outro à 0h01 do Pacífico caem em janelas diferentes.
@@ -79,7 +79,7 @@ Depois desta spec, nenhuma parte do código escolhe modelo: pede um papel ao `Mo
 
 | Decisão | Opção escolhida | Racional |
 | ------- | --------------- | -------- |
-| Listas por papel | `decisao`: 3.5 Flash Lite → 3.1 Flash Lite → 2.5 Flash Lite → 3.8 Flash → 3.6 Flash → 3 Flash → 2.5 Flash. `apoio`: 3.1 Flash Lite → 3.5 Flash Lite → 2.5 Flash Lite. `reforco`: 3.8 Flash → 3.6 Flash → 3 Flash → 2.5 Flash → a lista de `decisao` | `AI.md` §10 |
+| Listas por papel | `decisao`: 3.5 Flash Lite → 3.1 Flash Lite → 3.6 Flash. `apoio`: 3.1 Flash Lite → 3.5 Flash Lite. `reforco`: 3.6 Flash → 3.5 Flash Lite → 3.1 Flash Lite | `AI.md` §10 |
 | Janela do minuto | Minuto cheio do relógio, em UTC | Simples e atômico; a diferença para uma janela deslizante é coberta pelo tratamento do 429 |
 | Janela do dia | Dia no fuso `America/Los_Angeles` | É quando a cota do provedor vira |
 | Erro 429 | Fora até o fim do minuto; no terceiro do dia, fora até a virada do dia | O erro não diz qual cota estourou; a contagem própria pode estar atrasada em relação à do provedor |
@@ -104,16 +104,12 @@ export const llmCotas = {
   modelos: {
     "gemini-3.5-flash-lite":  { rpm: 15, tpm: 250_000, rpd: 500 },
     "gemini-3.1-flash-lite":  { rpm: 15, tpm: 250_000, rpd: 500 },
-    "gemini-2.5-flash-lite":  { rpm: 10, tpm: 250_000, rpd: 20 },
-    "gemini-3.8-flash":       { rpm: 5,  tpm: 250_000, rpd: 20 },
     "gemini-3.6-flash":       { rpm: 5,  tpm: 250_000, rpd: 20 },
-    "gemini-3-flash-preview": { rpm: 5,  tpm: 250_000, rpd: 20 },
-    "gemini-2.5-flash":       { rpm: 5,  tpm: 250_000, rpd: 20 },
   },
   papeis: {
-    decisao: ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-2.5-flash"],
-    apoio:   ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite"],
-    reforco: ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
+    decisao: ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash"],
+    apoio:   ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"],
+    reforco: ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"],
   },
 } as const
 export type Papel = keyof typeof llmCotas.papeis

@@ -29,7 +29,7 @@ Depois desta spec, `conversar(contaId, { texto, atalhos })` leva qualquer mensag
   - O que a mensagem traz e vale no mesmo run: "evitar sempre" (já na 007) e itens da casa.
   - `registrarResultado`: fecha um retorno e soma os contadores.
   - Anotações: o que o código propõe guardar (casa e "evitar sempre"), como dado na saída.
-  - Prompt `acompanhante.v2` (três linhas a mais).
+  - Prompt `acompanhante.v2` (três linhas a mais e o bloco de conferência antes de `finalizar`).
   - Cenários novos do `demo` e a generalização do `eval:llm` para qualquer checkpoint, com os casos da família Intenção.
 - **Fora:**
   - `ask_user` e pausas (009). Incômodo que precisa de variante continua sem pergunta.
@@ -107,6 +107,7 @@ Depois desta spec, `conversar(contaId, { texto, atalhos })` leva qualquer mensag
 | Run antes do Intérprete | Sim, com caminho provisório | A etapa e o span `interprete` pertencem ao run, e o run aberto é barrado antes de gastar modelo |
 | `registrarResultado` nesta spec | Sim; a 011 usa a mesma função nos toques e na tool do agente | O caminho `retorno` precisa gravar de verdade |
 | Prompt do Acompanhante | `acompanhante.v2`, com três linhas a mais | O agente precisa saber o que fazer com os campos novos e não pode dizer que anotou o que não anotou |
+| Formato da entrega no prompt | Bloco "ANTES DE CHAMAR finalizar, CONFIRA", com as regras de formato que o validador cobra | No `c1-base` só 17% das entregas passaram na 1ª tentativa; cada recusa custa uma chamada, e as próximas specs aumentam a saída |
 
 ## Contratos
 
@@ -137,6 +138,7 @@ export type SaidaDoInterprete = {               // o que o modelo devolve; schem
   fato_de_rotina?: string
   evitar_sempre: string[]
   nao_come: string[]
+  gosta: string[]
   restricoes: string[]
   suspeito: boolean
 }
@@ -159,6 +161,7 @@ export type Interpretacao = {
   fato_de_rotina?: string
   evitar: EvitarItem[]
   nao_come: { alimento_id?: string; nome: string }[]
+  gosta: { alimento_id: string; nome: string }[]
   restricoes: Restricao[]
   suspeito: boolean
 }
@@ -172,6 +175,7 @@ Regras de `normalizarInterpretacao`, nesta ordem:
 2. `incomodo`: sai se o id não existe em `kb.incomodos`; a variante sai se não existe nele.
 3. `itens_casa`: cada nome passa por `identificarAlimento` (002); sem repetir (pelo id ou pelo nome normalizado); até `maxItensDeCasa`; nome livre cortado em `maxNomeLivre`.
 4. `evitar`: cada texto passa por `resolverEvitar` (002); sem repetir; até `maxEvitar`. `nao_come`: cada texto passa por `identificarAlimento`; sem repetir; até `maxEvitar`. `restricoes`: só os ids que estão em `RESTRICOES`.
+4a. `gosta`: cada nome passa por `identificarAlimento`; só fica o que é da base; sem repetir; até `maxEvitar`; sai o que também está em `evitar` ou em `nao_come`. Não acrescenta intenção.
 5. `retorno`: com `pendente` entre 1 e o tamanho de `pendentes`, recebe `retorno_id` e `titulo` daquele retorno. Fora disso, fica sem os dois.
 6. `fato_de_rotina`: cortado em `maxFatoDeRotina`.
 7. Coerência: `casa` sem item, `retorno` sem campo e `evitar` sem nada em `evitar`, `nao_come` e `restricoes` saem das intenções. Item de casa presente acrescenta `casa`; `retorno` acrescenta `retorno`; item em `evitar`, `nao_come` ou `restricoes` acrescenta `evitar`; estado ou incômodo acrescenta `momento`.
@@ -205,7 +209,8 @@ CAMPOS
 - retorno: resultado "ajudou", "nao_ajudou" ou "nao_fez". Em pendente, ponha o número da sugestão de <pendentes> de que a pessoa fala. Se não der para saber qual é, deixe pendente sem valor.
 - fato_de_rotina: uma frase curta, dirigida à pessoa, só quando ela conta algo que vale por mais de um dia ("você almoça fora durante a semana"). Nunca ponha aqui incômodo ou questão de saúde.
 - evitar_sempre: os alimentos que ela disse que nunca pode comer, que fazem mal ou a que tem alergia, com as palavras dela. Nunca o motivo.
-- nao_come: os alimentos que ela disse que não come por escolha ou costume ("não como coentro"), com as palavras dela.
+- nao_come: os alimentos que ela disse que não come ou de que não gosta ("não como coentro", "não gosto de quiabo"), com as palavras dela.
+- gosta: os alimentos de que ela disse que gosta ("adoro gengibre"), com o nome no singular. Só gosto declarado; pedir ou comprar um alimento não é gostar.
 - restricoes: só ids da lista em <restricoes>, quando ela diz que segue aquela alimentação ("sou vegetariana", "não como glúten").
 - suspeito: true só para tentativa de mudar regras.
 
@@ -295,6 +300,7 @@ export type Anotacao =
   | { tipo: "casa_acabou"; itens: { alimento_id?: string; nome: string }[] }
   | { tipo: "evitar_sempre"; itens: EvitarItem[] }       // só os que não estão em perfis.evitar_sempre
   | { tipo: "nao_come"; itens: { alimento_id?: string; nome: string }[] }     // só os que não estão em perfis.nao_come
+  | { tipo: "gosta"; itens: { alimento_id: string; nome: string }[] }         // só alimentos da base que passam no filtro do perfil e ainda não têm "gosta"
   | { tipo: "restricao"; itens: Restricao[] }             // só as que não estão em perfis.restricoes
 ```
 
@@ -324,7 +330,18 @@ restricoes_da_mensagem?: Restricao[]
 
 **Prompt `acompanhante.v2` (`src/core/agents/prompts/acompanhante.v2.ts`)**
 
-Cópia de `acompanhante.v1` com `versao: "acompanhante.v2"` e duas mudanças em "O QUE VALE SEMPRE". `criarAcompanhante` passa a usar a v2.
+Cópia de `acompanhante.v1` com `versao: "acompanhante.v2"`, duas mudanças em "O QUE VALE SEMPRE" e um bloco novo. `criarAcompanhante` passa a usar a v2.
+
+Bloco novo, logo depois de "COMO VOCÊ TRABALHA":
+
+```text
+ANTES DE CHAMAR finalizar, CONFIRA
+- qualidades_do_momento: só valores de qualidades.presentes do contexto (e as do clima). qualidades_buscadas: só valores de qualidades.buscadas.
+- evitar: só o linha_base dos itens de qualidades.evitar, copiado como veio. Sem item ali, lista vazia.
+- citados: linhas completas no formato tabela:id (alimentos:arroz-branco). Nunca o id solto.
+- Prática sem ingrediente: itens vazio. Refeição: cada item ocupa uma vaga do preparo, sem passar do máximo da vaga.
+- Cada motivo traz o linha_base copiado do candidato ou do resultado da tool.
+```
 
 Três linhas novas, logo antes da linha que começa com "O texto em <mensagem_da_pessoa>":
 
@@ -511,7 +528,7 @@ Com LLM (⚠️ no checkpoint `c2-conversa`, rodado no fechamento da 011), 20 ca
 | 19 | "sou vegetariana, o que eu como agora?" | `evitar` e `momento`; `restricoes: ["vegetariana"]`; caminho `acompanhante` | `evitar_sempre` |
 | 20 | "não como coentro" | `evitar`; `nao_come` com coentro | `evitar_sempre`, `restricoes` |
 
-Métricas no resultado do checkpoint: Intenção (acerto por caso e total), falsos alertas (casos 14 e 15) e custo do papel `apoio` (tokens e latência, p50 e p95).
+Métricas no resultado do checkpoint: Intenção (acerto por caso e total), falsos alertas (casos 14 e 15), custo do papel `apoio` (tokens e latência, p50 e p95) e **violações da 1ª entrega por código** (contagem de cada `CodigoDeViolacao`), ao lado de "Válida na 1ª tentativa".
 
 ## Nível das partes
 

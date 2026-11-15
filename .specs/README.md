@@ -9,7 +9,7 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 - Marque na spec o **nível** de cada parte: `mecanica` (Haiku), `nucleo` (Sonnet), `tela` (Sonnet) ou `conteudo` (Opus). Regras em `RULES.md` §1.
 - Liste em "Leitura para a construção" só as seções de `.docs/` que a construção precisa abrir.
 - As specs de uma entrega são todas aprovadas antes de ela começar. As das entregas seguintes podem ser escritas durante a construção, a partir do código já commitado.
-- **Andamento:** 001 a 009 aprovadas; 010 escrita, à espera da aprovação; 011 a 024 a escrever.
+- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 a 015 aprovadas (entrega 2 toda especificada); 016 a 024 a escrever. Antes da 008: correção C13 da 002 (alimentos aceitos por vaga).
 
 ## Backlog
 
@@ -33,9 +33,9 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 | 009 | `pausas` | `ask_user` com três tipos fechados de pergunta (casa, come, variante), texto montado por código; `waiting_for_input`, `continuar`, expiração, limite de perguntas; pergunta agrupada sobre a casa com Tenho · Não tenho · Não gosto, gravada na hora; variante do incômodo perguntada por código antes do agente; anotação `nao_come`; demo com pausa no terminal; casos de perguntas do `c2` | 008 | **Núcleo** |
 | 010 | `aprovacao` | Propostas montadas por código (casa, "evitar sempre", restrição, "não como") e pelo agente (`memoria.propor` para rotina, `lista.propor` para o que faltou hoje); bloco com uma linha por assunto; `waiting_for_approval`, executor em código, aprovação parcial, expiração, recusa duradoura da lista; restrição e "não como" da conversa valendo no mesmo run | 009 | **Núcleo** |
 | 011 | `retorno-gostos-e-trocas` | Retornos criados a cada sugestão; registro por toque e pela conversa quando o agente está no caminho (`resultado.registrar`), sobre o `registrarResultado` da 008; gostos; troca de ingrediente por código; gravação de "já sugerido", de gostos e de resultados, que a ordenação da 007 lê; gravação das faltas do run; proposta de lista para a indicação de "vale ter em casa" (`para_ter`) | 008, 010 | Parte núcleo |
-| 012 | `rotina-e-padroes` | Notas de rotina e resumo compactado (agente de Memória); detecção diária de padrões em código; frase do padrão; confirmação pela pessoa | 010, 011 | Parte núcleo |
-| 013 | `guardrails-e-juiz` | Guardrail de entrada, Juiz barra "evitar sempre" violado e linguagem vulgar, sinais de alerta físicos e emocionais (texto fixo com o CVV), texto vindo da memória delimitado como dado, checagens entre passos, Juiz fail-closed com uma nova tentativa no papel `reforco`, resposta segura | 007, 006 | Parte núcleo |
-| 014 | `evals` | Runner com checkpoints e `--retomar`, casos determinísticos e com LLM por família (`QA.md`, inclusive "Linguagem e sofrimento"), relatório por checkpoint, `COMPARACAO.md`, `historico.json`, job determinístico na CI | 008–013 | Mecânica |
+| 012 | `rotina-e-padroes` | Resumo de rotina compactado (agente de Memória), com reserva por código, refeito depois de cada nota aprovada, apagada ou corrigida; teto de notas; detecção diária de padrões em código, com a frase montada por código (`npm run padroes`); linha "Notei isto. Está certo?" no bloco, com confirmação, recusa e "fica para depois"; casos de memória do `c3` | 010, 011 | Parte núcleo |
+| 013 | `guardrails-e-juiz` | Guardrail de entrada em código (alerta físico e emocional, injection) antes do Intérprete; `dosagem` no validador; Juiz fail-closed, com motivos graves e de registro (jargão), uma nova tentativa no papel `reforco` e resposta segura; proposta de rotina com saúde sai do bloco; evals de "dado, não instrução"; casos de segurança e do Juiz do `c3` | 006 a 012 | Parte núcleo |
+| 014 | `evals` | Runner com `--retomar`, famílias e marcas nos 84 casos, avaliador do eval, métricas com metas que avisam e falhas críticas, relatório por checkpoint com a variação, `historico.json`, `COMPARACAO.md` gerado, mapa dos evals determinísticos, job `evals` na CI | 008–013 | Mecânica |
 | 015 | `observabilidade-completa` | Métricas de `OBSERVABILITY.md`, logs estruturados, painel como código (com a linha de modelos e cota), teste de privacidade | 005, 006, 014 | Parte núcleo |
 
 ### Entrega 3: site

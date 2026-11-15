@@ -193,7 +193,7 @@ scripts/                     # demo.ts (terminal), eval.ts, cleanup.ts, smoke.ts
 data/                        # base ayurvédica em YAML
 seed/                        # perfil de demonstração
 evals/                       # casos, runner, resultados por checkpoint e COMPARACAO.md
-observability/               # docker-compose do LGTM e dashboards
+observability/               # painel e alertas gerados, provisionamento do Grafana
 mcp/                         # servidor MCP
 test/fixtures/  e2e/
 ```

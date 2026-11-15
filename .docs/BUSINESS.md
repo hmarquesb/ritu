@@ -219,6 +219,10 @@ Como a casa é atualizada:
 
 Cada ingrediente de uma sugestão pode ser trocado sem refazer a resposta. O substituto é o alimento com as qualidades mais próximas, na mesma função do preparo, que passe por "evitar sempre", pelas restrições e pelas combinações. A ordem de preferência é: tem em casa, gosta, já funcionou. A troca mostra o motivo: *"Troquei canela por cardamomo: os dois aquecem."* Se não houver substituto, a tela diz isso.
 
+O substituto é sempre algo que está confirmado em casa. Quando não há, o Ritu pergunta se a pessoa tem o substituto mais próximo: com "Tenho", registra em casa e faz a troca; com "Não tenho", anota a falta, que conta para o "vale ter em casa". É no máximo uma pergunta por troca.
+
+Tocar em "Não tenho" ou em "Não gosto" num ingrediente anota e já faz a troca, no mesmo toque.
+
 A troca é feita por código, com a base de alimentos. Não chama o modelo.
 
 ### Gostos
@@ -228,7 +232,7 @@ Três informações diferentes por alimento ou prática, guardadas separadas:
 | Informação | De onde vem | Efeito |
 |---|---|---|
 | **Tem em casa** | Minha casa | Decide se pode entrar agora |
-| **Gosta / não gosta** | Toque em "Não gosto" num ingrediente, resposta a uma pergunta do agente ("Tenho" · "Não tenho" · "Não gosto"), marcação em Minha casa, ou o que a pessoa escreve | Quem ela gosta sobe na ordem; quem ela não gosta deixa de ser sugerido |
+| **Gosta / não gosta** | Toque em "Não gosto" num ingrediente, resposta a uma pergunta do agente ("Tenho" · "Não tenho" · "Não gosto"), marcação em Minha casa, ou o que a pessoa escreve ("adoro gengibre" vale na mesma resposta e é guardado com aprovação; "não gosto de quiabo" entra como "não como") | Quem ela gosta sobe na ordem; quem ela não gosta deixa de ser sugerido |
 | **Funcionou** | Retornos de "Como ficou?" | O que ajudou sobe; o que não ajudou nas duas últimas vezes vai para o fim |
 
 Regra: **a adequação ayurvédica, "evitar sempre" e as restrições filtram; gosto e resultado só ordenam o que passou no filtro.** Gostar de um alimento nunca faz o agente sugeri-lo quando ele não serve para o momento.
@@ -244,7 +248,7 @@ Uma **falta** é anotada em dois casos:
 | Caso | Quando |
 |---|---|
 | **Teria entrado** | O alimento estava entre os mais adequados para o momento e não estava em casa (nunca foi registrado, ou acabou) |
-| **Não tenho** | A pessoa tocou em "Não tenho" num ingrediente sugerido, ou respondeu "Não tenho" a uma pergunta do agente |
+| **Não tenho** | A pessoa tocou em "Não tenho" num ingrediente sugerido, ou respondeu "Não tenho" a uma pergunta do agente ou de uma troca |
 
 - Cada alimento conta no máximo **uma vez por dia**.
 - Item incerto não conta como falta: a pessoa talvez ainda tenha.
@@ -295,7 +299,7 @@ A memória tem níveis. Cada nível aparece na página **"O que sei sobre você"
 | **Gostos e resultados** | Por alimento e por prática | "Gosta de canela · Chá de gengibre ajudou 3 vezes" | Toques da pessoa e retornos |
 | **O que fez falta** | Alimentos que teriam entrado numa resposta e não estavam em casa (§9) | "Cardamomo: fez falta 4 vezes nos últimos 30 dias" | Automático, por código; apagado depois de 30 dias |
 | **Rotina** | Fatos da vida que mudam a recomendação | "Almoça fora durante a semana", "Acorda às 5 h às terças" | Só com aprovação |
-| **Padrões** | Regularidades que o Ritu percebeu nos registros | "Quando está com frio e agitada, o que mais te ajudou foi chá quente" | O Ritu pergunta *"Notei isto. Está certo?"*; só vale depois do sim |
+| **Padrões** | Regularidades que o Ritu percebeu nos registros | "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar" | O Ritu pergunta *"Notei isto. Está certo?"*; só vale depois do sim. Sem resposta, a pergunta volta no máximo uma vez por dia e até 3 vezes |
 | **Conversa** | As mensagens dos últimos 7 dias | — | Automático; apagado depois de 7 dias |
 
 Regras da memória:

@@ -1,6 +1,6 @@
 ---
 title: Aprovação
-status: draft
+status: approved
 entrega: 2
 created: 2026-11-14
 ---
@@ -51,7 +51,7 @@ Depois desta spec, toda resposta que tem algo a guardar termina com o bloco "Pos
 - [ ] **Executor:** cada tipo de proposta grava exatamente o da tabela de "Contratos" (casa tem, casa acabou, evitar sempre, restrição, "não como", rotina, lista), numa transação só. Conteúdo fora do schema, ou com qualquer operação que não seja acrescentar, não é executado: a linha fica `recusada` e o run ganha uma etapa `erro` de nome `proposta_invalida`.
 - [ ] **Expiração:** `aprovar` mais de 30 minutos depois de o bloco ser criado marca o run como `expired` e as propostas como `expirada`, lança `aprovacao_expirada` e não grava nada. Mensagem nova com bloco aberto leva o run a `done` e as propostas a `expirada` (005).
 - [ ] **Expirada não é recusa:** proposta de lista expirada não entra em `proposals.recusadas`; recusada, entra.
-- [ ] `aprovar` com id que não é do run, ou em run de outra conta, lança erro (`aprovacao_invalida` ou `RunNaoContinuavelError`) e não muda nada. `aprovar` duas vezes: a segunda lança `RunNaoContinuavelError` e nada é gravado de novo.
+- [ ] `aprovar` com id que não é do run, ou em run de outra conta, lança erro (`aprovacao_invalida` ou `RunNaoContinuavelError`) e não muda nada. `aprovar` duas vezes, em seguida ou ao mesmo tempo: só uma grava; a outra lança `RunNaoContinuavelError` e nada é gravado de novo (teste no fake e em `test:db`, com duas chamadas simultâneas).
 - [ ] **`memoria.propor`:** com `fato_de_rotina` nos dados, devolve `{ proposto: true }` e a nota entra no bloco com o texto do fato; cada código de recusa de "Contratos" tem um teste.
 - [ ] **`lista.propor`:** só é aceita para alimento respondido com "Não tenho" neste run; cada código de recusa tem um teste; a linha traz o nome da sugestão a que ele faltou.
 - [ ] **Proposta e `finalizar` no mesmo passo:** chamadas nessa ordem, a proposta entra no bloco.
@@ -101,6 +101,8 @@ Depois desta spec, toda resposta que tem algo a guardar termina com o bloco "Pos
 | "Não como" respondido numa pergunta (009) | Também entra no temporário do dia | Coerente com o que vem da mensagem |
 | Aprovação com falha no meio | A transação desfaz tudo; o run continua em espera | A pessoa pode tentar de novo; nunca fica meio gravado |
 | Caminhos de código | `casa` e `evitar` também terminam em `waiting_for_approval` | É o mesmo bloco, venha a anotação de onde vier |
+| Duas aprovações ao mesmo tempo | Troca de status condicional como primeira operação da transação | Dois toques seguidos em "Anotar" não podem gravar duas vezes |
+| Candidatos de `lista.propor` | A lista completa do preparo, e não só a que foi ao modelo | O alimento respondido com "Não tenho" pode ter tirado a refeição da lista do modelo; a falta continua sendo dela |
 
 ## Contratos
 
@@ -123,6 +125,7 @@ export type ConteudoDaProposta =
   | { tool: "memoria.propor"; tipo: "evitar_sempre"; itens: EvitarItem[] }
   | { tool: "memoria.propor"; tipo: "restricao"; itens: Restricao[] }
   | { tool: "memoria.propor"; tipo: "nao_come"; itens: { alimento_id?: string; nome: string }[] }
+  | { tool: "memoria.propor"; tipo: "gosta"; itens: { alimento_id: string; nome: string }[] }
   | { tool: "memoria.propor"; tipo: "rotina"; texto: string }                       // até 200
   | { tool: "lista.propor"; alimento_id: string; motivo: "faltou_hoje" | "fez_falta"; detalhe: string }
 export type PropostaNaSaida = { id: string; tool: TipoDeProposta; texto: string }
@@ -139,6 +142,7 @@ Schema zod estrito para cada variante (campo a mais é recusado). `propostas.con
 | Evitar sempre | Não sugerir mais {itens} (Evitar sempre) |
 | Restrição | Sua alimentação é {itens} |
 | Não como | Você não come {itens} |
+| Gosta | Você gosta de {itens} |
 | Rotina | A frase, com a primeira letra maiúscula |
 | Lista, faltou hoje | {Item} na lista "Para ter em casa" (faltou para {detalhe}) |
 | Lista, fez falta | {Item} na lista "Para ter em casa" (já fez falta {detalhe} vezes) |
@@ -167,7 +171,7 @@ As duas leem `ctx.run`, que o `responder` monta a partir de `Checkpoint.dados` a
 run: {
   fato_de_rotina?: string; com_incomodo: boolean; tem_para_ter: boolean
   nao_tem: string[]                                   // respondidos com "Não tenho" neste run
-  candidatos: { tipo: TipoDeSugestao; id: string; nome: string; alimentos: string[] }[]
+  candidatos: { tipo: TipoDeSugestao; id: string; nome: string; alimentos: string[] }[]   // lista completa do preparo, antes de `entregaveis` (009) e das retiradas por resposta
   na_lista: string[]; lista_recusada: string[]; notas_ativas: string[]
 }
 ```
@@ -199,8 +203,9 @@ export function montarPropostas(p: { anotacoes: Anotacao[]; doAgente: ConteudoDa
 ```
 
 - Cada anotação vira uma proposta: `casa_tem` e `casa_acabou` → `casa.propor`; `evitar_sempre`, `restricao` e `nao_come` → `memoria.propor` do tipo correspondente.
-- `extras` é por onde a 011 entrega a proposta do `para_ter`.
-- Ordem: evitar sempre, restrição, não como, casa tem, casa acabou, lista, rotina. Corta em `maxLinhas`.
+- `extras` é por onde a 011 entrega a proposta do `para_ter` (`propostaDoParaTer`). Em `aprovar`, cada proposta de lista com motivo `fez_falta` soma `ritu_para_ter_total{etapa: "aprovada" | "recusada"}`.
+- A anotação `gosta` (011) vira `memoria.propor` do tipo `gosta`.
+- Ordem: evitar sempre, restrição, não como, gosta, casa tem, casa acabou, lista, rotina. Corta em `maxLinhas`.
 
 `finalizar` (007) passa a pôr `propostasDoAgente(estado.mensagens)` na saída que entrega (`propostas_do_agente`, campo interno de `SaidaDoAcompanhante`).
 
@@ -224,7 +229,7 @@ Fim de um run, em `conversar` e em `continuar`, depois de a saída existir (pass
 
 1. `montarAnotacoes` (008, 009) e `montarPropostas`. Em run de `alerta`, `fora`, `ofensa` ou `ajuda`: nada.
 2. Sem propostas: run `done`.
-3. Com propostas: `proposals.criar`; uma etapa `proposta` por linha (`nome`: o tipo; `resumo`: `casa: 3 itens`, `evitar_sempre: 1 item`, `rotina`, `lista`); `saida.propostas` com id e texto; evento `pausa`; run em `waiting_for_approval` com pendência `{ tipo: "aprovacao", conteudo: { propostas: [ids] } }`; `ritu_pausas_total{tipo: "aprovacao"}`.
+3. Com propostas: `proposals.criar`; uma etapa `proposta` por linha (`nome`: o tipo; `resumo`: `casa: 3 itens`, `evitar_sempre: 1 item`, `gosta: 1 item`, `rotina`, `lista`); `saida.propostas` com id e texto; evento `pausa`; run em `waiting_for_approval` com pendência `{ tipo: "aprovacao", conteudo: { propostas: [ids] } }`; `ritu_pausas_total{tipo: "aprovacao"}`.
 
 `RespostaDaConversa` devolve `status: "waiting_for_approval"` com a `saida` completa.
 
@@ -238,7 +243,7 @@ Ordem de `aprovar`:
 1. Busca o run. Fora de `waiting_for_approval`, ou de outra conta: `RunNaoContinuavelError`.
 2. `pendencia.criada_em` há mais de `esperaMinutos`: run `expired`, propostas `expirada` (`expirarDosRuns`), erro `aprovacao_expirada`.
 3. Algum id de `aprovadas` fora das propostas pendentes do run: erro `aprovacao_invalida`.
-4. Dentro do span `aprovacao.execucao` e de uma transação: para cada pendente, na ordem do bloco, se aprovada, `executarProposta` e `decidir("aprovada")`; senão `decidir("recusada")`. Proposta que o executor não aceita: `decidir("recusada")` e etapa `erro` `proposta_invalida`. Soma `ritu_propostas_total{tool, decisao}`. Grava a etapa `aprovacao` (`resumo`: `N de M`) e encerra o run em `done`.
+4. Dentro do span `aprovacao.execucao` e de uma transação: a primeira operação é `runs.mudarStatusSe(contaId, runId, "waiting_for_approval", "done")`; se devolver `false`, `RunNaoContinuavelError` (outra aprovação chegou antes). Depois, para cada pendente, na ordem do bloco, se aprovada, `executarProposta` e `decidir("aprovada")`; senão `decidir("recusada")`. Proposta que o executor não aceita: `decidir("recusada")` e etapa `erro` `proposta_invalida`. Soma `ritu_propostas_total{tool, decisao}`. Grava a etapa `aprovacao` (`resumo`: `N de M`). Se algo falhar, a transação desfaz também a troca de status e o run continua em espera.
 
 **Executor (`src/core/proposals/executor.ts`)**
 
@@ -255,6 +260,7 @@ Valida `{ tool, ...conteudo }` com o schema e grava:
 | Evitar sempre | `profiles.acrescentarEvitarSempre(itens)` |
 | Restrição | `profiles.definirRestricoes` com a união das atuais e das novas |
 | Não como | `profiles.definirNaoCome` com a união (alimento da base como `alimento`; nome livre como `texto`) |
+| Gosta | `preferences.definirGosto({ tipo: "alimento", id }, "gosta")` para cada item que existe na base; `ritu_gosto_total{gosto: "gosta"}` |
 | Rotina | `routine.anotar(texto)` |
 | Lista | `shortages.porNaLista({ alimento_id, motivo, detalhe })`, se o alimento existe na base |
 
@@ -276,6 +282,7 @@ A linha que começa com "- fato_de_rotina:" é substituída por estas três:
 
 - 004: `ItemTemporario` na porta de perfil (acima).
 - 005: o resultado de cada tool entra em `estado.mensagens` antes de a tool seguinte do mesmo passo ser executada.
+- 005: `RunRepository` ganha `mudarStatusSe(contaId, runId, de: StatusDoRun, para: StatusDoRun): Promise<boolean>`, que troca o status numa operação só (`update … where status = de`) e devolve se trocou. Nos dois adaptadores e na suíte de contrato. `continuarRun` (009) passa a usá-la para sair de `waiting_for_input`.
 - 007: `montarFiltro` com os temporários; `finalizar` recolhe as propostas do agente; saída com `propostas`.
 - 008: campos `nao_come` e `restricoes` no Intérprete, anotações `nao_come` e `restricao`, textos `naoCome`, `restricao` e `fixoJaGuardado`, `fato_de_rotina` em segunda pessoa (já escritos na 008).
 - 009: `aplicarResposta` também acrescenta o alimento respondido com "Não tenho" a `dados.nao_tem_do_run`; `gravarResposta` grava a resposta "Não como" no temporário do dia.
@@ -313,7 +320,7 @@ Determinísticos, em `evals/det/aprovacao/`:
 - `expiracao.eval.ts`: 30 minutos vale, 31 expira; expirada não entra em `recusadas`; recusada entra e bloqueia nova proposta de lista do mesmo alimento.
 - `restricao-no-run.eval.ts`: restrição e "não como" filtram na mesma resposta e no resto do dia, somem no dia seguinte sem aprovação, ficam no perfil com aprovação.
 - `bloco.eval.ts`: uma linha por assunto, ordem, teto de 6, nada duplicado, textos.
-- `autorizacao.eval.ts`: outra conta não aprova, não lê propostas; aprovar duas vezes.
+- `autorizacao.eval.ts`: outra conta não aprova, não lê propostas; aprovar duas vezes, em seguida e ao mesmo tempo.
 - `privacidade.eval.ts`: os cenários não deixam nome de alimento, texto de nota nem texto da pessoa em span, métrica, log ou `resumo`.
 
 Com LLM (⚠️ no `c2-conversa`), 6 casos do tipo `conversa` em `evals/llm/casos/c2/propostas/`:
@@ -382,7 +389,8 @@ Os textos e o prompt são copiados desta spec; não há parte `conteudo`.
 
 - `config/aprovacao.ts`, `config/index.ts`
 - `src/core/proposals/`: `conteudo.ts`, `textos.ts`, `montar.ts`, `executor.ts`
-- `src/core/agents/tools/propostas.ts`, `finalizar.ts`, `tool.ts`
+- `src/core/agents/tools/propostas.ts`, `finalizar.ts`; `src/core/tools/tool.ts`
+- `src/core/runs/ports.ts`, `src/infra/db/runs.ts` (`mudarStatusSe`), `test/contracts/`
 - `src/core/agents/prompts/acompanhante.v4.ts`
 - `src/core/agents/companion/`: `filtro-da-pessoa.ts`, `preparo.ts`, `saida.ts`, `agente.ts`, `responder.ts`
 - `src/core/conversation/conversar.ts`, `aprovar.ts`

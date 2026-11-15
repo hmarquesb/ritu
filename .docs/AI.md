@@ -34,7 +34,7 @@ Um agente **decide o caminho**, **age**, **observa o resultado** e **corrige**. 
 | **Intérprete** | Texto da mensagem + últimas mensagens do dia + lista numerada das sugestões que esperam retorno | — | `{intencoes[], estados[], incomodo, alerta, itens_casa[], retorno, fato_de_rotina, evitar_sempre[], suspeito}` | `apoio` |
 | **Acompanhante** (o agente principal) | Saída do Intérprete + contexto montado no preparo | Catálogo de §4 | `{resposta, geral, explicacao, sugestoes[], evitar[], incertos[], para_ter, propostas[]}` | `decisao` |
 | **Juiz** (guardrail de saída) | Saída do Acompanhante + linhas da base citadas | — | `{aprovado, violacoes[]}` | `apoio` |
-| **Memória** | Notas de rotina aprovadas, ou um padrão detectado por código | — | Resumo de rotina compactado, ou a frase do padrão | `apoio` |
+| **Memória** | Notas de rotina aprovadas | — | Resumo de rotina compactado | `apoio` |
 
 ### Intenções e caminhos
 
@@ -139,7 +139,7 @@ Todas com entrada e saída em zod, determinísticas e testáveis sem LLM.
 
 **O validador** (função em código, chamada por `finalizar`) aponta:
 
-Cada violação tem um código, o lugar e uma mensagem. Os códigos são `fora_da_base`, `estrutura`, `fora_de_casa`, `evitar_sempre`, `restricao`, `nao_come`, `nao_gosta`, `contraindicacao`, `combinacao`, `repetida`, `linha_base`, `qualidades`, `novidade`, `para_ter`, `texto_sem_estrutura`, `tamanho` e `vazia`.
+Cada violação tem um código, o lugar e uma mensagem. Os códigos são `fora_da_base`, `estrutura`, `fora_de_casa`, `evitar_sempre`, `restricao`, `nao_come`, `nao_gosta`, `contraindicacao`, `combinacao`, `repetida`, `linha_base`, `qualidades`, `novidade`, `para_ter`, `texto_sem_estrutura`, `dosagem`, `tamanho` e `vazia`.
 
 - `fora_da_base`: alimento, preparo, prática, troca ou linha citada que não existe na base; sugestão sem exatamente um entre `pratica_id` e `preparo_id`; tipo que não bate;
 - `estrutura`: os itens de uma prática não são exatamente os ingredientes dela; item de um preparo fora de uma vaga ou que não serve à vaga; vaga obrigatória sem item; vaga acima do máximo;
@@ -153,6 +153,7 @@ Cada violação tem um código, o lugar e uma mensagem. Os códigos são `fora_d
 - `novidade`: sugestão marcada como novidade que o preparo não marcou;
 - `para_ter`: campo sem candidato no preparo, diferente do candidato, com `vezes` diferente da contagem ou com outra linha da base;
 - `texto_sem_estrutura`: alimento ou prática da base citado no texto da resposta e ausente da parte estruturada (sugestões, trocas, `para_ter` ou `citados`);
+- `dosagem`: unidade de dose (mg, cápsula, comprimido, gotas), suplemento, fitoterápico ou extrato no texto ou num motivo; medida de cozinha não conta;
 - `tamanho`: resposta vazia ou acima de 900 caracteres; mais de 3 sugestões, de 3 `incertos` ou de 5 `citados`; motivo acima de 200 caracteres; incerto acima de 120;
 - `vazia`: run de `momento` com candidatos no contexto e resposta sem sugestão nem `incertos`.
 
@@ -167,9 +168,9 @@ O validador recebe o clima só se `clima.agora` devolveu `ok` no run.
 
 As tools de proposta nunca gravam: validam o pedido e devolvem a proposta, que `finalizar` recolhe.
 
-**Propostas montadas por código**, sem o agente: o que a mensagem diz sobre a casa (tem, acabou), "evitar sempre", restrição e "não como" apontados pelo Intérprete, e a lista do `para_ter`. Todas entram no mesmo bloco.
+**Propostas montadas por código**, sem o agente: o que a mensagem diz sobre a casa (tem, acabou), "evitar sempre", restrição, "não como" e "gosto" apontados pelo Intérprete, e a lista do `para_ter`. Todas entram no mesmo bloco.
 
-**Gravação sem proposta:** `resultado.registrar`, usada quando a pessoa conta um retorno na conversa. A própria fala é o consentimento. Os toques da tela (Ajudou, Não gosto, Não tenho, Trocar, confirmar em "Ainda tem?") são gravados por rotas próprias, sem agente. As **faltas** (§6) também são gravadas por código, quando a resposta é entregue.
+**Gravação sem proposta:** `resultado.registrar`, usada quando a pessoa conta um retorno na conversa e o Intérprete não soube ligá-lo a uma sugestão. O agente só escolhe a sugestão; o resultado é o que o Intérprete apontou. A própria fala é o consentimento. Os toques da tela (Ajudou, Não gosto, Não tenho, Trocar, confirmar em "Ainda tem?") são gravados por rotas próprias, sem agente. As **faltas** (§6) também são gravadas por código, quando a resposta é entregue.
 
 ## 5. Aprovação (plano → aprovação → ação)
 
@@ -177,7 +178,7 @@ As tools de proposta nunca gravam: validam o pedido e devolvem a proposta, que `
 - O run fica em `waiting_for_approval`. A resposta chega em `POST /api/runs/:id/approve`, e um **executor em código** grava só o que foi aprovado. O LLM não participa da gravação.
 - A resposta do agente aparece **antes** da aprovação: a pessoa não precisa aprovar nada para receber valor.
 - Proposta sem resposta em 30 min expira e nada é gravado.
-- Padrões detectados (§6) entram no mesmo bloco, no máximo um por resposta: *"Notei isto. Está certo?"*
+- Padrões detectados (§6) entram no mesmo bloco, por último e no máximo um por resposta: *"Notei isto. Está certo?"* Linha aprovada confirma o padrão. Linha desligada, com outra ligada, recusa para sempre. "Agora não" e a expiração deixam o padrão para depois: ele volta no máximo uma vez por dia e até 3 vezes; depois disso, só dá para confirmar em "O que sei sobre você".
 - A indicação de "vale ter em casa" (§6) entra no mesmo bloco, como proposta de lista. Proposta de lista recusada (linha desligada ou "Agora não"), por qualquer dos dois motivos, vale para sempre: o alimento não volta a ser proposto nem indicado. Proposta que expira sem resposta não conta como recusa.
 - O executor só acrescenta. Nenhuma proposta remove ou troca o que já está guardado.
 - Cada proposta, aprovação e recusa vira etapa do rastro.
@@ -241,14 +242,18 @@ O prompt recebe contadores, não conteúdo: `mensagens_hoje` (só as da pessoa),
 
 - O Intérprete aponta um `fato_de_rotina` quando a pessoa conta algo que muda a recomendação por mais de um dia.
 - O Acompanhante propõe anotar (`memoria.propor`). Aprovado, vira uma nota com data.
-- O agente de Memória recebe as notas ativas e devolve o **resumo de rotina**: junta repetidas, resolve contradição a favor da mais recente e respeita o teto. Validação em zod antes de gravar; a versão anterior fica guardada.
+- Logo depois da aprovação, o agente de Memória recebe as notas ativas e devolve o **resumo de rotina**: junta repetidas, resolve contradição a favor da mais recente e respeita o teto. Com uma nota só, o resumo é a própria nota, sem modelo. O resumo é validado antes de gravar (tamanho e nada de incômodo); a versão anterior fica guardada.
+- Sem modelo, ou com resumo inválido, o código monta o resumo com as notas mais recentes primeiro. O resumo nunca fica desatualizado.
+- As notas não mudam sozinhas: contradição se resolve no resumo, e nota só sai quando a pessoa tira. Com 30 notas ativas, uma nota nova não é proposta.
 
 ### Padrões
 
-- Um job diário em código procura regularidades nos **registros estruturados** (estados do momento, clima, hora do dia, sugestão, resultado). Nunca lê texto livre nem incômodos.
-- Dois tipos: **o que ajuda em um estado** ("com frio e agitada → chá quente ajudou") e **estados que andam juntos** ("pesada → sem energia").
-- Critério: pelo menos 3 ocorrências e 75% de consistência.
-- O agente de Memória escreve a frase. O padrão fica como **candidato** até a pessoa confirmar; recusado, não volta a ser proposto.
+- Um job diário em código procura regularidades nos **registros estruturados** dos últimos 60 dias (estados do momento, sugestão, resultado). Nunca lê texto livre nem incômodos, e não chama modelo.
+- Dois tipos: **o que ajuda em um estado**, por sugestão específica ("com frio e agitada → chá de gengibre com canela"), e **estados que andam juntos** ("pesada → sem energia").
+- Critério: pelo menos 3 ocorrências e 75% de consistência. Em "o que ajuda", ocorrência é um "ajudou", e a consistência é a parte de "ajudou" entre "ajudou" e "não ajudou". Em "andam juntos", ocorrência é um dia.
+- A frase é montada por código, a partir de um modelo de frase: *"Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar."*
+- O padrão fica como **candidato** até a pessoa confirmar (até 3 candidatos por conta); recusado, não volta a ser proposto. Só o confirmado vai ao prompt.
+- Padrão de uma sugestão que o filtro da pessoa barra hoje ("evitar sempre", restrição, "não como", "não gosto") não é proposto nem vai ao prompt.
 
 ### Transparência
 
@@ -270,13 +275,13 @@ Pausa: o run é salvo como `waiting_for_input` ou `waiting_for_approval`, com o 
 
 ## 8. Guardrails
 
-**Entrada (código, antes de qualquer LLM):** teto de tamanho; padrões de injection; padrões de sinal de alerta, físico e emocional; texto da pessoa sempre delimitado e marcado como dado; limites de uso.
+**Entrada (código, antes de qualquer LLM):** teto de tamanho; padrões de injection; padrões de sinal de alerta, físico e emocional; texto da pessoa sempre delimitado e marcado como dado; limites de uso. Os padrões pegam só as frases claras e encerram o run com o texto fixo, sem chamar modelo; injection clara leva à resposta padrão mesmo com um pedido legítimo junto.
 
 **Memória também é dado:** tudo o que veio do texto da pessoa e volta ao prompt depois (resumo de rotina, mensagens do dia, "evitar sempre" em texto livre, frases de padrões) entra delimitado, com `<` e `>` neutralizados, e o prompt diz que é dado, como a mensagem. Uma nota aprovada com "ignore suas regras" não vira instrução.
 
 **Entre os passos (código):** resultado de tool é dado, nunca instrução; argumentos de tool validados em zod; tool fora do catálogo do agente é recusada e vira etapa de erro.
 
-**Saída (Juiz, fail-closed, uma nova tentativa):** fica com o que precisa de leitura: promessa de saúde ou de tratamento ("trata", "cura", "resolve a dor"), dosagem, suplemento e fitoterápico; motivo que não faz sentido diante da linha citada; texto que diz algo diferente da parte estruturada; jargão sem explicação; tom que cobra ou julga a pessoa; indicação de "vale ter em casa" apresentada como solução para o momento, ou com marca, loja ou preço; palavrão, linguagem vulgar ou repetição de ofensa da pessoa. Tudo o que dá para conferir por regra já foi barrado pelo validador.
+**Saída (Juiz, fail-closed, uma nova tentativa):** fica com o que precisa de leitura: promessa de saúde ou de tratamento ("trata", "cura", "resolve a dor"), dosagem, suplemento e fitoterápico; conselho fora do papel; "evitar sempre" citado com outro nome; motivo que não faz sentido diante da linha citada; texto que diz algo diferente da parte estruturada; tom que cobra ou julga a pessoa; indicação de "vale ter em casa" apresentada como solução para o momento, ou com marca, loja ou preço; palavrão, linguagem vulgar ou repetição de ofensa da pessoa. Qualquer um desses reprova: o Acompanhante recebe a lista e tenta de novo, uma vez, no papel `reforco`; reprovada de novo, sai a resposta segura. **Jargão sem explicação não reprova:** fica registrado na etapa e na métrica. O Juiz também lê a proposta de nota de rotina: com assunto de saúde, a linha sai do bloco e a resposta segue. Ele não recebe a mensagem da pessoa. Tudo o que dá para conferir por regra já foi barrado pelo validador.
 
 **Incômodo e sinal de alerta:** incômodo leve recebe recomendação de conforto, com linguagem de conforto e o aviso reforçado, que é anexado por código (`BUSINESS.md` §12). Sinal de alerta é barrado antes do agente: só encaminhamento. O incômodo não vai para nenhum nível de memória nem para propostas.
 
@@ -307,11 +312,7 @@ O Ritu usa só o plano gratuito do Gemini. Cada modelo tem a sua cota, por proje
 |---|---|---|---|---|
 | Gemini 3.5 Flash Lite | `gemini-3.5-flash-lite` | 15 | 250 mil | 500 |
 | Gemini 3.1 Flash Lite | `gemini-3.1-flash-lite` | 15 | 250 mil | 500 |
-| Gemini 3.8 Flash | `gemini-3.8-flash` | 5 | 250 mil | 20 |
 | Gemini 3.6 Flash | `gemini-3.6-flash` | 5 | 250 mil | 20 |
-| Gemini 3 Flash | `gemini-3-flash-preview` | 5 | 250 mil | 20 |
-| Gemini 2.5 Flash | `gemini-2.5-flash` | 5 | 250 mil | 20 |
-| Gemini 2.5 Flash Lite | `gemini-2.5-flash-lite` | 10 | 250 mil | 20 |
 
 Os identificadores e as cotas ficam em `config/llm-cotas.ts`, versionados. Não são segredo e não vêm de variável de ambiente: trocar de modelo é um commit.
 
@@ -319,14 +320,14 @@ Os identificadores e as cotas ficam em `config/llm-cotas.ts`, versionados. Não 
 
 | Papel | Quem usa | Modelo principal | Se acabar a cota, tenta |
 |---|---|---|---|
-| `decisao` | Acompanhante | Gemini 3.5 Flash Lite | 3.1 Flash Lite → 2.5 Flash Lite → modelos Flash |
-| `apoio` | Intérprete, Juiz, Memória | Gemini 3.1 Flash Lite | 3.5 Flash Lite → 2.5 Flash Lite |
-| `reforco` | Segunda tentativa do Acompanhante, depois de uma reprovação do Juiz | Gemini 3.8 Flash | 3.6 Flash → 3 Flash → 2.5 Flash → modelo de `decisao` |
+| `decisao` | Acompanhante | Gemini 3.5 Flash Lite | 3.1 Flash Lite → 3.6 Flash |
+| `apoio` | Intérprete, Juiz, Memória | Gemini 3.1 Flash Lite | 3.5 Flash Lite |
+| `reforco` | Segunda tentativa do Acompanhante, depois de uma reprovação do Juiz | Gemini 3.6 Flash | 3.5 Flash Lite → 3.1 Flash Lite |
 
 Por que assim:
 
 - Os dois modelos com 500 pedidos por dia carregam o volume. O Acompanhante e o Juiz ficam em modelos **diferentes**, para o juiz não repetir o viés de quem escreveu.
-- Os modelos Flash têm 20 pedidos por dia cada (80 somados). São escassos, então só entram onde um modelo mais forte muda o resultado: a segunda tentativa de uma resposta reprovada.
+- O modelo Flash tem 20 pedidos por dia. É escasso, então só entra onde um modelo mais forte muda o resultado: a segunda tentativa de uma resposta reprovada. No papel `decisao` ele é a última reserva.
 - Capacidade diária aproximada, sem troca de modelo: cerca de 160 mensagens de momento (3 chamadas de `decisao` cada) e 250 mensagens no papel `apoio` (2 chamadas cada).
 
 ### O roteador (`ModelRouter`)

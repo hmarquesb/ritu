@@ -1,3 +1,5 @@
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createDbClient, type DbClient } from "@/infra/db/client"
 import { migrate } from "@/infra/db/migrate"
@@ -133,5 +135,42 @@ describe("efeitos no banco", () => {
     await env.stores.runs.votar(a, run.id, "down")
     const segundo = await cliente.sql`select voto from feedback where run_id = ${run.id}`
     expect(segundo.map((f) => f.voto)).toEqual(["down"])
+  })
+})
+
+describe("migrate", () => {
+  it("é idempotente e registra em _migracoes as migrações de db/migrations, em ordem de nome", async () => {
+    const aplicadasAgora = await migrate(cliente.sql, createFixedClock(INICIO))
+    expect(aplicadasAgora).toEqual([])
+
+    const registradas = await cliente.sql<{ nome: string }[]>`
+      select nome from _migracoes order by nome`
+    const arquivos = (await readdir(join(process.cwd(), "db", "migrations")))
+      .filter((nome) => nome.endsWith(".sql"))
+      .sort()
+    expect(registradas.map((linha) => linha.nome)).toEqual(arquivos)
+  })
+
+  it("aplica as pendentes em ordem de nome e, rodando de novo, não aplica nada", async () => {
+    const schemaMig = "ritu_test_mig"
+    const fixtures = join(process.cwd(), "test", "db", "fixtures")
+    const pasta = join(fixtures, "migracoes")
+    await cliente.sql.unsafe(
+      `DROP SCHEMA IF EXISTS ${schemaMig} CASCADE; CREATE SCHEMA ${schemaMig}`,
+    )
+    await rm(pasta, { recursive: true, force: true })
+    await mkdir(pasta, { recursive: true })
+    const cliMig = createDbClient({ url: URL_DO_BANCO, schema: schemaMig })
+    try {
+      await writeFile(join(pasta, "0001_a.sql"), "create table a (id int);")
+      await writeFile(join(pasta, "0002_b.sql"), "create table b (id int);")
+      const clock = createFixedClock(INICIO)
+
+      expect(await migrate(cliMig.sql, clock, pasta)).toEqual(["0001_a.sql", "0002_b.sql"])
+      expect(await migrate(cliMig.sql, clock, pasta)).toEqual([])
+    } finally {
+      await cliMig.close()
+      await rm(fixtures, { recursive: true, force: true })
+    }
   })
 })

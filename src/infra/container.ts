@@ -2,7 +2,9 @@ import { type AppConfig, config } from "@config/index"
 import type { Clock } from "@/core/clock"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
+import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
+import { createModelRouter, type ModelRouter } from "@/core/llm/router"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
 import { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
@@ -15,6 +17,7 @@ import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { optionalEnv, requireEnv } from "@/infra/env"
+import { createGeminiClient } from "@/infra/gemini/client"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { createMastraRuntime } from "@/infra/mastra/runtime"
 import { createOpenMeteoCities } from "@/infra/open-meteo/cities"
@@ -32,6 +35,8 @@ export type Container = {
   stores: Stores
   tx: Transactor
   ledger: UsageLedger
+  router: ModelRouter
+  llm: LlmClient
   telemetry: Telemetry
   runtime: AgentRuntime
   runs: ReturnType<typeof createRunService>
@@ -60,6 +65,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let stores: Stores | undefined
   let tx: Transactor | undefined
   let ledger: UsageLedger | undefined
+  let router: ModelRouter | undefined
+  let llm: LlmClient | undefined
   let telemetry: Telemetry | undefined
   let runtime: AgentRuntime | undefined
   let runs: ReturnType<typeof createRunService> | undefined
@@ -98,6 +105,19 @@ export function createContainer(overrides?: Partial<Container>): Container {
     get ledger() {
       ledger ??= createPgUsageLedger(bancoPreguicoso().sql, clock)
       return ledger
+    },
+    get router() {
+      router ??= createModelRouter({
+        ledger: container.ledger,
+        clock,
+        telemetry: container.telemetry,
+      })
+      return router
+    },
+    // A chave do Gemini só é lida na primeira chamada.
+    get llm() {
+      llm ??= createGeminiClient({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      return llm
     },
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
     get telemetry() {

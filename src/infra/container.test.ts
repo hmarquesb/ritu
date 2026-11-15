@@ -135,6 +135,28 @@ describe("container", () => {
     }
   })
 
+  it("router e llm existem sem ler GEMINI_API_KEY e aceitam override", async () => {
+    const { createContainer } = await import("./container")
+    const { createFakeLlm } = await import("@/infra/fakes/fake-llm")
+    const { createMemoryLedger } = await import("@/infra/fakes/memory-stores")
+    const chaveAnterior = process.env.GEMINI_API_KEY
+    delete process.env.GEMINI_API_KEY
+    try {
+      const container = createContainer({
+        ledger: createMemoryLedger(createFixedClock("2026-01-15T12:00:00Z")),
+      })
+      expect(() => container.llm).not.toThrow()
+      expect(container.llm).toBe(container.llm)
+      expect(typeof container.router.paraPapel).toBe("function")
+      const fake = createFakeLlm([])
+      expect(createContainer({ llm: fake }).llm).toBe(fake)
+      const router = container.router
+      expect(createContainer({ router }).router).toBe(router)
+    } finally {
+      if (chaveAnterior !== undefined) process.env.GEMINI_API_KEY = chaveAnterior
+    }
+  })
+
   it("criar o container e ler stores não lê DATABASE_URL; a primeira consulta é que falha sem ela", async () => {
     const urlAnterior = process.env.DATABASE_URL
     delete process.env.DATABASE_URL

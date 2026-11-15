@@ -1,12 +1,21 @@
+import { config } from "@config/index"
 import type { AccountRepository, ProfileStore } from "@/core/accounts/ports"
 import type { Conta, Perfil } from "@/core/accounts/types"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import { normalizar } from "@/core/knowledge/identificar"
+import { momentoSchema, sugestaoRegistradaSchema } from "@/core/memory-schemas"
+import type { Mensagem, MessageRepository } from "@/core/messages/ports"
+import type { OutcomeStore, Retorno } from "@/core/outcomes/ports"
 import type { PantryStore, ReferenciaDeItem } from "@/core/pantry/ports"
 import type { ItemDaCasa } from "@/core/pantry/types"
+import type { Padrao, PatternStore } from "@/core/patterns/ports"
 import type { ItemTipo, PreferenceStore, Preferencia } from "@/core/preferences/ports"
+import type { ProposalStore, Proposta } from "@/core/proposals/ports"
+import type { NotaDeRotina, ResumoDeRotina, RoutineStore } from "@/core/routine/ports"
+import { RunAbertoError } from "@/core/runs/errors"
+import type { Run, RunEtapa, RunRepository, StatusRun } from "@/core/runs/ports"
 import type { ItemDaLista, ShortageStore } from "@/core/shortages/ports"
 import type { Stores, Transactor } from "@/core/stores"
 
@@ -25,6 +34,8 @@ type Falta = {
 
 type EvitarDoDia = EvitarItem & { conta_id: string; dia: string }
 
+type Voto = { conta_id: string; run_id: string; voto: "up" | "down" }
+
 type Estado = {
   contas: Conta[]
   perfis: Perfil[]
@@ -34,6 +45,15 @@ type Estado = {
   lista: ItemDaLista[]
   preferencias: Preferencia[]
   evitarDoDia: EvitarDoDia[]
+  notas: NotaDeRotina[]
+  resumos: ResumoDeRotina[]
+  padroes: Padrao[]
+  mensagens: Mensagem[]
+  retornos: Retorno[]
+  runs: Run[]
+  etapas: RunEtapa[]
+  votos: Voto[]
+  propostas: Proposta[]
 }
 
 /** Guarda o estado atual. A transação troca o estado por uma cópia e volta se falhar. */
@@ -41,9 +61,10 @@ type Db = { estado: Estado }
 
 type Ref = { alimento: string } | { livre: string }
 
-const naoImplementado = (): never => {
-  throw new Error("não implementado")
-}
+const TEXTO_NOTA_MAX = 200
+
+const STATUS_ABERTOS: StatusRun[] = ["running", "waiting_for_input", "waiting_for_approval"]
+const STATUS_EM_ESPERA: StatusRun[] = ["waiting_for_input", "waiting_for_approval"]
 
 function estadoVazio(): Estado {
   return {
@@ -55,10 +76,33 @@ function estadoVazio(): Estado {
     lista: [],
     preferencias: [],
     evitarDoDia: [],
+    notas: [],
+    resumos: [],
+    padroes: [],
+    mensagens: [],
+    retornos: [],
+    runs: [],
+    etapas: [],
+    votos: [],
+    propostas: [],
   }
 }
 
 const copia = <T>(valor: T): T => structuredClone(valor)
+
+const agoraIso = (clock: Clock): string => clock.now().toISOString()
+
+/** Separa a lista em quem fica e quantos saíram. */
+function separa<T>(lista: T[], sai: (x: T) => boolean): { mantidos: T[]; apagados: number } {
+  const mantidos = lista.filter((x) => !sai(x))
+  return { mantidos, apagados: lista.length - mantidos.length }
+}
+
+/** Carimbo ISO anterior ao limite. */
+const anteriorA = (iso: string, limite: Date): boolean => Date.parse(iso) < limite.getTime()
+
+const maisNovoPrimeiro = (a: { criado_em: string }, b: { criado_em: string }): number =>
+  Date.parse(b.criado_em) - Date.parse(a.criado_em)
 
 const mesmoEvitar = (a: EvitarItem, b: EvitarItem): boolean =>
   a.tipo === b.tipo && normalizar(a.valor) === normalizar(b.valor)
@@ -92,15 +136,41 @@ function novoPerfil(contaId: string, agora: string): Perfil {
   }
 }
 
-/** Remove, do estado, tudo o que é da conta. A limpeza de runs entra com a spec 004 (T4). */
+/**
+ * Remove, do estado, tudo o que é da conta. Os runs ficam sem conta e sem o que
+ * identifica a pessoa (saída, checkpoint, pendência, clima); as etapas perdem o resumo.
+ */
 function apagarDadosDaConta(e: Estado, contaId: string): void {
+  const runsDaConta = new Set(e.runs.filter((r) => r.conta_id === contaId).map((r) => r.id))
+  for (const run of e.runs) {
+    if (run.conta_id !== contaId) continue
+    Object.assign(run, {
+      conta_id: null,
+      saida: null,
+      checkpoint: null,
+      pendencia: null,
+      clima_usado: null,
+    })
+  }
+  for (const etapa of e.etapas) {
+    if (runsDaConta.has(etapa.run_id)) etapa.resumo = null
+  }
+
+  const deOutra = (conta_id: string | null): boolean => conta_id !== contaId
   e.contas = e.contas.filter((c) => c.id !== contaId)
-  e.perfis = e.perfis.filter((p) => p.conta_id !== contaId)
-  e.itensCasa = e.itensCasa.filter((i) => i.conta_id !== contaId)
-  e.faltas = e.faltas.filter((f) => f.conta_id !== contaId)
-  e.lista = e.lista.filter((l) => l.conta_id !== contaId)
-  e.preferencias = e.preferencias.filter((p) => p.conta_id !== contaId)
-  e.evitarDoDia = e.evitarDoDia.filter((x) => x.conta_id !== contaId)
+  e.perfis = e.perfis.filter((p) => deOutra(p.conta_id))
+  e.itensCasa = e.itensCasa.filter((i) => deOutra(i.conta_id))
+  e.faltas = e.faltas.filter((f) => deOutra(f.conta_id))
+  e.lista = e.lista.filter((l) => deOutra(l.conta_id))
+  e.preferencias = e.preferencias.filter((p) => deOutra(p.conta_id))
+  e.evitarDoDia = e.evitarDoDia.filter((x) => deOutra(x.conta_id))
+  e.notas = e.notas.filter((n) => deOutra(n.conta_id))
+  e.resumos = e.resumos.filter((r) => deOutra(r.conta_id))
+  e.padroes = e.padroes.filter((p) => deOutra(p.conta_id))
+  e.mensagens = e.mensagens.filter((m) => deOutra(m.conta_id))
+  e.retornos = e.retornos.filter((r) => deOutra(r.conta_id))
+  e.votos = e.votos.filter((v) => deOutra(v.conta_id))
+  e.propostas = e.propostas.filter((p) => deOutra(p.conta_id))
 }
 
 function criarAccounts(db: Db, clock: Clock): AccountRepository {
@@ -466,9 +536,353 @@ function criarPreferences(db: Db, clock: Clock): PreferenceStore {
   }
 }
 
+const ultimoResumo = (e: Estado, contaId: string): ResumoDeRotina | undefined =>
+  e.resumos.filter((r) => r.conta_id === contaId).sort((a, b) => b.versao - a.versao)[0]
+
+function criarRoutine(db: Db, clock: Clock): RoutineStore {
+  return {
+    async notasAtivas(contaId) {
+      return copia(db.estado.notas.filter((n) => n.conta_id === contaId && n.ativa))
+    },
+    async anotar(contaId, texto) {
+      if (texto.length > TEXTO_NOTA_MAX) {
+        throw new RituError("texto_longo", "Nota longa demais para a rotina")
+      }
+      const nota: NotaDeRotina = {
+        id: crypto.randomUUID(),
+        conta_id: contaId,
+        texto,
+        ativa: true,
+        criado_em: agoraIso(clock),
+      }
+      db.estado.notas.push(nota)
+      return copia(nota)
+    },
+    async desativar(contaId, notaId) {
+      const nota = db.estado.notas.find((n) => n.id === notaId && n.conta_id === contaId)
+      if (nota) nota.ativa = false
+    },
+    async resumo(contaId) {
+      const atual = ultimoResumo(db.estado, contaId)
+      return atual ? copia(atual) : undefined
+    },
+    async gravarResumo(contaId, texto) {
+      if (texto.length > config.memoria.resumoRotinaCaracteres) {
+        throw new RituError("texto_longo", "Resumo longo demais para a rotina")
+      }
+      const anterior = ultimoResumo(db.estado, contaId)
+      const resumo: ResumoDeRotina = {
+        conta_id: contaId,
+        versao: (anterior?.versao ?? 0) + 1,
+        texto,
+        criado_em: agoraIso(clock),
+      }
+      db.estado.resumos.push(resumo)
+      return copia(resumo)
+    },
+  }
+}
+
+function criarPatterns(db: Db, clock: Clock): PatternStore {
+  const padraoDaConta = (contaId: string, padraoId: string): Padrao | undefined =>
+    db.estado.padroes.find((p) => p.id === padraoId && p.conta_id === contaId)
+
+  return {
+    async listar(contaId, status) {
+      return copia(
+        db.estado.padroes.filter(
+          (p) => p.conta_id === contaId && (status === undefined || p.status === status),
+        ),
+      )
+    },
+    async propor(contaId, p) {
+      const existe = db.estado.padroes.some(
+        (x) => x.conta_id === contaId && x.tipo === p.tipo && x.chave === p.chave,
+      )
+      if (existe) return undefined
+      const padrao: Padrao = {
+        id: crypto.randomUUID(),
+        conta_id: contaId,
+        tipo: p.tipo,
+        chave: p.chave,
+        frase: p.frase,
+        ocorrencias: p.ocorrencias,
+        status: "candidato",
+        criado_em: agoraIso(clock),
+        decidido_em: null,
+      }
+      db.estado.padroes.push(padrao)
+      return copia(padrao)
+    },
+    async decidir(contaId, padraoId, status) {
+      const padrao = padraoDaConta(contaId, padraoId)
+      if (!padrao) return
+      padrao.status = status
+      padrao.decidido_em = agoraIso(clock)
+    },
+    async apagar(contaId, padraoId) {
+      db.estado.padroes = db.estado.padroes.filter(
+        (p) => !(p.id === padraoId && p.conta_id === contaId),
+      )
+    },
+  }
+}
+
+function criarMessages(db: Db, clock: Clock): MessageRepository {
+  return {
+    async gravar(contaId, m) {
+      const mensagem: Mensagem = {
+        id: crypto.randomUUID(),
+        conta_id: contaId,
+        run_id: m.run_id ?? null,
+        autor: m.autor,
+        texto: m.texto,
+        com_incomodo: m.com_incomodo,
+        dia: m.dia,
+        criado_em: agoraIso(clock),
+      }
+      db.estado.mensagens.push(mensagem)
+      return copia(mensagem)
+    },
+    async doDia(contaId, dia) {
+      const doDiaDaConta = db.estado.mensagens.filter(
+        (m) => m.conta_id === contaId && m.dia === dia,
+      )
+      return copia(doDiaDaConta.sort((a, b) => Date.parse(a.criado_em) - Date.parse(b.criado_em)))
+    },
+    async marcarIncomodoDoRun(contaId, runId) {
+      for (const m of db.estado.mensagens) {
+        if (m.conta_id === contaId && m.run_id === runId) m.com_incomodo = true
+      }
+    },
+    async apagarAntesDe(limite) {
+      const { mantidos, apagados } = separa(db.estado.mensagens, (m) =>
+        anteriorA(m.criado_em, limite),
+      )
+      db.estado.mensagens = mantidos
+      return apagados
+    },
+    async apagarComIncomodoAntesDoDia(dia) {
+      const { mantidos, apagados } = separa(
+        db.estado.mensagens,
+        (m) => m.com_incomodo && m.dia < dia,
+      )
+      db.estado.mensagens = mantidos
+      return apagados
+    },
+  }
+}
+
+function criarOutcomes(db: Db, clock: Clock): OutcomeStore {
+  const retornoDaConta = (contaId: string, retornoId: string): Retorno | undefined =>
+    db.estado.retornos.find((r) => r.id === retornoId && r.conta_id === contaId)
+
+  return {
+    async criar(contaId, runId, sugestoes) {
+      const agora = agoraIso(clock)
+      const criados = sugestoes.map(
+        (s): Retorno => ({
+          id: crypto.randomUUID(),
+          conta_id: contaId,
+          run_id: runId,
+          sugestao: sugestaoRegistradaSchema.parse(s),
+          status: "aguardando",
+          resultado: null,
+          origem: null,
+          criado_em: agora,
+          respondido_em: null,
+        }),
+      )
+      db.estado.retornos.push(...criados)
+      return copia(criados)
+    },
+    async pendentes(contaId) {
+      return copia(
+        db.estado.retornos
+          .filter((r) => r.conta_id === contaId && r.status === "aguardando")
+          .sort(maisNovoPrimeiro),
+      )
+    },
+    async responder(contaId, retornoId, resultado, origem) {
+      const retorno = retornoDaConta(contaId, retornoId)
+      if (!retorno) return undefined
+      if (retorno.status === "aguardando") {
+        Object.assign(retorno, {
+          status: "respondido",
+          resultado,
+          origem,
+          respondido_em: agoraIso(clock),
+        })
+      }
+      return copia(retorno)
+    },
+    async doRun(contaId, runId) {
+      return copia(db.estado.retornos.filter((r) => r.conta_id === contaId && r.run_id === runId))
+    },
+    async apagarAguardandoAntesDe(limite) {
+      const { mantidos, apagados } = separa(
+        db.estado.retornos,
+        (r) => r.status === "aguardando" && anteriorA(r.criado_em, limite),
+      )
+      db.estado.retornos = mantidos
+      return apagados
+    },
+  }
+}
+
+function criarRuns(db: Db, clock: Clock): RunRepository {
+  const runDaConta = (contaId: string, runId: string): Run | undefined =>
+    db.estado.runs.find((r) => r.id === runId && r.conta_id === contaId)
+  const abertoDaConta = (contaId: string): Run | undefined =>
+    db.estado.runs.find((r) => r.conta_id === contaId && STATUS_ABERTOS.includes(r.status))
+
+  return {
+    async criar(contaId, r) {
+      if (abertoDaConta(contaId)) throw new RunAbertoError()
+      const agora = agoraIso(clock)
+      const run: Run = {
+        id: crypto.randomUUID(),
+        conta_id: contaId,
+        caminho: r.caminho,
+        intencoes: [...r.intencoes],
+        status: "running",
+        checkpoint: null,
+        pendencia: null,
+        momento: null,
+        com_incomodo: false,
+        clima_usado: null,
+        saida: null,
+        passos: 0,
+        tokens_entrada: 0,
+        tokens_saida: 0,
+        latencia_ms: 0,
+        modelos: {},
+        trocas_de_modelo: 0,
+        prompt_versao: null,
+        juiz_tentativas: 0,
+        juiz_aprovado: null,
+        trace_id: r.trace_id ?? null,
+        dia: r.dia,
+        criado_em: agora,
+        atualizado_em: agora,
+      }
+      db.estado.runs.push(run)
+      return copia(run)
+    },
+    async buscar(contaId, runId) {
+      const run = runDaConta(contaId, runId)
+      return run ? copia(run) : undefined
+    },
+    async aberto(contaId) {
+      const run = abertoDaConta(contaId)
+      return run ? copia(run) : undefined
+    },
+    async atualizar(contaId, runId, campos) {
+      const run = runDaConta(contaId, runId)
+      if (!run) return
+      if (campos.momento) momentoSchema.parse(campos.momento)
+      Object.assign(run, campos, { atualizado_em: agoraIso(clock) })
+    },
+    async acrescentarEtapa(contaId, runId, etapa) {
+      if (!runDaConta(contaId, runId))
+        throw new RituError("run_nao_encontrado", "Run não encontrado")
+      const ordens = db.estado.etapas.filter((x) => x.run_id === runId).map((x) => x.ordem)
+      const nova: RunEtapa = {
+        ...etapa,
+        run_id: runId,
+        ordem: Math.max(0, ...ordens) + 1,
+        criado_em: agoraIso(clock),
+      }
+      db.estado.etapas.push(nova)
+      return copia(nova)
+    },
+    async etapas(contaId, runId) {
+      if (!runDaConta(contaId, runId)) return []
+      return copia(
+        db.estado.etapas.filter((x) => x.run_id === runId).sort((a, b) => a.ordem - b.ordem),
+      )
+    },
+    async recentes(contaId, desde, limite) {
+      const feitos = db.estado.runs.filter(
+        (r) =>
+          r.conta_id === contaId &&
+          r.status === "done" &&
+          Date.parse(r.criado_em) >= desde.getTime(),
+      )
+      return copia(feitos.sort(maisNovoPrimeiro).slice(0, limite))
+    },
+    async contarMensagensDoDia(contaId, dia) {
+      return db.estado.mensagens.filter(
+        (m) => m.conta_id === contaId && m.dia === dia && m.autor === "pessoa",
+      ).length
+    },
+    async votar(contaId, runId, voto) {
+      if (!runDaConta(contaId, runId)) return
+      const existente = db.estado.votos.find((v) => v.conta_id === contaId && v.run_id === runId)
+      if (existente) existente.voto = voto
+      else db.estado.votos.push({ conta_id: contaId, run_id: runId, voto })
+    },
+    async expirarEmEsperaAntesDe(limite) {
+      const alvos = db.estado.runs.filter(
+        (r) => STATUS_EM_ESPERA.includes(r.status) && anteriorA(r.atualizado_em, limite),
+      )
+      for (const run of alvos) run.status = "expired"
+      return alvos.map((r) => r.id)
+    },
+  }
+}
+
+function criarProposals(db: Db, clock: Clock): ProposalStore {
+  return {
+    async criar(contaId, runId, propostas) {
+      const agora = agoraIso(clock)
+      const criadas = propostas.map(
+        (p): Proposta => ({
+          id: crypto.randomUUID(),
+          run_id: runId,
+          conta_id: contaId,
+          tool: p.tool,
+          conteudo: copia(p.conteudo),
+          decisao: "pendente",
+          criado_em: agora,
+          decidida_em: null,
+        }),
+      )
+      db.estado.propostas.push(...criadas)
+      return copia(criadas)
+    },
+    async doRun(contaId, runId) {
+      return copia(db.estado.propostas.filter((p) => p.conta_id === contaId && p.run_id === runId))
+    },
+    async decidir(contaId, propostaId, decisao) {
+      const proposta = db.estado.propostas.find(
+        (p) => p.id === propostaId && p.conta_id === contaId,
+      )
+      if (!proposta) return undefined
+      if (proposta.decisao === "pendente") {
+        Object.assign(proposta, { decisao, decidida_em: agoraIso(clock) })
+      }
+      return copia(proposta)
+    },
+    async recusadas(contaId, tool) {
+      return copia(
+        db.estado.propostas.filter(
+          (p) => p.conta_id === contaId && p.tool === tool && p.decisao === "recusada",
+        ),
+      )
+    },
+    async expirarDosRuns(runIds) {
+      const alvos = db.estado.propostas.filter(
+        (p) => p.decisao === "pendente" && runIds.includes(p.run_id),
+      )
+      for (const proposta of alvos) proposta.decisao = "expirada"
+      return alvos.length
+    },
+  }
+}
+
 /**
  * Fake em memória das portas. Um estado só, para as regras cruzadas valerem também aqui.
- * As seis portas de outras áreas são stubs até a T4.
  */
 export function createMemoryStores(clock: Clock, opts: OpcoesMemoria = {}): Stores & Transactor {
   const db: Db = { estado: estadoVazio() }
@@ -479,53 +893,13 @@ export function createMemoryStores(clock: Clock, opts: OpcoesMemoria = {}): Stor
     profiles: criarProfiles(db, clock),
     pantry: criarPantry(db, clock, existe),
     preferences: criarPreferences(db, clock),
+    outcomes: criarOutcomes(db, clock),
     shortages: criarShortages(db, clock),
-    outcomes: {
-      criar: naoImplementado,
-      pendentes: naoImplementado,
-      responder: naoImplementado,
-      doRun: naoImplementado,
-      apagarAguardandoAntesDe: naoImplementado,
-    },
-    routine: {
-      notasAtivas: naoImplementado,
-      anotar: naoImplementado,
-      desativar: naoImplementado,
-      resumo: naoImplementado,
-      gravarResumo: naoImplementado,
-    },
-    patterns: {
-      listar: naoImplementado,
-      propor: naoImplementado,
-      decidir: naoImplementado,
-      apagar: naoImplementado,
-    },
-    messages: {
-      gravar: naoImplementado,
-      doDia: naoImplementado,
-      marcarIncomodoDoRun: naoImplementado,
-      apagarAntesDe: naoImplementado,
-      apagarComIncomodoAntesDoDia: naoImplementado,
-    },
-    runs: {
-      criar: naoImplementado,
-      buscar: naoImplementado,
-      aberto: naoImplementado,
-      atualizar: naoImplementado,
-      acrescentarEtapa: naoImplementado,
-      etapas: naoImplementado,
-      recentes: naoImplementado,
-      contarMensagensDoDia: naoImplementado,
-      votar: naoImplementado,
-      expirarEmEsperaAntesDe: naoImplementado,
-    },
-    proposals: {
-      criar: naoImplementado,
-      doRun: naoImplementado,
-      decidir: naoImplementado,
-      recusadas: naoImplementado,
-      expirarDosRuns: naoImplementado,
-    },
+    routine: criarRoutine(db, clock),
+    patterns: criarPatterns(db, clock),
+    messages: criarMessages(db, clock),
+    runs: criarRuns(db, clock),
+    proposals: criarProposals(db, clock),
   }
 
   return {

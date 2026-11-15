@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest"
 import { accountsContract } from "../../../test/contracts/accounts.contract"
+import { deleteAccountContract } from "../../../test/contracts/delete-account.contract"
 import { contractStoreOpts } from "../../../test/contracts/env"
+import { messagesContract } from "../../../test/contracts/messages.contract"
+import { outcomesContract } from "../../../test/contracts/outcomes.contract"
 import { pantryContract } from "../../../test/contracts/pantry.contract"
+import { patternsContract } from "../../../test/contracts/patterns.contract"
 import { preferencesContract } from "../../../test/contracts/preferences.contract"
 import { profilesContract } from "../../../test/contracts/profiles.contract"
+import { proposalsContract } from "../../../test/contracts/proposals.contract"
+import { routineContract } from "../../../test/contracts/routine.contract"
+import { runsContract } from "../../../test/contracts/runs.contract"
 import { shortagesContract } from "../../../test/contracts/shortages.contract"
+import { transactorContract } from "../../../test/contracts/transactor.contract"
 import { createFixedClock } from "./fixed-clock"
 import { createMemoryStores } from "./memory-stores"
 
@@ -19,6 +27,14 @@ profilesContract(() => ambiente())
 pantryContract(() => ambiente())
 shortagesContract(() => ambiente())
 preferencesContract(() => ambiente())
+outcomesContract(() => ambiente())
+routineContract(() => ambiente())
+patternsContract(() => ambiente())
+messagesContract(() => ambiente())
+runsContract(() => ambiente())
+proposalsContract(() => ambiente())
+transactorContract(() => ambiente())
+deleteAccountContract(() => ambiente())
 
 describe("createMemoryStores: comportamento próprio do fake", () => {
   it("transação com erro desfaz as escritas feitas dentro dela", async () => {

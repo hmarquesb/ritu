@@ -8,7 +8,7 @@
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
     - { funcao: adocante, obrigatoria: false, grupos: [adocantes] }
   gunas_do_preparo: [quente, suave, oleoso]
-  passos: "Aquecer {gordura} na panela e soltar o aroma de {tempero}. Juntar {base} e cozinhar em fogo baixo com bastante água, mexendo, até ficar macio e cremoso. Servir quente e adoçar com {adocante} já fora do fogo."
+  passos: "Se tiver, aquecer {gordura} na panela. Se quiser, soltar o aroma de {tempero}. Juntar {base} e cozinhar em fogo baixo com bastante água, mexendo, até ficar macio e cremoso. Servir quente. Se quiser, adoçar com {adocante} já fora do fogo."
   momento: [manha]
   contraindicacoes: []
   fontes:
@@ -26,7 +26,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, suave]
-  passos: "Aquecer {gordura} e refogar {tempero} até soltar o aroma. Juntar {legume} e {base} em pedaços, cobrir com água e cozinhar em fogo baixo até tudo ficar bem macio. Servir quente."
+  passos: "Se tiver, aquecer {gordura} na panela. Se quiser, refogar {tempero} até soltar o aroma. Juntar {legume} em pedaços. Se tiver, juntar também {base} em pedaços. Cobrir com água e cozinhar em fogo baixo até tudo ficar bem macio. Servir quente."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -43,7 +43,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, suave, oleoso]
-  passos: "Refogar {tempero} em {gordura}. Juntar {legume} e {base} em pedaços, cobrir com água e cozinhar até amaciar. Bater parte da sopa até ficar cremosa, voltar à panela, misturar e servir quente."
+  passos: "Se tiver, aquecer {gordura} na panela. Se quiser, refogar {tempero}. Juntar {legume} em pedaços. Se tiver, juntar também {base} em pedaços. Cobrir com água e cozinhar até amaciar. Bater parte da sopa até ficar cremosa, voltar à panela, misturar e servir quente."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -61,7 +61,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, suave]
-  passos: "Aquecer {gordura} e soltar o aroma de {tempero}. Juntar {legume} e {folha} picados, cobrir com bastante água e cozinhar em fogo baixo até o caldo pegar sabor. Coar e tomar quente, aos golinhos."
+  passos: "Se tiver, aquecer {gordura} na panela. Se quiser, soltar o aroma de {tempero}. Picar {legume} e juntar à panela. Se tiver, picar {folha} e juntar também. Cobrir com bastante água e cozinhar em fogo baixo até o caldo pegar sabor. Coar e tomar quente, aos golinhos."
   momento: [jantar, noite]
   contraindicacoes: []
   fontes:
@@ -78,7 +78,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [quente, suave, leve]
-  passos: "Dourar {tempero} em {gordura}. Juntar {base} lavado, cobrir com bastante água quente e cozinhar tampado em fogo bem baixo até desmanchar e virar uma papa macia. Acertar o sal no fim e servir quente."
+  passos: "Se tiver, aquecer {gordura} na panela. Se quiser, dourar {tempero}. Juntar {base} lavado, cobrir com bastante água quente e cozinhar tampado em fogo bem baixo até desmanchar e virar uma papa macia. Acertar o sal no fim e servir quente."
   momento: [manha, jantar]
   contraindicacoes: []
   fontes:
@@ -95,7 +95,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, suave]
-  passos: "Lavar {base}. Aquecer {gordura} e soltar o aroma de {tempero}. Juntar {legume} picado e {base}, cobrir com mais água que o habitual e cozinhar tampado em fogo baixo até tudo ficar macio."
+  passos: "Lavar {base}. Se tiver, aquecer {gordura} na panela. Se quiser, soltar o aroma de {tempero}. Juntar {legume} picado e {base}, cobrir com mais água que o habitual e cozinhar tampado em fogo baixo até tudo ficar macio."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -113,7 +113,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, suave]
-  passos: "Lavar bem {base} e {proteina}. Cozinhar juntos em bastante água, tampado, até amaciar. Juntar {legume} em pedaços e cozinhar mais um pouco. À parte, aquecer {gordura} com {tempero} até soltar o aroma e misturar ao final."
+  passos: "Lavar bem {base} e {proteina}. Cozinhar juntos em bastante água, tampado, até amaciar. Se tiver, juntar {legume} em pedaços e cozinhar mais um pouco. Se tiver, aquecer {gordura} numa panelinha à parte. Se quiser, soltar ali o aroma de {tempero}. Se usou a panelinha, misturar ao final."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -130,7 +130,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, estavel]
-  passos: "Se for grão seco, deixar {proteina} de molho de véspera e escorrer. Cozinhar em água nova até ficar bem macio. À parte, aquecer {gordura} com {tempero} até as sementes estourarem, juntar {legume} picado e misturar tudo no fim."
+  passos: "Se for grão seco, deixar {proteina} de molho de véspera e escorrer. Cozinhar em água nova até ficar bem macio. Se tiver, aquecer {gordura} numa panelinha à parte. Se quiser, juntar ali {tempero} até as sementes estourarem. Se tiver, juntar ali {legume} picado. Se usou a panelinha, misturar tudo no fim."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -148,7 +148,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, estavel]
-  passos: "Se for grão seco, deixar {proteina} de molho de véspera. Cozinhar {base} e {proteina} em panelas separadas até ficarem macios. Refogar {legume} em {gordura} com {tempero} e juntar tudo antes de servir."
+  passos: "Se for grão seco, deixar {proteina} de molho de véspera. Cozinhar {base} e {proteina} em panelas separadas até ficarem macios. Se tiver, aquecer {gordura} numa panelinha. Se quiser, juntar ali {tempero}. Se tiver, refogar ali {legume}. Juntar tudo antes de servir."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -164,7 +164,7 @@
     - { funcao: gordura, obrigatoria: true, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, suave]
-  passos: "Aquecer {gordura} e juntar {tempero} até as sementes estourarem. Acrescentar {legume} em pedaços e misturar bem. Tampar e cozinhar em fogo baixo, mexendo de vez em quando, até ficar macio."
+  passos: "Aquecer {gordura}. Juntar {tempero} até as sementes estourarem. Acrescentar {legume} em pedaços e misturar bem. Tampar e cozinhar em fogo baixo, mexendo de vez em quando, até ficar macio."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -181,7 +181,7 @@
     - { funcao: legume, obrigatoria: false, grupos: [raizes, legumes] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso, suave]
-  passos: "Aquecer {gordura} com {tempero} até soltar o aroma. Juntar {folha} picada, misturar e pingar água no fundo da panela. Tampar e cozinhar em fogo baixo até murchar e amaciar. Servir junto de {legume} cozido."
+  passos: "Aquecer {gordura}. Juntar {tempero} até soltar o aroma. Juntar {folha} picada, misturar e pingar água no fundo da panela. Tampar e cozinhar em fogo baixo até murchar e amaciar. Servir junto de {legume} cozido."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -197,7 +197,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2 }
   gunas_do_preparo: [quente, leve]
-  passos: "Cortar {legume} em pedaços e cozinhar no vapor até ficar macio. Servir quente, com {gordura} derretida, {tempero} e sal."
+  passos: "Cortar {legume} em pedaços e cozinhar no vapor até ficar macio. Servir quente, com sal. Se tiver, regar com {gordura} derretida. Se quiser, juntar {tempero}."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -214,7 +214,7 @@
     - { funcao: gordura, obrigatoria: true, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, seco]
-  passos: "Cortar {legume} em pedaços, misturar com {gordura} e {tempero} numa assadeira e assar no forno até ficar macio por dentro e dourado por fora."
+  passos: "Cortar {legume} em pedaços e misturar com {gordura} numa assadeira. Se quiser, temperar com {tempero}. Assar no forno até ficar macio por dentro e dourado por fora."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -231,7 +231,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [quente, suave, oleoso, pesado]
-  passos: "Cozinhar {base} em pedaços até ficar bem macio. Escorrer e amassar ainda quente com {gordura}, {tempero} e sal, até virar um purê liso."
+  passos: "Cozinhar {base} em pedaços até ficar bem macio. Escorrer e, ainda quente, começar a amassar com sal. Se tiver, juntar {gordura}. Se quiser, juntar {tempero}. Amassar até virar um purê liso."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -248,7 +248,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [quente, estavel]
-  passos: "Aquecer {gordura} e juntar {tempero} até as sementes estalarem. Acrescentar {base} descascada em cubos, misturar, pingar água, tampar e cozinhar em fogo baixo até o garfo entrar com facilidade."
+  passos: "Se tiver, aquecer {gordura} na panela. Se quiser, juntar {tempero} até as sementes estalarem. Acrescentar {base} descascada em cubos, misturar, pingar água, tampar e cozinhar em fogo baixo até o garfo entrar com facilidade."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -266,7 +266,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [leve, oleoso]
-  passos: "Cozinhar {legume} em pedaços no vapor até ficar macio. Deixar amornar e misturar com {folha} picada. Temperar com {gordura}, {tempero} e sal e servir morna ou em temperatura ambiente."
+  passos: "Cozinhar {legume} em pedaços no vapor até ficar macio e deixar amornar. Se tiver, misturar {folha} picada. Se tiver, regar com {gordura}. Se quiser, juntar {tempero}. Temperar com sal e servir morna ou em temperatura ambiente."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -284,7 +284,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [frio, leve, seco, aspero]
-  passos: "Lavar bem {folha} e {legume}. Fatiar {legume} bem fino e rasgar {folha} com as mãos. Temperar com {gordura}, {tempero} e sal na hora de servir. Comer com calma, no meio do dia."
+  passos: "Lavar bem {folha}. Se tiver, lavar também {legume} e fatiar bem fino. Rasgar {folha} com as mãos. Se tiver, regar com {gordura}. Se quiser, juntar {tempero}. Temperar com sal na hora de servir. Comer com calma, no meio do dia."
   momento: [almoco]
   contraindicacoes: [com_frio]
   fontes:
@@ -302,7 +302,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: adocante, obrigatoria: false, grupos: [frutas, adocantes] }
   gunas_do_preparo: [quente, oleoso, estavel]
-  passos: "Descascar {fruta} se preciso e cortar em pedaços. Levar à panela com um pouco de água, {tempero} e {adocante} e cozinhar em fogo baixo, tampado, até ficar bem macia. Finalizar com {gordura} e comer morna, sozinha."
+  passos: "Descascar {fruta} se preciso e cortar em pedaços. Levar à panela com um pouco de água. Se quiser, juntar {tempero}. Para adoçar, juntar {adocante}. Cozinhar em fogo baixo, tampado, até ficar bem macia. Se tiver, finalizar com {gordura}. Comer morna, sozinha."
   momento: [manha, tarde]
   contraindicacoes: []
   fontes:
@@ -322,7 +322,7 @@
     - { funcao: adocante, obrigatoria: false, grupos: [frutas, adocantes] }
     - { funcao: gordura, obrigatoria: false, grupos: [oleos, oleaginosas] }
   gunas_do_preparo: [leve, seco]
-  passos: "Lavar {fruta}, tirar o miolo e rechear com {adocante}, {tempero} e {gordura}. Pôr numa assadeira com um pouco de água no fundo, cobrir e assar no forno até ficar macia. Servir morna."
+  passos: "Lavar {fruta} e tirar o miolo. Se tiver, pôr {adocante} no miolo. Se quiser, pôr {tempero} no miolo. Se tiver, completar o miolo com {gordura}. Pôr numa assadeira com um pouco de água no fundo, cobrir e assar no forno até ficar macia. Servir morna."
   momento: [manha, tarde]
   contraindicacoes: []
   fontes:
@@ -356,7 +356,7 @@
     - { funcao: folha, obrigatoria: false }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso]
-  passos: "Aquecer {gordura} em fogo baixo e soltar o aroma de {tempero}. Juntar {folha} picada até murchar. Acrescentar {proteina} e mexer sem parar até firmar, sem deixar dourar. Servir quente."
+  passos: "Se tiver, aquecer {gordura} na frigideira. Se quiser, soltar o aroma de {tempero}. Se tiver, juntar {folha} picada até murchar. Em fogo baixo, acrescentar {proteina} e mexer sem parar até firmar, sem deixar dourar. Servir quente."
   momento: [manha]
   contraindicacoes: []
   fontes:
@@ -374,7 +374,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso]
-  passos: "Picar {legume} bem miúdo e amaciar em {gordura} com {tempero}. Bater {proteina} com sal, despejar por cima e cozinhar tampado em fogo baixo até firmar. Virar ou dobrar e servir quente."
+  passos: "Picar {legume} bem miúdo. Se tiver, aquecer {gordura} na frigideira. Se quiser, juntar {tempero}. Amaciar {legume} na frigideira. Bater {proteina} com sal, despejar por cima e cozinhar tampado em fogo baixo até firmar. Virar ou dobrar e servir quente."
   momento: [manha]
   contraindicacoes: []
   fontes:
@@ -390,7 +390,7 @@
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
     - { funcao: adocante, obrigatoria: false, grupos: [adocantes] }
   gunas_do_preparo: [frio]
-  passos: "Bater {proteina} com bastante água, {tempero} e {adocante} no liquidificador até ficar leve e espumante. Acertar o doce ao gosto. Tomar em temperatura ambiente, no fim da refeição ou num lanche da tarde."
+  passos: "Pôr {proteina} e bastante água no liquidificador. Se quiser, juntar {tempero}. Para adoçar, juntar {adocante} ao gosto. Bater até ficar leve e espumante. Tomar em temperatura ambiente, no fim da refeição ou num lanche da tarde."
   momento: [almoco, tarde]
   contraindicacoes: []
   fontes:
@@ -408,7 +408,7 @@
     - { funcao: proteina, obrigatoria: false, grupos: [laticinios, ovos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [leve, seco]
-  passos: "Espalhar {base} hidratada numa frigideira seca e quente até firmar como um disco. Rechear com {legume} já cozido, {proteina} e {tempero}, dobrar e deixar mais um pouco no fogo. Servir quente."
+  passos: "Espalhar {base} hidratada numa frigideira seca e quente até firmar como um disco. Rechear com {legume} já cozido. Se tiver, juntar {proteina}. Se quiser, temperar com {tempero}. Dobrar e deixar mais um pouco no fogo. Servir quente."
   momento: [manha]
   contraindicacoes: []
   fontes:
@@ -426,7 +426,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [leve, oleoso]
-  passos: "Umedecer {base} com água e sal e deixar descansar até hidratar. Misturar {legume} picado e {tempero}, pôr na cuscuzeira e cozinhar no vapor até ficar macio e soltinho. Servir quente com {gordura}."
+  passos: "Umedecer {base} com água e sal e deixar descansar até hidratar. Se tiver, misturar {legume} picado. Se quiser, misturar {tempero}. Pôr na cuscuzeira e cozinhar no vapor até ficar macio e soltinho. Servir quente. Se tiver, regar com {gordura}."
   momento: [manha, jantar]
   contraindicacoes: []
   fontes:
@@ -444,7 +444,7 @@
     - { funcao: tempero, obrigatoria: false, grupos: [especiarias] }
     - { funcao: adocante, obrigatoria: false, grupos: [adocantes] }
   gunas_do_preparo: [leve, seco]
-  passos: "Tostar {base} na frigideira ou no forno até dourar. Passar {gordura} ainda quente e finalizar com {tempero} ou {adocante}. Servir na hora."
+  passos: "Tostar {base} na frigideira ou no forno até dourar. Passar {gordura} ainda quente. Se quiser, finalizar com {tempero}. Para um toque doce, usar {adocante}. Servir na hora."
   momento: [manha]
   contraindicacoes: []
   fontes:
@@ -462,7 +462,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
   gunas_do_preparo: [quente, oleoso]
-  passos: "Cozinhar {base} em água fervente e escorrer. Aquecer {gordura}, soltar o aroma de {tempero} e juntar {legume} em pedaços. Pingar água, tampar e cozinhar no vapor da panela até ficar macio. Misturar tudo e servir quente."
+  passos: "Cozinhar {base} em água fervente e escorrer. Aquecer {gordura} na panela. Soltar ali o aroma de {tempero}. Juntar {legume} em pedaços. Pingar água, tampar e cozinhar no vapor da panela até ficar macio. Misturar tudo e servir quente."
   momento: [almoco, jantar]
   contraindicacoes: []
   fontes:
@@ -478,7 +478,7 @@
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
   gunas_do_preparo: [quente, suave]
-  passos: "Dissolver {base} em água fria com sal, levar ao fogo baixo e mexer sem parar até engrossar e ficar cremosa. Terminar com {gordura} e {tempero} e servir quente."
+  passos: "Dissolver {base} em água fria com sal, levar ao fogo baixo e mexer sem parar até engrossar e ficar cremosa. Se tiver, terminar com {gordura}. Se quiser, juntar {tempero}. Servir quente."
   momento: [manha, jantar]
   contraindicacoes: []
   fontes:
@@ -511,7 +511,7 @@
     - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
   gunas_do_preparo: [quente, suave, pesado]
-  passos: "Levar {liquido} ao fogo até ferver de leve. Juntar {tempero} e {gordura}, mexer e deixar amornar. Tomar aos golinhos, antes de deitar."
+  passos: "Levar {liquido} ao fogo até ferver de leve. Se quiser, juntar {tempero}. Se tiver, acrescentar {gordura}. Mexer e deixar amornar. Tomar aos golinhos, antes de deitar."
   momento: [noite]
   contraindicacoes: []
   fontes:

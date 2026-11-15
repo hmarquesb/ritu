@@ -1,2 +1,257 @@
 # Preparos (pratos) da base — schema em src/core/knowledge/schemas.ts
-[]
+- id: mingau
+  nome: Mingau
+  titulo: "Mingau de {base} com {tempero}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos, oleaginosas] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+    - { funcao: adocante, obrigatoria: false, grupos: [adocantes] }
+  gunas_do_preparo: [quente, suave, oleoso]
+  passos: "Aquecer {gordura} na panela e soltar o aroma de {tempero}. Juntar {base} e cozinhar em fogo baixo com bastante água, mexendo, até ficar macio e cremoso. Servir quente e adoçar com {adocante} já fora do fogo."
+  momento: [manha]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-mingau-aveia, campos: [vagas, passos] }
+    - { ref: banyan-mingau-arroz, campos: [passos, gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [vagas, momento, gunas_do_preparo] }
+  confianca: media
+
+- id: sopa
+  nome: Sopa de legumes
+  titulo: "Sopa de {legume} com {tempero}"
+  vagas:
+    - { funcao: legume, obrigatoria: true, maximo: 3 }
+    - { funcao: base, obrigatoria: false, grupos: [raizes, graos] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, suave]
+  passos: "Aquecer {gordura} e refogar {tempero} até soltar o aroma. Juntar {legume} e {base} em pedaços, cobrir com água e cozinhar em fogo baixo até tudo ficar bem macio. Servir quente."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-sopa-legumes-inverno, campos: [vagas, passos] }
+    - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
+  confianca: media
+
+- id: sopa-creme
+  nome: Sopa creme
+  titulo: "Creme de {legume} com {tempero}"
+  vagas:
+    - { funcao: legume, obrigatoria: true, maximo: 2 }
+    - { funcao: base, obrigatoria: false, grupos: [raizes] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, suave, oleoso]
+  passos: "Refogar {tempero} em {gordura}. Juntar {legume} e {base} em pedaços, cobrir com água e cozinhar até amaciar. Bater parte da sopa até ficar cremosa, voltar à panela, misturar e servir quente."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-sopa-couve-flor, campos: [vagas, passos, gunas_do_preparo] }
+    - { ref: banyan-sopa-cenoura-gengibre, campos: [vagas, passos] }
+    - { ref: banyan-dieta-vata, campos: [momento] }
+  confianca: media
+
+- id: caldo
+  nome: Caldo de legumes
+  titulo: "Caldo quente de {legume} com {tempero}"
+  vagas:
+    - { funcao: legume, obrigatoria: true, maximo: 3 }
+    - { funcao: folha, obrigatoria: false }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, suave]
+  passos: "Aquecer {gordura} e soltar o aroma de {tempero}. Juntar {legume} e {folha} picados, cobrir com bastante água e cozinhar em fogo baixo até o caldo pegar sabor. Coar e tomar quente, aos golinhos."
+  momento: [jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-caldo-folhas, campos: [vagas, passos, gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [momento] }
+  confianca: media
+
+- id: arroz-papa
+  nome: Arroz papa
+  titulo: "Papa de {base} com {tempero}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [quente, suave, leve]
+  passos: "Dourar {tempero} em {gordura}. Juntar {base} lavado, cobrir com bastante água quente e cozinhar tampado em fogo bem baixo até desmanchar e virar uma papa macia. Acertar o sal no fim e servir quente."
+  momento: [manha, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-mingau-arroz, campos: [vagas, passos, gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [momento] }
+  confianca: media
+
+- id: arroz-com-legume
+  nome: Arroz bem cozido com legume
+  titulo: "Arroz bem cozido com {legume} e {gordura}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: legume, obrigatoria: true, maximo: 2 }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, suave]
+  passos: "Lavar {base}. Aquecer {gordura} e soltar o aroma de {tempero}. Juntar {legume} picado e {base}, cobrir com mais água que o habitual e cozinhar tampado em fogo baixo até tudo ficar macio."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-arroz-com-legumes, campos: [vagas, passos] }
+    - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
+  confianca: media
+
+- id: kitchari
+  nome: Kitchari
+  titulo: "Kitchari de {base} e {proteina}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: proteina, obrigatoria: true, grupos: [leguminosas] }
+    - { funcao: legume, obrigatoria: false, maximo: 2 }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, suave]
+  passos: "Lavar bem {base} e {proteina}. Cozinhar juntos em bastante água, tampado, até amaciar. Juntar {legume} em pedaços e cozinhar mais um pouco. À parte, aquecer {gordura} com {tempero} até soltar o aroma e misturar ao final."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-receita-kitchari, campos: [vagas, passos] }
+    - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
+  confianca: media
+
+- id: leguminosa-cozida
+  nome: Leguminosa bem cozida
+  titulo: "Panela de {proteina} com {tempero}"
+  vagas:
+    - { funcao: proteina, obrigatoria: true, grupos: [leguminosas] }
+    - { funcao: legume, obrigatoria: false }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, estavel]
+  passos: "Se for grão seco, deixar {proteina} de molho de véspera e escorrer. Cozinhar em água nova até ficar bem macio. À parte, aquecer {gordura} com {tempero} até as sementes estourarem, juntar {legume} picado e misturar tudo no fim."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-sopa-feijao-mungo, campos: [vagas, passos, gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [passos, momento, gunas_do_preparo] }
+  confianca: media
+
+- id: arroz-com-leguminosa
+  nome: Arroz com leguminosa
+  titulo: "Prato de {base} com {proteina}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [graos] }
+    - { funcao: proteina, obrigatoria: true, grupos: [leguminosas] }
+    - { funcao: legume, obrigatoria: false, maximo: 2 }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, estavel]
+  passos: "Se for grão seco, deixar {proteina} de molho de véspera. Cozinhar {base} e {proteina} em panelas separadas até ficarem macios. Refogar {legume} em {gordura} com {tempero} e juntar tudo antes de servir."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-arroz-e-feijao, campos: [vagas, passos, gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
+  confianca: media
+
+- id: refogado
+  nome: Refogado de legumes
+  titulo: "Refogado de {legume} com {tempero}"
+  vagas:
+    - { funcao: legume, obrigatoria: true, maximo: 3 }
+    - { funcao: gordura, obrigatoria: true, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, suave]
+  passos: "Aquecer {gordura} e juntar {tempero} até as sementes estourarem. Acrescentar {legume} em pedaços e misturar bem. Tampar e cozinhar em fogo baixo, mexendo de vez em quando, até ficar macio."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-subji-legumes, campos: [vagas, passos] }
+    - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
+  confianca: media
+
+- id: folhas-refogadas
+  nome: Folhas refogadas
+  titulo: "Refogado de {folha} com {tempero}"
+  vagas:
+    - { funcao: folha, obrigatoria: true, maximo: 2 }
+    - { funcao: gordura, obrigatoria: true, grupos: [oleos] }
+    - { funcao: legume, obrigatoria: false, grupos: [raizes, legumes] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, oleoso, suave]
+  passos: "Aquecer {gordura} com {tempero} até soltar o aroma. Juntar {folha} picada, misturar e pingar água no fundo da panela. Tampar e cozinhar em fogo baixo até murchar e amaciar. Servir junto de {legume} cozido."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-folhas-batidas, campos: [vagas, passos] }
+    - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
+  confianca: media
+
+- id: legumes-no-vapor
+  nome: Legumes no vapor
+  titulo: "{legume} no vapor com {tempero}"
+  vagas:
+    - { funcao: legume, obrigatoria: true, maximo: 3 }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2 }
+  gunas_do_preparo: [quente, leve]
+  passos: "Cortar {legume} em pedaços e cozinhar no vapor até ficar macio. Servir quente, com {gordura} derretida, {tempero} e sal."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-limpeza-tradicional, campos: [vagas, passos] }
+    - { ref: ayurveda-com-guia-dieta, campos: [gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [momento] }
+  confianca: media
+
+- id: legumes-assados
+  nome: Legumes assados
+  titulo: "{legume} assado com {tempero}"
+  vagas:
+    - { funcao: legume, obrigatoria: true, maximo: 3 }
+    - { funcao: gordura, obrigatoria: true, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 3, grupos: [especiarias] }
+  gunas_do_preparo: [quente, seco]
+  passos: "Cortar {legume} em pedaços, misturar com {gordura} e {tempero} numa assadeira e assar no forno até ficar macio por dentro e dourado por fora."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-arroz-e-feijao, campos: [vagas, passos] }
+    - { ref: banyan-dieta-vata, campos: [momento] }
+    - { ref: a_confirmar, campos: [gunas_do_preparo] }
+  confianca: baixa
+
+- id: pure-de-raiz
+  nome: Purê de raiz
+  titulo: "Purê de {base} com {gordura}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [raizes] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [quente, suave, oleoso, pesado]
+  passos: "Cozinhar {base} em pedaços até ficar bem macio. Escorrer e amassar ainda quente com {gordura}, {tempero} e sal, até virar um purê liso."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: ayurveda-com-guia-dieta, campos: [vagas, gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
+    - { ref: a_confirmar, campos: [passos] }
+  confianca: baixa
+
+- id: raiz-cozida
+  nome: Raiz cozida
+  titulo: "Cozido de {base} com {tempero}"
+  vagas:
+    - { funcao: base, obrigatoria: true, grupos: [raizes] }
+    - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
+    - { funcao: tempero, obrigatoria: false, maximo: 2, grupos: [especiarias] }
+  gunas_do_preparo: [quente, estavel]
+  passos: "Aquecer {gordura} e juntar {tempero} até as sementes estalarem. Acrescentar {base} descascada em cubos, misturar, pingar água, tampar e cozinhar em fogo baixo até o garfo entrar com facilidade."
+  momento: [almoco, jantar]
+  contraindicacoes: []
+  fontes:
+    - { ref: banyan-sabji-batata-doce, campos: [vagas, passos, gunas_do_preparo] }
+    - { ref: ayurveda-com-guia-dieta, campos: [gunas_do_preparo] }
+    - { ref: banyan-dieta-vata, campos: [momento] }
+  confianca: media

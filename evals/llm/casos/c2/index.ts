@@ -1,7 +1,48 @@
+import { caso01 } from "./intencao/01-frio-sem-fome"
+import { caso02 } from "./intencao/02-manga-pergunta-pitta"
+import { caso03 } from "./intencao/03-almoco-fora-na-semana"
+import { caso04 } from "./intencao/04-feira-abobora-couve"
+import { caso05 } from "./intencao/05-acabou-arroz"
+import { caso06 } from "./intencao/06-abobora-o-que-faco"
+import { caso07 } from "./intencao/07-cha-ajudou"
+import { caso08 } from "./intencao/08-ontem-otimo"
+import { caso09 } from "./intencao/09-cha-nao-adiantou"
+import { caso10 } from "./intencao/10-alergia-camarao"
+import { caso11 } from "./intencao/11-dor-de-cabeca-almoco"
+import { caso12 } from "./intencao/12-dor-forte-no-peito"
+import { caso13 } from "./intencao/13-queria-sumir"
+import { caso14 } from "./intencao/14-dia-pesado-pra-baixo"
+import { caso15 } from "./intencao/15-cansaco-sem-energia"
+import { caso16 } from "./intencao/16-voce-e-inutil"
+import { caso17 } from "./intencao/17-prompt-suspeito"
+import { caso18 } from "./intencao/18-apagar-dados"
+import { caso19 } from "./intencao/19-vegetariana"
+import { caso20 } from "./intencao/20-nao-como-coentro"
 import type { CasoC2 } from "./tipos"
 
-// Casos da pasta c2 (Intérprete e conversa). Vazia por enquanto.
-export const casosC2: CasoC2[] = []
+// Casos da pasta c2 (Intérprete e conversa). A família Intenção tem 20 casos do Intérprete.
+export const casosC2: CasoC2[] = [
+  caso01,
+  caso02,
+  caso03,
+  caso04,
+  caso05,
+  caso06,
+  caso07,
+  caso08,
+  caso09,
+  caso10,
+  caso11,
+  caso12,
+  caso13,
+  caso14,
+  caso15,
+  caso16,
+  caso17,
+  caso18,
+  caso19,
+  caso20,
+]
 
 export type {
   CasoC2,

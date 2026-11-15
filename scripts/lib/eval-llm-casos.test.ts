@@ -1,12 +1,38 @@
 import { describe, expect, it } from "vitest"
 import { casosC1 } from "../../evals/llm/casos/c1"
 import type { CasoConversa, CasoInterprete } from "../../evals/llm/casos/c2"
+import { casosC2 } from "../../evals/llm/casos/c2"
+import {
+  caminho,
+  campoVazio,
+  ehSuspeito,
+  evitaGrupo,
+  itemDeCasa,
+  naoCaminho,
+  naoComeAlimento,
+  retorno,
+  semAlerta,
+  semEstados,
+  semIntencao,
+  semMotivo,
+  semPendente,
+  semVariante,
+  temAlerta,
+  temCampo,
+  temEstado,
+  temIncomodo,
+  temIntencao,
+  temRestricao,
+  temUmaDe,
+} from "../../evals/llm/casos/c2/intencao/expectativas"
+import type { ExpectativaDoInterprete } from "../../evals/llm/casos/c2/tipos"
+import type { Interpretacao } from "../../src/core/agents/interpreter/interpretacao"
+import type { Caminho } from "../../src/core/runs/ports"
 import { createContainer } from "../../src/infra/container"
 import { createFakeLlm } from "../../src/infra/fakes/fake-llm"
 import { createScriptedRuntime } from "../../src/infra/fakes/scripted-runtime"
 import { cenariosDeConversa, montarCenario } from "../../test/fixtures/cenarios"
 import {
-  casosDoCheckpoint,
   conferir,
   despachar,
   ehCheckpoint,
@@ -80,9 +106,17 @@ describe("listagem por checkpoint", () => {
     expect(linhas.every((l) => l.pasta === "c1" && l.tipo === "acompanhante")).toBe(true)
   })
 
-  it("c2-conversa lista o c1 e o c2 (vazio por enquanto)", () => {
-    expect(listarCasos("c2-conversa")).toHaveLength(12)
-    expect(casosDoCheckpoint("c2-conversa").map((x) => x.pasta)).toEqual(casosC1.map(() => "c1"))
+  it("c2-conversa lista os 12 do c1 e os 20 do c2", () => {
+    const linhas = listarCasos("c2-conversa")
+    expect(linhas).toHaveLength(32)
+    expect(linhas.slice(0, 12).every((l) => l.pasta === "c1")).toBe(true)
+    expect(linhas.slice(12).every((l) => l.pasta === "c2" && l.tipo === "interprete")).toBe(true)
+  })
+
+  it("c2 tem 20 casos do Intérprete, com ids únicos", () => {
+    expect(casosC2).toHaveLength(20)
+    expect(casosC2.every((c) => c.tipo === "interprete")).toBe(true)
+    expect(new Set(casosC2.map((c) => c.id)).size).toBe(20)
   })
 
   it("formata cada caso com pasta, id, tipo e título", () => {
@@ -251,5 +285,129 @@ describe("runner da conversa com LLM falso", () => {
     expect(r.erro).toBeUndefined()
     expect(r.deve.every((x) => x.ok)).toBe(true)
     expect(r.naoPode.every((x) => x.ok)).toBe(true)
+  })
+})
+
+const base: Interpretacao = {
+  intencoes: ["momento"],
+  estados: ["com_frio"],
+  itens_casa: [],
+  evitar: [],
+  nao_come: [],
+  gosta: [],
+  restricoes: [],
+  suspeito: false,
+}
+
+const passa = (
+  e: ExpectativaDoInterprete,
+  r: Partial<Interpretacao> & { caminho?: Caminho } = {},
+): boolean => {
+  const { caminho: c = "acompanhante", ...dados } = r
+  return e.confere({ interpretacao: { ...base, ...dados }, caminho: c })
+}
+
+describe("expectativas do Intérprete", () => {
+  it("temIntencao e semIntencao", () => {
+    expect(passa(temIntencao("momento"), {})).toBe(true)
+    expect(passa(temIntencao("casa"), {})).toBe(false)
+    expect(passa(semIntencao("momento"), {})).toBe(false)
+    expect(passa(semIntencao("casa"), {})).toBe(true)
+  })
+
+  it("temUmaDe passa se alguma das intenções está", () => {
+    expect(passa(temUmaDe("vida", "momento"), {})).toBe(true)
+    expect(passa(temUmaDe("vida", "pergunta"), {})).toBe(false)
+  })
+
+  it("temEstado e semEstados", () => {
+    expect(passa(temEstado("com_frio"), {})).toBe(true)
+    expect(passa(temEstado("sem_energia"), {})).toBe(false)
+    expect(passa(semEstados(), { estados: [] })).toBe(true)
+    expect(passa(semEstados(), {})).toBe(false)
+  })
+
+  it("temAlerta e semAlerta, com ou sem tipo", () => {
+    expect(passa(temAlerta(), { alerta: "fisico" })).toBe(true)
+    expect(passa(temAlerta(), {})).toBe(false)
+    expect(passa(temAlerta("fisico"), { alerta: "emocional" })).toBe(false)
+    expect(passa(semAlerta(), {})).toBe(true)
+    expect(passa(semAlerta(), { alerta: "emocional" })).toBe(false)
+  })
+
+  it("temIncomodo e semVariante", () => {
+    expect(passa(temIncomodo("dor-de-cabeca"), { incomodo: { id: "dor-de-cabeca" } })).toBe(true)
+    expect(passa(temIncomodo("dor-de-cabeca"), {})).toBe(false)
+    expect(passa(semVariante(), { incomodo: { id: "dor-de-cabeca" } })).toBe(true)
+    expect(passa(semVariante(), { incomodo: { id: "dor-de-cabeca", variante: "tensa" } })).toBe(
+      false,
+    )
+  })
+
+  it("itemDeCasa confere alimento e ação", () => {
+    const item = { alimento_id: "abobora", nome: "abóbora", acao: "tem" as const }
+    expect(passa(itemDeCasa("abobora", "tem"), { itens_casa: [item] })).toBe(true)
+    expect(passa(itemDeCasa("abobora", "acabou"), { itens_casa: [item] })).toBe(false)
+    expect(passa(itemDeCasa("couve", "tem"), { itens_casa: [item] })).toBe(false)
+  })
+
+  it("retorno confere resultado e, se pedido, o pendente pela posição", () => {
+    const r = { resultado: "ajudou" as const, retorno_id: "p1", titulo: "Chá" }
+    expect(passa(retorno("ajudou"), { retorno: r })).toBe(true)
+    expect(passa(retorno("ajudou", 1), { retorno: r })).toBe(true)
+    expect(passa(retorno("ajudou", 2), { retorno: r })).toBe(false)
+    expect(passa(retorno("nao_ajudou"), { retorno: r })).toBe(false)
+    expect(passa(retorno("ajudou"), {})).toBe(false)
+  })
+
+  it("semPendente passa quando o retorno não aponta pendente", () => {
+    expect(passa(semPendente(), { retorno: { resultado: "ajudou" } })).toBe(true)
+    expect(passa(semPendente(), { retorno: { resultado: "ajudou", retorno_id: "p1" } })).toBe(false)
+  })
+
+  it("evitaGrupo confere o grupo em evitar", () => {
+    const evitar = [{ tipo: "grupo" as const, valor: "frutos_do_mar" }]
+    expect(passa(evitaGrupo("frutos_do_mar"), { evitar })).toBe(true)
+    expect(passa(evitaGrupo("peixe"), { evitar })).toBe(false)
+  })
+
+  it("semMotivo procura as palavras em qualquer texto, sem acento nem caixa", () => {
+    const evitar = [{ tipo: "grupo" as const, valor: "frutos_do_mar" }]
+    expect(passa(semMotivo(["alergica", "alergia"]), { evitar })).toBe(true)
+    expect(passa(semMotivo(["alergica", "alergia"]), { fato_de_rotina: "Sou ALÉRGICA" })).toBe(
+      false,
+    )
+    expect(passa(semMotivo(["alergia"]), { nao_come: [{ nome: "alergia a leite" }] })).toBe(false)
+  })
+
+  it("naoComeAlimento confere o alimento em nao_come", () => {
+    const nao_come = [{ alimento_id: "coentro-fresco", nome: "Coentro" }]
+    expect(passa(naoComeAlimento("coentro-fresco"), { nao_come })).toBe(true)
+    expect(passa(naoComeAlimento("manga"), { nao_come })).toBe(false)
+  })
+
+  it("temRestricao confere a restrição", () => {
+    expect(passa(temRestricao("vegetariana"), { restricoes: ["vegetariana"] })).toBe(true)
+    expect(passa(temRestricao("vegana"), { restricoes: ["vegetariana"] })).toBe(false)
+  })
+
+  it("caminho e naoCaminho conferem o caminho recebido", () => {
+    expect(passa(caminho("acompanhante"), {})).toBe(true)
+    expect(passa(caminho("fora"), {})).toBe(false)
+    expect(passa(naoCaminho("fora"), {})).toBe(true)
+    expect(passa(naoCaminho("acompanhante"), {})).toBe(false)
+  })
+
+  it("campoVazio e temCampo olham o campo da interpretação", () => {
+    expect(passa(campoVazio("alerta"), {})).toBe(true)
+    expect(passa(campoVazio("alerta"), { alerta: "fisico" })).toBe(false)
+    expect(passa(campoVazio("evitar"), { evitar: [] })).toBe(true)
+    expect(passa(temCampo("fato_de_rotina"), { fato_de_rotina: "almoço pesado" })).toBe(true)
+    expect(passa(temCampo("fato_de_rotina"), {})).toBe(false)
+  })
+
+  it("ehSuspeito confere o flag suspeito", () => {
+    expect(passa(ehSuspeito(), { suspeito: true })).toBe(true)
+    expect(passa(ehSuspeito(), {})).toBe(false)
   })
 })

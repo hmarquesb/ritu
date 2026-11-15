@@ -31,4 +31,17 @@ describe("config", () => {
     expect(config.clima.fusoPadrao).toBe("America/Sao_Paulo")
     expect(config.clima.busca).toEqual({ minimoCaracteres: 2, maximoResultados: 5, idioma: "pt" })
   })
+
+  it("expõe os prazos de memória com os valores da spec", () => {
+    expect(config.memoria.mensagensDias).toBe(7)
+    expect(config.memoria.retornosDias).toBe(7)
+    expect(config.memoria.faltasDias).toBe(30)
+    expect(config.memoria.esperaMinutos).toBe(30)
+    expect(config.memoria.historicoLinhas).toBe(20)
+  })
+
+  it("expõe a validade da casa por durabilidade com os valores da spec", () => {
+    expect(config.casa.validadeDias).toEqual({ curta: 5, media: 14, longa: 90 })
+    expect(config.casa.durabilidadeDesconhecido).toBe("media")
+  })
 })

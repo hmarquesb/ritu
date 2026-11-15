@@ -32,7 +32,11 @@ function ambiente() {
 describe("historico.recente", () => {
   it("traz momento e sugestões, sem o texto da conversa nem o incômodo", async () => {
     const { ctx, stores } = ambiente()
-    const run = await stores.runs.criar(CONTA, { caminho: "acompanhante", intencoes: [], dia: HOJE })
+    const run = await stores.runs.criar(CONTA, {
+      caminho: "acompanhante",
+      intencoes: [],
+      dia: HOJE,
+    })
     await stores.runs.atualizar(CONTA, run.id, {
       status: "done",
       com_incomodo: true,

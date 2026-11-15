@@ -21,6 +21,10 @@ export type ResultadoDoCaso = {
   houveViolacao: boolean
   corrigiuAposViolacao: boolean
   explicacao?: Explicacao
+  /** A chamada de apoio que avalia a explicação falhou: o caso conta, a explicação não. */
+  explicacaoNaoAvaliada?: boolean
+  /** Erro inesperado no caso: só a classe/código, nunca o texto. */
+  erro?: string
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaMs: number
@@ -63,6 +67,7 @@ export type ResumoDaRodada = {
   corrigiuAposViolacao: number
   explicacaoCompleta: number
   comExplicacao: number
+  explicacaoNaoAvaliada: number
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaP50: number
@@ -86,12 +91,13 @@ function somarUso(casos: ResultadoDoCaso[]): Record<string, UsoDoPapel> {
 }
 
 export function resumir(casos: ResultadoDoCaso[]): ResumoDaRodada {
-  const latencias = casos.map((c) => c.latenciaMs)
+  const latencias = casos.filter((c) => !c.erro).map((c) => c.latenciaMs)
+  const semErro = casos.filter((c) => !c.erro)
   const comExplicacao = casos.filter((c) => c.explicacao)
   return {
     casos: casos.length,
-    conteudoDeve: casos.filter((c) => todosOk(c.deve)).length,
-    conteudoNaoPode: casos.filter((c) => todosOk(c.naoPode)).length,
+    conteudoDeve: semErro.filter((c) => todosOk(c.deve)).length,
+    conteudoNaoPode: semErro.filter((c) => todosOk(c.naoPode)).length,
     trajetoriaCorreta: casos.filter((c) => c.trajetoriaOk).length,
     chamadasDesnecessarias: soma(casos.map((c) => c.chamadasDesnecessarias)),
     validaNa1a: casos.filter((c) => c.validaNa1a).length,
@@ -104,6 +110,7 @@ export function resumir(casos: ResultadoDoCaso[]): ResumoDaRodada {
         c.explicacao.texto_bate_com_sugestoes,
     ).length,
     comExplicacao: comExplicacao.length,
+    explicacaoNaoAvaliada: casos.filter((c) => c.explicacaoNaoAvaliada).length,
     uso: somarUso(casos),
     trocas: soma(casos.map((c) => c.trocas)),
     latenciaP50: percentil(latencias, 50),
@@ -125,7 +132,7 @@ function tabelaDeMetricas(r: ResumoDaRodada): string[] {
     `| Chamadas desnecessárias por run | ${media} (${r.chamadasDesnecessarias} no total) |`,
     `| Válida na 1ª tentativa | ${r.validaNa1a}/${r.casos} (${porcentagem(r.validaNa1a, r.casos)}) |`,
     `| Corrigiu após violação | ${r.corrigiuAposViolacao}/${r.comViolacao} (${porcentagem(r.corrigiuAposViolacao, r.comViolacao)}) |`,
-    `| Explicação (as três respostas sim) | ${r.explicacaoCompleta}/${r.comExplicacao} (${porcentagem(r.explicacaoCompleta, r.comExplicacao)}) |`,
+    `| Explicação (as três respostas sim) | ${r.explicacaoCompleta}/${r.comExplicacao} (${porcentagem(r.explicacaoCompleta, r.comExplicacao)})${r.explicacaoNaoAvaliada > 0 ? `, ${r.explicacaoNaoAvaliada} não avaliada(s), fora da conta` : ""} |`,
     `| Trocas de modelo | ${r.trocas} |`,
     `| Latência por run (p50 / p95) | ${r.latenciaP50} ms / ${r.latenciaP95} ms |`,
   ]
@@ -143,13 +150,19 @@ function tabelaDeCusto(uso: Record<string, UsoDoPapel>): string[] {
 }
 
 function linhaDoCaso(c: ResultadoDoCaso): string {
+  if (c.erro) return `| ${c.id} | erro: ${c.erro} | erro | não | não | n/d | n/d |`
   const deve = c.deve.filter((x) => x.ok).length
   const nao = c.naoPode.filter((x) => x.ok).length
-  const expl = c.explicacao ? sim(Object.values(c.explicacao).every(Boolean)) : "n/d"
+  const expl = c.explicacao
+    ? sim(Object.values(c.explicacao).every(Boolean))
+    : c.explicacaoNaoAvaliada
+      ? "não avaliada"
+      : "n/d"
   return `| ${c.id} | ${deve}/${c.deve.length} | ${nao}/${c.naoPode.length} | ${sim(c.trajetoriaOk)} | ${sim(c.validaNa1a)} | ${expl} | ${c.latenciaMs} ms |`
 }
 
 function falhasDoCaso(c: ResultadoDoCaso): string[] {
+  if (c.erro) return [`- ${c.id}: erro inesperado (${c.erro})`]
   const falhas = [
     ...c.deve.filter((x) => !x.ok).map((x) => `deve: ${x.descricao}`),
     ...c.naoPode.filter((x) => !x.ok).map((x) => `não pode: ${x.descricao}`),

@@ -304,6 +304,7 @@ export async function rodarConversa(
   const latenciaMs = Math.round(performance.now() - inicio)
   const run = await deps.stores.runs.buscar(contaId, resposta.run_id)
   if (!run) throw new Error(`run ${resposta.run_id} não encontrado`)
+  if (!resposta.saida) throw new Error(`run ${resposta.run_id} pausou sem saída`)
   if (resposta.saida.origem === "sem_modelo") throw new SemModeloError()
   const etapas = await deps.stores.runs.etapas(contaId, resposta.run_id)
   const r = colherResultado(resposta.saida, resposta.status, etapas)

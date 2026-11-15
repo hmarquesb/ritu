@@ -138,7 +138,7 @@ describe("alérgica: o motivo não aparece em nenhum registro do run", () => {
 
     expect(normalizar(JSON.stringify(run))).not.toContain("alergi")
     expect(normalizar(JSON.stringify(etapas))).not.toContain("alergi")
-    expect(normalizar(JSON.stringify(resposta.saida.anotacoes))).not.toContain("alergi")
+    expect(normalizar(JSON.stringify(resposta.saida?.anotacoes))).not.toContain("alergi")
     expect(normalizar(JSON.stringify(doAgente))).not.toContain("alergi")
   })
 })
@@ -162,7 +162,7 @@ describe("restrição e 'não como': seguem o caminho evitar, filtram no dia e n
       tipo: "restricao",
       valor: "vegetariana",
     })
-    expect(resposta.saida.anotacoes).toContainEqual({
+    expect(resposta.saida?.anotacoes).toContainEqual({
       tipo: "restricao",
       itens: ["vegetariana"],
     })
@@ -185,7 +185,7 @@ describe("restrição e 'não como': seguem o caminho evitar, filtram no dia e n
 
     expect(run?.caminho).toBe("evitar")
     expect(naoCome).toBeDefined()
-    expect(resposta.saida.anotacoes.some((a) => a.tipo === "nao_come")).toBe(true)
+    expect(resposta.saida?.anotacoes.some((a) => a.tipo === "nao_come")).toBe(true)
     expect(perfil.nao_come).toEqual([])
   })
 

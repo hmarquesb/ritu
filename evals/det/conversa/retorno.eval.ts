@@ -45,7 +45,7 @@ describe("retorno ligado: o pendente recebe o resultado e os contadores sobem", 
     const { contaId, deps } = await montar(c)
     const resposta = await deps.conversation.conversar(contaId, c.mensagem)
 
-    expect(resposta.saida.resposta).toBe(
+    expect(resposta.saida?.resposta).toBe(
       textosDaConversa.retornoAjudou.replace("{titulo}", () => CHA_NA_FRASE),
     )
     expect(await preferenciaDe(deps, contaId, "pratica", "cha-gengibre-canela")).toMatchObject({
@@ -70,7 +70,7 @@ describe("retorno sem ligação: nada é anotado nem contado", () => {
     const { contaId, deps } = await montar(c)
     const resposta = await deps.conversation.conversar(contaId, c.mensagem)
 
-    expect(resposta.saida.resposta).toBe(textosDaConversa.retornoSemLigacao)
+    expect(resposta.saida?.resposta).toBe(textosDaConversa.retornoSemLigacao)
     expect(await deps.stores.preferences.ler(contaId)).toEqual([])
   })
 
@@ -79,7 +79,7 @@ describe("retorno sem ligação: nada é anotado nem contado", () => {
     const { contaId, deps } = await montar(c)
     const resposta = await deps.conversation.conversar(contaId, c.mensagem)
 
-    expect(resposta.saida.resposta).toBe(textosDaConversa.retornoSemLigacao)
+    expect(resposta.saida?.resposta).toBe(textosDaConversa.retornoSemLigacao)
     expect(await deps.stores.preferences.ler(contaId)).toEqual([])
     expect(await deps.stores.outcomes.pendentes(contaId)).toHaveLength(2)
   })
@@ -119,7 +119,7 @@ describe("não fez: conta em nao_fez e não entra em ultimos_resultados", () => 
     const { contaId, deps } = await montar(c)
     const resposta = await deps.conversation.conversar(contaId, c.mensagem)
 
-    expect(resposta.saida.resposta).toBe(
+    expect(resposta.saida?.resposta).toBe(
       textosDaConversa.retornoNaoFez.replace("{titulo}", () => CHA_NA_FRASE),
     )
     expect(await preferenciaDe(deps, contaId, "pratica", "cha-gengibre-canela")).toMatchObject({

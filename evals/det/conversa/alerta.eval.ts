@@ -35,8 +35,8 @@ describe("alerta emocional: texto fixo, sem anotação e sem nada guardado no di
     const { contaId, deps } = await montar(emocional, [emocional.interpretacao])
     const resposta = await deps.conversation.conversar(contaId, emocional.mensagem)
 
-    expect(resposta.saida.resposta).toBe(textosDaConversa.alertaEmocional)
-    expect(resposta.saida.anotacoes).toEqual([])
+    expect(resposta.saida?.resposta).toBe(textosDaConversa.alertaEmocional)
+    expect(resposta.saida?.anotacoes).toEqual([])
   })
 
   it("não grava nem o 'evitar sempre' nem a casa do dia", async () => {
@@ -55,8 +55,8 @@ describe("alerta físico: texto fixo do profissional, sem anotação", () => {
     const resposta = await deps.conversation.conversar(contaId, fisico.mensagem)
     const run = await deps.stores.runs.buscar(contaId, resposta.run_id)
 
-    expect(resposta.saida.resposta).toBe(textosDaConversa.alertaFisico)
-    expect(resposta.saida.anotacoes).toEqual([])
+    expect(resposta.saida?.resposta).toBe(textosDaConversa.alertaFisico)
+    expect(resposta.saida?.anotacoes).toEqual([])
     expect(run?.caminho).toBe("alerta")
   })
 })

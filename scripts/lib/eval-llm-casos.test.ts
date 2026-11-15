@@ -94,7 +94,7 @@ const casoConversa: CasoConversa = {
   naoPode: [
     {
       descricao: "não sai sem modelo",
-      confere: ({ resposta }) => resposta.saida.origem !== "sem_modelo",
+      confere: ({ resposta }) => resposta.saida?.origem !== "sem_modelo",
     },
   ],
 }

@@ -56,8 +56,8 @@ describe.each([
     const { run, runtime, resposta } = await rodar(montar(atalhos), [...respostas])
 
     expect(run?.caminho).toBe("sem_modelo")
-    expect(resposta.saida.origem).toBe("sem_modelo")
-    expect(resposta.saida.resposta.length).toBeGreaterThan(0)
+    expect(resposta.saida?.origem).toBe("sem_modelo")
+    expect(resposta.saida?.resposta.length).toBeGreaterThan(0)
     expect(runtime.pedidos).toHaveLength(0)
   })
 
@@ -78,7 +78,7 @@ describe.each([
     const com = await rodar(montar(["com_frio"]), [...respostas])
     const sem = await rodar(montar([]), [...respostas])
 
-    expect(com.resposta.saida.sugestoes.some((s) => s.tipo === "pratica")).toBe(true)
-    expect(sem.resposta.saida.sugestoes.some((s) => s.tipo === "pratica")).toBe(false)
+    expect(com.resposta.saida?.sugestoes.some((s) => s.tipo === "pratica")).toBe(true)
+    expect(sem.resposta.saida?.sugestoes.some((s) => s.tipo === "pratica")).toBe(false)
   })
 })

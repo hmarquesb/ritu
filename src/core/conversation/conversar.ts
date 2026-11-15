@@ -1,7 +1,7 @@
 import { config } from "@config/index"
 import type { Perfil } from "@/core/accounts/types"
 import { type EntradaDoAcompanhante, intencaoSchema } from "@/core/agents/companion/entrada"
-import type { createCompanion, RespostaDoRun } from "@/core/agents/companion/responder"
+import type { createCompanion } from "@/core/agents/companion/responder"
 import { type SaidaDoAcompanhante, saidaDeCodigo, saidaSegura } from "@/core/agents/companion/saida"
 import {
   type Interpretacao,
@@ -16,6 +16,7 @@ import { lerConversaDoDia } from "@/core/messages/para-o-prompt"
 import { type MensagemRecebida, textoDaMensagem } from "@/core/messages/texto"
 import { escolherCaminho } from "@/core/runs/caminhos"
 import type { EventoAoVivo } from "@/core/runs/loop"
+import type { Pergunta } from "@/core/runs/pergunta"
 import type { Caminho, NovaEtapa, Run, RunEtapa } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
@@ -29,6 +30,7 @@ import {
   registrarRetornoDaConversa,
   resolverCaminhoDeCodigo,
 } from "./caminhos-de-codigo"
+import { anotarPendencia, ETAPA_DA_VARIANTE, perguntaDaVariantePendente } from "./pausa-de-codigo"
 
 export { type MensagemRecebida, mensagemRecebidaSchema } from "@/core/messages/texto"
 
@@ -36,7 +38,8 @@ export type RespostaDaConversa = {
   run_id: string
   status: Run["status"]
   caminho: Caminho
-  saida: SaidaDoAcompanhante
+  saida?: SaidaDoAcompanhante
+  pergunta?: Pergunta
   interpretacao?: Interpretacao
 }
 
@@ -54,7 +57,7 @@ type Deps = {
 type AoVivo = (e: EventoAoVivo) => void
 type Apoio = { modelo: string; tokens: { entrada: number; saida: number }; duracao_ms: number }
 type Interpretado = { interpretacao?: Interpretacao; apoio?: Apoio }
-type Resultado = { saida: SaidaDoAcompanhante; incomodo: boolean }
+type Resultado = { saida?: SaidaDoAcompanhante; pergunta?: Pergunta; incomodo: boolean }
 type Execucao = {
   contaId: string
   run: Run
@@ -75,11 +78,6 @@ function validar(m: MensagemRecebida): MensagemRecebida {
   const longa = texto !== undefined && Array.from(texto).length > config.conversa.maxCaracteres
   if (!atalhosOk || vazia || longa) throw mensagemInvalida()
   return texto ? { texto, atalhos: m.atalhos } : { atalhos: m.atalhos }
-}
-
-function saidaDoRun(r: RespostaDoRun): SaidaDoAcompanhante {
-  if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
-  return r.saida
 }
 
 function intencoesDoAcompanhante(
@@ -206,7 +204,8 @@ export function createConversation(deps: Deps) {
       semModelo: true,
       aoVivo: x.aoVivo,
     })
-    return { saida: saidaDoRun(r), incomodo: false }
+    if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
+    return { saida: r.saida, incomodo: false }
   }
 
   async function viaCodigo(
@@ -240,6 +239,27 @@ export function createConversation(deps: Deps) {
     }
   }
 
+  // Pausa de código: a pergunta da variante sai antes do Acompanhante e do papel decisao.
+  async function pausarNaVariante(
+    x: Execucao,
+    ctx: ContextoDoCaminho,
+    entrada: EntradaDoAcompanhante,
+    pergunta: Pergunta,
+    apoio: Apoio | undefined,
+  ): Promise<Resultado> {
+    await etapaAoVivo(x, ETAPA_DA_VARIANTE)
+    const anotacoes = await anotacoesDaMensagem(ctx)
+    await runs.pausarSemAgente(x.contaId, x.run.id, {
+      tipo: "pergunta",
+      conteudo: { origem: "codigo", pergunta, entrada, anotacoes },
+    })
+    await stores.runs.atualizar(x.contaId, x.run.id, {
+      com_incomodo: true,
+      ...(await somarApoio(x, apoio)),
+    })
+    return { pergunta, incomodo: true }
+  }
+
   async function viaAcompanhante(
     x: Execucao,
     ctx: ContextoDoCaminho,
@@ -249,10 +269,20 @@ export function createConversation(deps: Deps) {
     await registrarRetornoDaConversa(ctx)
     await gravarItensDoDia(ctx)
     const entrada = entradaDoAcompanhante(x.m.texto, ctx.interpretacao, intencoes)
+    const incomodo = Boolean(ctx.interpretacao.incomodo)
+    const variante = perguntaDaVariantePendente(entrada, kb)
+    if (variante) return pausarNaVariante(x, ctx, entrada, variante, apoio)
     const r = await companion.responder(x.contaId, entrada, { run: x.run, aoVivo: x.aoVivo })
-    const saida = { ...saidaDoRun(r), anotacoes: await anotacoesDaMensagem(ctx) }
+    const anotacoes = await anotacoesDaMensagem(ctx)
+    if (r.pergunta) {
+      await anotarPendencia(stores, x.contaId, x.run.id, anotacoes)
+      await stores.runs.atualizar(x.contaId, x.run.id, await somarApoio(x, apoio))
+      return { pergunta: r.pergunta, incomodo }
+    }
+    if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
+    const saida = { ...r.saida, anotacoes }
     await stores.runs.atualizar(x.contaId, x.run.id, { saida, ...(await somarApoio(x, apoio)) })
-    return { saida, incomodo: Boolean(ctx.interpretacao.incomodo) }
+    return { saida, incomodo }
   }
 
   async function seguirCaminho(x: Execucao, i: Interpretacao, apoio?: Apoio): Promise<Resultado> {
@@ -280,13 +310,13 @@ export function createConversation(deps: Deps) {
     await stores.messages.gravar(x.contaId, {
       run_id: x.run.id,
       autor: "agente",
-      texto: r.saida.resposta,
-      com_incomodo: false,
+      texto: r.pergunta?.texto ?? r.saida?.resposta ?? "",
+      com_incomodo: r.pergunta?.tipo === "variante",
       dia: x.run.dia,
     })
     estado.gravada = true
     if (r.incomodo) await stores.messages.marcarIncomodoDoRun(x.contaId, x.run.id)
-    return { saida: r.saida, interpretacao }
+    return { saida: r.saida, pergunta: r.pergunta, interpretacao }
   }
 
   async function fecharComoFalho(x: Execucao, saida?: SaidaDoAcompanhante): Promise<void> {
@@ -297,7 +327,7 @@ export function createConversation(deps: Deps) {
 
   async function respostaDoRun(
     x: Execucao,
-    saida: SaidaDoAcompanhante,
+    parte: { saida?: SaidaDoAcompanhante; pergunta?: Pergunta },
     interpretacao?: Interpretacao,
   ): Promise<RespostaDaConversa> {
     const final = await stores.runs.buscar(x.contaId, x.run.id)
@@ -305,7 +335,8 @@ export function createConversation(deps: Deps) {
       run_id: x.run.id,
       status: final?.status ?? x.run.status,
       caminho: final?.caminho ?? x.run.caminho,
-      saida,
+      ...(parte.saida ? { saida: parte.saida } : {}),
+      ...(parte.pergunta ? { pergunta: parte.pergunta } : {}),
       ...(interpretacao ? { interpretacao } : {}),
     }
   }
@@ -320,7 +351,7 @@ export function createConversation(deps: Deps) {
       com_incomodo: false,
       dia: x.run.dia,
     })
-    return respostaDoRun(x, saida)
+    return respostaDoRun(x, { saida })
   }
 
   async function rodar(x: Execucao): Promise<RespostaDaConversa> {
@@ -338,8 +369,8 @@ export function createConversation(deps: Deps) {
     }
     const estado = { gravada: false }
     try {
-      const { saida, interpretacao } = await responderMensagem(x, estado)
-      return await respostaDoRun(x, saida, interpretacao)
+      const { interpretacao, ...parte } = await responderMensagem(x, estado)
+      return await respostaDoRun(x, parte, interpretacao)
     } catch (e) {
       if (estado.gravada) throw e
       return respostaSegura(x)

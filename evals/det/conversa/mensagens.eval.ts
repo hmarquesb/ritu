@@ -43,7 +43,7 @@ describe("gravação dos dois lados em todos os caminhos", () => {
     )
 
     expect(doRun.find((m) => m.autor === "pessoa")?.texto).toContain(c.mensagem.texto ?? "")
-    expect(doRun.find((m) => m.autor === "agente")?.texto).toBe(resposta.saida.resposta)
+    expect(doRun.find((m) => m.autor === "agente")?.texto).toBe(resposta.saida?.resposta)
   })
 })
 

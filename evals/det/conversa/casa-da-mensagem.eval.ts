@@ -78,7 +78,7 @@ describe("casa da mensagem: item em 'evitar sempre' não entra em confirmados", 
 describe("casa da mensagem: item desconhecido fica só na anotação", () => {
   it("a pitaia, fora da base, vai na anotação sem id e não entra na despensa", async () => {
     const { resposta, naCasa } = await rodar(cenario("casa-sozinha"))
-    const anotado = resposta.saida.anotacoes.find((a) => a.tipo === "casa_tem")
+    const anotado = resposta.saida?.anotacoes.find((a) => a.tipo === "casa_tem")
     const pitaia = anotado?.itens.find((i) => i.nome === "pitaia")
 
     expect(pitaia).toBeDefined()

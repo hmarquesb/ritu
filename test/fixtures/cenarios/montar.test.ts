@@ -115,7 +115,7 @@ describe("cenários de conversa", () => {
       if (!c?.mensagem) throw new Error(`cenário sem mensagem: ${nome}`)
       const { contaId, deps } = await montarCenario(c)
       const r = await deps.conversation.conversar(contaId, c.mensagem)
-      expect(r.saida.origem).toBe("agente")
+      expect(r.saida?.origem).toBe("agente")
     }
   })
 

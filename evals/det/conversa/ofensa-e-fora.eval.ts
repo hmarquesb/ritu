@@ -20,8 +20,8 @@ describe("ofensa sozinha: resposta fixa, sem Acompanhante", () => {
   it("recebe o texto fixo, sem anotação e sem chamar o runtime", async () => {
     const { resposta, run, runtime } = await rodar(cenario("ofensa"))
 
-    expect(resposta.saida.resposta).toBe(textosDaConversa.ofensa)
-    expect(resposta.saida.anotacoes).toEqual([])
+    expect(resposta.saida?.resposta).toBe(textosDaConversa.ofensa)
+    expect(resposta.saida?.anotacoes).toEqual([])
     expect(run?.caminho).toBe("ofensa")
     expect(runtime.pedidos).toHaveLength(0)
   })
@@ -53,7 +53,7 @@ describe("suspeito e fora: guardrail recusa sem Acompanhante", () => {
     const guardrail = etapas.find((e) => e.tipo === "guardrail")
 
     expect(run?.caminho).toBe("fora")
-    expect(resposta.saida.resposta).toBe(textosDaConversa.fora)
+    expect(resposta.saida?.resposta).toBe(textosDaConversa.fora)
     expect(guardrail).toMatchObject({ nome: "suspeito", status: "recusado" })
     expect(runtime.pedidos).toHaveLength(0)
   })

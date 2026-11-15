@@ -28,7 +28,7 @@ describe("precedência dos caminhos: alerta ganha de tudo", () => {
     const { run, resposta } = await rodar(c)
 
     expect(run?.caminho).toBe("alerta")
-    expect(resposta.saida.resposta).toBe(textosDaConversa.alertaEmocional)
+    expect(resposta.saida?.resposta).toBe(textosDaConversa.alertaEmocional)
   })
 })
 

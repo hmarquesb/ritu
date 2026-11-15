@@ -176,8 +176,8 @@ describe("conversar: caminhos sem agente", () => {
       if (caso.caminho === "retorno") await criarRetorno(m)
       const r = await dizer(m, "mensagem")
       expect(r).toMatchObject({ status: "done", caminho: caso.caminho })
-      expect(r.saida.origem).toBe("codigo")
-      expect(r.saida.resposta).toMatch(caso.texto)
+      expect(r.saida?.origem).toBe("codigo")
+      expect(r.saida?.resposta).toMatch(caso.texto)
       expect(m.runtime.pedidos).toHaveLength(0)
       const run = await runDe(m, r.run_id)
       expect(run.status).toBe("done")
@@ -221,7 +221,7 @@ describe("conversar: atalhos e acompanhante", () => {
       "1 confirmados, 0 incertos",
     )
     expect(await m.stores.pantry.listar(m.conta.id)).toEqual([])
-    expect(r.saida.anotacoes).toMatchObject([{ tipo: "casa_tem" }])
+    expect(r.saida?.anotacoes).toMatchObject([{ tipo: "casa_tem" }])
     expect(run.saida).toMatchObject({ anotacoes: [{ tipo: "casa_tem" }] })
   })
 
@@ -256,10 +256,10 @@ describe("conversar: alertas", () => {
       })
       const r = await dizer(m, "mensagem de alerta")
       expect(r.caminho).toBe("alerta")
-      expect(r.saida.resposta).toBe(
+      expect(r.saida?.resposta).toBe(
         alerta === "fisico" ? textosDaConversa.alertaFisico : textosDaConversa.alertaEmocional,
       )
-      expect(r.saida.anotacoes).toEqual([])
+      expect(r.saida?.anotacoes).toEqual([])
       const run = await runDe(m, r.run_id)
       expect(run.intencoes).toEqual(["alerta"])
       expect(run.com_incomodo).toBe(true)
@@ -285,7 +285,7 @@ describe("conversar: retorno", () => {
     })
     await criarRetorno(m)
     const r = await dizer(m, "ajudou")
-    expect(r.saida.resposta).toContain("chá de gengibre")
+    expect(r.saida?.resposta).toContain("chá de gengibre")
     expect(await m.stores.outcomes.pendentes(m.conta.id)).toEqual([])
     const preferencias = await m.stores.preferences.ler(m.conta.id)
     expect(preferencias.find((p) => p.item_id === "gengibre")?.ajudou).toBe(1)
@@ -311,7 +311,7 @@ describe("conversar: retorno", () => {
       })
       if (pendente) await criarRetorno(m)
       const r = await dizer(m, "ajudou")
-      expect(r.saida.resposta).toBe(textosDaConversa.retornoSemLigacao)
+      expect(r.saida?.resposta).toBe(textosDaConversa.retornoSemLigacao)
       expect(await m.stores.preferences.ler(m.conta.id)).toEqual([])
       expect(m.telemetry.metricas.some((x) => x.nome === "ritu_retorno_total")).toBe(false)
       if (pendente) expect(await m.stores.outcomes.pendentes(m.conta.id)).toHaveLength(1)
@@ -326,7 +326,7 @@ describe("conversar: evitar", () => {
     const item = resolverEvitar("leite", kb)
     const run = await runDe(m, r.run_id)
     expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([item])
-    expect(r.saida.anotacoes).toEqual([{ tipo: "evitar_sempre", itens: [item] }])
+    expect(r.saida?.anotacoes).toEqual([{ tipo: "evitar_sempre", itens: [item] }])
     expect((await m.stores.profiles.ler(m.conta.id)).evitar_sempre).toEqual([])
   })
 
@@ -335,8 +335,8 @@ describe("conversar: evitar", () => {
     const item = resolverEvitar("leite", kb)
     await m.stores.profiles.acrescentarEvitarSempre(m.conta.id, [item])
     const r = await dizer(m, "não posso comer leite")
-    expect(r.saida.anotacoes).toEqual([])
-    expect(r.saida.resposta).toContain("já está em Evitar sempre")
+    expect(r.saida?.anotacoes).toEqual([])
+    expect(r.saida?.resposta).toContain("já está em Evitar sempre")
     const run = await runDe(m, r.run_id)
     expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([item])
   })
@@ -391,7 +391,7 @@ describe("conversar: mensagens", () => {
     expect(m.vistas[0]?.[0]).toMatchObject({ run_id: r.run_id, texto: SEGREDO })
     const mensagens = await m.stores.messages.doDia(m.conta.id, (await runDe(m, r.run_id)).dia)
     expect(mensagens.map((x) => x.autor)).toEqual(["pessoa", "agente"])
-    expect(mensagens[1]?.texto).toBe(r.saida.resposta)
+    expect(mensagens[1]?.texto).toBe(r.saida?.resposta)
   })
 
   it("erro inesperado: run failed, saída segura gravada e devolvida", async () => {
@@ -403,12 +403,12 @@ describe("conversar: mensagens", () => {
     const m = await montar({ llm: [saida({})], companion })
     const r = await dizer(m, "oi")
     expect(r).toMatchObject({ status: "failed", caminho: "acompanhante" })
-    expect(r.saida.origem).toBe("segura")
+    expect(r.saida?.origem).toBe("segura")
     const run = await runDe(m, r.run_id)
     expect(run.status).toBe("failed")
     const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)
     expect(mensagens.map((x) => x.autor)).toEqual(["pessoa", "agente"])
-    expect(mensagens[1]?.texto).toBe(r.saida.resposta)
+    expect(mensagens[1]?.texto).toBe(r.saida?.resposta)
   })
 })
 
@@ -496,4 +496,101 @@ describe("conversar: entrada inválida", () => {
       expect(m.llm.pedidos).toHaveLength(0)
     })
   }
+})
+
+describe("conversar: pausas", () => {
+  const dorDeCabeca = (incomodo: Record<string, unknown>) =>
+    saida({ intencoes: ["momento"], incomodo })
+
+  it("variante do incômodo pausa por código, sem Acompanhante nem decisão", async () => {
+    const m = await montar({ llm: [dorDeCabeca({ id: "dor-de-cabeca" })] })
+    const r = await dizer(m, SEGREDO)
+    expect(r).toMatchObject({ status: "waiting_for_input", caminho: "acompanhante" })
+    expect(r.saida).toBeUndefined()
+    expect(r.pergunta).toMatchObject({ tipo: "variante", incomodo: "dor-de-cabeca" })
+    expect(r.pergunta?.tipo === "variante" && r.pergunta.opcoes).toHaveLength(3)
+    expect(m.runtime.pedidos).toHaveLength(0)
+    expect(m.llm.pedidos).toHaveLength(1)
+    const run = await runDe(m, r.run_id)
+    expect(run.status).toBe("waiting_for_input")
+    expect(run.checkpoint).toBeNull()
+    expect(run.com_incomodo).toBe(true)
+    expect(run.pendencia).toMatchObject({
+      tipo: "pergunta",
+      conteudo: { origem: "codigo", pergunta: r.pergunta, anotacoes: [] },
+    })
+    expect(run.modelos).toMatchObject({ apoio: expect.any(Array) })
+    const etapas = await etapasDe(m, r.run_id)
+    expect(etapas.find((e) => e.tipo === "pergunta")).toMatchObject({
+      nome: "variante",
+      resumo: "variante",
+      status: "ok",
+    })
+    expect(m.telemetry.eventos.filter((e) => e.nome === "pausa")).toHaveLength(1)
+    expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_pausas_total")).toHaveLength(1)
+    const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)
+    expect(mensagens.map((x) => x.com_incomodo)).toEqual([true, true])
+    expect(mensagens.every((x) => x.run_id === r.run_id)).toBe(true)
+    expect(mensagens[1]?.texto).toBe(r.pergunta?.texto)
+    const rastro = JSON.stringify([
+      m.telemetry.spans,
+      m.telemetry.metricas,
+      m.telemetry.eventos,
+      m.telemetry.logs,
+      etapas.map((e) => e.resumo),
+    ])
+    expect(rastro).not.toContain(SEGREDO)
+    expect(rastro).not.toContain("dor-de-cabeca")
+  })
+
+  it("variante única ou já dita não pausa", async () => {
+    const unica = await montar({
+      llm: [dorDeCabeca({ id: "gases" })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    expect((await dizer(unica, "gases")).status).toBe("done")
+    const dita = await montar({
+      llm: [dorDeCabeca({ id: "dor-de-cabeca", variante: "latejante" })],
+      roteiro: [
+        finalizar({
+          ...entregaDoMomento,
+          explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
+        }),
+      ],
+    })
+    expect((await dizer(dita, "latejante")).status).toBe("done")
+  })
+
+  it("pergunta do agente: devolve a pergunta, grava a mensagem e a anotação", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio", "agitada"] })],
+      roteiro: [
+        { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+        {
+          chamadas: [
+            { nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["abobora", "cenoura"] } },
+          ],
+        },
+      ],
+    })
+    m.clock.set("2026-09-16T22:00:00.000Z")
+    const velhos = [{ alimento_id: "abobora" }, { alimento_id: "cenoura" }]
+    await m.stores.pantry.registrar(m.conta.id, velhos, "tela")
+    m.clock.set("2026-11-15T22:00:00.000Z")
+    const novos = [{ alimento_id: "arroz-branco" }, { alimento_id: "ghee" }]
+    await m.stores.pantry.registrar(m.conta.id, novos, "tela")
+    const r = await dizer(m, "o que como?")
+    expect(r).toMatchObject({ status: "waiting_for_input", caminho: "acompanhante" })
+    expect(r.saida).toBeUndefined()
+    expect(r.pergunta?.tipo).toBe("casa")
+    const run = await runDe(m, r.run_id)
+    expect(run.saida).toBeNull()
+    expect(run.pendencia).toMatchObject({
+      conteudo: { origem: "agente", anotacoes: expect.any(Array) },
+    })
+    expect(run.modelos).toMatchObject({ apoio: expect.any(Array) })
+    const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)
+    expect(mensagens.map((x) => x.autor)).toEqual(["pessoa", "agente"])
+    expect(mensagens[1]).toMatchObject({ texto: r.pergunta?.texto, com_incomodo: false })
+  })
 })

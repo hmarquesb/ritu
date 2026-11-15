@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { executarLimpeza } from "@/core/cleanup"
 import type { Stores } from "@/core/stores"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
-import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 
 const CONTA = "conta-1"
 const DIA_EM_MS = 86_400_000
@@ -21,7 +21,7 @@ function ambiente() {
 type Relogio = ReturnType<typeof createFixedClock>
 
 function limpar(stores: Stores, clock: Relogio) {
-  return executarLimpeza({ stores, clock })
+  return executarLimpeza({ stores, clock, ledger: createMemoryLedger(clock) })
 }
 
 describe("mensagens (prazo em dias)", () => {

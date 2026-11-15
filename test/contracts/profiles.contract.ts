@@ -119,6 +119,20 @@ export function profilesContract(make: () => Promise<ContractEnv> | ContractEnv)
       expect(await env.stores.profiles.evitarTemporario(a, "2026-01-16")).toEqual([])
     })
 
+    it("evitarTemporario guarda restrição e não como, e não duplica", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const itens = [
+        { tipo: "restricao" as const, valor: "vegetariana" as const },
+        { tipo: "nao_come" as const, valor: "coentro" },
+      ]
+      await env.stores.profiles.acrescentarEvitarTemporario(a, DIA, itens)
+      await env.stores.profiles.acrescentarEvitarTemporario(a, DIA, itens)
+
+      const lidos = await env.stores.profiles.evitarTemporario(a, DIA)
+      expect(lidos).toHaveLength(2)
+      expect(lidos).toEqual(expect.arrayContaining(itens))
+    })
+
     it("apagarEvitarTemporarioAntesDe apaga só os dias anteriores e devolve a contagem", async () => {
       const { a, b } = await criarDuasContas(env.stores)
       await env.stores.profiles.acrescentarEvitarTemporario(a, "2026-01-14", [

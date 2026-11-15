@@ -1,10 +1,9 @@
 import { config } from "@config/index"
 import { llmCotas } from "@config/llm-cotas"
-import type { AccountRepository, ProfileStore } from "@/core/accounts/ports"
+import type { AccountRepository, ItemDoDia, ProfileStore } from "@/core/accounts/ports"
 import type { Conta, Perfil } from "@/core/accounts/types"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
-import type { EvitarItem } from "@/core/knowledge/filtros"
 import { normalizar } from "@/core/knowledge/identificar"
 import { diaDaCota, janelaDoMinuto } from "@/core/llm/janelas"
 import type { Limites, UsageLedger, UsoDoModelo } from "@/core/llm/ledger"
@@ -35,7 +34,7 @@ type Falta = {
   dia: string
 }
 
-type EvitarDoDia = EvitarItem & { conta_id: string; dia: string }
+type EvitarDoDia = { conta_id: string; dia: string; item: ItemDoDia }
 
 type Voto = { conta_id: string; run_id: string; voto: "up" | "down" }
 
@@ -107,7 +106,7 @@ const anteriorA = (iso: string, limite: Date): boolean => Date.parse(iso) < limi
 const maisNovoPrimeiro = (a: { criado_em: string }, b: { criado_em: string }): number =>
   Date.parse(b.criado_em) - Date.parse(a.criado_em)
 
-const mesmoEvitar = (a: EvitarItem, b: EvitarItem): boolean =>
+const mesmoEvitar = (a: ItemDoDia, b: ItemDoDia): boolean =>
   a.tipo === b.tipo && normalizar(a.valor) === normalizar(b.valor)
 
 const estaVencida = (conta: Conta, clock: Clock): boolean =>
@@ -284,16 +283,16 @@ function criarProfiles(db: Db, clock: Clock): ProfileStore {
       return copia(
         db.estado.evitarDoDia
           .filter((x) => x.conta_id === contaId && x.dia === dia)
-          .map(({ tipo, valor }) => ({ tipo, valor })),
+          .map((x) => x.item),
       )
     },
     async acrescentarEvitarTemporario(contaId, dia, itens) {
       const e = db.estado
       for (const item of itens) {
         const ja = e.evitarDoDia.some(
-          (x) => x.conta_id === contaId && x.dia === dia && mesmoEvitar(x, item),
+          (x) => x.conta_id === contaId && x.dia === dia && mesmoEvitar(x.item, item),
         )
-        if (!ja) e.evitarDoDia.push({ conta_id: contaId, dia, tipo: item.tipo, valor: item.valor })
+        if (!ja) e.evitarDoDia.push({ conta_id: contaId, dia, item: { ...item } })
       }
     },
     async apagarEvitarTemporarioAntesDe(dia) {

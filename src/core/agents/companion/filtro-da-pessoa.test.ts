@@ -154,6 +154,39 @@ describe("montarFiltro: texto livre", () => {
   })
 })
 
+describe("montarFiltro: restrição e não como do dia", () => {
+  it("restrição do dia vai para restricoes, sem repetir a do perfil, e fica fora de evitar", () => {
+    const resultado = montarFiltro({
+      ...vazio,
+      perfil: perfil({ restricoes: ["vegetariana"] }),
+      evitarDoDia: [
+        { tipo: "restricao", valor: "vegetariana" },
+        { tipo: "restricao", valor: "sem_gluten" },
+      ],
+    })
+
+    expect(resultado.filtro.restricoes).toEqual(["vegetariana", "sem_gluten"])
+    expect(resultado.filtro.evitar).toEqual([])
+    expect(resultado.evitar_textos).toEqual([])
+  })
+
+  it("não como do dia vai para nao_come, sem repetir o do perfil, e fica fora de evitar e de evitar_textos", () => {
+    const resultado = montarFiltro({
+      ...vazio,
+      perfil: perfil({ nao_come: [{ tipo: "alimento", valor: "coentro" }] }),
+      evitarDoDia: [
+        { tipo: "nao_come", valor: "coentro" },
+        { tipo: "nao_come", valor: "castanha-do-para" },
+        { tipo: "grupo", valor: "gluten" },
+      ],
+    })
+
+    expect(resultado.filtro.nao_come).toEqual(["coentro", "castanha-do-para"])
+    expect(resultado.filtro.evitar).toEqual([{ tipo: "grupo", valor: "gluten" }])
+    expect(resultado.evitar_textos).toEqual([])
+  })
+})
+
 describe("montarFiltro: restrições e preferências", () => {
   it("restrições do perfil entram no filtro", () => {
     const { filtro } = montarFiltro({

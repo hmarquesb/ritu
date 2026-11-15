@@ -1,5 +1,6 @@
 import { adequacao } from "./adequacao"
 import { app } from "./app"
+import { aprovacao } from "./aprovacao"
 import { base } from "./base"
 import { casa } from "./casa"
 import { clima } from "./clima"
@@ -23,6 +24,7 @@ export const config = {
   clima,
   memoria,
   pausas,
+  aprovacao,
   casa,
   conversa,
   loop,

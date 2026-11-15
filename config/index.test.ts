@@ -49,6 +49,11 @@ describe("config", () => {
     expect(config.memoria.esperaMinutos).toBe(30)
   })
 
+  it("expõe os limites da aprovação com os valores da spec, e o prazo continua na memória", () => {
+    expect(config.aprovacao).toEqual({ maxLinhas: 6, maxFaltouHoje: 1 })
+    expect(config.memoria.esperaMinutos).toBe(30)
+  })
+
   it("expõe os limites do loop do agente com os valores da spec", () => {
     expect(config.loop).toEqual({
       maxChamadasDeModelo: 6,

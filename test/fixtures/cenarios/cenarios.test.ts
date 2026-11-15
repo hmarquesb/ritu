@@ -16,7 +16,7 @@ describe("cenários de demonstração", () => {
     const { contaId, deps } = await montarCenario(c)
     const r = await deps.companion.responder(contaId, c.entrada)
     expect(r.status).toBe("done")
-    expect(r.saida.origem).toBe(origens[nome])
+    expect(r.saida?.origem).toBe(origens[nome])
   })
 
   it("frio-agitada com o principal de decisao esgotado troca de modelo e termina em done", async () => {
@@ -25,7 +25,7 @@ describe("cenários de demonstração", () => {
     const { contaId, deps } = await montarCenario(c, { esgotar: "decisao" })
     const r = await deps.companion.responder(contaId, c.entrada)
     expect(r.status).toBe("done")
-    expect(r.saida.origem).toBe("agente")
+    expect(r.saida?.origem).toBe("agente")
     const run = await deps.stores.runs.buscar(contaId, r.run_id)
     expect(run?.trocas_de_modelo).toBeGreaterThanOrEqual(1)
   })

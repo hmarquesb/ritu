@@ -57,7 +57,7 @@ async function execucao(nome: string): Promise<Execucao> {
   if (!textoDaEntrada) throw new Error(`cenário sem texto na entrada: ${nome}`)
   const pronta: Execucao = {
     entrada: normalizar(textoDaEntrada),
-    resposta: normalizar(r.saida.resposta),
+    resposta: normalizar(r.saida?.resposta ?? ""),
     emitido: normalizar(textosDe([spans, eventos, metricas, logs, resumos]).join("\n")),
     spans: spans.length,
   }

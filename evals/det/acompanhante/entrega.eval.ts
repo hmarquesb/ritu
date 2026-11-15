@@ -54,8 +54,10 @@ describe("entrega: violação, correção e entrega", () => {
       "ok",
     ])
     expect(r.status).toBe("done")
-    expect(r.saida.origem).toBe("agente")
-    expect(r.saida.sugestoes.flatMap((s) => s.itens.map((i) => i.alimento_id))).toEqual(["hortela"])
+    expect(r.saida?.origem).toBe("agente")
+    expect(r.saida?.sugestoes.flatMap((s) => s.itens.map((i) => i.alimento_id))).toEqual([
+      "hortela",
+    ])
   })
 })
 
@@ -77,8 +79,8 @@ describe("entrega: teto de recusas", () => {
     expect(r.fim).toBe("limite")
     expect(r.motivo).toBe("validacao")
     expect(r.status).toBe("done")
-    expect(r.saida.origem).toBe("segura")
-    expect(r.saida.sugestoes).toEqual([])
+    expect(r.saida?.origem).toBe("segura")
+    expect(r.saida?.sugestoes).toEqual([])
   })
 })
 
@@ -96,6 +98,6 @@ describe("entrega: teto de chamadas de modelo", () => {
     expect(r.fim).toBe("limite")
     expect(r.motivo).toBe("chamadas")
     expect(r.status).toBe("done")
-    expect(r.saida.origem).toBe("segura")
+    expect(r.saida?.origem).toBe("segura")
   })
 })

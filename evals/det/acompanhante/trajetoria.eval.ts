@@ -78,7 +78,7 @@ describe("trajetória: cada cenário termina no status, na origem e nas etapas e
     const etapas = await deps.stores.runs.etapas(contaId, r.run_id)
 
     expect(r.status).toBe(esperada.status)
-    expect(r.saida.origem).toBe(esperada.origem)
+    expect(r.saida?.origem).toBe(esperada.origem)
     expect(etapas.map(comoEtapa)).toEqual(esperada.etapas)
   })
 })
@@ -97,7 +97,7 @@ describe("trajetória: casos de forma", () => {
     const c = cenario("estomago-pesado")
     const { contaId, deps } = await montarCenario(c)
     const r = await deps.companion.responder(contaId, c.entrada)
-    const tipos = r.saida.avisos.map((a) => a.tipo)
+    const tipos = r.saida?.avisos.map((a) => a.tipo)
 
     expect(tipos).toEqual(expect.arrayContaining(["incomodo", "geral"]))
   })
@@ -107,7 +107,7 @@ describe("trajetória: casos de forma", () => {
     const { contaId, deps } = await montarCenario(c)
     const r = await deps.companion.responder(contaId, c.entrada)
 
-    expect(r.saida.para_ter).toBeDefined()
-    expect(r.saida.para_ter?.alimento_id).toBe("cardamomo")
+    expect(r.saida?.para_ter).toBeDefined()
+    expect(r.saida?.para_ter?.alimento_id).toBe("cardamomo")
   })
 })

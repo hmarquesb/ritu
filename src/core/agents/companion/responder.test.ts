@@ -1,7 +1,9 @@
 import { llmCotas } from "@config/index"
 import { describe, expect, it } from "vitest"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
-import type { RunEtapa } from "@/core/runs/ports"
+import { RunNaoContinuavelError } from "@/core/runs/errors"
+import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
+import type { Run, RunEtapa } from "@/core/runs/ports"
 import { createRunService } from "@/core/runs/run-service"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
@@ -10,7 +12,7 @@ import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { createScriptedRuntime, type PassoRoteirizado } from "@/infra/fakes/scripted-runtime"
 import type { EntradaDoAcompanhante } from "./entrada"
-import { createCompanion } from "./responder"
+import { createCompanion, type RespostaDoRun } from "./responder"
 
 const kb = createMiniKnowledge()
 const TEXTO_DA_PESSOA = "texto secreto da pessoa"
@@ -64,7 +66,7 @@ async function montar(roteiro: PassoRoteirizado[], opts: { semModelo?: boolean }
   const conta = await stores.accounts.criar({ tipo: "demo" })
   const companion = (r: ModelRouter = router) =>
     createCompanion({ stores, kb, clock, weather, router: r, runs, telemetry })
-  return { clock, stores, telemetry, weather, router, conta, companion }
+  return { clock, stores, telemetry, weather, router, conta, companion, runtime }
 }
 
 const tipos = (etapas: RunEtapa[]) => etapas.map((e) => e.tipo)
@@ -74,7 +76,7 @@ describe("createCompanion.responder", () => {
     const m = await montar([finalizar(entregaRuim), finalizar(entregaOk)])
     const r = await m.companion().responder(m.conta.id, entrada())
     expect(r).toMatchObject({ status: "done", fim: "entregue" })
-    expect(r.saida.origem).toBe("agente")
+    expect(r.saida?.origem).toBe("agente")
     const etapas = await m.stores.runs.etapas(m.conta.id, r.run_id)
     const validacoes = etapas.filter((e) => e.tipo === "validacao")
     expect(validacoes.map((e) => e.status)).toEqual(["recusado", "ok"])
@@ -86,8 +88,8 @@ describe("createCompanion.responder", () => {
     const m = await montar([finalizar(entregaRuim), finalizar(entregaRuim), finalizar(entregaRuim)])
     const r = await m.companion().responder(m.conta.id, entrada())
     expect(r).toMatchObject({ status: "done", fim: "limite", motivo: "validacao" })
-    expect(r.saida.origem).toBe("segura")
-    expect(r.saida.sugestoes).toEqual([])
+    expect(r.saida?.origem).toBe("segura")
+    expect(r.saida?.sugestoes).toEqual([])
     const etapas = await m.stores.runs.etapas(m.conta.id, r.run_id)
     expect(etapas.find((e) => e.tipo === "erro")?.nome).toBe("limite:validacao")
   })
@@ -105,7 +107,7 @@ describe("createCompanion.responder", () => {
     const m = await montar([{ erro: "indisponivel" }, { erro: "indisponivel" }])
     const r = await m.companion().responder(m.conta.id, entrada())
     expect(r).toMatchObject({ status: "failed", fim: "erro", motivo: "indisponivel" })
-    expect(r.saida.origem).toBe("segura")
+    expect(r.saida?.origem).toBe("segura")
     const etapas = await m.stores.runs.etapas(m.conta.id, r.run_id)
     expect(etapas.filter((e) => e.tipo === "erro" && e.nome === "indisponivel")).toHaveLength(1)
     const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
@@ -116,7 +118,7 @@ describe("createCompanion.responder", () => {
     const m = await montar([], { semModelo: true })
     const r = await m.companion().responder(m.conta.id, entrada({ estados: ["com_frio"] }))
     expect(r).toMatchObject({ status: "done", fim: "sem_modelo" })
-    expect(r.saida.origem).toBe("sem_modelo")
+    expect(r.saida?.origem).toBe("sem_modelo")
     const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
     expect(run).toMatchObject({ caminho: "sem_modelo", status: "done" })
     const soma = m.telemetry.metricas.filter((x) => x.nome === "ritu_fallback_sem_llm_total")
@@ -135,7 +137,7 @@ describe("createCompanion.responder", () => {
     } as ModelRouter
     const r = await m.companion(semProximo).responder(m.conta.id, entrada())
     expect(r).toMatchObject({ status: "done", fim: "sem_modelo" })
-    expect(r.saida.origem).toBe("sem_modelo")
+    expect(r.saida?.origem).toBe("sem_modelo")
     const soma = m.telemetry.metricas.filter((x) => x.nome === "ritu_fallback_sem_llm_total")
     expect(soma.reduce((t, x) => t + x.valor, 0)).toBe(1)
   })
@@ -147,7 +149,7 @@ describe("createCompanion.responder", () => {
     ])
     const r = await m.companion().responder(m.conta.id, entrada())
     expect(r).toMatchObject({ status: "done", fim: "entregue" })
-    expect(r.saida.origem).toBe("agente")
+    expect(r.saida?.origem).toBe("agente")
     const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
     expect(run?.clima_usado).toBeNull()
   })
@@ -283,5 +285,209 @@ describe("createCompanion.responder", () => {
       await c.responder(m.conta.id, entrada({ casa_da_mensagem: casa }), { run })
       expect(visto).toEqual(casa)
     })
+  })
+})
+
+const PEDIDO_CASA = { tipo: "casa", alimentos: ["abobora", "cenoura"] }
+const pedirCasa = (): PassoRoteirizado => ({
+  chamadas: [{ nome: "ask_user", argumentos: PEDIDO_CASA }],
+})
+const entregaComLegume = (legume: string, extra: Record<string, unknown> = {}) => ({
+  ...entregaOk,
+  resposta: "Um arroz bem cozido com legume deixa o corpo aquecido e firme.",
+  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
+  sugestoes: [
+    {
+      tipo: "refeicao",
+      preparo_id: "arroz-com-legume",
+      itens: [
+        {
+          alimento_id: "arroz-branco",
+          funcao: "base",
+          contribui: [],
+          linha_base: "alimentos:arroz-branco",
+        },
+        { alimento_id: legume, funcao: "legume", contribui: [], linha_base: `alimentos:${legume}` },
+        { alimento_id: "ghee", funcao: "gordura", contribui: [], linha_base: "alimentos:ghee" },
+      ],
+      motivo: "Nutre e aquece.",
+      linhas_base: [
+        "preparos:arroz-com-legume",
+        `alimentos:${legume}`,
+        "alimentos:arroz-branco",
+        "alimentos:ghee",
+      ],
+      novidade: false,
+    },
+  ],
+  ...extra,
+})
+
+// 19h em São Paulo: momento "jantar", em que a mini-base tem refeições.
+const JANTAR = "2026-11-15T22:00:00.000Z"
+
+async function comPausa(roteiro: PassoRoteirizado[]) {
+  const m = await montar(roteiro)
+  m.clock.set("2026-09-16T22:00:00.000Z")
+  await m.stores.pantry.registrar(
+    m.conta.id,
+    [{ alimento_id: "abobora" }, { alimento_id: "cenoura" }],
+    "tela",
+  )
+  m.clock.set(JANTAR)
+  await m.stores.pantry.registrar(
+    m.conta.id,
+    [{ alimento_id: "arroz-branco" }, { alimento_id: "ghee" }],
+    "tela",
+  )
+  const r = await m
+    .companion()
+    .responder(m.conta.id, entrada({ intencoes: ["momento"], estados: ["com_frio", "agitada"] }))
+  return { m, r }
+}
+
+// O que o modelo recebeu de volta na primeira entrega recusada (última mensagem tool do pedido seguinte).
+function recusaDaEntrega(m: Awaited<ReturnType<typeof montar>>): string {
+  const pedido = m.runtime.pedidos.at(-1)
+  return JSON.stringify(
+    pedido?.mensagens.filter((x) => x.papel === "tool" && x.nome === "finalizar").at(-1),
+  )
+}
+
+async function retomar(
+  m: Awaited<ReturnType<typeof montar>>,
+  r: RespostaDoRun,
+  resposta: RespostaDaPessoa,
+) {
+  const parado = await m.stores.runs.buscar(m.conta.id, r.run_id)
+  await m.stores.runs.mudarStatusSe(m.conta.id, r.run_id, "waiting_for_input", "running")
+  const run = (await m.stores.runs.buscar(m.conta.id, r.run_id)) as Run
+  return {
+    parado,
+    resposta: await m
+      .companion()
+      .continuar(m.conta.id, run, { pergunta: r.pergunta as Pergunta, resposta }),
+  }
+}
+
+const tenhoENao: RespostaDaPessoa = {
+  tipo: "casa",
+  itens: [
+    { alimento_id: "abobora", resposta: "tenho" },
+    { alimento_id: "cenoura", resposta: "nao_tenho" },
+  ],
+}
+
+describe("pausa e continuar", () => {
+  it("responder para em waiting_for_input com a pergunta, sem saída", async () => {
+    const { m, r } = await comPausa([
+      { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+      pedirCasa(),
+    ])
+    expect(r).toMatchObject({ status: "waiting_for_input", fim: "pausa" })
+    expect(r.saida).toBeUndefined()
+    expect(r.pergunta?.tipo).toBe("casa")
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(run?.status).toBe("waiting_for_input")
+    expect(run?.pendencia).toBeTruthy()
+    expect(run?.checkpoint).toBeTruthy()
+    expect(run?.saida).toBeNull()
+    expect(run?.modelos).toEqual({ decisao: ["gemini-3.5-flash-lite"] })
+    expect(m.telemetry.eventos.filter((e) => e.nome === "pausa")).toHaveLength(1)
+    const pausas = m.telemetry.metricas.filter((x) => x.nome === "ritu_pausas_total")
+    expect(pausas).toHaveLength(1)
+    expect(m.telemetry.metricas.some((x) => x.nome === "ritu_para_ter_total")).toBe(false)
+  })
+
+  it("continuar aplica a resposta, retoma do passo seguinte e termina done", async () => {
+    const { m, r } = await comPausa([
+      { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+      pedirCasa(),
+      finalizar(entregaComLegume("cenoura")),
+      finalizar(entregaComLegume("abobora")),
+    ])
+    const { resposta } = await retomar(m, r, tenhoENao)
+    expect(m.runtime.pedidos).toHaveLength(4)
+    expect(resposta).toMatchObject({ status: "done", fim: "entregue" })
+    expect(resposta.saida?.origem).toBe("agente")
+    const etapas = await m.stores.runs.etapas(m.conta.id, r.run_id)
+    const validacoes = etapas.filter((e) => e.tipo === "validacao")
+    expect(validacoes.map((e) => e.status)).toEqual(["recusado", "ok"])
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(run?.status).toBe("done")
+    expect(run?.saida).toMatchObject({ origem: "agente" })
+    const tool = m.runtime.pedidos[2]?.mensagens.filter((x) => x.papel === "tool").at(-1)
+    const texto = JSON.stringify(tool)
+    expect(texto).toContain("candidatos_retirados")
+    expect(texto).toContain("nao_tenho")
+    expect(texto).toContain("tenho")
+  })
+
+  it("a entrega com o item que a pessoa não tem é recusada com fora_de_casa", async () => {
+    const { m, r } = await comPausa([
+      pedirCasa(),
+      finalizar(entregaComLegume("cenoura")),
+      finalizar(entregaComLegume("abobora")),
+    ])
+    const { resposta } = await retomar(m, r, tenhoENao)
+    expect(resposta.status).toBe("done")
+    expect(recusaDaEntrega(m)).toContain("fora_de_casa")
+  })
+
+  it("não gosto em um item recusa a entrega com ele como nao_gosta", async () => {
+    const { m, r } = await comPausa([
+      pedirCasa(),
+      finalizar(entregaComLegume("cenoura")),
+      finalizar(entregaComLegume("abobora")),
+    ])
+    const { resposta } = await retomar(m, r, {
+      tipo: "casa",
+      itens: [
+        { alimento_id: "abobora", resposta: "tenho" },
+        { alimento_id: "cenoura", resposta: "nao_gosto" },
+      ],
+    })
+    expect(resposta.status).toBe("done")
+    expect(recusaDaEntrega(m)).toContain("nao_gosta")
+  })
+
+  it("continuar em run waiting_for_input lança RunNaoContinuavelError", async () => {
+    const { m, r } = await comPausa([pedirCasa()])
+    const run = (await m.stores.runs.buscar(m.conta.id, r.run_id)) as Run
+    await expect(
+      m
+        .companion()
+        .continuar(m.conta.id, run, { pergunta: r.pergunta as Pergunta, resposta: tenhoENao }),
+    ).rejects.toBeInstanceOf(RunNaoContinuavelError)
+  })
+
+  it("sem modelo na retomada devolve a resposta sem modelo com o run done", async () => {
+    const { m, r } = await comPausa([pedirCasa()])
+    const semProximo = { temModelo: async () => false } as unknown as ModelRouter
+    await m.stores.runs.mudarStatusSe(m.conta.id, r.run_id, "waiting_for_input", "running")
+    const run = (await m.stores.runs.buscar(m.conta.id, r.run_id)) as Run
+    const resposta = await m
+      .companion(semProximo)
+      .continuar(m.conta.id, run, { pergunta: r.pergunta as Pergunta, resposta: tenhoENao })
+    expect(resposta).toMatchObject({ status: "done", fim: "sem_modelo" })
+    expect(resposta.saida?.origem).toBe("sem_modelo")
+    const salvo = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(salvo?.status).toBe("done")
+  })
+
+  it("os modelos já gravados no run continuam depois do continuar", async () => {
+    const { m, r } = await comPausa([pedirCasa(), finalizar(entregaComLegume("abobora"))])
+    await m.stores.runs.atualizar(m.conta.id, r.run_id, {
+      modelos: { decisao: ["gemini-3.5-flash-lite"], apoio: ["modelo-de-apoio"] },
+      trocas_de_modelo: 2,
+    })
+    const { resposta } = await retomar(m, r, tenhoENao)
+    expect(resposta.status).toBe("done")
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(run?.modelos).toEqual({
+      decisao: ["gemini-3.5-flash-lite"],
+      apoio: ["modelo-de-apoio"],
+    })
+    expect(run?.trocas_de_modelo).toBe(2)
   })
 })

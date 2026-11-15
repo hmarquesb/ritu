@@ -1,7 +1,7 @@
 import { config } from "@config/index"
 import type { Perfil } from "@/core/accounts/types"
 import { type EntradaDoAcompanhante, intencaoSchema } from "@/core/agents/companion/entrada"
-import type { createCompanion } from "@/core/agents/companion/responder"
+import type { createCompanion, RespostaDoRun } from "@/core/agents/companion/responder"
 import { type SaidaDoAcompanhante, saidaDeCodigo, saidaSegura } from "@/core/agents/companion/saida"
 import {
   type Interpretacao,
@@ -75,6 +75,11 @@ function validar(m: MensagemRecebida): MensagemRecebida {
   const longa = texto !== undefined && Array.from(texto).length > config.conversa.maxCaracteres
   if (!atalhosOk || vazia || longa) throw mensagemInvalida()
   return texto ? { texto, atalhos: m.atalhos } : { atalhos: m.atalhos }
+}
+
+function saidaDoRun(r: RespostaDoRun): SaidaDoAcompanhante {
+  if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
+  return r.saida
 }
 
 function intencoesDoAcompanhante(
@@ -201,7 +206,7 @@ export function createConversation(deps: Deps) {
       semModelo: true,
       aoVivo: x.aoVivo,
     })
-    return { saida: r.saida, incomodo: false }
+    return { saida: saidaDoRun(r), incomodo: false }
   }
 
   async function viaCodigo(
@@ -245,7 +250,7 @@ export function createConversation(deps: Deps) {
     await gravarItensDoDia(ctx)
     const entrada = entradaDoAcompanhante(x.m.texto, ctx.interpretacao, intencoes)
     const r = await companion.responder(x.contaId, entrada, { run: x.run, aoVivo: x.aoVivo })
-    const saida = { ...r.saida, anotacoes: await anotacoesDaMensagem(ctx) }
+    const saida = { ...saidaDoRun(r), anotacoes: await anotacoesDaMensagem(ctx) }
     await stores.runs.atualizar(x.contaId, x.run.id, { saida, ...(await somarApoio(x, apoio)) })
     return { saida, incomodo: Boolean(ctx.interpretacao.incomodo) }
   }

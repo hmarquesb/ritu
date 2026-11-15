@@ -64,6 +64,9 @@ function dados(mudar: Partial<DadosDoPreparo> = {}): DadosDoPreparo {
     fixos: { evitar_sempre: [], restricoes: [], nao_come: [] },
     padroes: [],
     mensagens_do_dia: [],
+    perguntas: { feitas: 0, alimentos: [] },
+    nao_come_do_run: [],
+    candidatos_completos: [],
     ...mudar,
   }
 }
@@ -262,6 +265,42 @@ describe("validarEntrega", () => {
     it("se_faltar sem estar confirmado em casa", () => {
       const d = dados({ casa: { confirmados: ["gengibre"], incertos: [] } })
       expect(codigos(comItem({ se_faltar: "cardamomo" }), d)).toEqual(["fora_de_casa"])
+    })
+
+    describe("refeição que depende de pergunta", () => {
+      const semLeite = { confirmados: CONFIRMADOS.filter((i) => i !== "leite"), incertos: [] }
+      const comRefeicao = (mudar: Partial<DadosDoPreparo>) =>
+        dados({
+          casa: semLeite,
+          candidatos: [
+            {
+              ...candidato("leite-morno-com-especiaria"),
+              tipo: "refeicao",
+              depende_de_pergunta: true,
+            },
+          ],
+          ...mudar,
+        })
+      const mensagem = (d: DadosDoPreparo) =>
+        validarEntrega(entrega({ sugestoes: [refeicao] }), { dados: d, kb, sinais }).find(
+          (v) => v.codigo === "fora_de_casa",
+        )?.mensagem
+
+      it("com pergunta disponível, manda perguntar com ask_user", () => {
+        expect(mensagem(comRefeicao({}))).toBe(
+          "pergunte antes com ask_user (tipo casa) ou use outro candidato",
+        )
+      })
+
+      it("sem pergunta disponível, manda usar outro candidato", () => {
+        const d = comRefeicao({ perguntas: { feitas: 2, alimentos: ["a", "b"] } })
+        expect(mensagem(d)).toBe("use outro candidato")
+      })
+
+      it("sem a marca, a mensagem é a de hoje", () => {
+        const d = dados({ casa: semLeite, candidatos: [candidato("leite-morno-com-especiaria")] })
+        expect(mensagem(d)).toContain("não está confirmado em casa")
+      })
     })
   })
 

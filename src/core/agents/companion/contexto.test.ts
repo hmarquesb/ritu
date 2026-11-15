@@ -110,6 +110,31 @@ describe("montarMensagemInicial", () => {
     expect(json.geral).toBe(true)
     expect(JSON.stringify(json)).not.toContain("[]")
   })
+
+  it("candidato com depende_de_pergunta leva o campo; falso ou ausente não", async () => {
+    const base = await dados()
+    const [primeiro, segundo] = base.candidatos
+    if (!primeiro) throw new Error("sem candidato")
+    const d = {
+      ...base,
+      candidatos: [
+        { ...primeiro, depende_de_pergunta: true },
+        ...(segundo ? [{ ...segundo, depende_de_pergunta: false }] : []),
+        ...base.candidatos.slice(2),
+      ],
+    }
+    const { json } = extrair(montarMensagemInicial(d, "oi"))
+    const candidatos = json.candidatos as Record<string, unknown>[]
+    expect(candidatos[0]?.depende_de_pergunta).toBe(true)
+    if (segundo) expect(candidatos[1]).not.toHaveProperty("depende_de_pergunta")
+  })
+
+  it("não manda ao modelo a lista completa, as perguntas nem o não come do run", async () => {
+    const { json } = extrair(montarMensagemInicial(await dados(), "oi"))
+    expect(json).not.toHaveProperty("candidatos_completos")
+    expect(json).not.toHaveProperty("perguntas")
+    expect(json).not.toHaveProperty("nao_come_do_run")
+  })
 })
 
 describe("acompanhanteV1", () => {

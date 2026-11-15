@@ -11,6 +11,7 @@ import {
   momentoDoDia as momentoDoDiaDaHora,
   qualidadesDoMomento,
 } from "@/core/knowledge/momento"
+import type { Preparo } from "@/core/knowledge/schemas"
 import {
   estadoSchema,
   funcaoSchema,
@@ -68,6 +69,7 @@ const candidatoSchema = z.object({
   ajudou: z.number(),
   novidade: z.boolean(),
   no_fim: z.boolean(),
+  depende_de_pergunta: z.boolean().optional(),
 })
 
 const evitarItemSchema = z.object({
@@ -146,6 +148,11 @@ export const dadosDoPreparoSchema = z.object({
   casa_da_mensagem: casaDaMensagemSchema.optional(),
   retorno: retornoDaMensagemSchema.optional(),
   fato_de_rotina: z.string().optional(),
+  perguntas: z
+    .object({ feitas: z.number().int().nonnegative(), alimentos: z.array(z.string()) })
+    .default({ feitas: 0, alimentos: [] }),
+  nao_come_do_run: z.array(z.string()).default([]),
+  candidatos_completos: z.array(z.string()).default([]),
 })
 
 export type DadosDoPreparo = z.infer<typeof dadosDoPreparoSchema>
@@ -202,18 +209,25 @@ function ajustarCasa(
   }
 }
 
-async function casaDaPessoa(deps: Deps, contaId: string, filtro: FiltroPessoa): Promise<Casa> {
+// Minha casa vira a casa do run e a lista dos ids marcados como acabou (que não seguram refeição).
+async function casaEAcabou(
+  deps: Deps,
+  contaId: string,
+  filtro: FiltroPessoa,
+): Promise<{ casa: Casa; acabou: string[] }> {
   const itens = await deps.stores.pantry.listar(contaId)
   const agora = deps.clock.now()
   const casa: Casa = { confirmados: [], incertos: [] }
+  const acabou: string[] = []
   for (const item of itens) {
+    if (item.estado === "acabou" && item.alimento_id) acabou.push(item.alimento_id)
     const alimento = item.alimento_id ? deps.kb.alimento(item.alimento_id) : undefined
     if (!alimento || !passaNoFiltro(alimento, filtro, deps.kb).passa) continue
     const estado = estadoDoItem(item, agora, alimento.durabilidade)
     if (estado === "incerto") casa.incertos.push(alimento.id)
     else if (estado !== "acabou") casa.confirmados.push(alimento.id)
   }
-  return casa
+  return { casa, acabou }
 }
 
 function sugeridosDasSaidas(saidas: unknown[]): string[] {
@@ -263,33 +277,73 @@ type Contexto = {
   sugeridos_hoje: string[]
   qualidades: MomentoQualidades
   momento_do_dia: DadosDoPreparo["momento_do_dia"]
+  acabou: string[]
 }
 
-// Candidato de refeição com vaga obrigatória sem opção em casa (confirmada ou incerta) não vai
-// ao modelo nem ao validador: qualquer entrega com ele seria recusada.
-export function entregaveisEmCasa(
+type Situacao = "fora" | "em_casa" | "pergunta"
+
+function semPergunta(c: Candidato): Candidato {
+  const { depende_de_pergunta: _dependia, ...resto } = c
+  return resto
+}
+
+// "fora": alguma vaga obrigatória não tem opção em casa nem perguntável.
+// "pergunta": alguma vaga obrigatória só tem opção perguntável. "em_casa": o resto.
+function situacaoDaRefeicao(
+  c: Candidato,
+  preparo: Preparo,
+  emCasa: Set<string>,
+  perguntavel: (id: string) => boolean,
+): Situacao {
+  let dependeDePergunta = false
+  for (const vaga of preparo.vagas) {
+    if (!vaga.obrigatoria) continue
+    const ids = (c.opcoes?.[vaga.funcao] ?? []).map((item) => item.alimento_id)
+    if (ids.some((id) => emCasa.has(id))) continue
+    if (!ids.some(perguntavel)) return "fora"
+    dependeDePergunta = true
+  }
+  return dependeDePergunta ? "pergunta" : "em_casa"
+}
+
+// Candidato de refeição sem opção de vaga obrigatória em casa nem perguntável não vai ao modelo
+// nem ao validador. Refeição que só fica por causa de uma opção perguntável sai com
+// depende_de_pergunta, e só as primeiras maxRefeicoesAPerguntar delas. Chá, óleo e prática passam.
+export function entregaveis(
   candidatos: Candidato[],
-  casa: Casa,
+  p: { casa: Casa; acabou: string[]; perguntasRestantes: number },
   kb: KnowledgeBase,
 ): Candidato[] {
-  const emCasa = new Set([...casa.confirmados, ...casa.incertos])
-  return candidatos.filter((candidato) => {
-    if (candidato.tipo !== "refeicao") return true
+  const emCasa = new Set([...p.casa.confirmados, ...p.casa.incertos])
+  const perguntavel = (id: string) =>
+    p.perguntasRestantes > 0 && !emCasa.has(id) && !p.acabou.includes(id)
+  let marcadas = 0
+  const saida: Candidato[] = []
+  for (const candidato of candidatos) {
+    if (candidato.tipo !== "refeicao") {
+      saida.push(candidato)
+      continue
+    }
     const preparo = kb.preparo(candidato.id)
-    if (!preparo) return true
-    return preparo.vagas
-      .filter((vaga) => vaga.obrigatoria)
-      .every((vaga) =>
-        (candidato.opcoes?.[vaga.funcao] ?? []).some((item) => emCasa.has(item.alimento_id)),
-      )
-  })
+    const situacao = preparo
+      ? situacaoDaRefeicao(candidato, preparo, emCasa, perguntavel)
+      : "em_casa"
+    if (situacao === "fora") continue
+    if (situacao === "em_casa") {
+      saida.push(semPergunta(candidato))
+    } else if (marcadas < config.pausas.maxRefeicoesAPerguntar) {
+      marcadas++
+      saida.push({ ...semPergunta(candidato), depende_de_pergunta: true })
+    }
+  }
+  return saida
 }
 
-function candidatosEFaltas(c: Contexto): { candidatos: Candidato[]; faltas: string[] } {
+function candidatosEFaltas(c: Contexto): { todos: Candidato[]; faltas: string[] } {
   const { entrada, deps } = c
   const querCandidatos =
     entrada.intencoes.includes("momento") || entrada.estados.length > 0 || !!entrada.incomodo
-  if (!querCandidatos) return { candidatos: [], faltas: [] }
+  if (!querCandidatos) return { todos: [], faltas: [] }
   const todos = montarCandidatos(
     {
       qualidades: c.qualidades,
@@ -308,7 +362,7 @@ function candidatosEFaltas(c: Contexto): { candidatos: Candidato[]; faltas: stri
     { candidatos: todos, casa: c.casa, prakriti: c.prakriti, buscadas: c.qualidades.buscadas },
     deps.kb,
   )
-  return { candidatos: cortarParaOContexto(entregaveisEmCasa(todos, c.casa, deps.kb)), faltas }
+  return { todos, faltas }
 }
 
 async function paraTerDoRun(c: Contexto, faltas: string[]): Promise<ParaTer | undefined> {
@@ -367,6 +421,7 @@ async function lerContexto(
     { estados: entrada.estados, incomodo: entrada.incomodo },
     kb,
   )
+  const { casa, acabou } = await casaEAcabou(deps, contaId, filtro)
   const c: Contexto = {
     deps,
     contaId,
@@ -374,7 +429,8 @@ async function lerContexto(
     dia,
     filtro,
     prakriti: perfil.prakriti ?? undefined,
-    casa: ajustarCasa(await casaDaPessoa(deps, contaId, filtro), entrada, deps, filtro),
+    casa: ajustarCasa(casa, entrada, deps, filtro),
+    acabou: [...new Set([...acabou, ...(entrada.casa_da_mensagem?.acabou ?? [])])],
     preferencias,
     sugeridos_hoje: await sugeridosDeHoje(deps, contaId, dia),
     qualidades,
@@ -387,14 +443,34 @@ export function preparar(
   deps: Deps,
   contaId: string,
   entrada: EntradaDoAcompanhante,
-  opts?: { runId?: string },
+  opts?: { runId?: string; perguntasFeitas?: number },
 ): Promise<DadosDoPreparo> {
   return deps.telemetry.span("preparo", {}, async (span) => {
     const { c, evitar_textos, perfil } = await lerContexto(deps, contaId, entrada)
     c.runId = opts?.runId ?? ""
-    const { candidatos, faltas } = candidatosEFaltas(c)
+    const feitas = opts?.perguntasFeitas ?? 0
+    const { todos, faltas } = candidatosEFaltas(c)
+    const candidatos = cortarParaOContexto(
+      entregaveis(
+        todos,
+        {
+          casa: c.casa,
+          acabou: c.acabou,
+          perguntasRestantes: config.pausas.maxPerguntasPorRun - feitas,
+        },
+        deps.kb,
+      ),
+    )
     const para_ter = await paraTerDoRun(c, faltas)
-    const dados = await completar(c, { evitar_textos, perfil, candidatos, faltas, para_ter })
+    const dados = await completar(c, {
+      evitar_textos,
+      perfil,
+      candidatos,
+      faltas,
+      para_ter,
+      candidatos_completos: todos.map((t) => t.id),
+      perguntas: { feitas, alimentos: [] },
+    })
     span.atribuir({
       "candidatos.total": candidatos.length,
       "faltas.registradas": faltas.length,
@@ -410,6 +486,8 @@ type Montado = {
   candidatos: Candidato[]
   faltas: string[]
   para_ter?: ParaTer
+  candidatos_completos: string[]
+  perguntas: DadosDoPreparo["perguntas"]
 }
 
 async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
@@ -467,6 +545,9 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
     ...(resumo ? { resumo_de_rotina: resumo.texto } : {}),
     padroes: padroes.slice(0, config.memoria.padroesNoPrompt).map((p) => p.frase),
     mensagens_do_dia: mensagensDoPrompt,
+    perguntas: m.perguntas,
+    nao_come_do_run: [],
+    candidatos_completos: m.candidatos_completos,
     ...(entrada.casa_da_mensagem
       ? { casa_da_mensagem: nomesDaCasaDaMensagem(entrada.casa_da_mensagem, kb) }
       : {}),

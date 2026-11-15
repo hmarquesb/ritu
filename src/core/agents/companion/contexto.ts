@@ -42,6 +42,7 @@ function candidato(c: Candidato): Record<string, unknown> {
     novidade: c.novidade ? true : undefined,
     ajudou: c.ajudou > 0 ? c.ajudou : undefined,
     gosta: c.gosta ? true : undefined,
+    depende_de_pergunta: c.depende_de_pergunta ? true : undefined,
     itens: c.itens.map(item),
     opcoes: opcoes(c),
   })

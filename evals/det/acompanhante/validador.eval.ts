@@ -107,6 +107,9 @@ function dados(mudar: Partial<DadosDoPreparo> = {}): DadosDoPreparo {
     fixos: { evitar_sempre: [], restricoes: [], nao_come: [] },
     padroes: [],
     mensagens_do_dia: [],
+    perguntas: { feitas: 0, alimentos: [] },
+    nao_come_do_run: [],
+    candidatos_completos: [],
     ...mudar,
   }
 }

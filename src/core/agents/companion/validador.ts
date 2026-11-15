@@ -211,7 +211,18 @@ function checarSeFaltar(ctx: Ctx, s: Sugestao, item: Item, onde: string): void {
   }
 }
 
-function checarCasa(ctx: Ctx, item: Item, onde: string): void {
+// Refeição que depende de pergunta: manda perguntar antes (se ainda couber) ou trocar o candidato.
+function mensagemDeAusente(ctx: Ctx, s: Sugestao, alimento_id: string): string {
+  const candidato = ctx.dados.candidatos.find((c) => c.id === s.preparo_id)
+  if (!candidato?.depende_de_pergunta) {
+    return `${alimento_id} não está confirmado em casa: tire da sugestão ou escolha outro candidato`
+  }
+  return ctx.dados.perguntas.feitas < config.pausas.maxPerguntasPorRun
+    ? "pergunte antes com ask_user (tipo casa) ou use outro candidato"
+    : "use outro candidato"
+}
+
+function checarCasa(ctx: Ctx, s: Sugestao, item: Item, onde: string): void {
   const { confirmados, incertos } = ctx.dados.casa
   if (confirmados.includes(item.alimento_id)) return
   if (incertos.includes(item.alimento_id)) {
@@ -220,12 +231,7 @@ function checarCasa(ctx: Ctx, item: Item, onde: string): void {
     }
     return
   }
-  apontar(
-    ctx,
-    "fora_de_casa",
-    onde,
-    `${item.alimento_id} não está confirmado em casa: tire da sugestão ou escolha outro candidato`,
-  )
+  apontar(ctx, "fora_de_casa", onde, mensagemDeAusente(ctx, s, item.alimento_id))
 }
 
 function checarQualidadesDoItem(ctx: Ctx, item: Item, alimento: Alimento, onde: string): void {
@@ -258,7 +264,7 @@ function checarItem(ctx: Ctx, s: Sugestao, item: Item, onde: string): void {
     apontar(ctx, "fora_da_base", onde, `${item.alimento_id} não existe na base`)
     return
   }
-  checarCasa(ctx, item, onde)
+  checarCasa(ctx, s, item, onde)
   checarFiltroDoAlimento(ctx, item.alimento_id, onde)
   checarMarcas(ctx, alimento, onde)
   checarSeFaltar(ctx, s, item, onde)

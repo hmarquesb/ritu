@@ -27,6 +27,7 @@ export type Candidato = {
   ajudou: number
   novidade: boolean
   no_fim: boolean
+  depende_de_pergunta?: boolean // só refeição: sai no contexto se a casa precisa de uma pergunta antes
 }
 
 export type Sinais = {

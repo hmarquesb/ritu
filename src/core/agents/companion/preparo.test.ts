@@ -5,21 +5,22 @@ import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import type { EntradaDoAcompanhante } from "./entrada"
-import { dadosDoPreparoSchema, entregaveisEmCasa, preparar } from "./preparo"
+import { dadosDoPreparoSchema, entregaveis, preparar } from "./preparo"
 
 const CONTA = "conta-1"
 const HOJE = "2026-11-15"
 const kb = createMiniKnowledge()
 
-function montar() {
-  const clock = createFixedClock("2026-11-15T18:00:00.000Z")
+function montar(iso = "2026-11-15T18:00:00.000Z") {
+  const clock = createFixedClock(iso)
   const stores = createMemoryStores(clock)
   const telemetry = createMemoryTelemetry()
   const deps = { stores, kb, clock, telemetry }
   return {
     stores,
     telemetry,
-    run: (e: Partial<EntradaDoAcompanhante>) => preparar(deps, CONTA, entrada(e)),
+    run: (e: Partial<EntradaDoAcompanhante>, opts?: { perguntasFeitas?: number }) =>
+      preparar(deps, CONTA, entrada(e), opts),
   }
 }
 
@@ -123,7 +124,7 @@ describe("preparar", () => {
   })
 })
 
-describe("entregaveisEmCasa", () => {
+describe("entregaveis", () => {
   const item = (alimento_id: string, casa: "confirmado" | "incerto" | "ausente") => ({
     alimento_id,
     nome: alimento_id,
@@ -146,30 +147,96 @@ describe("entregaveisEmCasa", () => {
     novidade: false,
     no_fim: false,
   })
-  const vazia = { confirmados: [], incertos: [] }
+  const vazia: { confirmados: string[]; incertos: string[] } = { confirmados: [], incertos: [] }
 
-  it("sai a refeição cuja vaga obrigatória só tem opção ausente de casa", () => {
+  const com = (perguntasRestantes: number, casa = vazia, acabou: string[] = []) => ({
+    casa,
+    acabou,
+    perguntasRestantes,
+  })
+
+  it("sai a refeição cuja vaga obrigatória só tem opção ausente e não há pergunta restante", () => {
     const c = refeicao({
       base: [item("abobora", "ausente")],
       gordura: [item("ghee", "confirmado")],
     })
-    expect(entregaveisEmCasa([c], { confirmados: ["ghee"], incertos: [] }, kb)).toEqual([])
+    const casa = { confirmados: ["ghee"], incertos: [] }
+    expect(entregaveis([c], com(0, casa), kb)).toEqual([])
   })
 
-  it("fica com opção confirmada ou incerta em cada vaga obrigatória", () => {
+  it("com pergunta restante, a refeição que só depende de um ausente fica marcada", () => {
+    const c = refeicao({
+      base: [item("abobora", "ausente")],
+      gordura: [item("ghee", "confirmado")],
+    })
+    const casa = { confirmados: ["ghee"], incertos: [] }
+    expect(entregaveis([c], com(2, casa), kb)).toEqual([{ ...c, depende_de_pergunta: true }])
+  })
+
+  it("fica com opção confirmada ou incerta em cada vaga obrigatória, sem o campo", () => {
     const c = refeicao({
       base: [item("abobora", "ausente"), item("cenoura", "incerto")],
       gordura: [item("ghee", "confirmado")],
     })
     const casa = { confirmados: ["ghee"], incertos: ["cenoura"] }
-    expect(entregaveisEmCasa([c], casa, kb)).toEqual([c])
+    const [saida] = entregaveis([c], com(0, casa), kb)
+    expect(saida).toEqual(c)
+    expect(saida).not.toHaveProperty("depende_de_pergunta")
+  })
+
+  it("no máximo duas refeições marcadas, na ordem; a terceira sai", () => {
+    const c1 = {
+      ...refeicao({ base: [item("abobora", "ausente")], gordura: [item("ghee", "ausente")] }),
+      id: "pure-de-raiz",
+    }
+    const c2 = {
+      ...refeicao({
+        base: [item("abobora", "ausente")],
+        legume: [item("cenoura", "ausente")],
+        gordura: [item("ghee", "ausente")],
+      }),
+      id: "arroz-com-legume",
+    }
+    const c3 = {
+      ...refeicao({ liquido: [item("leite", "ausente")], tempero: [item("canela", "ausente")] }),
+      id: "leite-morno-com-especiaria",
+    }
+    const saida = entregaveis([c1, c2, c3], com(5), kb)
+    expect(saida.map((c) => c.id)).toEqual(["pure-de-raiz", "arroz-com-legume"])
+    expect(saida.every((c) => c.depende_de_pergunta === true)).toBe(true)
+  })
+
+  it("item em acabou não segura refeição", () => {
+    const c = refeicao({
+      base: [item("abobora", "ausente")],
+      gordura: [item("ghee", "confirmado")],
+    })
+    const casa = { confirmados: ["ghee"], incertos: [] }
+    expect(entregaveis([c], com(2, casa, ["abobora"]), kb)).toEqual([])
   })
 
   it("não mexe em chá, óleo nem prática", () => {
     const cha = { ...refeicao({}), tipo: "cha" as const, id: "cha-gengibre" }
-    expect(entregaveisEmCasa([cha], vazia, kb)).toEqual([cha])
+    expect(entregaveis([cha], com(0), kb)).toEqual([cha])
   })
 
+  it("rodar de novo dá o mesmo resultado e descarta a marca anterior", () => {
+    const c = refeicao({
+      base: [item("abobora", "ausente")],
+      gordura: [item("ghee", "confirmado")],
+    })
+    const casa = { confirmados: ["ghee"], incertos: [] }
+    const primeira = entregaveis([c], com(2, casa), kb)
+    expect(entregaveis(primeira, com(2, casa), kb)).toEqual(primeira)
+
+    const confirmada = { confirmados: ["ghee", "abobora"], incertos: [] }
+    const [saida] = entregaveis(primeira, com(2, confirmada), kb)
+    expect(saida).toEqual(c)
+    expect(saida).not.toHaveProperty("depende_de_pergunta")
+  })
+})
+
+describe("preparar: casa, mensagem e perguntas", () => {
   it("as faltas e o para_ter não mudam com o filtro", async () => {
     const { run } = montar()
     const dados = await run({ estados: ["com_frio"] })
@@ -248,5 +315,69 @@ describe("entregaveisEmCasa", () => {
     })
     expect(dados.mensagens_do_dia.map((m) => m.texto)).toEqual(["antiga"])
     expect(dados.sinais.mensagens_hoje).toBe(3)
+  })
+})
+
+// 19h em São Paulo: momento "jantar", em que a base mini tem refeições.
+const JANTAR = "2026-11-15T22:00:00.000Z"
+
+describe("preparar: perguntas do run", () => {
+  it("item só em casa_da_mensagem.acabou não segura refeição perguntável no mesmo turno", async () => {
+    const { run } = montar(JANTAR)
+    const estados: EntradaDoAcompanhante["estados"] = ["com_frio", "agitada"]
+    const base = await run({ estados })
+    const alvo = base.candidatos.find((c) => c.depende_de_pergunta === true)
+    expect(alvo, "há refeição que depende de pergunta").toBeDefined()
+    if (!alvo) return
+    const ids = Object.values(alvo.opcoes ?? {}).flatMap((l) => (l ?? []).map((i) => i.alimento_id))
+
+    const dados = await run({ estados, casa_da_mensagem: { tem: [], acabou: ids } })
+    expect(dados.candidatos.map((c) => c.id)).not.toContain(alvo.id)
+  })
+
+  it("grava perguntas.feitas e deixa nao_come_do_run vazio", async () => {
+    const { run } = montar(JANTAR)
+    const dados = await run({ estados: ["com_frio"] }, { perguntasFeitas: 1 })
+    expect(dados.perguntas).toEqual({ feitas: 1, alimentos: [] })
+    expect(dados.nao_come_do_run).toEqual([])
+  })
+
+  it("com pergunta disponível, alguma refeição fica marcada; sem pergunta, nenhuma", async () => {
+    const { run } = montar(JANTAR)
+    const estados: EntradaDoAcompanhante["estados"] = ["com_frio", "agitada"]
+    const com = await run({ estados })
+    expect(com.candidatos.some((c) => c.depende_de_pergunta === true)).toBe(true)
+    const sem = await run({ estados }, { perguntasFeitas: 2 })
+    expect(sem.candidatos.some((c) => c.depende_de_pergunta === true)).toBe(false)
+  })
+
+  it("candidatos_completos traz os ids de antes do filtro, na ordem", async () => {
+    const { run } = montar(JANTAR)
+    const dados = await run({ estados: ["com_frio", "agitada"] }, { perguntasFeitas: 2 })
+    expect(dados.candidatos_completos.length).toBeGreaterThan(dados.candidatos.length)
+    for (const c of dados.candidatos) expect(dados.candidatos_completos).toContain(c.id)
+  })
+
+  it("as faltas não mudam com as perguntas gastas", async () => {
+    const { run } = montar(JANTAR)
+    const e: Partial<EntradaDoAcompanhante> = { estados: ["com_frio"] }
+    const comPerguntas = await run(e, { perguntasFeitas: 2 })
+    expect(comPerguntas.faltas_do_run).toEqual((await run(e)).faltas_do_run)
+  })
+
+  it("aceita depende_de_pergunta no candidato; checkpoint sem os campos novos continua válido", async () => {
+    const { run } = montar()
+    const dados = await run({ estados: ["com_frio"] })
+    const marcado = {
+      ...dados,
+      candidatos: dados.candidatos.map((c) => ({ ...c, depende_de_pergunta: true })),
+    }
+    expect(dadosDoPreparoSchema.safeParse(marcado).success).toBe(true)
+
+    const { perguntas: _p, nao_come_do_run: _n, candidatos_completos: _c, ...antigo } = dados
+    const lido = dadosDoPreparoSchema.parse(antigo)
+    expect(lido.perguntas).toEqual({ feitas: 0, alimentos: [] })
+    expect(lido.nao_come_do_run).toEqual([])
+    expect(lido.candidatos_completos).toEqual([])
   })
 })

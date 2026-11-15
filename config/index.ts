@@ -7,6 +7,8 @@ import { llmCotas } from "./llm-cotas"
 import { loop } from "./loop"
 import { memoria } from "./memoria"
 import { momentoDoDia } from "./momento-do-dia"
+import { ranking } from "./ranking"
+import { resposta } from "./resposta"
 
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
@@ -21,6 +23,8 @@ export const config = {
   casa,
   loop,
   llmCotas,
+  ranking,
+  resposta,
 } as const
 
 export type AppConfig = typeof config

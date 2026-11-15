@@ -1,21 +1,15 @@
 import { z } from "zod"
-import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { passosDoPreparo, tituloDoPreparo } from "@/core/knowledge/lacunas"
 import { fraseDaTroca } from "@/core/knowledge/substitutos"
-import {
-  type Funcao,
-  funcaoSchema,
-  GUNAS,
-  type Guna,
-  gunaSchema,
-  type Restricao,
-  restricaoSchema,
-} from "@/core/knowledge/vocab"
+import { type Funcao, funcaoSchema, GUNAS, type Guna, gunaSchema } from "@/core/knowledge/vocab"
 import type { RespostaSemModelo } from "@/core/llm/sem-modelo"
+import { type Anotacao, anotacaoSchema } from "@/core/proposals/anotacao"
 import type { EstadoNaCasa, ParaTer, TipoDeSugestao } from "@/core/ranking/tipos"
 import type { DadosDoPreparo } from "./preparo"
 import { textosDoAcompanhante } from "./textos"
+
+export { type Anotacao, anotacaoSchema } from "@/core/proposals/anotacao"
 
 const itemDaEntregaSchema = z.object({
   alimento_id: z.string(),
@@ -93,15 +87,6 @@ export type SugestaoEntregue = {
   aviso?: string
 }
 
-// Anotações: o que a pessoa disse e que vira proposta de gravação (quem grava é o executor). Nenhum campo leva motivo.
-export type Anotacao =
-  | { tipo: "casa_tem"; itens: { alimento_id?: string; nome: string }[] }
-  | { tipo: "casa_acabou"; itens: { alimento_id?: string; nome: string }[] }
-  | { tipo: "evitar_sempre"; itens: EvitarItem[] }
-  | { tipo: "nao_come"; itens: { alimento_id?: string; nome: string }[] }
-  | { tipo: "gosta"; itens: { alimento_id: string; nome: string }[] }
-  | { tipo: "restricao"; itens: Restricao[] }
-
 export type SaidaDoAcompanhante = {
   origem: "agente" | "segura" | "sem_modelo" | "codigo"
   resposta: string
@@ -115,24 +100,6 @@ export type SaidaDoAcompanhante = {
   para_ter?: ParaTer & { verbos: string[]; motivo: string }
   anotacoes: Anotacao[]
 }
-
-const itemDeCasaSchema = z.object({ alimento_id: z.string().optional(), nome: z.string() })
-const evitarItemSchema = z.object({
-  tipo: z.enum(["grupo", "alimento", "texto"]),
-  valor: z.string(),
-})
-
-export const anotacaoSchema = z.discriminatedUnion("tipo", [
-  z.object({ tipo: z.literal("casa_tem"), itens: z.array(itemDeCasaSchema) }),
-  z.object({ tipo: z.literal("casa_acabou"), itens: z.array(itemDeCasaSchema) }),
-  z.object({ tipo: z.literal("evitar_sempre"), itens: z.array(evitarItemSchema) }),
-  z.object({ tipo: z.literal("nao_come"), itens: z.array(itemDeCasaSchema) }),
-  z.object({
-    tipo: z.literal("gosta"),
-    itens: z.array(z.object({ alimento_id: z.string(), nome: z.string() })),
-  }),
-  z.object({ tipo: z.literal("restricao"), itens: z.array(restricaoSchema) }),
-])
 
 const itemEntregueSchema = z.object({
   alimento_id: z.string(),

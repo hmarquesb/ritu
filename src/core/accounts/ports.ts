@@ -47,4 +47,6 @@ export interface ProfileStore {
   removerEvitarSempre(contaId: string, item: EvitarItem, opts: { confirmado: true }): Promise<void>
   evitarTemporario(contaId: string, dia: string): Promise<EvitarItem[]>
   acrescentarEvitarTemporario(contaId: string, dia: string, itens: EvitarItem[]): Promise<void>
+  /** Sem contaId. */
+  apagarEvitarTemporarioAntesDe(dia: string): Promise<number>
 }

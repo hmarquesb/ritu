@@ -293,6 +293,12 @@ function criarProfiles(db: Db, clock: Clock): ProfileStore {
         if (!ja) e.evitarDoDia.push({ conta_id: contaId, dia, tipo: item.tipo, valor: item.valor })
       }
     },
+    async apagarEvitarTemporarioAntesDe(dia) {
+      const e = db.estado
+      const antigos = e.evitarDoDia.filter((x) => x.dia < dia).length
+      e.evitarDoDia = e.evitarDoDia.filter((x) => x.dia >= dia)
+      return antigos
+    },
   }
 }
 

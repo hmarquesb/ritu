@@ -169,5 +169,10 @@ export function createPgProfiles(sql: Conexao, clock: Clock): ProfileStore {
         }
       })
     },
+
+    async apagarEvitarTemporarioAntesDe(dia) {
+      const apagadas = await sql`delete from evitar_temporario where dia < ${dia}::date`
+      return apagadas.count
+    },
   }
 }

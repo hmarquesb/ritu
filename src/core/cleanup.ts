@@ -1,0 +1,55 @@
+import { config } from "@config/index"
+import type { Clock } from "@/core/clock"
+import type { Stores } from "@/core/stores"
+import { diaLocal, diasAtras } from "@/core/time/dia-local"
+
+const DIA_MS = 86_400_000
+const MINUTO_MS = 60_000
+
+export type ResultadoLimpeza = {
+  mensagens: number
+  mensagens_com_incomodo: number
+  retornos: number
+  faltas: number
+  evitar_temporario: number
+  runs_expirados: number
+  propostas_expiradas: number
+  demos: number
+}
+
+// Apaga o que passou do prazo de memória e expira os runs em espera. Cortes por dia usam o fuso padrão.
+export async function executarLimpeza(deps: {
+  stores: Stores
+  clock: Clock
+}): Promise<ResultadoLimpeza> {
+  const { stores, clock } = deps
+  const agora = clock.now()
+  const hoje = diaLocal(agora)
+  const { memoria } = config
+
+  const mensagens = await stores.messages.apagarAntesDe(
+    new Date(agora.getTime() - memoria.mensagensDias * DIA_MS),
+  )
+  const mensagens_com_incomodo = await stores.messages.apagarComIncomodoAntesDoDia(hoje)
+  const retornos = await stores.outcomes.apagarAguardandoAntesDe(
+    new Date(agora.getTime() - memoria.retornosDias * DIA_MS),
+  )
+  const faltas = await stores.shortages.apagarFaltasAntesDe(diasAtras(hoje, memoria.faltasDias))
+  const evitar_temporario = await stores.profiles.apagarEvitarTemporarioAntesDe(hoje)
+  const ids = await stores.runs.expirarEmEsperaAntesDe(
+    new Date(agora.getTime() - memoria.esperaMinutos * MINUTO_MS),
+  )
+  const propostas_expiradas = await stores.proposals.expirarDosRuns(ids)
+  const demos = await stores.accounts.apagarDemosVencidas()
+
+  return {
+    mensagens,
+    mensagens_com_incomodo,
+    retornos,
+    faltas,
+    evitar_temporario,
+    runs_expirados: ids.length,
+    propostas_expiradas,
+    demos,
+  }
+}

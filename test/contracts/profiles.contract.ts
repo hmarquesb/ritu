@@ -119,6 +119,25 @@ export function profilesContract(make: () => Promise<ContractEnv> | ContractEnv)
       expect(await env.stores.profiles.evitarTemporario(a, "2026-01-16")).toEqual([])
     })
 
+    it("apagarEvitarTemporarioAntesDe apaga só os dias anteriores e devolve a contagem", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      await env.stores.profiles.acrescentarEvitarTemporario(a, "2026-01-14", [
+        { tipo: "grupo", valor: "castanhas" },
+      ])
+      await env.stores.profiles.acrescentarEvitarTemporario(b, "2026-01-13", [
+        { tipo: "grupo", valor: "castanhas" },
+      ])
+      await env.stores.profiles.acrescentarEvitarTemporario(a, DIA, [
+        { tipo: "grupo", valor: "castanhas" },
+      ])
+
+      expect(await env.stores.profiles.apagarEvitarTemporarioAntesDe(DIA)).toBe(2)
+      expect(await env.stores.profiles.evitarTemporario(a, "2026-01-14")).toEqual([])
+      expect(await env.stores.profiles.evitarTemporario(a, DIA)).toEqual([
+        { tipo: "grupo", valor: "castanhas" },
+      ])
+    })
+
     it("conta B não lê nem altera o perfil da conta A", async () => {
       const { a, b } = await criarDuasContas(env.stores)
       await env.stores.profiles.definirPrakriti(a, { vata: 1 }, "quiz")

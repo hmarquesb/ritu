@@ -213,7 +213,7 @@ describe("resumir", () => {
 describe("formatarRelatorio", () => {
   const rodada = {
     checkpoint: "c1-base",
-    promptVersao: "acompanhante.v1",
+    promptVersao: "acompanhante.v2",
     totalDeCasos: 12,
     interrompidaPor: "rate_limit",
     casos: [
@@ -225,7 +225,7 @@ describe("formatarRelatorio", () => {
 
   it("traz o cabeçalho com versão do prompt, modelos e a interrupção", () => {
     expect(texto).toContain("# Eval com LLM: c1-base")
-    expect(texto).toContain("Versão do prompt: acompanhante.v1")
+    expect(texto).toContain("Versão do prompt: acompanhante.v2")
     expect(texto).toContain("Modelos usados: gemini-3.5-flash-lite")
     expect(texto).toContain("Casos rodados: 2 de 12")
     expect(texto).toContain("Rodada interrompida: rate_limit")

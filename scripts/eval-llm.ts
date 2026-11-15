@@ -4,7 +4,7 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import { parseArgs } from "node:util"
 import { z } from "zod"
-import { acompanhanteV1 } from "@/core/agents/prompts/acompanhante.v1"
+import { acompanhanteV2 } from "@/core/agents/prompts/acompanhante.v2"
 import { chamarComPapel, SemModeloError } from "@/core/llm/chamar"
 import type { RunEtapa } from "@/core/runs/ports"
 import { type Container, getContainer } from "@/infra/container"
@@ -148,7 +148,7 @@ async function rodarCaso(container: Container, caso: CasoC1): Promise<ResultadoD
 const rodar = (container: Container, checkpoint: string, casos: CasoC1[]): Promise<Rodada> =>
   executarRodada({
     checkpoint,
-    promptVersao: acompanhanteV1.versao,
+    promptVersao: acompanhanteV2.versao,
     casos,
     rodarCaso: (caso) => rodarCaso(container, caso),
     pausaMs: PAUSA_ENTRE_CASOS_MS,

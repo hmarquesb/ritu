@@ -96,7 +96,7 @@ function estado(mensagens: MensagemDoLoop[] = [], dadosDoRun: unknown = dados())
   return {
     versao: 1,
     agente: "acompanhante",
-    prompt_versao: "acompanhante.v1",
+    prompt_versao: "acompanhante.v2",
     mensagens,
     chamadas_de_modelo: 0,
     tokens: { entrada: 0, saida: 0 },

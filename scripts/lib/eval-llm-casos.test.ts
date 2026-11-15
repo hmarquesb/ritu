@@ -5,7 +5,7 @@ vi.mock("../../config/pausas", () => ({
   pausas: { maxPerguntasPorRun: 10, maxItensPorPergunta: 5, maxRefeicoesAPerguntar: 2 },
 }))
 
-import { casosC1 } from "../../evals/llm/casos/c1"
+import { casosC1, type ResultadoDoRun } from "../../evals/llm/casos/c1"
 import type { CasoConversa, CasoInterprete } from "../../evals/llm/casos/c2"
 import { casosC2 } from "../../evals/llm/casos/c2"
 import {
@@ -31,10 +31,28 @@ import {
   temRestricao,
   temUmaDe,
 } from "../../evals/llm/casos/c2/intencao/expectativas"
-import type { ExpectativaDoInterprete } from "../../evals/llm/casos/c2/tipos"
+import {
+  itensNaPergunta,
+  naoGostaDoPrimeiroTenhoOsOutros,
+  naoPerguntou,
+  naoTenhoATudo,
+  nuncaPerguntou,
+  pausouSemDecisao,
+  perguntouCasa,
+  perguntouNoMaximo,
+  semItemNaoGostado,
+  semItemNaSaida,
+  semSegundaPerguntaSobre,
+  sugestaoQueRefresca,
+  temAvisoDeIncomodo,
+  tenhoATudo,
+  terminou,
+} from "../../evals/llm/casos/c2/perguntas/expectativas"
+import type { ExpectativaDaConversa, ExpectativaDoInterprete } from "../../evals/llm/casos/c2/tipos"
+import type { SaidaDoAcompanhante, SugestaoEntregue } from "../../src/core/agents/companion/saida"
 import type { Interpretacao } from "../../src/core/agents/interpreter/interpretacao"
 import type { PedidoDePergunta } from "../../src/core/agents/tools/ask-user"
-import type { RespostaDaPessoa } from "../../src/core/runs/pergunta"
+import type { Pergunta, RespostaDaPessoa } from "../../src/core/runs/pergunta"
 import type { Caminho, RunEtapa } from "../../src/core/runs/ports"
 import { createContainer } from "../../src/infra/container"
 import { createFakeLlm } from "../../src/infra/fakes/fake-llm"
@@ -50,6 +68,7 @@ import {
   ehCheckpoint,
   formatarListagem,
   listarCasos,
+  resolverResposta,
   retornosFalsos,
   rodarConversa,
   rodarInterprete,
@@ -118,17 +137,26 @@ describe("listagem por checkpoint", () => {
     expect(linhas.every((l) => l.pasta === "c1" && l.tipo === "acompanhante")).toBe(true)
   })
 
-  it("c2-conversa lista os 12 do c1 e os 20 do c2", () => {
+  it("c2-conversa lista os 12 do c1 e os 28 do c2", () => {
     const linhas = listarCasos("c2-conversa")
-    expect(linhas).toHaveLength(32)
+    expect(linhas).toHaveLength(40)
     expect(linhas.slice(0, 12).every((l) => l.pasta === "c1")).toBe(true)
-    expect(linhas.slice(12).every((l) => l.pasta === "c2" && l.tipo === "interprete")).toBe(true)
+    expect(linhas.slice(12).every((l) => l.pasta === "c2")).toBe(true)
+    expect(linhas.slice(12).filter((l) => l.tipo === "interprete")).toHaveLength(20)
+    expect(linhas.slice(12).filter((l) => l.tipo === "conversa")).toHaveLength(8)
   })
 
-  it("c2 tem 20 casos do Intérprete, com ids únicos", () => {
-    expect(casosC2).toHaveLength(20)
-    expect(casosC2.every((c) => c.tipo === "interprete")).toBe(true)
-    expect(new Set(casosC2.map((c) => c.id)).size).toBe(20)
+  it("c2 tem 20 casos do Intérprete e 8 de Perguntas, com ids únicos", () => {
+    expect(casosC2).toHaveLength(28)
+    expect(casosC2.filter((c) => c.tipo === "interprete")).toHaveLength(20)
+    expect(casosC2.filter((c) => c.tipo === "conversa")).toHaveLength(8)
+    expect(new Set(casosC2.map((c) => c.id)).size).toBe(28)
+  })
+
+  it("os 8 casos de Perguntas são de conversa e têm mensagem", () => {
+    const perguntas = casosC2.filter((c) => c.id.startsWith("c2-p"))
+    expect(perguntas).toHaveLength(8)
+    expect(perguntas.every((c) => c.tipo === "conversa" && !!c.cenario.mensagem.texto)).toBe(true)
   })
 
   it("formata cada caso com pasta, id, tipo e título", () => {
@@ -606,5 +634,295 @@ describe("expectativas do Intérprete", () => {
   it("ehSuspeito confere o flag suspeito", () => {
     expect(passa(ehSuspeito(), { suspeito: true })).toBe(true)
     expect(passa(ehSuspeito(), {})).toBe(false)
+  })
+})
+
+describe("respostas como função", () => {
+  const perguntaDeUmItem: Pergunta = {
+    tipo: "casa",
+    texto: "Você tem abóbora?",
+    itens: [{ alimento_id: "abobora", nome: "abóbora" }],
+  }
+
+  it("a função recebe a pergunta que saiu e a resposta é o que ela devolve", () => {
+    expect(resolverResposta(tenhoATudo, perguntaDeUmItem)).toEqual({
+      tipo: "casa",
+      itens: [{ alimento_id: "abobora", resposta: "tenho" }],
+    })
+  })
+
+  it("resposta fixa passa como está; posição sem resposta vira pular", () => {
+    const fixa: RespostaDaPessoa = { tipo: "variante", variante: "latejante" }
+    expect(resolverResposta(fixa, perguntaDeUmItem)).toBe(fixa)
+    expect(resolverResposta(undefined, perguntaDeUmItem)).toEqual({ tipo: "pular" })
+  })
+
+  it("com LLM falso, a pausa recebe a resposta montada com os itens que saíram", async () => {
+    const casaIncerta = cenariosComPausa["casa-incerta"]
+    if (!casaIncerta) throw new Error("cenário casa-incerta ausente")
+    const { roteiro, respostas: _ignorada, ...cenario } = casaIncerta
+    const caso: CasoConversa = {
+      tipo: "conversa",
+      id: "t-resposta-na-hora",
+      titulo: "Resposta montada na hora",
+      cenario,
+      respostas: [tenhoATudo],
+      deve: [
+        {
+          descricao: "a pausa recebe tenho em todos os itens que saíram",
+          confere: ({ perguntas }) => {
+            const p = perguntas[0]
+            if (p?.pergunta.tipo !== "casa" || p.resposta.tipo !== "casa") return false
+            return (
+              p.resposta.itens.length === p.pergunta.itens.length &&
+              p.resposta.itens.every((i) => i.resposta === "tenho")
+            )
+          },
+        },
+      ],
+      naoPode: [],
+    }
+    const r = await rodarConversa(caso, {
+      runtime: createScriptedRuntime(roteiro),
+      llm: createFakeLlm([casaIncerta.interpretacao]),
+    })
+    expect(r.erro).toBeUndefined()
+    expect(r.deve.every((x) => x.ok)).toBe(true)
+  })
+})
+
+describe("expectativas da conversa de Perguntas", () => {
+  type Entrada = Parameters<ExpectativaDaConversa["confere"]>[0]
+
+  const saidaPronta = (p: Partial<SaidaDoAcompanhante> = {}): SaidaDoAcompanhante => ({
+    origem: "agente",
+    resposta: "Um prato morno.",
+    geral: false,
+    avisos: [],
+    explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
+    sugestoes: [],
+    evitar: [],
+    incertos: [],
+    citados: [],
+    anotacoes: [],
+    ...p,
+  })
+
+  const sugestaoCom = (ids: string[], verbos: string[] = []): SugestaoEntregue => ({
+    tipo: "refeicao",
+    titulo: "Sopa morna",
+    como_fazer: "Cozinhe e sirva quente.",
+    motivo: "Esquenta.",
+    linhas_base: [],
+    novidade: false,
+    verbos,
+    itens: ids.map((id) => ({
+      alimento_id: id,
+      nome: id,
+      contribui: [],
+      verbos: [],
+      linha_base: `alimentos:${id}`,
+      casa: "confirmado",
+    })),
+  })
+
+  const resultadoCom = (saida: SaidaDoAcompanhante): ResultadoDoRun => ({
+    saida,
+    status: "done",
+    tools: [],
+    chamadasDeModelo: 1,
+    validacoes: ["ok"],
+  })
+
+  const entrada = (p: Partial<Entrada> = {}): Entrada => ({
+    resposta: { run_id: "run-eval", status: "done", caminho: "acompanhante" },
+    resultado: resultadoCom(saidaPronta()),
+    perguntas: [],
+    recusadas: 0,
+    llmAntesDaPrimeiraPausa: 0,
+    ...p,
+  })
+
+  const casaCom = (ids: string[]): Entrada["perguntas"][number] => ({
+    pergunta: {
+      tipo: "casa",
+      texto: "Você tem?",
+      itens: ids.map((id) => ({ alimento_id: id, nome: id })),
+    },
+    resposta: { tipo: "pular" },
+  })
+
+  const variante: Entrada["perguntas"][number] = {
+    pergunta: {
+      tipo: "variante",
+      texto: "Qual dor?",
+      incomodo: "dor-de-cabeca",
+      opcoes: [{ id: "latejante", texto: "latejante" }],
+    },
+    resposta: { tipo: "variante", variante: "latejante" },
+  }
+
+  const passa = (e: ExpectativaDaConversa, r: Partial<Entrada>): boolean => e.confere(entrada(r))
+
+  it("perguntouCasa e naoPerguntou", () => {
+    expect(passa(perguntouCasa(), { perguntas: [casaCom(["abobora"])] })).toBe(true)
+    expect(passa(perguntouCasa(), {})).toBe(false)
+    expect(passa(naoPerguntou(), {})).toBe(true)
+    expect(passa(naoPerguntou(), { perguntas: [casaCom(["abobora"])] })).toBe(false)
+  })
+
+  it("perguntouNoMaximo conta as perguntas do run", () => {
+    expect(passa(perguntouNoMaximo(1), { perguntas: [casaCom(["abobora"])] })).toBe(true)
+    expect(
+      passa(perguntouNoMaximo(1), { perguntas: [casaCom(["abobora"]), casaCom(["couve"])] }),
+    ).toBe(false)
+  })
+
+  it("itensNaPergunta limita os itens de cada pergunta de casa", () => {
+    const seis = ["a", "b", "c", "d", "e", "f"]
+    expect(passa(itensNaPergunta(5), { perguntas: [casaCom(["a", "b", "c"])] })).toBe(true)
+    expect(passa(itensNaPergunta(5), { perguntas: [casaCom(seis)] })).toBe(false)
+    expect(passa(itensNaPergunta(5), {})).toBe(false)
+  })
+
+  it("nuncaPerguntou olha os itens das perguntas de casa", () => {
+    expect(passa(nuncaPerguntou("gengibre"), { perguntas: [casaCom(["abobora"])] })).toBe(true)
+    expect(passa(nuncaPerguntou("gengibre"), { perguntas: [casaCom(["gengibre"])] })).toBe(false)
+  })
+
+  it("semItemNaSaida procura o id em sugestão ou citado, e o nome no texto", () => {
+    expect(
+      passa(semItemNaSaida("abobora"), {
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestaoCom(["arroz-branco"])] })),
+      }),
+    ).toBe(true)
+    expect(
+      passa(semItemNaSaida("abobora"), {
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestaoCom(["abobora"])] })),
+      }),
+    ).toBe(false)
+    expect(
+      passa(semItemNaSaida("abobora"), {
+        resultado: resultadoCom(saidaPronta({ citados: ["alimentos:abobora"] })),
+      }),
+    ).toBe(false)
+    expect(
+      passa(semItemNaSaida("abobora"), {
+        resultado: resultadoCom(saidaPronta({ resposta: "Use a abóbora." })),
+      }),
+    ).toBe(false)
+  })
+
+  it("semSegundaPerguntaSobre aceita uma pergunta por item e recusa duas", () => {
+    expect(passa(semSegundaPerguntaSobre(["abobora"]), { perguntas: [casaCom(["abobora"])] })).toBe(
+      true,
+    )
+    expect(
+      passa(semSegundaPerguntaSobre(["abobora"]), {
+        perguntas: [casaCom(["abobora"]), casaCom(["abobora", "couve"])],
+      }),
+    ).toBe(false)
+  })
+
+  it("pausouSemDecisao exige zero chamadas antes da variante", () => {
+    expect(passa(pausouSemDecisao(), { perguntas: [variante] })).toBe(true)
+    expect(passa(pausouSemDecisao(), { perguntas: [variante], llmAntesDaPrimeiraPausa: 1 })).toBe(
+      false,
+    )
+    expect(passa(pausouSemDecisao(), { perguntas: [casaCom(["abobora"])] })).toBe(false)
+  })
+
+  it("temAvisoDeIncomodo confere o aviso de incômodo", () => {
+    expect(
+      passa(temAvisoDeIncomodo(), {
+        resultado: resultadoCom(saidaPronta({ avisos: [{ tipo: "incomodo", texto: "Cuidado." }] })),
+      }),
+    ).toBe(true)
+    expect(
+      passa(temAvisoDeIncomodo(), {
+        resultado: resultadoCom(saidaPronta({ avisos: [{ tipo: "geral", texto: "Oi." }] })),
+      }),
+    ).toBe(false)
+  })
+
+  it("sugestaoQueRefresca aceita frio ou brando em verbos ou contribui", () => {
+    expect(
+      passa(sugestaoQueRefresca(), {
+        resultado: resultadoCom(
+          saidaPronta({ sugestoes: [sugestaoCom(["melancia"], ["brando"])] }),
+        ),
+      }),
+    ).toBe(true)
+    expect(
+      passa(sugestaoQueRefresca(), {
+        resultado: resultadoCom(
+          saidaPronta({ sugestoes: [sugestaoCom(["melancia"], ["quente"])] }),
+        ),
+      }),
+    ).toBe(false)
+  })
+
+  it("terminou confere o status done", () => {
+    expect(passa(terminou(), {})).toBe(true)
+    const pausado: Partial<Entrada> = {
+      resposta: { run_id: "run-eval", status: "waiting_for_input", caminho: "acompanhante" },
+    }
+    expect(passa(terminou(), pausado)).toBe(false)
+  })
+
+  it("semItemNaoGostado confere que o item marcado como não gosto não sai", () => {
+    const naoGosto: Entrada["perguntas"][number] = {
+      pergunta: {
+        tipo: "casa",
+        texto: "Você tem?",
+        itens: [{ alimento_id: "abobora", nome: "abóbora" }],
+      },
+      resposta: { tipo: "casa", itens: [{ alimento_id: "abobora", resposta: "nao_gosto" }] },
+    }
+    expect(
+      passa(semItemNaoGostado(), {
+        perguntas: [naoGosto],
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestaoCom(["couve"])] })),
+      }),
+    ).toBe(true)
+    expect(
+      passa(semItemNaoGostado(), {
+        perguntas: [naoGosto],
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestaoCom(["abobora"])] })),
+      }),
+    ).toBe(false)
+  })
+
+  it("as respostas montadas na hora seguem os itens da pergunta", () => {
+    const casa: Pergunta = {
+      tipo: "casa",
+      texto: "Você tem?",
+      itens: [
+        { alimento_id: "abobora", nome: "abóbora" },
+        { alimento_id: "couve", nome: "couve" },
+      ],
+    }
+    expect(tenhoATudo(casa)).toEqual({
+      tipo: "casa",
+      itens: [
+        { alimento_id: "abobora", resposta: "tenho" },
+        { alimento_id: "couve", resposta: "tenho" },
+      ],
+    })
+    expect(naoTenhoATudo(casa)).toEqual({
+      tipo: "casa",
+      itens: [
+        { alimento_id: "abobora", resposta: "nao_tenho" },
+        { alimento_id: "couve", resposta: "nao_tenho" },
+      ],
+    })
+    expect(naoGostaDoPrimeiroTenhoOsOutros(casa)).toEqual({
+      tipo: "casa",
+      itens: [
+        { alimento_id: "abobora", resposta: "nao_gosto" },
+        { alimento_id: "couve", resposta: "tenho" },
+      ],
+    })
+    expect(tenhoATudo(variante.pergunta)).toEqual({ tipo: "pular" })
   })
 })

@@ -28,6 +28,7 @@ import type { SugestaoRegistrada } from "../../src/core/memory-schemas"
 import type { Retorno } from "../../src/core/outcomes/ports"
 import type { AgentRuntime } from "../../src/core/runs/agent-runtime"
 import { escolherCaminho } from "../../src/core/runs/caminhos"
+import type { Pergunta, RespostaDaPessoa } from "../../src/core/runs/pergunta"
 import type { Run, RunEtapa } from "../../src/core/runs/ports"
 import { createMemoryTelemetry } from "../../src/infra/fakes/memory-telemetry"
 import { montarCenario, rodarCenario } from "../../test/fixtures/cenarios"
@@ -340,6 +341,15 @@ function pausadoAcimaDoTeto(
   }
 }
 
+/** Resposta de uma pausa: a função recebe a pergunta que saiu; posição vazia vira pular. */
+export function resolverResposta(
+  resposta: NonNullable<CasoConversa["respostas"]>[number] | undefined,
+  pergunta: Pergunta,
+): RespostaDaPessoa {
+  if (typeof resposta === "function") return resposta(pergunta)
+  return resposta ?? { tipo: "pular" }
+}
+
 /** Uma mensagem pela conversa, respondendo às pausas com as respostas do caso. Sem juiz: a explicação fica fora desta conta. */
 export async function rodarConversa(
   caso: CasoConversa,
@@ -349,7 +359,7 @@ export async function rodarConversa(
   const { contaId, deps } = await montarCenario(cenario, opts)
   const inicio = performance.now()
   const rodada = await rodarCenario(deps, contaId, cenario, {
-    responder: async (_pergunta, i) => caso.respostas?.[i] ?? { tipo: "pular" },
+    responder: async (pergunta, i) => resolverResposta(caso.respostas?.[i], pergunta),
   })
   const latenciaMs = Math.round(performance.now() - inicio)
   const resposta = daConversa(rodada.final)

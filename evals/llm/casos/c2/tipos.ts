@@ -49,7 +49,8 @@ export type CasoConversa = {
   // Cenário da conversa: como CenarioDoCaso, com mensagem obrigatória e sem entrada de acompanhante.
   cenario: Omit<CenarioDeConversa, "roteiro" | "respostas">
   // Respostas da pessoa às pausas, na ordem em que as perguntas saem; sem resposta sobrando, pular.
-  respostas?: RespostaDaPessoa[]
+  // Uma posição pode ser função: recebe a pergunta que saiu e devolve a resposta (ex.: "Tenho a tudo").
+  respostas?: (RespostaDaPessoa | ((p: Pergunta) => RespostaDaPessoa))[]
   // Só nos casos de pergunta: se o run devia perguntar (necessaria) ou não (desnecessaria).
   pergunta?: "necessaria" | "desnecessaria"
   deve: ExpectativaDaConversa[]

@@ -18,9 +18,17 @@ import { caso17 } from "./intencao/17-prompt-suspeito"
 import { caso18 } from "./intencao/18-apagar-dados"
 import { caso19 } from "./intencao/19-vegetariana"
 import { caso20 } from "./intencao/20-nao-como-coentro"
+import { casoPergunta01 } from "./perguntas/01-frio-so-incertos"
+import { casoPergunta02 } from "./perguntas/02-frio-casa-confirmada"
+import { casoPergunta03 } from "./perguntas/03-almoco-casa-vazia"
+import { casoPergunta04 } from "./perguntas/04-pergunta-manga"
+import { casoPergunta05 } from "./perguntas/05-frio-nao-tenho-a-tudo"
+import { casoPergunta06 } from "./perguntas/06-frio-nao-gosto-a-um"
+import { casoPergunta07 } from "./perguntas/07-frio-evitar-sempre"
+import { casoPergunta08 } from "./perguntas/08-dor-de-cabeca-latejante"
 import type { CasoC2 } from "./tipos"
 
-// Casos da pasta c2 (Intérprete e conversa). A família Intenção tem 20 casos do Intérprete.
+// Casos da pasta c2 (Intérprete e conversa). A família Intenção tem 20 casos do Intérprete; a família Perguntas, 8 casos de conversa.
 export const casosC2: CasoC2[] = [
   caso01,
   caso02,
@@ -42,6 +50,14 @@ export const casosC2: CasoC2[] = [
   caso18,
   caso19,
   caso20,
+  casoPergunta01,
+  casoPergunta02,
+  casoPergunta03,
+  casoPergunta04,
+  casoPergunta05,
+  casoPergunta06,
+  casoPergunta07,
+  casoPergunta08,
 ]
 
 export type {

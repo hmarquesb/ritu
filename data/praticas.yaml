@@ -1,2 +1,356 @@
 # Chás, óleos e práticas — schema em src/core/knowledge/schemas.ts
-[]
+- id: cha-gengibre
+  tipo: cha
+  nome: Chá de gengibre
+  ingredientes: [gengibre]
+  preparo: "Ferva rodelas de gengibre fresco na água por alguns minutos, coe e beba morno. O gengibre fresco é mais suave que o seco."
+  gunas: [quente, leve, movel]
+  favorece_estados: [com_frio, pesada, sem_energia]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [jantar, noite]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [preparo, contraindicacoes] }
+    - { ref: banyan-gengibre-na-dieta, campos: [momento] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados] }
+  confianca: baixa
+- id: cha-gengibre-canela
+  tipo: cha
+  nome: Chá de gengibre com canela
+  ingredientes: [gengibre, canela]
+  preparo: "Ferva rodelas de gengibre com um pau de canela por alguns minutos. Coe e beba morno."
+  gunas: [quente, leve, movel]
+  favorece_estados: [com_frio, pesada, sem_energia]
+  efeito: { vata: 0, pitta: 1, kapha: -1 }
+  momento: [manha, tarde]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-cha-clareza, campos: [gunas, favorece_estados] }
+    - { ref: banyan-especiarias-outono-inverno, campos: [preparo, contraindicacoes] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [momento] }
+  confianca: baixa
+- id: cha-gengibre-limao-mel
+  tipo: cha
+  nome: Chá de gengibre com limão e mel
+  ingredientes: [gengibre, limao, mel]
+  preparo: "Deixe gengibre ralado em água fervente por alguns minutos e coe. Espere o chá amornar e só então junte o limão espremido e o mel."
+  gunas: [quente, leve, seco]
+  favorece_estados: [pesada, sem_energia, com_frio]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  momento: [jantar, noite]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: [vegana]
+  aviso: "Junte o mel só com o chá já morno; não aqueça o mel."
+  fontes:
+    - { ref: banyan-gengibre-na-dieta, campos: [preparo, momento, favorece_estados] }
+    - { ref: banyan-mel, campos: [preparo, aviso, efeito, contraindicacoes] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+- id: cha-canela
+  tipo: cha
+  nome: Chá de canela
+  ingredientes: [canela]
+  preparo: "Ferva um pau de canela na água por alguns minutos. Beba morno."
+  gunas: [quente, leve, seco]
+  favorece_estados: [com_frio, pesada]
+  efeito: { vata: 1, pitta: 0, kapha: -1 }
+  momento: [manha, tarde]
+  contraindicacoes: [com_calor]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [preparo, gunas, favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-canela-cardamomo
+  tipo: cha
+  nome: Chá de canela com cardamomo
+  ingredientes: [canela, cardamomo]
+  preparo: "Ferva um pau de canela com bagas de cardamomo abertas por alguns minutos. Coe e beba morno."
+  gunas: [quente, leve]
+  favorece_estados: [com_frio, pesada, sem_energia]
+  efeito: { vata: 0, pitta: 0, kapha: -1 }
+  momento: [manha, tarde]
+  contraindicacoes: [com_calor]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [preparo] }
+    - { ref: banyan-cha-clareza, campos: [gunas, favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-cardamomo
+  tipo: cha
+  nome: Chá de cardamomo
+  ingredientes: [cardamomo]
+  preparo: "Abra bagas de cardamomo e deixe em água quente, tampado, por alguns minutos. Coe e beba morno."
+  gunas: [leve, suave]
+  favorece_estados: [pesada, agitada]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [almoco, tarde, jantar]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-ervas-verao, campos: [preparo, efeito] }
+    - { ref: banyan-ervas-cozinha, campos: [efeito, favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, momento] }
+  confianca: baixa
+- id: cha-cravo-canela
+  tipo: cha
+  nome: Chá de cravo com canela
+  ingredientes: [cravo, canela]
+  preparo: "Ferva cravos com um pau de canela por alguns minutos. Coe e beba morno."
+  gunas: [quente, leve, movel]
+  favorece_estados: [com_frio, sem_energia, pesada]
+  efeito: { vata: 0, pitta: 1, kapha: -1 }
+  momento: [manha, tarde]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-especiarias-outono-inverno, campos: [preparo, gunas, favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, contraindicacoes] }
+    - { ref: a_confirmar, campos: [momento] }
+  confianca: baixa
+- id: cha-erva-doce
+  tipo: cha
+  nome: Chá de erva-doce
+  ingredientes: [erva-doce]
+  preparo: "Deixe sementes de erva-doce em água quente, tampado, por alguns minutos. Coe e beba morno, de preferência depois da refeição."
+  gunas: [leve, suave, brando]
+  favorece_estados: [com_calor, agitada, seca]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  momento: [almoco, tarde, jantar]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-erva-doce, campos: [preparo, favorece_estados, efeito] }
+    - { ref: banyan-ervas-verao, campos: [favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, momento] }
+  confianca: baixa
+- id: cha-cominho-coentro-erva-doce
+  tipo: cha
+  nome: Chá de cominho, coentro e erva-doce
+  ingredientes: [cominho, coentro-em-grao, erva-doce]
+  preparo: "Ferva sementes de cominho, de coentro e de erva-doce na água por alguns minutos. Coe e beba morno ou em temperatura ambiente."
+  gunas: [leve, brando]
+  favorece_estados: [pesada, com_calor]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  momento: [manha, almoco, tarde]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-cha-ccf, campos: [preparo, favorece_estados] }
+    - { ref: banyan-rotina-manha-energia, campos: [efeito, momento] }
+    - { ref: banyan-ervas-cozinha, campos: [momento] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+- id: cha-coentro-em-grao
+  tipo: cha
+  nome: Chá de coentro em grão
+  ingredientes: [coentro-em-grao]
+  preparo: "Deixe sementes de coentro de molho em água em temperatura ambiente, tampado, por um tempo. Coe e beba fresco, sem gelo."
+  gunas: [frio, brando]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  momento: [almoco, tarde]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-ervas-verao, campos: [preparo, gunas, favorece_estados, efeito] }
+    - { ref: banyan-dosha-pitta-cuidados, campos: [preparo] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-hortela
+  tipo: cha
+  nome: Chá de hortelã
+  ingredientes: [hortela]
+  preparo: "Deixe folhas de hortelã em água quente, tampado, por alguns minutos. Beba morno ou em temperatura ambiente, sem gelo."
+  gunas: [frio, leve]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  momento: [almoco, tarde]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-cha-calmante-pitta, campos: [favorece_estados] }
+    - { ref: banyan-equilibrar-pitta, campos: [favorece_estados] }
+    - { ref: banyan-dosha-pitta-cuidados, campos: [preparo] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-hortela-erva-doce
+  tipo: cha
+  nome: Chá de hortelã com erva-doce
+  ingredientes: [hortela, erva-doce]
+  preparo: "Deixe folhas de hortelã e sementes de erva-doce em água quente, tampado, por alguns minutos. Coe e beba morno ou fresco, sem gelo."
+  gunas: [frio, brando]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  momento: [almoco, tarde]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-cha-calmante-pitta, campos: [preparo, gunas, favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-camomila
+  tipo: cha
+  nome: Chá de camomila
+  ingredientes: [camomila]
+  preparo: "Deixe flores de camomila em água quente, tampado, por alguns minutos. Coe e beba morno, num momento de pausa."
+  gunas: [suave, estavel, brando]
+  favorece_estados: [agitada, irritada, com_calor]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  momento: [tarde, noite]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-sono-insuficiente, campos: [momento, favorece_estados] }
+    - { ref: banyan-cha-calmante-pitta, campos: [favorece_estados] }
+    - { ref: banyan-dosha-pitta-cuidados, campos: [favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas] }
+  confianca: baixa
+- id: cha-camomila-erva-doce
+  tipo: cha
+  nome: Chá de camomila com erva-doce
+  ingredientes: [camomila, erva-doce]
+  preparo: "Deixe flores de camomila e sementes de erva-doce em água quente, tampado, por alguns minutos. Coe e beba morno."
+  gunas: [suave, estavel, brando]
+  favorece_estados: [agitada, seca, irritada]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  momento: [jantar, noite]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-sono-insuficiente, campos: [momento] }
+    - { ref: banyan-erva-doce, campos: [favorece_estados] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados] }
+  confianca: baixa
+- id: cha-capim-limao
+  tipo: cha
+  nome: Chá de capim-limão
+  ingredientes: [capim-limao]
+  preparo: "Corte folhas de capim-limão e deixe em água quente, tampado, por alguns minutos. Coe e beba morno ou fresco, sem gelo."
+  gunas: [frio, leve]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  momento: [almoco, tarde]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-equilibrar-pitta, campos: [favorece_estados] }
+    - { ref: banyan-dosha-pitta-cuidados, campos: [preparo] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-capim-limao-hortela
+  tipo: cha
+  nome: Chá de capim-limão com hortelã
+  ingredientes: [capim-limao, hortela]
+  preparo: "Corte folhas de capim-limão e junte folhas de hortelã em água quente, tampado, por alguns minutos. Coe e beba morno ou fresco, sem gelo."
+  gunas: [frio, leve]
+  favorece_estados: [com_calor, irritada]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  momento: [tarde]
+  contraindicacoes: [com_frio]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-equilibrar-pitta, campos: [favorece_estados] }
+    - { ref: banyan-dosha-pitta-cuidados, campos: [preparo] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-erva-cidreira
+  tipo: cha
+  nome: Chá de erva-cidreira
+  ingredientes: [erva-cidreira]
+  preparo: "Deixe folhas de erva-cidreira em água quente, tampado, por alguns minutos. Coe e beba morno."
+  gunas: [frio, leve, brando]
+  favorece_estados: [irritada, com_calor]
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
+  momento: [tarde, noite]
+  contraindicacoes: [com_frio, seca]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, contraindicacoes] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, momento] }
+  confianca: baixa
+- id: cha-curcuma-gengibre
+  tipo: cha
+  nome: Chá de cúrcuma com gengibre
+  ingredientes: [curcuma, gengibre]
+  preparo: "Ferva rodelas de gengibre e de cúrcuma fresca, ou cúrcuma em pó, por alguns minutos. Desligue, coe e beba morno."
+  gunas: [quente, leve, seco]
+  favorece_estados: [com_frio, pesada]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [manha, tarde]
+  contraindicacoes: [com_calor]
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-cha-gengibre-curcuma, campos: [preparo] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [gunas, favorece_estados, momento, contraindicacoes] }
+  confianca: baixa
+- id: cha-anis-estrelado
+  tipo: cha
+  nome: Chá de anis-estrelado
+  ingredientes: [anis-estrelado]
+  preparo: "Deixe anis-estrelado em água quente, tampado, por alguns minutos. Coe e beba morno."
+  gunas: [quente, leve]
+  favorece_estados: [com_frio, pesada]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  momento: [tarde, jantar]
+  contraindicacoes: [com_calor, irritada]
+  nunca_sugerir_se: []
+  aviso: "Use só anis-estrelado vendido como tempero, de procedência conhecida."
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, contraindicacoes] }
+    - { ref: a_confirmar, campos: [preparo, gunas, favorece_estados, momento, aviso] }
+  confianca: baixa
+- id: agua-morna-com-limao
+  tipo: cha
+  nome: Água morna com limão
+  ingredientes: [limao]
+  preparo: "Ao acordar, esprema limão na água morna e beba devagar, antes do café da manhã."
+  gunas: [quente, leve]
+  favorece_estados: [pesada, sem_energia]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [manha]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-sete-praticas-diarias, campos: [preparo, momento] }
+    - { ref: banyan-saude-figado, campos: [preparo, momento, gunas, efeito] }
+    - { ref: banyan-rotina-manha-energia, campos: [preparo] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [favorece_estados] }
+  confianca: baixa

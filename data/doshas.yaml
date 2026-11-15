@@ -1,2 +1,57 @@
 # Doshas (vata, pitta, kapha) — schema em src/core/knowledge/schemas.ts
-[]
+- id: vata
+  nome: Vata
+  elementos: [ar, espaco]
+  resumo: "Movimento: leveza, agilidade e um ritmo que varia bastante."
+  gunas: [frio, seco, leve, movel, aspero]
+  equilibra_gunas: [quente, oleoso, pesado, estavel]
+  equilibra_rasas: [doce, azedo, salgado]
+  caracteristicas:
+    corpo: "Corpo leve, que se cansa com facilidade quando passa do próprio ritmo."
+    mente: "Entende rápido e esquece rápido; a cabeça gosta de novidade."
+    digestao: "Apetite e digestão que variam de um dia para o outro, com tendência ao intestino seco."
+  desequilibra: "Frio, barulho, viagens frequentes, estímulo o tempo todo, comida crua, gelada ou seca e café em excesso."
+  equilibra: "O que é quente, úmido, nutritivo e estável: comida morna e bem cozida, um fio de óleo e os sabores doce, azedo e salgado."
+  fontes:
+    - { ref: ayurveda-com-doshas-elementos-atributos, campos: [elementos, gunas] }
+    - { ref: banyan-vata-pitta-kapha, campos: [elementos, resumo, gunas, equilibra_gunas] }
+    - { ref: ayurveda-com-introducao, campos: [caracteristicas, desequilibra, equilibra, equilibra_rasas] }
+    - { ref: banyan-dieta-vata, campos: [equilibra_rasas, desequilibra, equilibra] }
+    - { ref: ayurveda-com-guia-dieta, campos: [desequilibra] }
+- id: pitta
+  nome: Pitta
+  elementos: [fogo, agua]
+  resumo: "Transformação: calor, foco e intensidade."
+  gunas: [quente, intenso, oleoso]
+  equilibra_gunas: [frio, brando]
+  equilibra_rasas: [doce, amargo, adstringente]
+  caracteristicas:
+    corpo: "Corpo aquecido, com metabolismo forte."
+    mente: "Raciocínio afiado; quando passa do ponto, se irrita com facilidade."
+    digestao: "Apetite forte, que não gosta de pular refeição."
+  desequilibra: "Calor em excesso, comida muito picante, salgada, azeda, frita ou fermentada, álcool e café."
+  equilibra: "O que é fresco e brando: refeições regulares, sabores suaves e os sabores doce, amargo e adstringente."
+  fontes:
+    - { ref: ayurveda-com-doshas-elementos-atributos, campos: [elementos, gunas] }
+    - { ref: banyan-vata-pitta-kapha, campos: [elementos, resumo, gunas, equilibra_gunas, caracteristicas] }
+    - { ref: ayurveda-com-introducao, campos: [caracteristicas, desequilibra, equilibra, equilibra_rasas] }
+    - { ref: banyan-dieta-pitta, campos: [equilibra_gunas, equilibra_rasas, caracteristicas, desequilibra, equilibra] }
+- id: kapha
+  nome: Kapha
+  elementos: [agua, terra]
+  resumo: "Estrutura: firmeza, constância e acolhimento."
+  gunas: [pesado, frio, oleoso, estavel]
+  equilibra_gunas: [leve, seco, quente, movel]
+  equilibra_rasas: [picante, amargo, adstringente]
+  caracteristicas:
+    corpo: "Corpo de estrutura firme, com metabolismo mais lento e sono profundo e longo."
+    mente: "Aprende devagar e guarda por muito tempo; ligada ao afeto e à compaixão."
+    digestao: "Digestão lenta, com tendência a se sentir pesada depois de comer muito."
+  desequilibra: "Comida pesada, gordurosa, doce ou gelada, laticínios em excesso e comer demais de uma vez."
+  equilibra: "O que é leve, seco, quente e estimulante: comida morna e temperada e os sabores picante, amargo e adstringente."
+  fontes:
+    - { ref: ayurveda-com-doshas-elementos-atributos, campos: [elementos, gunas] }
+    - { ref: banyan-vata-pitta-kapha, campos: [elementos, resumo, gunas, equilibra_gunas, caracteristicas] }
+    - { ref: ayurveda-com-introducao, campos: [caracteristicas, desequilibra, equilibra_rasas] }
+    - { ref: banyan-dieta-kapha, campos: [equilibra_gunas, equilibra_rasas, caracteristicas, desequilibra, equilibra] }
+    - { ref: ayurveda-com-guia-dieta, campos: [desequilibra] }

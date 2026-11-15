@@ -1,2 +1,92 @@
 # Estados da pessoa — schema em src/core/knowledge/schemas.ts
-[]
+- id: com_frio
+  rotulo: Com frio
+  emoji: "🥶"
+  eixo: temperatura
+  presentes: [frio]
+  favorecer: [quente]
+  evitar_gunas: [frio]
+  evitar_marcas: []
+  evitar_texto: "gelados e crus"
+  fontes:
+    - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer, evitar_gunas] }
+    - { ref: banyan-dieta-vata, campos: [evitar_texto] }
+  confianca: media
+- id: com_calor
+  rotulo: Com calor
+  emoji: "🥵"
+  eixo: temperatura
+  presentes: [quente]
+  favorecer: [frio, brando]
+  evitar_gunas: [quente, intenso]
+  evitar_marcas: []
+  evitar_texto: "picantes, frituras e pratos muito quentes"
+  fontes:
+    - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer, evitar_gunas] }
+    - { ref: banyan-dieta-pitta, campos: [favorecer, evitar_gunas, evitar_texto] }
+  confianca: media
+- id: pesada
+  rotulo: Pesada, inchada
+  emoji: "🪨"
+  eixo: corpo
+  presentes: [pesado, oleoso]
+  favorecer: [leve, seco, quente]
+  evitar_gunas: [pesado, oleoso]
+  evitar_marcas: [fruta_doce]
+  evitar_texto: "pratos pesados, gordurosos e doces em excesso"
+  fontes:
+    - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer] }
+    - { ref: banyan-dieta-kapha, campos: [presentes, favorecer, evitar_gunas, evitar_marcas, evitar_texto] }
+  confianca: media
+- id: seca
+  rotulo: Seca, ressecada
+  emoji: "🍂"
+  eixo: corpo
+  presentes: [seco, aspero]
+  favorecer: [oleoso, suave]
+  evitar_gunas: [seco, aspero]
+  evitar_marcas: []
+  evitar_texto: "secos e crus"
+  fontes:
+    - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer] }
+    - { ref: banyan-dieta-vata, campos: [favorecer, evitar_gunas, evitar_texto] }
+  confianca: media
+- id: agitada
+  rotulo: Agitada, ansiosa
+  emoji: "⚡"
+  eixo: mente
+  presentes: [movel]
+  favorecer: [estavel, quente, pesado]
+  evitar_gunas: [movel, frio]
+  evitar_marcas: [estimulante]
+  evitar_texto: "café e outros estimulantes, crus e gelados"
+  fontes:
+    - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer] }
+    - { ref: banyan-dieta-vata, campos: [evitar_gunas, evitar_marcas, evitar_texto] }
+  confianca: media
+- id: irritada
+  rotulo: Irritada
+  emoji: "🔥"
+  eixo: mente
+  presentes: [intenso, quente]
+  favorecer: [frio, brando]
+  evitar_gunas: [intenso, quente]
+  evitar_marcas: [fruta_azeda, fermentado]
+  evitar_texto: "picantes, azedos e fermentados"
+  fontes:
+    - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer] }
+    - { ref: banyan-dieta-pitta, campos: [favorecer, evitar_gunas, evitar_marcas, evitar_texto] }
+  confianca: media
+- id: sem_energia
+  rotulo: Sem energia
+  emoji: "😴"
+  eixo: mente
+  presentes: [pesado, estavel]
+  favorecer: [leve, quente, movel]
+  evitar_gunas: [pesado, frio]
+  evitar_marcas: [fruta_doce]
+  evitar_texto: "pesados, doces e gelados"
+  fontes:
+    - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer] }
+    - { ref: banyan-dieta-kapha, campos: [presentes, evitar_gunas, evitar_marcas, evitar_texto] }
+  confianca: media

@@ -1,2 +1,13 @@
 # Vocabulário das 12 qualidades — schema em src/core/knowledge/schemas.ts
-[]
+- { guna: quente, nome: quente, verbo: aquece }
+- { guna: frio, nome: frio, verbo: refresca }
+- { guna: oleoso, nome: úmido, verbo: umedece }
+- { guna: seco, nome: seco, verbo: seca }
+- { guna: pesado, nome: nutritivo, verbo: nutre }
+- { guna: leve, nome: leve, verbo: alivia o peso }
+- { guna: estavel, nome: estável, verbo: assenta }
+- { guna: movel, nome: estimulante, verbo: estimula }
+- { guna: suave, nome: suave, verbo: suaviza }
+- { guna: brando, nome: brando, verbo: acalma }
+- { guna: intenso, nome: intenso, verbo: desperta }
+- { guna: aspero, nome: áspero, verbo: null }

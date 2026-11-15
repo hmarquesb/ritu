@@ -1,2 +1,122 @@
 # Incômodos e variantes — schema em src/core/knowledge/schemas.ts
-[]
+- id: dor-de-cabeca
+  nome: Dor de cabeça
+  palavras: [dor de cabeça, cabeça doendo, dor na cabeça, cabeça latejando, cabeça pesada, enxaqueca]
+  pergunta: "Como está essa dor de cabeça?"
+  variantes:
+    - id: latejante
+      opcao: "Latejante, com calor ou irritação"
+      presentes: [quente, intenso]
+      favorecer: [frio, brando]
+      evitar_gunas: [quente, intenso]
+      evitar_marcas: []
+      evitar_texto: "picantes, frituras e sol forte"
+    - id: tensa
+      opcao: "Tensa, com cansaço, ansiedade ou sono ruim"
+      presentes: [movel, seco]
+      favorecer: [estavel, oleoso, quente]
+      evitar_gunas: [movel, frio]
+      evitar_marcas: [estimulante]
+      evitar_texto: "jejum longo, café e gelados"
+    - id: pesada
+      opcao: "Pesada, com nariz entupido"
+      presentes: [pesado, oleoso]
+      favorecer: [leve, quente]
+      evitar_gunas: [pesado, frio]
+      evitar_marcas: []
+      evitar_texto: "laticínios, doces e gelados"
+  fontes:
+    - { ref: a_confirmar, campos: [variantes] }
+  confianca: baixa
+- id: estomago-pesado
+  nome: Estômago pesado
+  palavras: [estômago pesado, comi demais, empanturrada, empachada, digestão lenta, má digestão, estufada depois de comer]
+  variantes:
+    - id: unica
+      opcao: "Estômago pesado"
+      presentes: [pesado, frio]
+      favorecer: [leve, quente]
+      evitar_gunas: [pesado, frio]
+      evitar_marcas: []
+      evitar_texto: "pratos pesados, crus e gelados"
+  fontes:
+    - { ref: ayurveda-com-guia-dieta, campos: [variantes.unica.favorecer] }
+    - { ref: a_confirmar, campos: [variantes.unica.presentes, variantes.unica.evitar_gunas, variantes.unica.evitar_texto] }
+  confianca: baixa
+- id: gases
+  nome: Gases, estufamento
+  palavras: [gases, gás, estufada, estufamento, barriga inchada, barriga estufada, flatulência]
+  variantes:
+    - id: unica
+      opcao: "Gases, estufamento"
+      presentes: [movel, seco]
+      favorecer: [quente, suave]
+      evitar_gunas: [frio, aspero]
+      evitar_marcas: []
+      evitar_texto: "crus, gelados e feijão mal cozido"
+  fontes:
+    - { ref: ayurveda-com-introducao, campos: [variantes.unica.presentes] }
+    - { ref: banyan-vata-pitta-kapha, campos: [variantes.unica.presentes, variantes.unica.favorecer] }
+    - { ref: ayurveda-com-guia-dieta, campos: [variantes.unica.evitar_gunas, variantes.unica.evitar_texto] }
+  confianca: media
+- id: cansaco
+  nome: Cansaço
+  palavras: [cansaço, cansada, exausta, moída, sem pique, sonolenta, lerda, desanimada]
+  variantes:
+    - id: unica
+      opcao: "Cansaço"
+      presentes: [pesado, estavel]
+      favorecer: [leve, quente]
+      evitar_gunas: [pesado]
+      evitar_marcas: [fruta_doce]
+      evitar_texto: "pratos pesados e doces"
+  fontes:
+    - { ref: ayurveda-com-introducao, campos: [variantes.unica.presentes] }
+    - { ref: banyan-vata-pitta-kapha, campos: [variantes.unica.presentes, variantes.unica.favorecer] }
+    - { ref: banyan-dieta-kapha, campos: [variantes.unica.evitar_gunas, variantes.unica.evitar_marcas, variantes.unica.evitar_texto] }
+  confianca: media
+- id: dificuldade-para-dormir
+  nome: Dificuldade para dormir
+  palavras: [não consigo dormir, insônia, sono ruim, dormi mal, acordo de madrugada, sono leve, demoro a dormir, perdi o sono]
+  variantes:
+    - id: unica
+      opcao: "Dificuldade para dormir"
+      presentes: [movel]
+      favorecer: [estavel, quente, pesado]
+      evitar_gunas: [movel]
+      evitar_marcas: [estimulante]
+      evitar_texto: "café e outros estimulantes à noite, telas e jantar tarde e farto"
+  fontes:
+    - { ref: banyan-sono-insuficiente, campos: [variantes.unica.presentes, variantes.unica.favorecer, variantes.unica.evitar_gunas, variantes.unica.evitar_marcas, variantes.unica.evitar_texto] }
+  confianca: media
+- id: nariz-entupido
+  nome: Nariz entupido
+  palavras: [nariz entupido, nariz trancado, congestionada, nariz escorrendo, catarro, coriza]
+  variantes:
+    - id: unica
+      opcao: "Nariz entupido"
+      presentes: [pesado, oleoso, frio]
+      favorecer: [quente, leve, seco]
+      evitar_gunas: [frio, pesado]
+      evitar_marcas: []
+      evitar_texto: "laticínios e gelados"
+  fontes:
+    - { ref: ayurveda-com-introducao, campos: [variantes.unica.presentes] }
+    - { ref: banyan-vata-pitta-kapha, campos: [variantes.unica.presentes, variantes.unica.favorecer] }
+    - { ref: ayurveda-com-guia-dieta, campos: [variantes.unica.favorecer, variantes.unica.evitar_gunas, variantes.unica.evitar_texto] }
+  confianca: media
+- id: colica-leve
+  nome: Cólica leve
+  palavras: [cólica, cólica menstrual, pé da barriga doendo, menstruação doendo, barriga doendo na menstruação]
+  variantes:
+    - id: unica
+      opcao: "Cólica leve"
+      presentes: [movel, frio]
+      favorecer: [quente, oleoso]
+      evitar_gunas: [frio]
+      evitar_marcas: [estimulante]
+      evitar_texto: "gelados, crus e café"
+  fontes:
+    - { ref: banyan-ciclo-saudavel, campos: [variantes.unica.presentes, variantes.unica.favorecer, variantes.unica.evitar_marcas, variantes.unica.evitar_texto] }
+    - { ref: a_confirmar, campos: [variantes.unica.evitar_gunas] }
+  confianca: baixa

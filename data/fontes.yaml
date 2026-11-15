@@ -1,2 +1,55 @@
 # Fontes registradas — schema em src/core/knowledge/schemas.ts
-[]
+- ref: ayurveda-com-doshas-elementos-atributos
+  titulo: "Doshas: Their Elements and Attributes"
+  autor: The Ayurvedic Institute
+  url: https://ayurveda.com/blog/doshas-their-elements-and-attributes/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: ayurveda-com-introducao
+  titulo: "Ayurveda: A Brief Introduction and Guide"
+  autor: The Ayurvedic Institute
+  url: https://ayurveda.com/ayurveda-a-brief-introduction-and-guide/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: ayurveda-com-guia-dieta
+  titulo: "Ayurvedic Diet Guide: Balance Doshas, Digestion & Mind"
+  autor: The Ayurvedic Institute
+  url: https://ayurveda.com/resources/ayurvedic-diet-guide/
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-vata-pitta-kapha
+  titulo: "Ayurvedic Body Type - Vata, Pitta, and Kapha"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-vata-pitta-and-kapha
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-dieta-vata
+  titulo: "Ayurveda Vata Diet - Balancing Vata Dosha"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-vata-pacifying-diet
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-dieta-pitta
+  titulo: "Pitta-Pacifying Diet"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-pitta-pacifying-diet
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-dieta-kapha
+  titulo: "Kapha-Pacifying Diet"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-kapha-pacifying-diet
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-ciclo-saudavel
+  titulo: "An Ayurvedic Approach to a Healthy Cycle"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-healthy-cycle-guide
+  acessado_em: "2026-11-15"
+  aprovada: true
+- ref: banyan-sono-insuficiente
+  titulo: "Balancing Insufficient Sleep"
+  autor: Banyan Botanicals
+  url: https://www.banyanbotanicals.com/info/ayurvedic-living/living-ayurveda/health-guides/an-ayurvedic-guide-to-balanced-sleep/balancing-insufficient-sleep/
+  acessado_em: "2026-11-15"
+  aprovada: true

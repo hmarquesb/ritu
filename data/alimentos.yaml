@@ -1688,3 +1688,506 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
   confianca: media
   notas: "Diretrizes: Vata com moderação; Pitta favorece; Kapha favorece quente (com moderação) e evita frio."
+
+- id: leite
+  nome: Leite
+  sinonimos: [leite de vaca, leite integral]
+  grupo: laticinios
+  durabilidade: media
+  funcoes: [liquido]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, frio]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    vata: "Morno, com cardamomo, gengibre ou cúrcuma."
+    kapha: "Morno, com gengibre, canela ou pimenta-do-reino, só de vez em quando."
+  restricoes: [vegana, sem_lactose]
+  grupos_evitar: [leite]
+  marcas: []
+  fontes:
+    - { ref: banyan-laticinios, campos: [rasa, virya, vipaka, como_equilibrar] }
+    - { ref: banyan-substancias-veiculo, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+  confianca: alta
+  notas: "Diretrizes e Banyan concordam: Vata e Pitta favorecem; Kapha evita leite de vaca. Banyan pede leite longe das outras refeições."
+
+- id: iogurte-natural
+  nome: Iogurte natural
+  sinonimos: [iogurte, coalhada]
+  grupo: laticinios
+  durabilidade: media
+  funcoes: [proteina]
+  rasa: [azedo]
+  virya: quente
+  vipaka: azedo
+  gunas: [oleoso, quente]
+  efeito: { vata: 0, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    vata: "Diluído em água e temperado."
+    pitta: "Fresco, feito em casa, diluído e sem fruta."
+    kapha: "Só diluído em água."
+  restricoes: [vegana, sem_lactose]
+  grupos_evitar: [leite]
+  marcas: [fermentado]
+  fontes:
+    - { ref: banyan-sabor-azedo, campos: [rasa] }
+    - { ref: banyan-laticinios, campos: [virya, vipaka, gunas] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+  confianca: media
+  notas: "Diretrizes evitam iogurte puro para os três doshas e aceitam diluído (Vata e Pitta com moderação). Banyan dá rasa azedo e picante a iogurte e queijo juntos."
+
+- id: queijo-minas
+  nome: Queijo minas
+  sinonimos: [queijo minas frescal, queijo branco, queijo fresco]
+  grupo: laticinios
+  durabilidade: media
+  funcoes: [proteina]
+  rasa: [azedo]
+  virya: quente
+  vipaka: azedo
+  gunas: [pesado, oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    vata: "Fresco e macio, que pesa menos que o curado."
+    pitta: "Fresco e sem sal."
+    kapha: "Só de vez em quando, com gengibre ou pimenta-do-reino."
+  restricoes: [vegana, sem_lactose]
+  grupos_evitar: [leite]
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-azedo, campos: [rasa] }
+    - { ref: banyan-laticinios, campos: [virya, vipaka, como_equilibrar] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+  confianca: media
+  notas: "Efeito de 'cheese (soft)'. Banyan diz que queijo fresco aquece menos que o curado; virya e vipaka são os de queijo em geral."
+
+- id: ricota
+  nome: Ricota
+  sinonimos: [queijo ricota]
+  grupo: laticinios
+  durabilidade: media
+  funcoes: [proteina]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, suave]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar:
+    kapha: "De vez em quando, com gengibre ou pimenta-do-reino."
+  restricoes: [vegana, sem_lactose]
+  grupos_evitar: [leite]
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-laticinios, campos: [como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Efeito de 'cottage cheese'. Kapha só favorece o de leite de cabra desnatado; ricota de vaca ficou em moderação. Rasa a gunas sem página."
+
+- id: manteiga
+  nome: Manteiga
+  sinonimos: [manteiga sem sal]
+  grupo: laticinios
+  durabilidade: media
+  funcoes: [gordura]
+  rasa: [doce, azedo]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    pitta: "Sem sal."
+  restricoes: [vegana]
+  grupos_evitar: [leite]
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Pitta favorece só a sem sal; Kapha evita (sem sal, raramente). Banyan lista manteiga entre os azedos; o resto sem página."
+
+- id: ovo
+  nome: Ovo
+  sinonimos: [ovo de galinha, ovos]
+  grupo: ovos
+  durabilidade: media
+  funcoes: [proteina]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar:
+    pitta: "Prefira só a clara."
+    kapha: "Cozido ou mexido, sem fritura, de vez em quando."
+  restricoes: [vegana]
+  grupos_evitar: [ovo]
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, vipaka, gunas] }
+    - { ref: banyan-dieta-pitta, campos: [virya, gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+  confianca: media
+  notas: "Diretrizes: Kapha favorece; Banyan aceita para Kapha sem fritura e com moderação. Pitta: clara sim, gema não."
+
+- id: castanha-de-caju
+  nome: Castanha-de-caju
+  sinonimos: [caju, castanha de caju]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [proteina, gordura]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: 0, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    vata: "Deixada de molho, que fica mais fácil de digerir."
+    kapha: "Só de vez em quando."
+  restricoes: []
+  grupos_evitar: [castanhas]
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, vipaka] }
+    - { ref: banyan-dieta-pitta, campos: [virya] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+    - { ref: a_confirmar, campos: [como_equilibrar] }
+  confianca: baixa
+  notas: "Diretrizes: Vata com moderação; Banyan diz que, com moderação, toda oleaginosa acalma Vata. Pitta e Kapha evitam."
+
+- id: castanha-do-para
+  nome: Castanha-do-pará
+  sinonimos: [castanha do brasil, castanha-do-brasil]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [proteina, gordura]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: 0, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Só de vez em quando."
+  restricoes: []
+  grupos_evitar: [castanhas]
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-pitta, campos: [virya] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: Vata com moderação; Banyan favorece para Vata. Pitta e Kapha evitam. Rasa e vipaka copiados do caju."
+
+- id: amendoa
+  nome: Amêndoa
+  sinonimos: [amêndoas]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [proteina, gordura]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: 0, pitta: 0, kapha: 1 }
+  como_equilibrar:
+    pitta: "Deixada de molho e sem pele."
+    kapha: "De molho e sem pele, raramente."
+  restricoes: []
+  grupos_evitar: [castanhas]
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, vipaka] }
+    - { ref: banyan-dieta-pitta, campos: [virya] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+  confianca: media
+  notas: "Diretrizes: Vata com moderação; Pitta favorece de molho e sem pele, evita com pele; Kapha de molho e sem pele, raramente. Banyan favorece para Kapha assim."
+
+- id: noz
+  nome: Noz
+  sinonimos: [nozes, noz comum]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [proteina, gordura]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: 0, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Só de vez em quando."
+  restricoes: []
+  grupos_evitar: [castanhas]
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-pitta, campos: [virya] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: Vata com moderação; Banyan favorece para Vata. Pitta e Kapha evitam. Rasa e vipaka copiados do caju."
+
+- id: amendoim
+  nome: Amendoim
+  sinonimos: [amendoins]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [proteina, gordura]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: 0, pitta: 1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Só de vez em quando."
+  restricoes: []
+  grupos_evitar: [amendoim]
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-pitta, campos: [virya] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+    - { ref: a_confirmar, campos: [rasa, vipaka] }
+  confianca: baixa
+  notas: "As duas fontes o põem entre as oleaginosas: Vata com moderação (Banyan favorece), Pitta e Kapha evitam. Rasa e vipaka copiados do caju."
+
+- id: gergelim
+  nome: Gergelim
+  sinonimos: [sésamo, semente de gergelim]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce, picante, adstringente, amargo]
+  virya: quente
+  vipaka: doce
+  gunas: [oleoso, quente]
+  efeito: { vata: -1, pitta: 1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: [gergelim]
+  marcas: []
+  fontes:
+    - { ref: banyan-oleo-de-gergelim, campos: [rasa, virya, gunas] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Diretrizes e Banyan concordam: Vata favorece; Pitta e Kapha evitam. Vipaka sem página."
+
+- id: linhaca
+  nome: Linhaça
+  sinonimos: [semente de linhaça, linhaça dourada]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: Vata e Pitta favorecem; Kapha com moderação (Banyan favorece). Rasa, virya e vipaka sem página."
+
+- id: chia
+  nome: Chia
+  sinonimos: [semente de chia]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [oleoso]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes e Banyan concordam: Vata e Kapha favorecem; Pitta evita. Rasa, virya e vipaka sem página."
+
+- id: semente-de-girassol
+  nome: Semente de girassol
+  sinonimos: [girassol, semente de girassol descascada]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [proteina, gordura]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: Vata e Pitta favorecem; Kapha com moderação (Banyan favorece). Rasa, virya e vipaka sem página."
+
+- id: semente-de-abobora
+  nome: Semente de abóbora
+  sinonimos: [pepita, semente de jerimum]
+  grupo: oleaginosas
+  durabilidade: longa
+  funcoes: [proteina, gordura]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [oleoso]
+  efeito: { vata: -1, pitta: 0, kapha: 0 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-sabor-doce, campos: [rasa, vipaka] }
+    - { ref: banyan-dieta-kapha, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [virya] }
+  confianca: baixa
+  notas: "Diretrizes: Vata favorece; Pitta e Kapha com moderação. Banyan favorece para os três. Virya sem página."
+
+- id: ghee
+  nome: Ghee
+  sinonimos: [manteiga clarificada, manteiga ghee]
+  grupo: oleos
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 0 }
+  como_equilibrar:
+    kapha: "Com gengibre, canela ou pimenta-do-reino, que tiram o peso."
+  restricoes: [vegana]
+  grupos_evitar: [leite]
+  marcas: []
+  fontes:
+    - { ref: banyan-substancias-veiculo, campos: [rasa, virya] }
+    - { ref: banyan-laticinios, campos: [gunas, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Banyan diz que é tridóshico e melhor para Vata e Pitta; Diretrizes dão Kapha com moderação. Vipaka sem página."
+
+- id: azeite
+  nome: Azeite
+  sinonimos: [azeite de oliva, azeite extravirgem]
+  grupo: oleos
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [oleoso, pesado]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  observacao: "Prefira o extravirgem, prensado a frio."
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes e Banyan concordam: Vata e Pitta favorecem; Kapha evita. Banyan põe o azeite entre os óleos que refrescam para Pitta; o resto sem página."
+
+- id: oleo-de-coco
+  nome: Óleo de coco
+  sinonimos: [gordura de coco]
+  grupo: oleos
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [oleoso, pesado]
+  efeito: { vata: 0, pitta: -1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  observacao: "Prefira o prensado a frio."
+  fontes:
+    - { ref: banyan-alimentos-vata, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Divergência: Diretrizes dão coco só para uso externo em Vata e Pitta; Banyan favorece para os dois. Kapha evita nas duas. Rasa a gunas sem página."
+
+- id: oleo-de-gergelim
+  nome: Óleo de gergelim
+  sinonimos: [óleo de sésamo]
+  grupo: oleos
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce, amargo]
+  virya: quente
+  vipaka: doce
+  gunas: [oleoso, pesado]
+  efeito: { vata: -1, pitta: 1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: [gergelim]
+  marcas: []
+  observacao: "Prefira o prensado a frio e não torrado."
+  fontes:
+    - { ref: banyan-substancias-veiculo, campos: [rasa, virya] }
+    - { ref: banyan-oleo-de-gergelim, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Diretrizes e Banyan: Vata favorece; Pitta evita; Kapha evita no consumo (Diretrizes aceitam uso externo). Vipaka sem página."
+
+- id: oleo-de-girassol
+  nome: Óleo de girassol
+  sinonimos: [óleo de semente de girassol]
+  grupo: oleos
+  durabilidade: longa
+  funcoes: [gordura]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [oleoso, leve]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  observacao: "Prefira o prensado a frio."
+  fontes:
+    - { ref: banyan-alimentos-vata, campos: [efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Pitta e Kapha favorecem (Kapha com pouco óleo); Vata cai em 'most other oils'; Banyan favorece para Vata. Rasa a gunas sem página."

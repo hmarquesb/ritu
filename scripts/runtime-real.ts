@@ -12,6 +12,7 @@ async function main(): Promise<void> {
     process.exit(2)
   }
   const container = getContainer()
+  await container.iniciarTelemetria()
   try {
     const resultado = await container.runtime.passo({
       instrucoes: "Você é um assistente de teste. Use as tools quando pedido.",

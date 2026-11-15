@@ -79,6 +79,7 @@ function imprimirEtapas(etapas: RunEtapa[]): void {
 
 async function main(): Promise<void> {
   const container = getContainer()
+  await container.iniciarTelemetria()
   try {
     const clock = createFixedClock("2026-01-15T12:00:00-03:00")
     const stores = createMemoryStores(clock)

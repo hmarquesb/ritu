@@ -252,4 +252,50 @@ describe("container", () => {
     expect(container.runtime).toBe(runtime)
     expect(container.runs).toBe(runs)
   })
+
+  it("iniciarTelemetria sem endpoint não carrega o SDK de Node", async () => {
+    const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    const carregou = vi.fn()
+    vi.doMock("@opentelemetry/sdk-node", () => {
+      carregou()
+      return {}
+    })
+    try {
+      const { createContainer } = await import("./container")
+      await createContainer().iniciarTelemetria()
+      expect(carregou).not.toHaveBeenCalled()
+    } finally {
+      vi.doUnmock("@opentelemetry/sdk-node")
+      if (anterior !== undefined) process.env.OTEL_EXPORTER_OTLP_ENDPOINT = anterior
+    }
+  })
+
+  it("com endpoint, iniciarTelemetria inicia o SDK uma vez só e encerrar o encerra", async () => {
+    const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    const nextRuntime = process.env.NEXT_RUNTIME
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    delete process.env.NEXT_RUNTIME
+    const encerrarSdk = vi.fn().mockResolvedValue(undefined)
+    const iniciar = vi.fn(() => ({ encerrar: encerrarSdk }))
+    vi.doMock("@/infra/otel/node-sdk", () => ({ iniciarOtelNode: iniciar }))
+    try {
+      const { createContainer } = await import("./container")
+      const { createNullTelemetry } = await import("./otel/null-telemetry")
+      const container = createContainer({ telemetry: createNullTelemetry() })
+
+      await container.iniciarTelemetria()
+      await container.iniciarTelemetria()
+      expect(iniciar).toHaveBeenCalledTimes(1)
+      expect(encerrarSdk).not.toHaveBeenCalled()
+
+      await container.encerrar()
+      expect(encerrarSdk).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.doUnmock("@/infra/otel/node-sdk")
+      if (anterior === undefined) delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+      else process.env.OTEL_EXPORTER_OTLP_ENDPOINT = anterior
+      if (nextRuntime !== undefined) process.env.NEXT_RUNTIME = nextRuntime
+    }
+  })
 })

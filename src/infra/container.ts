@@ -32,6 +32,7 @@ export type Container = {
   telemetry: Telemetry
   runtime: AgentRuntime
   runs: ReturnType<typeof createRunService>
+  iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
 
@@ -58,6 +59,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let telemetry: Telemetry | undefined
   let runtime: AgentRuntime | undefined
   let runs: ReturnType<typeof createRunService> | undefined
+  let sdk: { encerrar(): Promise<void> } | undefined
+  let telemetriaIniciada = false
   const container: Container = {
     config,
     clock,
@@ -111,8 +114,19 @@ export function createContainer(overrides?: Partial<Container>): Container {
       })
       return runs
     },
+    // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
+    async iniciarTelemetria() {
+      if (telemetriaIniciada) return
+      if (optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined) return
+      if (process.env.NEXT_RUNTIME !== undefined) return
+      telemetriaIniciada = true
+      const { iniciarOtelNode } = await import("@/infra/otel/node-sdk")
+      sdk = iniciarOtelNode()
+    },
     async encerrar() {
       await container.telemetry.encerrar()
+      await sdk?.encerrar()
+      sdk = undefined
       await closeDatabase()
     },
     ...overrides,

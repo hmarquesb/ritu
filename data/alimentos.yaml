@@ -401,7 +401,7 @@
 
 - id: coco
   nome: Coco
-  sinonimos: [coco seco, coco ralado, coco verde, água de coco]
+  sinonimos: [coco seco, coco ralado, coco verde]
   grupo: frutas
   durabilidade: curta
   funcoes: [fruta, gordura]
@@ -2821,3 +2821,236 @@
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
   confianca: media
   notas: "Diretrizes: Pitta evita sal nas especiarias e só em excesso nos condimentos (lá aparece em moderação)."
+
+- id: mel
+  nome: Mel
+  sinonimos: [mel de abelha, mel puro, mel cru]
+  grupo: adocantes
+  durabilidade: longa
+  funcoes: [adocante]
+  rasa: [doce, adstringente]
+  virya: quente
+  vipaka: doce
+  gunas: [quente, seco, aspero]
+  efeito: { vata: -1, pitta: 1, kapha: -1 }
+  como_equilibrar:
+    pitta: "Só de vez em quando, e não nos dias quentes."
+  restricoes: [vegana]
+  grupos_evitar: []
+  marcas: []
+  observacao: "Não aqueça nem cozinhe o mel: use cru, no chá já morno."
+  fontes:
+    - { ref: banyan-mel, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar, observacao] }
+    - { ref: banyan-substancias-veiculo, campos: [rasa, gunas, efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [efeito, observacao] }
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [observacao] }
+  confianca: alta
+  notas: "Diretrizes: Vata e Kapha favorecem; Pitta evita (ok raramente). Banyan: seco e adstringente, 'raspador'; aquecido vira tóxico."
+
+- id: acucar-mascavo
+  nome: Açúcar mascavo
+  sinonimos: [mascavo]
+  grupo: adocantes
+  durabilidade: longa
+  funcoes: [adocante]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [frio, oleoso]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-adocantes-confeitaria, campos: [rasa, virya, gunas] }
+    - { ref: banyan-alimentos-vata, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Tratado como o sucanat (açúcar de cana não refinado) da Banyan: 'frio, úmido, doce'. Equivalência é leitura da redação. Vipaka sem página."
+
+- id: rapadura
+  nome: Rapadura
+  sinonimos: [rapadura de cana, açúcar de rapadura]
+  grupo: adocantes
+  durabilidade: longa
+  funcoes: [adocante]
+  rasa: [doce, adstringente]
+  virya: quente
+  vipaka: doce
+  gunas: [quente]
+  efeito: { vata: -1, pitta: 1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-mel, campos: [virya, vipaka, gunas, efeito] }
+    - { ref: banyan-adocantes-confeitaria, campos: [rasa] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-vata, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [efeito] }
+  confianca: alta
+  notas: "Rapadura = jaggery (caldo de cana seco). Diretrizes e Banyan concordam: Vata favorece; Pitta e Kapha evitam."
+
+- id: melado
+  nome: Melado
+  sinonimos: [melado de cana]
+  grupo: adocantes
+  durabilidade: longa
+  funcoes: [adocante]
+  rasa: [doce]
+  virya: quente
+  vipaka: doce
+  gunas: [pesado, quente]
+  efeito: { vata: -1, pitta: 1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-mel, campos: [rasa, virya, vipaka, efeito] }
+    - { ref: banyan-adocantes-confeitaria, campos: [gunas] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: banyan-alimentos-vata, campos: [efeito] }
+    - { ref: banyan-alimentos-pitta, campos: [efeito] }
+    - { ref: banyan-alimentos-kapha, campos: [efeito] }
+  confianca: media
+  notas: "Tratado como molasses; o melado brasileiro é xarope de cana, mais leve que o melaço. Equivalência é leitura da redação."
+
+- id: agua-de-coco
+  nome: Água de coco
+  sinonimos: [água de coco verde]
+  grupo: bebidas
+  durabilidade: media
+  funcoes: [liquido]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [frio]
+  efeito: { vata: 0, pitta: -1, kapha: 1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-substancias-veiculo, campos: [rasa, virya, gunas, efeito] }
+    - { ref: a_confirmar, campos: [vipaka, efeito] }
+  confianca: baixa
+  notas: "Banyan: doce, refrescante, acalma Pitta. Vata e Kapha sem página (seguem o coco)."
+
+- id: leite-de-coco
+  nome: Leite de coco
+  sinonimos: []
+  grupo: bebidas
+  durabilidade: media
+  funcoes: [liquido]
+  rasa: [doce]
+  virya: frio
+  vipaka: doce
+  gunas: [frio, pesado]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
+  como_equilibrar:
+    kapha: "Pouco, e com especiarias quentes."
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: banyan-leite, campos: [virya, gunas, efeito] }
+    - { ref: banyan-substancias-veiculo, campos: [rasa, virya, efeito] }
+    - { ref: a_confirmar, campos: [vipaka, como_equilibrar] }
+  confianca: baixa
+  notas: "Banyan: frio e pesado; acalma Vata e Pitta, não é a melhor escolha para Kapha. Vipaka e o conselho para Kapha sem página."
+
+- id: cafe
+  nome: Café
+  sinonimos: [cafezinho, café coado, café preto, café expresso]
+  grupo: bebidas
+  durabilidade: longa
+  funcoes: [liquido]
+  rasa: [amargo, adstringente]
+  virya: quente
+  vipaka: picante
+  gunas: [quente, seco, movel]
+  efeito: { vata: 1, pitta: 1, kapha: 0 }
+  como_equilibrar:
+    vata: "Com cardamomo e depois de comer, nunca em jejum."
+    pitta: "Com cardamomo e depois de comer, nunca em jejum."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [estimulante]
+  fontes:
+    - { ref: banyan-cafe, campos: [rasa, virya, gunas, efeito, como_equilibrar] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [vipaka] }
+  confianca: baixa
+  notas: "Diretrizes: os três evitam café. Banyan: amargo e adstringente equilibram Kapha. Kapha virou 0. Vipaka sem página."
+
+- id: cha-preto
+  nome: Chá preto
+  sinonimos: []
+  grupo: bebidas
+  durabilidade: longa
+  funcoes: [liquido]
+  rasa: [adstringente]
+  virya: quente
+  vipaka: picante
+  gunas: [seco, movel]
+  efeito: { vata: 1, pitta: 0, kapha: -1 }
+  como_equilibrar:
+    kapha: "Com especiarias."
+  restricoes: []
+  grupos_evitar: []
+  marcas: [estimulante]
+  fontes:
+    - { ref: banyan-cafe, campos: [rasa, gunas, efeito] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes: Vata evita; Pitta com moderação; Kapha favorece com especiarias (mas lista cafeína como ok raramente). Só 'seco' tem página."
+
+- id: cha-mate
+  nome: Chá-mate
+  sinonimos: [mate, erva-mate, chimarrão, tereré]
+  grupo: bebidas
+  durabilidade: longa
+  funcoes: [liquido]
+  rasa: [amargo, adstringente]
+  virya: quente
+  vipaka: picante
+  gunas: [seco, movel]
+  efeito: { vata: 1, pitta: 1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: [estimulante]
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
+  confianca: baixa
+  notas: "Diretrizes (chás de ervas): Vata evita (ok raramente), Pitta evita, Kapha favorece. Rasa, virya, vipaka e gunas sem página."
+
+- id: cha-verde
+  nome: Chá verde
+  sinonimos: [matchá]
+  grupo: bebidas
+  durabilidade: longa
+  funcoes: [liquido]
+  rasa: [adstringente]
+  virya: frio
+  vipaka: picante
+  gunas: [seco, movel]
+  efeito: { vata: 1, pitta: 0, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: [estimulante]
+  fontes:
+    - { ref: banyan-cafe, campos: [rasa, gunas, efeito] }
+    - { ref: a_confirmar, campos: [virya, vipaka, gunas, efeito] }
+  confianca: baixa
+  notas: "Banyan: chá é adstringente e não é a melhor escolha para Vata. Pitta, Kapha, virya, vipaka e 'móvel' sem página."

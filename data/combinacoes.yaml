@@ -1,2 +1,124 @@
 # Combinações de alimentos — schema em src/core/knowledge/schemas.ts
-[]
+- id: leite-com-fruta-azeda
+  itens: ["alimento:leite", "marca:fruta_azeda"]
+  motivo: "O leite pede mais tempo para digerir, e o Ayurveda desaconselha tomá-lo com alimentos azedos."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+    - { ref: banyan-leite, campos: [itens] }
+  confianca: alta
+- id: leite-com-banana
+  itens: ["alimento:leite", "alimento:banana"]
+  motivo: "Leite e banana estão entre as combinações mais difíceis de digerir; melhor em horários diferentes."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+    - { ref: banyan-leite, campos: [itens, motivo] }
+  confianca: alta
+- id: leite-com-iogurte
+  itens: ["alimento:leite", "alimento:iogurte-natural"]
+  motivo: "Leite e iogurte juntos pesam na digestão; o Ayurveda os separa."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+    - { ref: banyan-leite, campos: [itens] }
+  confianca: alta
+- id: ovo-com-leite
+  itens: ["alimento:ovo", "alimento:leite"]
+  motivo: "Ovo com leite está entre as combinações mais difíceis de digerir."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: melao-com-laticinios
+  itens: ["alimento:melao", "grupo:laticinios"]
+  motivo: "O melão combina mal com quase tudo, e principalmente com laticínios; melhor comê-lo sozinho."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: melao-com-ovos
+  itens: ["alimento:melao", "grupo:ovos"]
+  motivo: "O melão combina mal com quase tudo, e principalmente com ovos; melhor comê-lo sozinho."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: melao-com-graos
+  itens: ["alimento:melao", "grupo:graos"]
+  motivo: "O melão combina mal com quase tudo, e principalmente com grãos e féculas; melhor comê-lo sozinho."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: melao-com-raizes
+  itens: ["alimento:melao", "grupo:raizes"]
+  motivo: "O melão combina mal com alimentos ricos em amido, como raízes e tubérculos; melhor comê-lo sozinho."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: media
+- id: melao-com-outras-frutas
+  itens: ["alimento:melao", "grupo:frutas"]
+  motivo: "O melão combina mal com quase todo outro alimento, outras frutas incluídas; melhor comê-lo sozinho."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: media
+- id: iogurte-com-frutas
+  itens: ["alimento:iogurte-natural", "grupo:frutas"]
+  motivo: "O Ayurveda desaconselha iogurte com fruta: juntos, pesam na digestão."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: limao-com-pepino
+  itens: ["alimento:limao", "alimento:pepino"]
+  motivo: "Limão com pepino aparece entre as combinações que o Ayurveda pede para evitar."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: limao-com-tomate
+  itens: ["alimento:limao", "alimento:tomate"]
+  motivo: "Limão com tomate aparece entre as combinações que o Ayurveda pede para evitar."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: rabanete-com-banana
+  itens: ["alimento:rabanete", "alimento:banana"]
+  motivo: "Rabanete com banana aparece entre as combinações que o Ayurveda pede para evitar."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: rabanete-com-uva-passa
+  itens: ["alimento:rabanete", "alimento:uva-passa"]
+  motivo: "Rabanete com uva-passa aparece entre as combinações que o Ayurveda pede para evitar."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: rabanete-com-leite
+  itens: ["alimento:rabanete", "alimento:leite"]
+  motivo: "Rabanete com leite aparece entre as combinações que o Ayurveda pede para evitar."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: tapioca-com-frutas
+  itens: ["alimento:tapioca", "grupo:frutas"]
+  motivo: "Tapioca com fruta, principalmente banana e manga, pesa na digestão."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: media
+- id: tapioca-com-leguminosas
+  itens: ["alimento:tapioca", "grupo:leguminosas"]
+  motivo: "Tapioca com feijões e outras leguminosas aparece entre as combinações que o Ayurveda pede para evitar."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: media
+- id: tapioca-com-rapadura
+  itens: ["alimento:tapioca", "alimento:rapadura"]
+  motivo: "Tapioca com rapadura aparece entre as combinações que o Ayurveda pede para evitar."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: media
+- id: leguminosas-com-ovos
+  itens: ["grupo:leguminosas", "grupo:ovos"]
+  motivo: "Feijões e outras leguminosas com ovo pesam na digestão."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta
+- id: leguminosas-com-leite
+  itens: ["grupo:leguminosas", "alimento:leite"]
+  motivo: "Feijões e outras leguminosas com leite pesam na digestão."
+  fontes:
+    - { ref: ayurveda-com-combinacao-alimentos, campos: [itens, motivo] }
+  confianca: alta

@@ -401,3 +401,93 @@ describe("avisos e contagens", () => {
     expect(resultado.contagens.aConfirmar).toBe(1)
   })
 })
+
+describe("vaga com lista explícita de alimentos", () => {
+  const cenoura = alimento({ id: "cenoura", nome: "Cenoura" })
+  const beterraba = alimento({ id: "beterraba", nome: "Beterraba" })
+  const comLista = (alimentos: string[]) =>
+    preparo({ vagas: [{ funcao: "legume", obrigatoria: true, maximo: 1, alimentos }] })
+
+  it("aponta id da lista que não existe em alimentos", () => {
+    const resultado = validarBase(
+      dados({
+        alimentos: [alimento(), cenoura, beterraba],
+        preparos: [comLista(["abobora", "xyz"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain('preparos:sopa-de-legume:vagas[0].alimentos "xyz" não existe')
+  })
+
+  it("aponta id da lista que não tem a função da vaga", () => {
+    const resultado = validarBase(
+      dados({
+        alimentos: [alimento(), cenoura, beterraba, gengibre],
+        preparos: [comLista(["abobora", "gengibre"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain(
+      'preparos:sopa-de-legume:vagas[0].alimentos "gengibre" não tem a função "legume"',
+    )
+  })
+
+  it("aponta vaga com 2 alimentos possíveis, abaixo do mínimo de 3", () => {
+    const resultado = validarBase(
+      dados({
+        alimentos: [alimento(), cenoura, beterraba, gengibre],
+        preparos: [comLista(["abobora", "cenoura"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain(
+      'preparos:sopa-de-legume:vagas vaga "legume" tem poucos alimentos possíveis (2, mínimo 3)',
+    )
+  })
+
+  it("aceita a lista com 3 alimentos válidos", () => {
+    const resultado = validarBase(
+      dados({
+        alimentos: [alimento(), cenoura, beterraba, gengibre],
+        preparos: [comLista(["abobora", "cenoura", "beterraba"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toEqual([])
+  })
+
+  it("lista de 2 passa na vaga listada em excecoesMinAlimentosPorVaga", () => {
+    const leite = alimento({
+      id: "leite",
+      nome: "Leite",
+      grupo: "laticinios",
+      funcoes: ["liquido"],
+      grupos_evitar: ["leite"],
+    })
+    const iogurte = alimento({
+      id: "iogurte-natural",
+      nome: "Iogurte natural",
+      grupo: "laticinios",
+      funcoes: ["liquido"],
+      grupos_evitar: ["leite"],
+    })
+    const leiteMorno = preparo({
+      id: "leite-morno-com-especiaria",
+      titulo: "{liquido} morno com especiaria",
+      passos: "Aqueça o {liquido} sem deixar ferver.",
+      vagas: [
+        {
+          funcao: "liquido",
+          obrigatoria: true,
+          maximo: 1,
+          alimentos: ["leite", "iogurte-natural"],
+        },
+      ],
+    })
+    const resultado = validarBase(
+      dados({ alimentos: [leite, iogurte, gengibre], preparos: [leiteMorno] }),
+      semCobertura,
+    )
+    expect(resultado.erros.some((e) => e.includes("poucos alimentos possíveis"))).toBe(false)
+  })
+})

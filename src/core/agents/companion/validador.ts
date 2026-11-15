@@ -1,6 +1,6 @@
 import { config } from "@config/index"
 import { checarCombinacao } from "@/core/knowledge/combinacoes"
-import { passaNoFiltro } from "@/core/knowledge/filtros"
+import { passaNoFiltro, serveAVaga } from "@/core/knowledge/filtros"
 import { normalizar } from "@/core/knowledge/identificar"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { Alimento, Pratica, Preparo } from "@/core/knowledge/schemas"
@@ -118,9 +118,7 @@ function checarItemDaRefeicao(ctx: Ctx, preparo: Preparo, item: Item, onde: stri
     apontar(ctx, "estrutura", onde, `${item.alimento_id} não ocupa uma vaga de ${preparo.id}`)
     return
   }
-  const servePara = alimento.funcoes.includes(vaga.funcao)
-  const noGrupo = !vaga.grupos || vaga.grupos.includes(alimento.grupo)
-  if (!(servePara && noGrupo)) {
+  if (!serveAVaga(alimento, vaga)) {
     apontar(ctx, "estrutura", onde, `${item.alimento_id} não serve à vaga ${vaga.funcao}`)
   }
 }

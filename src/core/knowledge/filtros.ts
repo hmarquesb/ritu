@@ -60,14 +60,25 @@ function resultadoPratica(
   return { passa: true }
 }
 
-// Alimentos que servem a uma função (e, se houver, a um dos grupos da vaga).
+// Único lugar que decide se um alimento serve a uma vaga.
+export function serveAVaga(
+  alimento: Alimento,
+  vaga: Pick<Vaga, "funcao" | "grupos" | "alimentos">,
+): boolean {
+  if (vaga.alimentos) {
+    return vaga.alimentos.includes(alimento.id) && alimento.funcoes.includes(vaga.funcao)
+  }
+  return (
+    alimento.funcoes.includes(vaga.funcao) && (!vaga.grupos || vaga.grupos.includes(alimento.grupo))
+  )
+}
+
+// Alimentos que servem a uma vaga.
 export function candidatosDaVaga(
-  vaga: Pick<Vaga, "funcao" | "grupos">,
+  vaga: Pick<Vaga, "funcao" | "grupos" | "alimentos">,
   kb: KnowledgeBase,
 ): Alimento[] {
-  return kb.alimentos.filter(
-    (a) => a.funcoes.includes(vaga.funcao) && (!vaga.grupos || vaga.grupos.includes(a.grupo)),
-  )
+  return kb.alimentos.filter((a) => serveAVaga(a, vaga))
 }
 
 function motivoMaisFrequente(motivos: MotivoFiltro[]): MotivoFiltro | undefined {

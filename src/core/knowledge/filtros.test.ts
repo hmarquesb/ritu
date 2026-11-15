@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { createMiniKnowledge, miniDados } from "@/infra/fakes/mini-knowledge"
-import { type FiltroPessoa, filtroVazio, passaNoFiltro } from "./filtros"
-import type { Alimento, Pratica, Preparo } from "./schemas"
+import { type FiltroPessoa, filtroVazio, passaNoFiltro, serveAVaga } from "./filtros"
+import type { Alimento, Pratica, Preparo, Vaga } from "./schemas"
 
 const kb = createMiniKnowledge()
 
@@ -142,5 +142,37 @@ describe("passaNoFiltro", () => {
     passaNoFiltro(alimento("leite"), com({ evitar: [{ tipo: "grupo", valor: "leite" }] }), kb)
 
     expect(JSON.stringify(miniDados.alimentos)).toBe(antes)
+  })
+})
+
+describe("serveAVaga", () => {
+  it("com lista explícita, aceita só os ids da lista que têm a função", () => {
+    const vaga: Pick<Vaga, "funcao" | "alimentos"> = {
+      funcao: "liquido",
+      alimentos: ["leite", "manteiga"],
+    }
+
+    expect(serveAVaga(alimento("leite"), vaga)).toBe(true)
+    expect(serveAVaga(alimento("manteiga"), vaga)).toBe(false)
+  })
+
+  it("com lista explícita, recusa alimento com a função que não está na lista", () => {
+    const vaga: Pick<Vaga, "funcao" | "alimentos"> = { funcao: "liquido", alimentos: ["leite"] }
+
+    expect(serveAVaga(alimento("iogurte-natural"), vaga)).toBe(false)
+  })
+
+  it("sem lista, vale a função e o grupo", () => {
+    const comGrupo: Pick<Vaga, "funcao" | "grupos"> = {
+      funcao: "liquido",
+      grupos: ["laticinios"],
+    }
+    const outroGrupo: Pick<Vaga, "funcao" | "grupos"> = { funcao: "liquido", grupos: ["oleos"] }
+    const semGrupo: Pick<Vaga, "funcao"> = { funcao: "liquido" }
+
+    expect(serveAVaga(alimento("iogurte-natural"), comGrupo)).toBe(true)
+    expect(serveAVaga(alimento("iogurte-natural"), outroGrupo)).toBe(false)
+    expect(serveAVaga(alimento("iogurte-natural"), semGrupo)).toBe(true)
+    expect(serveAVaga(alimento("manteiga"), semGrupo)).toBe(false)
   })
 })

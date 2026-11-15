@@ -76,12 +76,15 @@ export const alimentoSchema = z.strictObject({
 })
 export type Alimento = z.infer<typeof alimentoSchema>
 
-export const vagaSchema = z.strictObject({
-  funcao: funcaoSchema,
-  obrigatoria: z.boolean(),
-  maximo: z.number().int().min(1).default(1),
-  grupos: z.array(grupoSchema).optional(),
-})
+export const vagaSchema = z
+  .strictObject({
+    funcao: funcaoSchema,
+    obrigatoria: z.boolean(),
+    maximo: z.number().int().min(1).default(1),
+    grupos: z.array(grupoSchema).optional(),
+    alimentos: z.array(idSchema).min(1).optional(),
+  })
+  .refine((vaga) => !(vaga.alimentos && vaga.grupos), "alimentos e grupos não vêm juntos")
 export type Vaga = z.infer<typeof vagaSchema>
 
 function algumaVagaObrigatoria(vagas: Vaga[]): boolean {

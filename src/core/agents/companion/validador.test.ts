@@ -191,6 +191,28 @@ describe("validarEntrega", () => {
       expect(codigos(e)).toEqual(["estrutura"])
     })
 
+    it("alimento fora da lista explícita da vaga", () => {
+      const kbComLista: KnowledgeBase = {
+        ...kb,
+        preparo: (id) => {
+          const p = kb.preparo(id)
+          if (!p || id !== "leite-morno-com-especiaria") return p
+          const vagas = p.vagas.map((v) =>
+            v.funcao === "liquido" ? { ...v, alimentos: ["ghee"] } : v,
+          )
+          return { ...p, vagas }
+        },
+      }
+      const v = validarEntrega(entrega({ sugestoes: [refeicao] }), {
+        dados: dados(),
+        kb: kbComLista,
+        sinais,
+      })
+      expect(v.find((x) => x.codigo === "estrutura")?.mensagem).toContain(
+        "leite não serve à vaga liquido",
+      )
+    })
+
     it("função que não é vaga do preparo", () => {
       const itens = [...refeicao.itens, { ...(refeicao.itens[1] as object), funcao: "fruta" }]
       expect(codigos(entrega({ sugestoes: [{ ...refeicao, itens }] } as never))).toEqual([

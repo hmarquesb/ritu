@@ -12,6 +12,7 @@ import {
   perguntaQuizSchema,
   praticaSchema,
   preparoSchema,
+  vagaSchema,
   vocabuloGunaSchema,
 } from "./schemas"
 
@@ -170,6 +171,29 @@ describe("fonteRefSchema e fonteSchema", () => {
       aprovada: true,
     }
     expect(fonteSchema.safeParse(fonte).success).toBe(true)
+  })
+})
+
+describe("vagaSchema", () => {
+  it("aceita uma vaga com a lista explícita de alimentos", () => {
+    const vaga = { funcao: "liquido", obrigatoria: true, alimentos: ["leite", "ghee"] }
+    expect(vagaSchema.safeParse(vaga).success).toBe(true)
+  })
+
+  it("recusa lista de alimentos vazia", () => {
+    expect(
+      vagaSchema.safeParse({ funcao: "liquido", obrigatoria: true, alimentos: [] }).success,
+    ).toBe(false)
+  })
+
+  it("recusa alimentos junto com grupos", () => {
+    const vaga = {
+      funcao: "liquido",
+      obrigatoria: true,
+      grupos: ["laticinios"],
+      alimentos: ["leite"],
+    }
+    expect(vagaSchema.safeParse(vaga).success).toBe(false)
   })
 })
 

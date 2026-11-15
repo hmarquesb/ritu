@@ -1,5 +1,6 @@
 import { config } from "@config/index"
 import type { z } from "zod"
+import { serveAVaga } from "./filtros"
 import {
   alimentoSchema,
   combinacaoSchema,
@@ -235,14 +236,27 @@ function minimoDaVaga(preparoId: string, funcao: string): number {
   return excecoes.includes(`${preparoId}:${funcao}`) ? 1 : config.base.minAlimentosPorVaga
 }
 
+// Regra 6 (lista explícita de alimentos da vaga)
+function regraAlimentosDaVaga(d: DadosDaBase, ids: Ids): string[] {
+  return d.preparos.flatMap((preparo) =>
+    preparo.vagas.flatMap((vaga, i) =>
+      (vaga.alimentos ?? []).flatMap((id) => {
+        const onde = `preparos:${preparo.id}:vagas[${i}].alimentos "${id}"`
+        if (!ids.alimentos.has(id)) return [`${onde} não existe`]
+        const alimento = d.alimentos.find((a) => a.id === id)
+        return alimento && !alimento.funcoes.includes(vaga.funcao)
+          ? [`${onde} não tem a função "${vaga.funcao}"`]
+          : []
+      }),
+    ),
+  )
+}
+
 // Regra 6
 function regraVagas(d: DadosDaBase): string[] {
   return d.preparos.flatMap((preparo) =>
     preparo.vagas.flatMap((vaga) => {
-      const possiveis = d.alimentos.filter(
-        (alimento) =>
-          alimento.funcoes.includes(vaga.funcao) && (vaga.grupos?.includes(alimento.grupo) ?? true),
-      ).length
+      const possiveis = d.alimentos.filter((alimento) => serveAVaga(alimento, vaga)).length
       const minimo = minimoDaVaga(preparo.id, vaga.funcao)
       return possiveis < minimo
         ? [
@@ -508,6 +522,7 @@ export function analisarBase(dados: unknown, opcoes: OpcoesValidacao = {}): Anal
     regraFontes(d, ids.fontes),
     regraReferenciasDeItens(d, ids),
     regraLacunas(d),
+    regraAlimentosDaVaga(d, ids),
     regraVagas(d),
     regraOleo(d),
     regraGruposEvitar(d),

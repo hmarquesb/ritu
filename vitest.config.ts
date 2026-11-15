@@ -16,7 +16,9 @@ export default defineConfig({
       "src/**/*.test.tsx",
       "scripts/**/*.test.ts",
       "config/**/*.test.ts",
+      "test/**/*.test.ts",
     ],
-    exclude: [...configDefaults.exclude, "e2e/**", "evals/**"],
+    // test/db precisa de Postgres: roda só em vitest.db.config.ts.
+    exclude: [...configDefaults.exclude, "e2e/**", "evals/**", "test/db/**"],
   },
 })

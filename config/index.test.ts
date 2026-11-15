@@ -40,6 +40,15 @@ describe("config", () => {
     expect(config.memoria.historicoLinhas).toBe(20)
   })
 
+  it("expõe os limites das pausas com os valores da spec", () => {
+    expect(config.pausas).toEqual({
+      maxPerguntasPorRun: 2,
+      maxItensPorPergunta: 5,
+      maxRefeicoesAPerguntar: 2,
+    })
+    expect(config.memoria.esperaMinutos).toBe(30)
+  })
+
   it("expõe os limites do loop do agente com os valores da spec", () => {
     expect(config.loop).toEqual({
       maxChamadasDeModelo: 6,

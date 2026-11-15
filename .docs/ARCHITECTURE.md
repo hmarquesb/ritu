@@ -1,0 +1,216 @@
+# Arquitetura
+
+## 1. Visão geral
+
+```
+Navegador (Next.js, celular primeiro)
+   │  Auth.js: Google · conta de demonstração por clique
+   ▼
+ROTAS DO SERVIDOR (Next.js na Vercel)
+ sessão → conta → guardrail de entrada → limite de uso
+   │
+   ├── POST /api/runs                 mensagem da conversa → cria o run e transmite as etapas
+   ├── POST /api/runs/:id/continue    resposta a uma pergunta do agente
+   ├── POST /api/runs/:id/approve     aprovação das propostas → executor em código
+   ├── toques (sem LLM): retorno, trocar ingrediente, gosto, casa, 👍/👎
+   └── perfil, cidade, quiz, o que sei sobre você, bastidores (sem LLM)
+          │
+          ▼
+   INTÉRPRETE (intenções) → o código escolhe o caminho
+          │
+          ├── casa, retorno ou evitar sozinhos, ajuda, ofensa, alerta, fora do assunto → resposta por código
+          ▼
+   PREPARO (código: qualidades, filtros, ordenação por gosto e resultado)
+          ▼
+   ACOMPANHANTE (loop de tools no core; cada passo na Mastra, atrás de AgentRuntime)
+     leitura: clima, casa, preferências, histórico, base ayurvédica
+     controle: ask_user, finalizar (com o validador)
+     escrita: só propostas
+          ▼
+   JUIZ (fail-closed, uma nova tentativa) → texto + sugestões na tela
+          │
+          └── rastro (runs, run_etapas) + spans e métricas (OpenTelemetry → Grafana)
+
+Todas as chamadas de modelo passam pelo ModelRouter (papéis, registro de cota, troca de modelo).
+
+Vercel Cron (diário) → limpeza (demos vencidas, runs e propostas expirados, mensagens com mais de 7 dias, mensagens de run com incômodo do dia anterior, retornos sem resposta há mais de 7 dias, faltas com mais de 30 dias)
+                     → detecção de padrões
+```
+
+## 2. Stack
+
+| Camada | Escolha |
+|---|---|
+| Linguagem e runtime | TypeScript, Node 24, npm |
+| App | Next.js (App Router) na Vercel |
+| UI | Tailwind CSS + React Aria Components (sem estilo de fábrica), tokens e componentes próprios (`DESIGN.md`); ícones Phosphor |
+| Auth | Auth.js v5: Google + conta de demonstração por clique, sessão em JWT |
+| Banco | Postgres com o driver `postgres`, SQL puro em `src/infra/db/` |
+| Limite de uso e registro de cota | Contadores no próprio Postgres, IP em HMAC |
+| Agendamento | Vercel Cron |
+| Qualidade | Biome, Vitest, tsx, teste de arquitetura, GitHub Actions |
+| LLM | Gemini, plano gratuito, vários modelos por papel (`AI.md` §10) |
+| Agente | Loop próprio no core; Mastra (`@mastra/core`) executa cada passo, atrás da porta `AgentRuntime` |
+| Schemas | zod em toda borda |
+| Observabilidade | OpenTelemetry → Grafana LGTM (Docker no dev, Grafana Cloud em prod) |
+| Clima e cidades | Open-Meteo (previsão e geocodificação), sem chave |
+| E2E | Playwright, como gate |
+| Ambiente local | `docker-compose`: Postgres + `grafana/otel-lgtm` |
+| MCP | Servidor com as tools de leitura da base e do clima |
+
+Os padrões de fundação seguem as referências locais (`.local/REFERENCIAS.md`, fora do git), quando existirem.
+
+## 3. Fluxo de um run
+
+1. A tela envia a mensagem (`POST /api/runs`), com texto, atalhos de check-in ou os dois.
+2. Sessão → conta. Sem sessão: `401`. A rota confirma no banco que a conta existe e não venceu.
+3. Guardrail de entrada (tamanho, injection, sinal de alerta) e limite de uso (por conta e por IP).
+4. Com texto: o Intérprete devolve as intenções e os campos (`AI.md` §3). Só com atalhos: esse passo é pulado.
+5. O código escolhe o caminho pela intenção. Casa, retorno ou "evitar sempre" sozinhos, ajuda, ofensa, alerta e fora do assunto são resolvidos aqui, sem o agente.
+6. Preparo em código: qualidades, filtros, ordenação, faltas e contexto.
+7. O run é criado com um `trace_id` e o Acompanhante roda, **transmitindo as etapas** (streaming): "vendo o clima…", "olhando sua casa…", "conferindo a resposta…".
+8. `finalizar` → validador → correções, se houver → Juiz.
+9. A tela mostra o texto do agente e as sugestões. Cada sugestão vira um registro em `retornos` (aguardando). As faltas do run são gravadas em `faltas`. Se houver propostas, a tela mostra o bloco de aprovação e o run fica em `waiting_for_approval`.
+10. Etapas, tokens, modelo usado e latência ficam no banco; spans e métricas saem por OTel.
+
+### Estados do run
+
+```
+running → waiting_for_input → running → … → done
+        ↘ waiting_for_approval → done
+        ↘ failed · expired · cancelled
+```
+
+- `waiting_for_input` e `waiting_for_approval` guardam o checkpoint. O run **não fica vivo** esperando: a resposta chega em outro pedido e retoma.
+- Um run aberto por conta. Espera de mais de 30 min → `expired`.
+
+### Rotas de toque (sem LLM)
+
+| Ação | Rota | O que grava |
+|---|---|---|
+| Retorno com um toque | `POST /api/retornos/:id` | `retornos` e o contador em `preferencias` |
+| Trocar ingrediente | `POST /api/sugestoes/:id/trocar` | A sugestão do run, com o substituto e o motivo; roda o validador de novo |
+| Não gosto · Gosto | `POST /api/preferencias` | `preferencias` |
+| Não tenho · Ainda tenho · Sempre tenho · adicionar · tirar | `POST /api/casa` | `casa`. "Não tenho" também grava uma falta em `faltas`. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa` |
+| Tirar um item da lista "Para ter em casa" | `POST /api/lista` | `lista_ter_em_casa` |
+| 👍 / 👎 na resposta | `POST /api/feedback` | `feedback` |
+| Confirmar ou recusar um padrão | `POST /api/padroes/:id` | `padroes` |
+
+## 4. Autenticação e demonstração
+
+- **Google** pelo Auth.js, só com `sub` e e-mail. Sem as credenciais do Google, a tela mostra só a demonstração.
+- **Conta de demonstração por clique:** cria uma conta nova, **copia o perfil semeado** (`seed/demo.yaml`: dosha, cidade, casa com itens confirmados e incertos, gostos, resultados, faltas (um alimento já com 3 dias), notas de rotina, um padrão a confirmar, retornos pendentes e conversas anteriores) e cai direto na tela Conversa com uma mensagem sugerida. Expira em 24 h. No máximo 5 por IP por dia.
+- Cookie `httpOnly`, `SameSite=Lax`. Toda rota protegida confere a conta no banco.
+- Autorização por conta **no repositório**: toda consulta leva o `conta_id`. Um teste tenta ler o run de outra conta e tem que falhar.
+
+### Proteção do site
+
+- **Texto puro na tela:** a resposta do agente e todo texto da pessoa são renderizados como texto. Nada de `dangerouslySetInnerHTML` nem de markdown vindo do modelo.
+- **Headers** em todas as respostas: CSP com nonce (sem `unsafe-inline` em script, `frame-ancestors 'none'`), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` desligando câmera, microfone e geolocalização, e HSTS em produção.
+- **Origem:** toda rota que muda estado confere o header `Origin` contra a URL do site; diferente ou ausente → `403`. Soma-se ao `SameSite=Lax`.
+- **Entrada das rotas:** corpo validado em zod, com tamanho máximo. Erro para fora nunca mostra stack nem detalhe interno.
+- **Limites:** mensagens, toques e demonstrações têm limites próprios (`BUSINESS.md` §14), contados por conta e por IP em HMAC.
+- **Cron:** só com `CRON_SECRET`.
+- **Servidor MCP:** público e sem login, com limite por IP. Só expõe as tools de leitura da base e do clima; nunca dado de conta.
+- **Dependências:** Dependabot semanal e `npm audit --omit=dev --audit-level=high` na CI.
+
+## 5. Portas e adaptadores
+
+A lógica fica em `src/core/`, sem Next, Auth.js, driver de banco, Mastra ou SDK de LLM.
+
+| Porta | Adaptador | Fake para testes |
+|---|---|---|
+| `AgentRuntime` (um passo de modelo com tools) | Mastra | Passos roteirizados (define a sequência de tools de cada cenário) |
+| `LlmClient` | Gemini | Respostas fixas; modo "429" |
+| `ModelRouter` | Papéis e cotas de `config/llm-cotas.ts`, registro no Postgres | Registro em memória, com cota configurável por teste |
+| `WeatherSource` | Open-Meteo (previsão) | Clima e previsão fixos; modo "fora do ar" |
+| `CityLookup` | Open-Meteo (geocodificação) | Lista fixa de cidades |
+| `KnowledgeBase` | YAML em `data/` | Os mesmos arquivos ou mini-tabela |
+| `RunRepository`, `MessageRepository`, `AccountRepository`, `PantryStore`, `ShortageStore`, `PreferenceStore`, `OutcomeStore`, `RoutineStore`, `PatternStore`, `ProposalStore` | Postgres | Em memória |
+| `UsageLimiter` | Postgres | Em memória |
+| `Telemetry` | OpenTelemetry | Em memória (os testes conferem spans e métricas) |
+| `Clock` | Relógio do sistema | Data fixa |
+
+A montagem acontece num único composition root (`src/infra/container.ts`). O teste de arquitetura falha se uma camada importar o que não pode.
+
+## 6. Modelo de dados
+
+| Tabela | Campos principais |
+|---|---|
+| `contas` | `id`, `tipo` (google, demo), `google_sub`, `email`, `expira_em`, `tester`, `aviso_aceito_em`, `evitar_passo` (pronto, nenhum, pulou), `evitar_lembrete_em`, `dosha_adiado_em` |
+| `perfis` | `conta_id`, `prakriti` (pode ser nulo), `origem` (quiz, declarado), `evitar_sempre[]` (`{tipo: grupo | alimento | texto, valor, desde}`), `restricoes[]`, `nao_come[]`, `cidade_nome`, `cidade_lat`, `cidade_lon` (duas casas decimais), `cidade_fuso` |
+| `evitar_temporario` | `conta_id`, `tipo`, `valor`, `dia`. O que a pessoa disse na conversa e vale até o fim do dia; apagado pela limpeza diária |
+| `casa` | `conta_id`, `alimento_id` (nulo se a base não conhece), `nome_livre`, `estado` (tem, acabou), `sempre_tenho`, `confirmado_em`, `origem` (conversa, tela, pergunta) |
+| `preferencias` | `conta_id`, `item_tipo` (alimento, pratica, preparo), `item_id`, `gosto` (gosta, nao_gosta, nulo), `ajudou`, `nao_ajudou`, `nao_fez`, `ultimos_resultados` (os dois mais recentes), `ultima_sugestao_em` |
+| `retornos` | `id`, `conta_id`, `run_id`, `sugestao` (tipo e ids), `status` (aguardando, respondido), `resultado` (ajudou, nao_ajudou, nao_fez), `origem` (toque, conversa), `respondido_em`. Sem resposta em 7 dias, é apagado |
+| `rotina_notas` | `id`, `conta_id`, `texto`, `ativa`, `criado_em` |
+| `rotina_resumos` | `conta_id`, `texto`, `versao` |
+| `padroes` | `id`, `conta_id`, `tipo`, `chave`, `frase`, `ocorrencias`, `status` (candidato, confirmado, recusado) |
+| `mensagens` | `id`, `conta_id`, `run_id`, `autor` (pessoa, agente), `texto`, `com_incomodo`, `dia`, `criado_em` (apagadas depois de 7 dias; as de run com incômodo, no dia seguinte) |
+| `runs` | `id`, `conta_id`, `caminho` (acompanhante, casa, retorno, evitar, ajuda, ofensa, alerta, fora, sem_modelo), `intencoes[]`, `status`, `checkpoint`, `pendencia`, `momento` (campos estruturados, sem incômodo), `com_incomodo`, `clima_usado`, `saida`, `passos`, `tokens_entrada`, `tokens_saida`, `latencia_ms`, `modelos` (por papel), `trocas_de_modelo`, `prompt_versao`, `juiz_tentativas`, `juiz_aprovado`, `trace_id`, `dia` |
+| `run_etapas` | `run_id`, `ordem`, `tipo`, `nome`, `resumo`, `status`, `duracao_ms`, `modelo`, `tokens_entrada`, `tokens_saida` |
+| `propostas` | `id`, `run_id`, `conta_id`, `tool`, `conteudo`, `decisao` (pendente, aprovada, recusada, expirada), `decidida_em` |
+| `faltas` | `conta_id`, `alimento_id`, `dia`, `origem` (teria_entrado, nao_tenho), `run_id`. Uma linha por conta, alimento e dia; apagadas depois de 30 dias |
+| `lista_ter_em_casa` | `conta_id`, `alimento_id`, `motivo` (faltou_hoje, fez_falta), `detalhe` (a sugestão de hoje, ou o número de faltas), `criado_em` |
+| `feedback` | `run_id`, `conta_id`, `voto` |
+| `alimentos_desconhecidos` | `nome`, `vezes` (sem `conta_id`; candidatos a entrar na base) |
+| `llm_uso` | `modelo`, `janela` (minuto ou dia), `inicio`, `pedidos`, `tokens` |
+| `limites` | Contadores por conta e por IP (HMAC) |
+
+O estado "incerto" de um item da casa não é gravado: é calculado de `confirmado_em`, da durabilidade do grupo e de `sempre_tenho` (`BUSINESS.md` §9).
+
+A recusa de uma indicação de "vale ter em casa" não tem tabela própria: é a proposta `lista.propor` daquele alimento com `decisao` recusada.
+
+"Apagar meus dados" remove a conta em cascata. Runs ficam sem `conta_id` e sem texto, só para as métricas agregadas.
+
+## 7. Estrutura de pastas
+
+```
+src/
+  core/                      # sem framework
+    knowledge/               # base, substitutos, combinações, explicação
+    weather/  pantry/  preferences/  routine/  patterns/  limits/  guardrails/
+    ranking/                 # ordenação dos candidatos
+    llm/                     # ModelRouter, papéis, cotas
+    agents/
+      interpreter/  companion/  judge/  memory/
+      tools/                 # catálogo fechado: leitura, controle, escrita
+      prompts/               # prompts versionados
+    runs/                    # estados, checkpoint, etapas, loop, caminhos por intenção, aprovação
+    telemetry/               # porta Telemetry e nomes de spans e métricas
+  infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth, otel
+    container.ts             # composition root
+  app/                       # Next.js: telas e rotas
+  components/                # UI (base em React Aria + componentes do Ritu)
+config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts
+scripts/                     # demo.ts (terminal), eval.ts, cleanup.ts, smoke.ts
+data/                        # base ayurvédica em YAML
+seed/                        # perfil de demonstração
+evals/                       # casos, runner, resultados por checkpoint e COMPARACAO.md
+observability/               # docker-compose do LGTM e dashboards
+mcp/                         # servidor MCP
+test/fixtures/  e2e/
+```
+
+## 8. Serviços e planos
+
+Só planos gratuitos, sem cartão.
+
+| Serviço | Plano | Cuidado |
+|---|---|---|
+| Vercel | Hobby | Tempo máximo de função; as pausas já evitam função longa |
+| Postgres em produção | Neon Free ou Supabase Free | Um projeto para o Ritu |
+| Gemini | Gratuito | Cotas por modelo e troca automática (`AI.md` §10). No plano gratuito o provedor pode usar as mensagens: o Aviso inicial e a tela Sobre dizem isso |
+| Grafana Cloud | Free | Retenção curta e limite mensal |
+| Open-Meteo | Gratuito, uso não comercial | Cache de 1 h por cidade |
+| GitHub Actions | Gratuito em repositório público | — |
+
+## 9. Ambientes
+
+| | Dev | Prod |
+|---|---|---|
+| Site | `localhost:3000` | Vercel (`*.vercel.app`) |
+| Banco | Postgres no Docker | Neon ou Supabase |
+| Observabilidade | LGTM no Docker (`localhost:3001`) ou desligada | Grafana Cloud |
+| Google | Cliente OAuth com `localhost` | Mesmo cliente, com a URL de produção |
+| LLM | Chave do projeto de desenvolvimento; é a que roda os evals | Chave do projeto de produção |

@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "eval:det": "vitest run --config vitest.eval.config.ts",
     "test:e2e": "playwright test",
+    "test:db": "vitest run --config vitest.db.config.ts",
     "dup": "jscpd",
     "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/db-migrate.ts",
     "env:check": "node --env-file-if-exists=.env.local --import tsx scripts/env-check.ts",

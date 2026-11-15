@@ -5,7 +5,7 @@ import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import { normalizar } from "@/core/knowledge/identificar"
-import { momentoSchema, sugestaoRegistradaSchema } from "@/core/memory-schemas"
+import { momentoSchema, prakritiSchema, sugestaoRegistradaSchema } from "@/core/memory-schemas"
 import type { Mensagem, MessageRepository } from "@/core/messages/ports"
 import type { OutcomeStore, Retorno } from "@/core/outcomes/ports"
 import type { PantryStore, ReferenciaDeItem } from "@/core/pantry/ports"
@@ -235,7 +235,7 @@ function criarProfiles(db: Db, clock: Clock): ProfileStore {
     },
     async definirPrakriti(contaId, prakriti, origem) {
       editar(contaId, (p) => {
-        p.prakriti = prakriti
+        p.prakriti = prakriti === null ? null : prakritiSchema.parse(prakriti)
         p.origem = origem
       })
     },

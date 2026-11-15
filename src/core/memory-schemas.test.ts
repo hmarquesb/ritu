@@ -46,6 +46,14 @@ describe("prakritiSchema", () => {
     expect(prakritiSchema.safeParse({ vata: 0.5, pitta: 0.2, kapha: 0.1 }).success).toBe(false)
   })
 
+  it("aceita um dosha só, que soma 1", () => {
+    expect(prakritiSchema.safeParse({ vata: 1 }).success).toBe(true)
+  })
+
+  it("recusa objeto vazio", () => {
+    expect(prakritiSchema.safeParse({}).success).toBe(false)
+  })
+
   it("recusa valor fora de 0 a 1", () => {
     expect(prakritiSchema.safeParse({ vata: 1.5, pitta: -0.5, kapha: 0 }).success).toBe(false)
   })

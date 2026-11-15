@@ -3,7 +3,10 @@ import type { RespostaDoRun } from "@/core/agents/companion/responder"
 import type { Anotacao, SaidaDoAcompanhante, SugestaoEntregue } from "@/core/agents/companion/saida"
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { EvitarItem } from "@/core/knowledge/filtros"
+import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
+import { textoDaResposta } from "@/core/runs/pergunta"
 import type { Caminho, Run, RunEtapa } from "@/core/runs/ports"
+import { formatarPergunta } from "./demo-resposta"
 
 export type ResumoDoRun = Pick<
   Run,
@@ -36,6 +39,8 @@ export type DadosDoRelatorio = {
   interpretacao?: Interpretacao
   // Nome de quem o Evitar cita; padrão: o próprio valor.
   nomeDoEvitar?: (item: EvitarItem) => string
+  // Pausas do run, na ordem em que aconteceram; sem pausa, não há blocos Pergunta.
+  perguntas?: { pergunta: Pergunta; resposta: RespostaDaPessoa }[]
 }
 
 type Item = SugestaoEntregue["itens"][number]
@@ -84,6 +89,17 @@ function linhasDasEtapas(etapas: RunEtapa[], pensamentos: Pensamento[]): string[
 function secaoEtapas(etapas: RunEtapa[], pensamentos: Pensamento[]): string[] {
   if (etapas.length === 0 && pensamentos.length === 0) return ["Etapas: nenhuma"]
   return ["Etapas", ...linhasDasEtapas(etapas, pensamentos)]
+}
+
+// Um bloco por pausa: a pergunta com as opções e a linha com a resposta usada.
+function blocoDaPergunta(p: { pergunta: Pergunta; resposta: RespostaDaPessoa }): string[] {
+  return [
+    "Pergunta",
+    ...formatarPergunta(p.pergunta)
+      .split("\n")
+      .map((linha) => `  ${linha}`),
+    `  Resposta: ${textoDaResposta(p.pergunta, p.resposta)}`,
+  ]
 }
 
 function secaoResposta(texto: string): string[] {
@@ -219,6 +235,7 @@ export function formatarRelatorio(d: DadosDoRelatorio): string {
     [`Cenário: ${d.nome}`],
     secaoEntendi(d.caminho, d.interpretacao, nomeDoEvitar),
     secaoEtapas(d.etapas, d.pensamentos),
+    ...(d.perguntas ?? []).map(blocoDaPergunta),
     secaoResposta(saida?.resposta ?? ""),
     secaoAnotacoes(saida?.anotacoes ?? [], nomeDoEvitar),
     secaoSugestoes(saida?.sugestoes ?? []),

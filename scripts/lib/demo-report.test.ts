@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { RespostaDoRun } from "@/core/agents/companion/responder"
 import type { Anotacao, SaidaDoAcompanhante } from "@/core/agents/companion/saida"
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
+import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Run, RunEtapa } from "@/core/runs/ports"
 import { type DadosDoRelatorio, formatarRelatorio } from "./demo-report"
 
@@ -280,5 +281,53 @@ describe("formatarRelatorio", () => {
     })
     expect(texto).toContain("Vale ter em casa: nada agora")
     expect(texto).toContain("Avisos: nenhum")
+  })
+})
+
+describe("formatarRelatorio · perguntas", () => {
+  const perguntaDeCasa: Pergunta = {
+    tipo: "casa",
+    texto: "Ainda tem abóbora e couve?",
+    itens: [
+      { alimento_id: "abobora", nome: "Abóbora" },
+      { alimento_id: "couve", nome: "Couve" },
+    ],
+  }
+  const respostaDeCasa: RespostaDaPessoa = {
+    tipo: "casa",
+    itens: [
+      { alimento_id: "abobora", resposta: "tenho" },
+      { alimento_id: "couve", resposta: "nao_tenho" },
+    ],
+  }
+
+  it("mostra o bloco Pergunta com as opções e a linha da resposta, antes da resposta final", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      perguntas: [{ pergunta: perguntaDeCasa, resposta: respostaDeCasa }],
+    })
+    expect(texto).toContain("Pergunta\n  Ainda tem abóbora e couve?")
+    expect(texto).toContain("1. Abóbora  [t] Tenho")
+    expect(texto).toContain("Resposta: Tenho: abóbora · Não tenho: couve")
+    expect(texto.indexOf("Etapas")).toBeLessThan(texto.indexOf("Pergunta\n"))
+    expect(texto.indexOf("Pergunta\n")).toBeLessThan(texto.indexOf("\nResposta\n"))
+  })
+
+  it("não mostra o bloco Pergunta quando o run não teve pausa", () => {
+    const texto = formatarRelatorio({ ...dadosDeExemplo(), perguntas: [] })
+    expect(texto).not.toMatch(/^Pergunta$/m)
+    expect(texto).not.toContain("Resposta: ")
+  })
+
+  it("aceita a resposta final sem saída, de run que terminou em espera", () => {
+    const dados = dadosDeExemplo()
+    const texto = formatarRelatorio({
+      ...dados,
+      resposta: { run_id: "run-1" },
+      run: { ...dados.run, status: "waiting_for_input" },
+      perguntas: [{ pergunta: perguntaDeCasa, resposta: respostaDeCasa }],
+    })
+    expect(texto).toContain("status: waiting_for_input")
+    expect(texto).toContain("origem: pausa")
   })
 })

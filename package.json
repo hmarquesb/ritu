@@ -28,6 +28,7 @@
     "clima:real": "tsx scripts/clima-real.ts",
     "runtime:real": "node --env-file-if-exists=.env.local --import tsx scripts/runtime-real.ts",
     "loop:demo": "node --env-file-if-exists=.env.local --import tsx scripts/loop-demo.ts",
+    "eval:llm": "node --env-file-if-exists=.env.local --import tsx scripts/eval-llm.ts",
     "demo": "node --env-file-if-exists=.env.local --import tsx scripts/demo.ts"
   },
   "dependencies": {

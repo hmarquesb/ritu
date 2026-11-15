@@ -1,12 +1,16 @@
 import { alertaEmocional } from "./alerta-emocional"
 import { autocorrecao } from "./autocorrecao"
+import { casaIncerta } from "./casa-incerta"
 import { casaSozinha } from "./casa-sozinha"
+import { casaVazia } from "./casa-vazia"
+import { dorDeCabeca } from "./dor-de-cabeca"
 import { duasIntencoes } from "./duas-intencoes"
 import { estomagoPesado } from "./estomago-pesado"
 import { evitarSozinho } from "./evitar-sozinho"
 import { frioAgitada } from "./frio-agitada"
 import { ofensa } from "./ofensa"
 import { perguntaManga } from "./pergunta-manga"
+import { perguntaRecusada } from "./pergunta-recusada"
 import { retornoConversa } from "./retorno-conversa"
 import { semModelo } from "./sem-modelo"
 import { soAtalhos } from "./so-atalhos"
@@ -46,4 +50,13 @@ export const cenariosDeConversa: Record<string, CenarioDeConversa> = {
   "so-atalhos": comMensagem(soAtalhos),
 }
 
+// Os quatro com pausa (009): passam pela conversa e são rodados por `rodarCenario` até o fim.
+export const cenariosComPausa: Record<string, CenarioDeConversa> = {
+  "casa-incerta": comMensagem(casaIncerta),
+  "casa-vazia": comMensagem(casaVazia),
+  "dor-de-cabeca": comMensagem(dorDeCabeca),
+  "pergunta-recusada": comMensagem(perguntaRecusada),
+}
+
 export { type DepsDoCenario, montarCenario, type OpcoesDoCenario } from "./montar"
+export { type RodadaDoCenario, rodarCenario } from "./rodar"

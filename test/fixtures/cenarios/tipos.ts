@@ -7,6 +7,7 @@ import type { Restricao } from "@/core/knowledge/vocab"
 import type { SugestaoRegistrada } from "@/core/memory-schemas"
 import type { MensagemRecebida } from "@/core/messages/texto"
 import type { ItemTipo } from "@/core/preferences/ports"
+import type { RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Caminho } from "@/core/runs/ports"
 import type { CidadeDaPessoa, Clima } from "@/core/weather/ports"
 import type { PassoRoteirizado } from "@/infra/fakes/scripted-runtime"
@@ -45,6 +46,8 @@ export type Cenario = {
   retornos?: { sugestao: SugestaoRegistrada; diasAtras: number }[]
   // Mensagens de conversas anteriores, cada uma num run já encerrado com o caminho dado.
   mensagens?: { autor: "pessoa" | "agente"; texto: string; caminho?: Caminho }[]
+  // Respostas da pessoa às pausas, na ordem em que as perguntas saem (rodarCenario).
+  respostas?: RespostaDaPessoa[]
   roteiro: PassoRoteirizado[]
 }
 

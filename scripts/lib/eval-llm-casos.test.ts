@@ -1,4 +1,10 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+
+// Limite de perguntas por run alto só neste arquivo: o teste de pausas acima do teto precisa de quatro pausas.
+vi.mock("../../config/pausas", () => ({
+  pausas: { maxPerguntasPorRun: 10, maxItensPorPergunta: 5, maxRefeicoesAPerguntar: 2 },
+}))
+
 import { casosC1 } from "../../evals/llm/casos/c1"
 import type { CasoConversa, CasoInterprete } from "../../evals/llm/casos/c2"
 import { casosC2 } from "../../evals/llm/casos/c2"
@@ -27,13 +33,19 @@ import {
 } from "../../evals/llm/casos/c2/intencao/expectativas"
 import type { ExpectativaDoInterprete } from "../../evals/llm/casos/c2/tipos"
 import type { Interpretacao } from "../../src/core/agents/interpreter/interpretacao"
-import type { Caminho } from "../../src/core/runs/ports"
+import type { PedidoDePergunta } from "../../src/core/agents/tools/ask-user"
+import type { RespostaDaPessoa } from "../../src/core/runs/pergunta"
+import type { Caminho, RunEtapa } from "../../src/core/runs/ports"
 import { createContainer } from "../../src/infra/container"
 import { createFakeLlm } from "../../src/infra/fakes/fake-llm"
-import { createScriptedRuntime } from "../../src/infra/fakes/scripted-runtime"
-import { cenariosDeConversa, montarCenario } from "../../test/fixtures/cenarios"
+import {
+  createScriptedRuntime,
+  type PassoRoteirizado,
+} from "../../src/infra/fakes/scripted-runtime"
+import { cenariosComPausa, cenariosDeConversa, montarCenario } from "../../test/fixtures/cenarios"
 import {
   conferir,
+  contarEtapas,
   despachar,
   ehCheckpoint,
   formatarListagem,
@@ -306,6 +318,191 @@ const passa = (
   const { caminho: c = "acompanhante", ...dados } = r
   return e.confere({ interpretacao: { ...base, ...dados }, caminho: c })
 }
+
+describe("runner da conversa com pausa", () => {
+  const casaIncerta = cenariosComPausa["casa-incerta"]
+  if (!casaIncerta) throw new Error("cenário casa-incerta ausente")
+  const { roteiro, ...semRoteiro } = casaIncerta
+  const respostaCasa: RespostaDaPessoa = {
+    tipo: "casa",
+    itens: [
+      { alimento_id: "abobora", resposta: "tenho" },
+      { alimento_id: "couve", resposta: "nao_tenho" },
+    ],
+  }
+
+  function casoComPausa(
+    parcial: Partial<Pick<CasoConversa, "respostas" | "deve">> = {},
+  ): CasoConversa {
+    const { respostas: _ignorada, ...cenario } = semRoteiro
+    return {
+      tipo: "conversa",
+      id: "t-pausa",
+      titulo: "Casa incerta",
+      cenario,
+      respostas: [respostaCasa],
+      deve: [],
+      naoPode: [],
+      ...parcial,
+    }
+  }
+
+  const opcoes = () => ({
+    runtime: createScriptedRuntime(roteiro),
+    llm: createFakeLlm([casaIncerta.interpretacao]),
+  })
+
+  it("responde a pausa com as respostas do caso, na ordem, e a expectativa vê as perguntas", async () => {
+    const r = await rodarConversa(
+      casoComPausa({
+        deve: [
+          {
+            descricao: "uma pergunta de casa, com a resposta dada",
+            confere: ({ perguntas }) =>
+              perguntas.length === 1 &&
+              perguntas[0]?.pergunta.tipo === "casa" &&
+              perguntas[0]?.resposta.tipo === "casa",
+          },
+        ],
+      }),
+      opcoes(),
+    )
+
+    expect(r.deve.every((x) => x.ok)).toBe(true)
+    expect(r.perguntas).toEqual(["casa"])
+    expect(r.erro).toBeUndefined()
+  })
+
+  it("sem resposta sobrando, a pausa recebe pular", async () => {
+    const r = await rodarConversa(
+      casoComPausa({
+        respostas: undefined,
+        deve: [
+          {
+            descricao: "a pausa recebe pular",
+            confere: ({ perguntas }) => perguntas[0]?.resposta.tipo === "pular",
+          },
+        ],
+      }),
+      opcoes(),
+    )
+
+    expect(r.deve.every((x) => x.ok)).toBe(true)
+    expect(r.perguntas).toEqual(["casa"])
+  })
+
+  it("sem pausa, as perguntas são vazias e não há recusas", async () => {
+    const r = await rodarConversa(
+      {
+        tipo: "conversa",
+        id: "t-sem-pausa",
+        titulo: "Só atalhos",
+        cenario: soAtalhos,
+        deve: [],
+        naoPode: [],
+      },
+      { runtime: createScriptedRuntime(soAtalhos.roteiro), llm: createFakeLlm([]) },
+    )
+
+    expect(r.perguntas).toEqual([])
+    expect(r.recusadas).toBe(0)
+  })
+})
+
+describe("pausas acima do teto de retomadas", () => {
+  const casaVazia = cenariosComPausa["casa-vazia"]
+  if (!casaVazia) throw new Error("cenário casa-vazia ausente")
+  const { roteiro: _roteiro, respostas: _respostas, ...cenario } = casaVazia
+  const pede = (ids: string[]): PassoRoteirizado => ({
+    texto: "Vou perguntar à pessoa.",
+    chamadas: [
+      { nome: "ask_user", argumentos: { tipo: "casa", alimentos: ids } satisfies PedidoDePergunta },
+    ],
+  })
+
+  it("um caso que pausa quatro vezes sai como falho com o motivo, e o caso seguinte roda", async () => {
+    const quatroPausas: CasoConversa = {
+      tipo: "conversa",
+      id: "t-quatro-pausas",
+      titulo: "Quatro pausas",
+      cenario,
+      deve: [],
+      naoPode: [],
+    }
+    const falho = await rodarConversa(quatroPausas, {
+      runtime: createScriptedRuntime([
+        pede(["mandioca"]),
+        pede(["inhame"]),
+        pede(["ghee"]),
+        pede(["azeite"]),
+      ]),
+      llm: createFakeLlm([casaVazia.interpretacao]),
+    })
+
+    expect(falho.erro).toBe("pausou mais de 3 vezes")
+    expect(falho.perguntas).toHaveLength(3)
+
+    const seguinte = await rodarConversa(
+      {
+        tipo: "conversa",
+        id: "t-seguinte",
+        titulo: "Só atalhos",
+        cenario: soAtalhos,
+        deve: [],
+        naoPode: [],
+      },
+      { runtime: createScriptedRuntime(soAtalhos.roteiro), llm: createFakeLlm([]) },
+    )
+    expect(seguinte.erro).toBeUndefined()
+  })
+})
+
+function etapa(
+  tipo: RunEtapa["tipo"],
+  nome: string,
+  ordem: number,
+  status: RunEtapa["status"] = "ok",
+): RunEtapa {
+  return {
+    run_id: "run-eval",
+    ordem,
+    tipo,
+    nome,
+    resumo: null,
+    status,
+    duracao_ms: 1,
+    modelo: null,
+    tokens_entrada: 0,
+    tokens_saida: 0,
+    criado_em: AGORA,
+  }
+}
+
+describe("contagem de recusas e de chamadas antes da pausa", () => {
+  it("conta as recusas de ask_user e as chamadas de modelo antes da primeira pergunta", () => {
+    const etapas = [
+      etapa("llm", "decisao", 1),
+      etapa("pergunta", "casa", 2),
+      etapa("llm", "decisao", 3),
+      etapa("validacao", "ask_user", 4, "recusado"),
+      etapa("llm", "decisao", 5),
+    ]
+    expect(contarEtapas(etapas)).toEqual({ recusadas: 1, llmAntesDaPrimeiraPausa: 1 })
+  })
+
+  it("sem pausa, conta todas as chamadas de modelo", () => {
+    const etapas = [etapa("llm", "decisao", 1), etapa("llm", "decisao", 2)]
+    expect(contarEtapas(etapas)).toEqual({ recusadas: 0, llmAntesDaPrimeiraPausa: 2 })
+  })
+
+  it("só ask_user recusado conta; outra tool recusada e ask_user aceito não", () => {
+    const etapas = [
+      etapa("validacao", "finalizar", 1, "recusado"),
+      etapa("validacao", "ask_user", 2, "ok"),
+    ]
+    expect(contarEtapas(etapas)).toEqual({ recusadas: 0, llmAntesDaPrimeiraPausa: 0 })
+  })
+})
 
 describe("expectativas do Intérprete", () => {
   it("temIntencao e semIntencao", () => {

@@ -3,6 +3,7 @@ import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { RespostaDaConversa } from "@/core/conversation/conversar"
 import type { Estado } from "@/core/knowledge/vocab"
 import type { SugestaoRegistrada } from "@/core/memory-schemas"
+import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Caminho } from "@/core/runs/ports"
 import type { CenarioDeConversa } from "../../../../test/fixtures/cenarios/tipos"
 import type { ResultadoDoRun } from "../c1/tipos"
@@ -26,10 +27,19 @@ export type CasoInterprete = {
   falsoAlerta?: true
 }
 
-// O que a conversa entrega ao caso: a resposta da conversa e o resultado colhido do run.
+// O que a conversa entrega ao caso: a resposta da conversa, o resultado colhido do run e as pausas.
 export type ExpectativaDaConversa = {
   descricao: string
-  confere: (r: { resposta: RespostaDaConversa; resultado: ResultadoDoRun }) => boolean
+  confere: (r: {
+    resposta: RespostaDaConversa
+    resultado: ResultadoDoRun
+    // Cada pergunta que saiu num run pausado, com a resposta dada pelo runner.
+    perguntas: { pergunta: Pergunta; resposta: RespostaDaPessoa }[]
+    // Etapas ask_user recusadas pelo código no run.
+    recusadas: number
+    // Chamadas de modelo antes da primeira pergunta (todas, sem pergunta).
+    llmAntesDaPrimeiraPausa: number
+  }) => boolean
 }
 
 export type CasoConversa = {
@@ -37,7 +47,11 @@ export type CasoConversa = {
   id: string
   titulo: string
   // Cenário da conversa: como CenarioDoCaso, com mensagem obrigatória e sem entrada de acompanhante.
-  cenario: Omit<CenarioDeConversa, "roteiro">
+  cenario: Omit<CenarioDeConversa, "roteiro" | "respostas">
+  // Respostas da pessoa às pausas, na ordem em que as perguntas saem; sem resposta sobrando, pular.
+  respostas?: RespostaDaPessoa[]
+  // Só nos casos de pergunta: se o run devia perguntar (necessaria) ou não (desnecessaria).
+  pergunta?: "necessaria" | "desnecessaria"
   deve: ExpectativaDaConversa[]
   naoPode: ExpectativaDaConversa[]
 }

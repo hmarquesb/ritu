@@ -15,6 +15,7 @@ import {
   casosC2,
 } from "../../evals/llm/casos/c2"
 import { checkpoints } from "../../evals/llm/checkpoints"
+import type { RespostaDoRun } from "../../src/core/agents/companion/responder"
 import type { SaidaDoAcompanhante } from "../../src/core/agents/companion/saida"
 import { createInterpreter } from "../../src/core/agents/interpreter/interpretar"
 import type { Clock } from "../../src/core/clock"
@@ -29,7 +30,7 @@ import type { AgentRuntime } from "../../src/core/runs/agent-runtime"
 import { escolherCaminho } from "../../src/core/runs/caminhos"
 import type { Run, RunEtapa } from "../../src/core/runs/ports"
 import { createMemoryTelemetry } from "../../src/infra/fakes/memory-telemetry"
-import { montarCenario } from "../../test/fixtures/cenarios"
+import { montarCenario, rodarCenario } from "../../test/fixtures/cenarios"
 import type { ChecagemDeExpectativa, ResultadoDoCaso, TipoDoCaso } from "./eval-llm-report"
 
 export type CasoDoEval = CasoC1 | CasoC2
@@ -290,32 +291,94 @@ export async function rodarInterprete(
 
 export type OpcoesDaConversa = { runtime: AgentRuntime; llm: LlmClient }
 
-/** Uma mensagem pela conversa, com o runtime e o cliente dados. Sem juiz: a explicação fica fora desta conta. */
+export type ContagemDasEtapas = { recusadas: number; llmAntesDaPrimeiraPausa: number }
+
+/** Recusas de ask_user e chamadas de modelo antes da primeira pergunta; sem pergunta, todas as chamadas. */
+export function contarEtapas(etapas: RunEtapa[]): ContagemDasEtapas {
+  const recusadas = etapas.filter(
+    (e) => e.tipo === "validacao" && e.nome === "ask_user" && e.status === "recusado",
+  ).length
+  const ordensDasPerguntas = etapas.filter((e) => e.tipo === "pergunta").map((e) => e.ordem)
+  const corte =
+    ordensDasPerguntas.length > 0 ? Math.min(...ordensDasPerguntas) : Number.POSITIVE_INFINITY
+  const llmAntesDaPrimeiraPausa = etapas.filter((e) => e.tipo === "llm" && e.ordem < corte).length
+  return { recusadas, llmAntesDaPrimeiraPausa }
+}
+
+// A conversa devolve resposta de conversa; a de acompanhante não passa por aqui.
+function daConversa(final: RespostaDaConversa | RespostaDoRun): RespostaDaConversa {
+  if (!("caminho" in final)) throw new Error("a conversa devolveu resposta de acompanhante")
+  return final
+}
+
+const MOTIVO_PAUSA_ACIMA_DO_TETO = "pausou mais de 3 vezes"
+
+// Caso falho por pausa acima do teto: as expectativas contam como não cumpridas, no formato do Intérprete com erro.
+function pausadoAcimaDoTeto(
+  caso: CasoConversa,
+  d: { latenciaMs: number; perguntas: string[]; recusadas: number },
+): ResultadoDoCaso {
+  return {
+    id: caso.id,
+    titulo: caso.titulo,
+    tipo: "conversa",
+    deve: falsas(caso.deve),
+    naoPode: falsas(caso.naoPode),
+    trajetoriaOk: true,
+    chamadasDesnecessarias: 0,
+    validaNa1a: false,
+    houveViolacao: false,
+    corrigiuAposViolacao: false,
+    erro: MOTIVO_PAUSA_ACIMA_DO_TETO,
+    pergunta: caso.pergunta,
+    perguntas: d.perguntas,
+    recusadas: d.recusadas,
+    uso: {},
+    trocas: 0,
+    latenciaMs: d.latenciaMs,
+    modelos: [],
+  }
+}
+
+/** Uma mensagem pela conversa, respondendo às pausas com as respostas do caso. Sem juiz: a explicação fica fora desta conta. */
 export async function rodarConversa(
   caso: CasoConversa,
   opts: OpcoesDaConversa,
 ): Promise<ResultadoDoCaso> {
-  const { contaId, deps } = await montarCenario({ ...caso.cenario, roteiro: [] }, opts)
+  const cenario = { ...caso.cenario, roteiro: [] }
+  const { contaId, deps } = await montarCenario(cenario, opts)
   const inicio = performance.now()
-  const resposta: RespostaDaConversa = await deps.conversation.conversar(
-    contaId,
-    caso.cenario.mensagem,
-  )
+  const rodada = await rodarCenario(deps, contaId, cenario, {
+    responder: async (_pergunta, i) => caso.respostas?.[i] ?? { tipo: "pular" },
+  })
   const latenciaMs = Math.round(performance.now() - inicio)
+  const resposta = daConversa(rodada.final)
   const run = await deps.stores.runs.buscar(contaId, resposta.run_id)
   if (!run) throw new Error(`run ${resposta.run_id} não encontrado`)
+  const etapas = await deps.stores.runs.etapas(contaId, resposta.run_id)
+  const contagem = contarEtapas(etapas)
+  const perguntas = rodada.perguntas.map((p) => p.pergunta.tipo)
+  // Ainda pausado depois do teto de retomadas: o caso falha com o motivo e a rodada segue.
+  if (resposta.status === "waiting_for_input") {
+    return pausadoAcimaDoTeto(caso, { latenciaMs, perguntas, recusadas: contagem.recusadas })
+  }
   if (!resposta.saida) throw new Error(`run ${resposta.run_id} pausou sem saída`)
   if (resposta.saida.origem === "sem_modelo") throw new SemModeloError()
-  const etapas = await deps.stores.runs.etapas(contaId, resposta.run_id)
   const r = colherResultado(resposta.saida, resposta.status, etapas)
-  return resultadoDaResposta({
-    caso,
-    tipo: "conversa",
-    r,
-    run,
-    latenciaMs,
-    violacoes: violacoesDaPrimeiraEntrega(deps.telemetry.spans, deps.telemetry.metricas),
-    deve: conferir(caso.deve, { resposta, resultado: r }),
-    naoPode: conferir(caso.naoPode, { resposta, resultado: r }),
-  })
+  const alvo = { resposta, resultado: r, perguntas: rodada.perguntas, ...contagem }
+  return {
+    ...resultadoDaResposta({
+      caso,
+      tipo: "conversa",
+      r,
+      run,
+      latenciaMs,
+      violacoes: violacoesDaPrimeiraEntrega(deps.telemetry.spans, deps.telemetry.metricas),
+      deve: conferir(caso.deve, alvo),
+      naoPode: conferir(caso.naoPode, alvo),
+    }),
+    pergunta: caso.pergunta,
+    perguntas,
+    recusadas: contagem.recusadas,
+  }
 }

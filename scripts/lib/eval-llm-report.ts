@@ -35,6 +35,12 @@ export type ResultadoDoCaso = {
   alertou?: boolean
   /** Códigos de violação da primeira validação (acompanhante e conversa). */
   violacoesDaPrimeira?: string[]
+  /** Caso conversa de pergunta: se o run devia perguntar ou não. Ausente = sem seção Perguntas. */
+  pergunta?: "necessaria" | "desnecessaria"
+  /** Tipos das perguntas que saíram no run (casa, come, variante). */
+  perguntas?: string[]
+  /** Etapas ask_user recusadas pelo código no run. */
+  recusadas?: number
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaMs: number
@@ -249,6 +255,61 @@ function secaoDoInterprete(casos: ResultadoDoCaso[], i: ResumoDoInterprete): str
   return linhas
 }
 
+const comPergunta = (casos: ResultadoDoCaso[]): ResultadoDoCaso[] =>
+  casos.filter((c) => c.pergunta !== undefined)
+
+// Acerto de uma pergunta: a necessária tem ao menos uma de casa; a desnecessária não tem nenhuma.
+function acertouAPergunta(c: ResultadoDoCaso): boolean {
+  const feitas = c.perguntas ?? []
+  return c.pergunta === "necessaria" ? feitas.includes("casa") : feitas.length === 0
+}
+
+export type ResumoDePerguntas = {
+  necessarias: number
+  necessariasFeitas: number
+  desnecessarias: number
+  desnecessariasEvitadas: number
+  recusadas: number
+  runs: number
+}
+
+export function resumirPerguntas(casos: ResultadoDoCaso[]): ResumoDePerguntas {
+  const marcados = comPergunta(casos)
+  const necessarias = marcados.filter((c) => c.pergunta === "necessaria")
+  const desnecessarias = marcados.filter((c) => c.pergunta === "desnecessaria")
+  const runs = casos.filter((c) => c.tipo === "conversa" && c.recusadas !== undefined)
+  return {
+    necessarias: necessarias.length,
+    necessariasFeitas: necessarias.filter(acertouAPergunta).length,
+    desnecessarias: desnecessarias.length,
+    desnecessariasEvitadas: desnecessarias.filter(acertouAPergunta).length,
+    recusadas: soma(runs.map((c) => c.recusadas ?? 0)),
+    runs: runs.length,
+  }
+}
+
+function linhaDePergunta(c: ResultadoDoCaso): string {
+  const rotulo = c.pergunta === "necessaria" ? "necessária" : "desnecessária"
+  const feitas = (c.perguntas ?? []).join(", ") || "nenhuma"
+  return `| ${c.id} | ${rotulo} | ${feitas} | ${sim(acertouAPergunta(c))} |`
+}
+
+function secaoDePerguntas(casos: ResultadoDoCaso[]): string[] {
+  const r = resumirPerguntas(casos)
+  const media = r.runs === 0 ? "0" : (r.recusadas / r.runs).toFixed(2)
+  return [
+    "## Perguntas",
+    "",
+    "| Caso | Esperada | Perguntas feitas | Acertou |",
+    "|---|---|---|---|",
+    ...comPergunta(casos).map(linhaDePergunta),
+    "",
+    `- Perguntas necessárias feitas: ${r.necessariasFeitas}/${r.necessarias} (${porcentagem(r.necessariasFeitas, r.necessarias)})`,
+    `- Desnecessárias evitadas: ${r.desnecessariasEvitadas}/${r.desnecessarias} (${porcentagem(r.desnecessariasEvitadas, r.desnecessarias)})`,
+    `- Perguntas recusadas pelo código por run: ${media} (${r.recusadas} no total, em ${r.runs} runs)`,
+  ]
+}
+
 function linhaDoCaso(c: ResultadoDoCaso): string {
   if (c.erro) return `| ${c.id} | erro: ${c.erro} | erro | não | não | n/d | n/d |`
   const deve = c.deve.filter((x) => x.ok).length
@@ -316,6 +377,7 @@ export function formatarRelatorio(rodada: Rodada): string {
   const linhas = cabecalho(rodada, r)
   if (r.casos > 0) linhas.push(...secaoDeRespostas(r))
   if (r.interprete.casos > 0) linhas.push("", ...secaoDoInterprete(rodada.casos, r.interprete))
+  if (comPergunta(rodada.casos).length > 0) linhas.push("", ...secaoDePerguntas(rodada.casos))
   linhas.push("", "## Custo por papel", "", ...tabelaDeCusto(r.uso))
   if (r.casos > 0) linhas.push(...secaoDeCasos(rodada.casos))
   linhas.push("", "## Falhas", "", ...(falhas.length > 0 ? falhas : ["Nenhuma."]))

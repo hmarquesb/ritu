@@ -350,6 +350,56 @@ describe("violações da primeira entrega", () => {
   })
 })
 
+describe("seção Perguntas", () => {
+  const conversa = (id: string, parcial: Partial<ResultadoDoCaso>) =>
+    caso({ id, tipo: "conversa", ...parcial })
+
+  const casos = [
+    conversa("p1", { pergunta: "necessaria", perguntas: ["casa"], recusadas: 0 }),
+    conversa("p2", { pergunta: "necessaria", perguntas: [], recusadas: 1 }),
+    conversa("p3", { pergunta: "desnecessaria", perguntas: [], recusadas: 0 }),
+    conversa("p4", { pergunta: "desnecessaria", perguntas: ["come"], recusadas: 0 }),
+  ]
+
+  it("mostra acerto por caso e o total de cada medida", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v3",
+      totalDeCasos: 4,
+      casos,
+    })
+    expect(texto).toContain("## Perguntas")
+    expect(texto).toContain("| p1 | necessária | casa | sim |")
+    expect(texto).toContain("| p2 | necessária | nenhuma | não |")
+    expect(texto).toContain("| p4 | desnecessária | come | não |")
+    expect(texto).toContain("- Perguntas necessárias feitas: 1/2 (50%)")
+    expect(texto).toContain("- Desnecessárias evitadas: 1/2 (50%)")
+    expect(texto).toContain(
+      "- Perguntas recusadas pelo código por run: 0.25 (1 no total, em 4 runs)",
+    )
+  })
+
+  it("sem casos com pergunta, a seção não aparece", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c1-base",
+      promptVersao: "acompanhante.v3",
+      totalDeCasos: 1,
+      casos: [caso({ id: "a" })],
+    })
+    expect(texto).not.toContain("## Perguntas")
+  })
+
+  it("conversa sem pergunta marcada não entra na seção", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v3",
+      totalDeCasos: 1,
+      casos: [conversa("x", {})],
+    })
+    expect(texto).not.toContain("## Perguntas")
+  })
+})
+
 describe("seções sem caso do tipo não aparecem", () => {
   it("só com Intérprete, não há Métricas, Casos nem Violações", () => {
     const texto = formatarRelatorio({

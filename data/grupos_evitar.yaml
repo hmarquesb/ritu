@@ -4,10 +4,24 @@
   palavras: [amendoim, paçoca, pé de moleque, pasta de amendoim, manteiga de amendoim]
 - id: castanhas
   nome: Castanhas
-  palavras: [castanha, castanha-do-pará, castanha de caju, nozes, amêndoa, avelã, pistache, macadâmia, pecã]
+  palavras:
+    [castanha, castanha-do-pará, castanha de caju, nozes, amêndoa, avelã, pistache, macadâmia, pecã]
 - id: leite
   nome: Leite e derivados
-  palavras: [leite, laticínio, laticínios, queijo, iogurte, manteiga, requeijão, creme de leite, nata, coalhada, ghee]
+  palavras:
+    [
+      leite,
+      laticínio,
+      laticínios,
+      queijo,
+      iogurte,
+      manteiga,
+      requeijão,
+      creme de leite,
+      nata,
+      coalhada,
+      ghee,
+    ]
 - id: ovo
   nome: Ovo
   palavras: [ovo, ovos, clara, gema, omelete, maionese]
@@ -16,7 +30,19 @@
   palavras: [soja, tofu, leite de soja, shoyu, molho de soja, missô, edamame, proteína de soja]
 - id: trigo
   nome: Trigo
-  palavras: [trigo, farinha de trigo, pão, macarrão, glúten, cuscuz marroquino, bolacha, biscoito, sêmola, triguilho]
+  palavras:
+    [
+      trigo,
+      farinha de trigo,
+      pão,
+      macarrão,
+      glúten,
+      cuscuz marroquino,
+      bolacha,
+      biscoito,
+      sêmola,
+      triguilho,
+    ]
 - id: gergelim
   nome: Gergelim
   palavras: [gergelim, tahine, óleo de gergelim, gergelim preto, homus]
@@ -25,4 +51,5 @@
   palavras: [peixe, atum, sardinha, salmão, tilápia, bacalhau, pescada, merluza]
 - id: frutos_do_mar
   nome: Frutos do mar
-  palavras: [frutos do mar, camarão, lagosta, siri, caranguejo, marisco, lula, polvo, ostra, mexilhão]
+  palavras:
+    [frutos do mar, camarão, lagosta, siri, caranguejo, marisco, lula, polvo, ostra, mexilhão]

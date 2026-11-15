@@ -3,7 +3,10 @@
   tema: corpo
   texto: Como é a estrutura do seu corpo desde sempre?
   opcoes:
-    - { dosha: vata, texto: "Fina e alongada, com ombros e quadris estreitos e articulações aparentes" }
+    - {
+        dosha: vata,
+        texto: "Fina e alongada, com ombros e quadris estreitos e articulações aparentes",
+      }
     - { dosha: pitta, texto: "Média e bem proporcionada, com músculos definidos" }
     - { dosha: kapha, texto: "Larga e firme, com ossos fortes e ombros e quadris largos" }
   fontes:

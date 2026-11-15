@@ -36,7 +36,10 @@
   evitar_texto: "pratos pesados, gordurosos e doces em excesso"
   fontes:
     - { ref: banyan-vata-pitta-kapha, campos: [presentes, favorecer] }
-    - { ref: banyan-dieta-kapha, campos: [presentes, favorecer, evitar_gunas, evitar_marcas, evitar_texto] }
+    - {
+        ref: banyan-dieta-kapha,
+        campos: [presentes, favorecer, evitar_gunas, evitar_marcas, evitar_texto],
+      }
   confianca: media
 - id: seca
   rotulo: Seca, ressecada

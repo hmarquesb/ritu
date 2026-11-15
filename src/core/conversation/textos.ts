@@ -3,9 +3,9 @@ import type { Perfil } from "@/core/accounts/types"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { juntarNomes } from "@/core/knowledge/lacunas"
+import { nomeDoCitado, nomeDoEvitar } from "@/core/knowledge/nomes"
 import { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 import type { Restricao } from "@/core/knowledge/vocab"
-import { neutralizar } from "@/core/neutralizar"
 
 export { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 
@@ -53,8 +53,6 @@ export const textosDaConversa = {
   fixoJaGuardado: "Isso eu já tinha guardado: {itens}.",
 } as const
 
-type Citado = { alimento_id?: string; nome: string }
-
 // Troca com função: o valor vindo da pessoa não é reinterpretado ($&, {itens}, {titulo}).
 function trocar(modelo: string, marca: string, valor: string): string {
   return modelo.replace(marca, () => valor)
@@ -63,19 +61,6 @@ function trocar(modelo: string, marca: string, valor: string): string {
 // Uma frase preenchida com os itens; vazia quando não há item.
 function frase(modelo: string, itens: string[]): string {
   return itens.length === 0 ? "" : trocar(modelo, "{itens}", juntarNomes(itens))
-}
-
-function nomeDoCitado(citado: Citado, kb: KnowledgeBase): string {
-  if (citado.alimento_id) return kb.alimento(citado.alimento_id)?.nome ?? neutralizar(citado.nome)
-  return neutralizar(citado.nome)
-}
-
-function nomeDoEvitar(item: EvitarItem, kb: KnowledgeBase): string {
-  if (item.tipo === "alimento") return kb.alimento(item.valor)?.nome ?? item.valor
-  if (item.tipo === "grupo") {
-    return kb.gruposEvitar.find((grupo) => grupo.id === item.valor)?.nome ?? item.valor
-  }
-  return neutralizar(item.valor)
 }
 
 export function textoDeCasa(itens: ItemDeCasaCitado[], kb: KnowledgeBase): string {

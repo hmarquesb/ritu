@@ -289,6 +289,28 @@ describe("container", () => {
     expect(container.runs).toBe(runs)
   })
 
+  it("companion é preguiçoso: sem GEMINI_API_KEY nem DATABASE_URL, criar não lança e a instância é a mesma", async () => {
+    const chave = process.env.GEMINI_API_KEY
+    const url = process.env.DATABASE_URL
+    delete process.env.GEMINI_API_KEY
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+      expect(container.companion).toBe(container.companion)
+    } finally {
+      if (chave !== undefined) process.env.GEMINI_API_KEY = chave
+      if (url !== undefined) process.env.DATABASE_URL = url
+    }
+  })
+
+  it("companion aceita override", async () => {
+    const { createContainer } = await import("./container")
+    const companion = {} as ReturnType<typeof createContainer>["companion"]
+    const container = createContainer({ companion })
+    expect(container.companion).toBe(companion)
+  })
+
   it("iniciarTelemetria sem endpoint não carrega o SDK de Node", async () => {
     const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
     delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT

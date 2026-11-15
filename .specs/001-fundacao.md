@@ -1,6 +1,7 @@
 ---
 title: Fundação
-status: approved
+status: implemented
+implemented: f904742
 entrega: 1
 created: 2026-11-14
 ---

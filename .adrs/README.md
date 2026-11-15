@@ -8,7 +8,27 @@
 
 | # | Decisão | Status |
 |---|---|---|
-| — | Nenhuma escrita ainda | — |
+| [0001](0001-foco-no-momento.md) | Foco no momento, com o que há em casa | Aceito |
+| [0002](0002-conversa-em-texto-livre.md) | Conversa em texto livre, resposta em texto do agente | Aceito |
+| [0003](0003-base-estruturada-em-yaml.md) | Base estruturada em YAML consultada por tools, sem RAG | Aceito |
+| [0004](0004-fundacao-tecnica.md) | Fundação técnica | Aceito |
+| [0005](0005-loop-no-core-mastra-por-passo.md) | Loop do agente no core, Mastra por passo | Aceito |
+| [0006](0006-roteamento-por-intencao.md) | Roteamento por intenção, com o que é sempre igual em código | Aceito |
+| [0007](0007-autocorrecao-em-finalizar.md) | Autocorreção obrigatória dentro de `finalizar` | Aceito |
+| [0008](0008-ler-livre-escrever-proposto.md) | Ler é livre, escrever é proposto | Aceito |
+| [0009](0009-casa-com-estado-por-durabilidade.md) | Casa com data de confirmação e estado calculado por durabilidade | Aceito |
+| [0010](0010-adequacao-filtra-gosto-ordena.md) | Adequação filtra, gosto e resultado ordenam, em código | Aceito |
+| [0011](0011-retorno-sem-cobranca.md) | Retorno sem cobrança | Aceito |
+| [0012](0012-memoria-em-niveis.md) | Memória em níveis | Aceito |
+| [0013](0013-juiz-em-producao.md) | Juiz em produção, fail-closed, em modelo diferente | Aceito |
+| [0014](0014-modelos-por-papel.md) | Vários modelos por papel, com registro de cota e troca automática | Aceito |
+| [0015](0015-clima-real-sem-gps.md) | Clima real pela cidade escolhida, sem GPS | Aceito |
+| [0016](0016-vocabulario-fechado-e-privacidade.md) | Vocabulário fechado, nenhuma pergunta sensível de saúde, privacidade por minimização | Aceito |
+| [0017](0017-entrada-google-e-demonstracao.md) | Entrada com Google e demonstração por clique com perfil semeado | Aceito |
+| [0018](0018-observabilidade-em-tres-camadas.md) | Observabilidade em três camadas | Aceito |
+| [0019](0019-evals-como-gate.md) | Evals como gate, com registro da evolução | Aceito |
+| [0020](0020-so-planos-gratuitos.md) | Só planos gratuitos, sem cartão | Aceito |
+| [0021](0021-construcao-por-orquestrador-e-subagentes.md) | Construção por orquestrador e subagentes, com portões humanos | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

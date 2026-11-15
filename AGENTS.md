@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** preparação. Ainda **não há código**: só documentação, backlog, skills e subagentes. Specs 001 a 009 escritas e aprovadas.
+> **Status:** construção da entrega 1. Specs 001 a 009 escritas e aprovadas.
 
 ## O que é o projeto
 
@@ -52,7 +52,19 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 
 ## Comandos
 
-*Nascem na spec 001.* Previstos: `npm run lint`, `typecheck`, `test`, `eval:det`, `build`, `test:e2e`, `env:check`, e os que chamam LLM: ⚠️ `demo` e ⚠️ `eval:llm` (só nos checkpoints de `QA.md`).
+| Comando | O que faz |
+|---|---|
+| `npm run lint` | Biome (lint, formatação, complexidade cognitiva ≤ 15). `npm run format` corrige |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest, sem rede, banco nem chave; inclui o teste de arquitetura (R1 a R9) |
+| `npm run eval:det` | Evals determinísticos em `evals/det/**/*.eval.ts` |
+| `npm run dup` | Duplicação em `src/` (jscpd); no fechamento de spec e na CI |
+| `npm run build` | `next build` |
+| `npm run test:e2e` | Playwright (celular e desktop); precisa do build |
+| `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |
+| `docker compose up -d` | Postgres (`5432`) e Grafana LGTM (`3001`, OTLP `4317`/`4318`) |
+
+Os que chamam LLM (⚠️ `demo` e ⚠️ `eval:llm`) nascem nas specs 007 e 014.
 
 ## Skills
 

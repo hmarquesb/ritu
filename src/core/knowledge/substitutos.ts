@@ -2,6 +2,7 @@ import { checarCombinacao } from "./combinacoes"
 import { candidatosDaVaga, type FiltroPessoa, passaNoFiltro } from "./filtros"
 import type { KnowledgeBase } from "./knowledge-base"
 import type { Alimento, Vaga } from "./schemas"
+import { verbosDasGunas } from "./verbos"
 import { type Funcao, GUNAS, type Guna } from "./vocab"
 
 export type SinaisPessoa = { em_casa: string[]; gosta: string[]; ajudou: Record<string, number> }
@@ -98,13 +99,6 @@ function pluralizarVerbo(verbo: string): string {
 }
 
 // Até dois verbos, na ordem de GUNAS, só das gunas em comum que têm verbo.
-function verbosDoPar(emComum: Guna[], kb: KnowledgeBase): string[] {
-  return GUNAS.filter((g) => emComum.includes(g))
-    .map((g) => kb.verbo(g))
-    .filter((v): v is string => v !== null)
-    .slice(0, 2)
-}
-
 export function fraseDaTroca(
   de: Alimento,
   para: Alimento,
@@ -112,7 +106,7 @@ export function fraseDaTroca(
   kb: KnowledgeBase,
 ): string {
   const troca = `Troquei ${minusculas(de.nome)} por ${minusculas(para.nome)}`
-  const verbos = verbosDoPar(emComum, kb).map(pluralizarVerbo)
+  const verbos = verbosDasGunas(emComum, kb).slice(0, 2).map(pluralizarVerbo)
   if (verbos.length === 0) return `${troca}: têm a mesma função no preparo.`
   return `${troca}: os dois ${verbos.join(" e ")}.`
 }

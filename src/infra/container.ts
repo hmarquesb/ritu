@@ -3,15 +3,19 @@ import type { Clock } from "@/core/clock"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
 import type { Stores, Transactor } from "@/core/stores"
+import type { Telemetry } from "@/core/telemetry/ports"
 import { createCachedWeatherSource } from "@/core/weather/cache"
 import type { CityLookup, WeatherSource } from "@/core/weather/ports"
 import { createDbClient, type DbClient } from "@/infra/db/client"
 import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
+import { optionalEnv } from "@/infra/env"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { createOpenMeteoCities } from "@/infra/open-meteo/cities"
 import { createOpenMeteoWeather } from "@/infra/open-meteo/weather"
+import { createNullTelemetry } from "@/infra/otel/null-telemetry"
+import { createOtelTelemetry } from "@/infra/otel/telemetry"
 import { systemClock } from "@/infra/system-clock"
 
 export type Container = {
@@ -22,6 +26,8 @@ export type Container = {
   cities: CityLookup
   stores: Stores
   tx: Transactor
+  telemetry: Telemetry
+  encerrar(): Promise<void>
 }
 
 // Cliente do banco: criado na primeira vez que alguém precisa dele. Importar o container não lê DATABASE_URL.
@@ -44,6 +50,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let cities: CityLookup | undefined
   let stores: Stores | undefined
   let tx: Transactor | undefined
+  let telemetry: Telemetry | undefined
   const container: Container = {
     config,
     clock,
@@ -73,6 +80,18 @@ export function createContainer(overrides?: Partial<Container>): Container {
         alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
       })
       return tx
+    },
+    // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
+    get telemetry() {
+      telemetry ??=
+        optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined
+          ? createNullTelemetry()
+          : createOtelTelemetry()
+      return telemetry
+    },
+    async encerrar() {
+      await container.telemetry.encerrar()
+      await closeDatabase()
     },
     ...overrides,
   }

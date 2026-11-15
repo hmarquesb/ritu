@@ -162,4 +162,67 @@ describe("container", () => {
       if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
     }
   })
+  it("sem OTEL_EXPORTER_OTLP_ENDPOINT, telemetry é a nula e o SDK de Node não é carregado", async () => {
+    const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    const carregou = vi.fn()
+    vi.doMock("@opentelemetry/sdk-node", () => {
+      carregou()
+      return {}
+    })
+    try {
+      const { createContainer } = await import("./container")
+      const { createNullTelemetry } = await import("./otel/null-telemetry")
+
+      const container = createContainer()
+
+      expect(container.telemetry.traceparentAtual()).toBeUndefined()
+      expect(container.telemetry).toBe(container.telemetry)
+      expect(Object.keys(container.telemetry).sort()).toEqual(
+        Object.keys(createNullTelemetry()).sort(),
+      )
+      expect(carregou).not.toHaveBeenCalled()
+    } finally {
+      vi.doUnmock("@opentelemetry/sdk-node")
+      if (anterior !== undefined) process.env.OTEL_EXPORTER_OTLP_ENDPOINT = anterior
+    }
+  })
+
+  it("com o endpoint, telemetry é a do OTel; createContainer aceita override", async () => {
+    const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    try {
+      const { createContainer } = await import("./container")
+      const { createNullTelemetry } = await import("./otel/null-telemetry")
+      const otel = await import("./otel/telemetry")
+      const espiao = vi.spyOn(otel, "createOtelTelemetry")
+
+      const container = createContainer()
+      expect(container.telemetry).toBe(container.telemetry)
+      expect(espiao).toHaveBeenCalledTimes(1)
+
+      const fake = createNullTelemetry()
+      expect(createContainer({ telemetry: fake }).telemetry).toBe(fake)
+    } finally {
+      if (anterior === undefined) delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+      else process.env.OTEL_EXPORTER_OTLP_ENDPOINT = anterior
+    }
+  })
+
+  it("encerrar chama telemetry.encerrar e fecha o banco, sem exigir DATABASE_URL", async () => {
+    const urlAnterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const { createNullTelemetry } = await import("./otel/null-telemetry")
+      const telemetry = createNullTelemetry()
+      const encerrar = vi.spyOn(telemetry, "encerrar")
+
+      await createContainer({ telemetry }).encerrar()
+
+      expect(encerrar).toHaveBeenCalledTimes(1)
+    } finally {
+      if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
+    }
+  })
 })

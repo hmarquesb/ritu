@@ -45,9 +45,11 @@
 
 | Spec | Tarefa | Nível | Status | Commit |
 |---|---|---|---|---|
-| 003 | T1 · Weather config, ports, pure functions | mecanica | em andamento | |
-| 003 | T2 · Weather cache and fakes | mecanica | pendente | |
-| 003 | T3 · Open-Meteo adapters | mecanica | pendente | |
-| 003 | T4 · Weather tools, ToolContext, container | mecanica | pendente | |
-| 003 | T5 · clima:real script and weather evals | mecanica | pendente | |
-| 003 | Fechamento (inclui ⚠️ clima:real uma vez) | — | pendente | |
+| 003 | T1 · Weather config, ports, pure functions | mecanica | concluida | c5a91f6 |
+| 003 | T2 · Weather cache and fakes | mecanica | concluida | cfec503 |
+| 003 | T3 · Open-Meteo adapters | mecanica | concluida | 303a7f3 |
+| 003 | T4 · Weather tools, ToolContext, container | mecanica | concluida | fcf42e6 |
+| 003 | T5 · clima:real script and weather evals | mecanica | concluida | 411c967 |
+| 003 | Fechamento (gates 1–6, ADR 0024, docs; sem push) | — | concluida | (este commit) |
+
+> 003 · ⚠️ `clima:real "Rio de Janeiro"` (2026-11-15, 04h local): Rio de Janeiro (Rio de Janeiro, Brasil) · America/Sao_Paulo · 25,1 °C (neutro) · 98% (úmido → `oleoso`) · próximas 6 h: esquenta, sem chuva · exit 0. Vai para o relatório da entrega.

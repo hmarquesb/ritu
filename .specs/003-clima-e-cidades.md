@@ -1,6 +1,7 @@
 ---
 title: Clima e cidades
-status: approved
+status: implemented
+implemented: 411c967
 entrega: 1
 created: 2026-11-14
 ---
@@ -39,17 +40,17 @@ Depois desta spec, qualquer código do core pede o clima por `WeatherSource` e a
 
 ## Critérios de aceite
 
-- [ ] `climaEmQualidades`: temperatura aparente de 19,9 °C → `frio`; 20 e 27 → neutro; 27,1 → `quente`. Umidade de 49,9% → `seco`; 50 e 75 → neutro; 75,1 → `oleoso`.
-- [ ] `tendenciaDasProximasHoras`: diferença de +3 °C ou mais entre agora e a sexta hora → `esquenta`; -3 °C ou menos → `esfria`; entre os dois → `estavel`. Alguma hora com probabilidade de chuva de 50% ou mais → `chuva: true`.
-- [ ] `clima.agora` sem cidade no contexto devolve `{ status: "sem_cidade" }` e não chama a porta.
-- [ ] Com a porta em modo "fora do ar", com timeout ou com resposta fora do schema, as duas tools devolvem `{ status: "indisponivel" }`.
-- [ ] Duas chamadas para a mesma cidade em menos de 60 minutos fazem **um** pedido à porta de dentro; depois de 60 minutos (relógio fixo avançado), fazem outro. Falha não fica em cache.
-- [ ] `clima.agora` e `clima.proximas_horas` para a mesma cidade, dentro da validade, compartilham o mesmo pedido.
-- [ ] O adaptador da Open-Meteo valida a resposta com zod e arredonda latitude e longitude para duas casas antes de montar a URL (teste com `fetch` simulado confere a URL).
-- [ ] `CityLookup.buscar("rio")` com `fetch` simulado devolve até 5 cidades com `nome`, `regiao`, `pais`, `lat`, `lon` (duas casas) e `fuso`; texto com menos de 2 caracteres devolve lista vazia sem chamar a rede; falha da rede lança `CityLookupUnavailableError`.
-- [ ] `horaLocal(new Date("2026-01-15T15:30:00Z"), "America/Sao_Paulo")` devolve 12; fuso inválido cai no fuso padrão.
-- [ ] `npm test` não abre conexão: os adaptadores são testados só com `fetch` injetado.
-- [ ] ⚠️ `npm run clima:real -- "Rio de Janeiro"` imprime a cidade encontrada, o clima de agora em faixas e qualidades, e a tendência. Roda só à mão.
+- [x] `climaEmQualidades`: temperatura aparente de 19,9 °C → `frio`; 20 e 27 → neutro; 27,1 → `quente`. Umidade de 49,9% → `seco`; 50 e 75 → neutro; 75,1 → `oleoso`.
+- [x] `tendenciaDasProximasHoras`: diferença de +3 °C ou mais entre agora e a sexta hora → `esquenta`; -3 °C ou menos → `esfria`; entre os dois → `estavel`. Alguma hora com probabilidade de chuva de 50% ou mais → `chuva: true`.
+- [x] `clima.agora` sem cidade no contexto devolve `{ status: "sem_cidade" }` e não chama a porta.
+- [x] Com a porta em modo "fora do ar", com timeout ou com resposta fora do schema, as duas tools devolvem `{ status: "indisponivel" }`.
+- [x] Duas chamadas para a mesma cidade em menos de 60 minutos fazem **um** pedido à porta de dentro; depois de 60 minutos (relógio fixo avançado), fazem outro. Falha não fica em cache.
+- [x] `clima.agora` e `clima.proximas_horas` para a mesma cidade, dentro da validade, compartilham o mesmo pedido.
+- [x] O adaptador da Open-Meteo valida a resposta com zod e arredonda latitude e longitude para duas casas antes de montar a URL (teste com `fetch` simulado confere a URL).
+- [x] `CityLookup.buscar("rio")` com `fetch` simulado devolve até 5 cidades com `nome`, `regiao`, `pais`, `lat`, `lon` (duas casas) e `fuso`; texto com menos de 2 caracteres devolve lista vazia sem chamar a rede; falha da rede lança `CityLookupUnavailableError`.
+- [x] `horaLocal(new Date("2026-01-15T15:30:00Z"), "America/Sao_Paulo")` devolve 12; fuso inválido cai no fuso padrão.
+- [x] `npm test` não abre conexão: os adaptadores são testados só com `fetch` injetado.
+- [x] ⚠️ `npm run clima:real -- "Rio de Janeiro"` imprime a cidade encontrada, o clima de agora em faixas e qualidades, e a tendência. Roda só à mão.
 
 ## O que fazer
 

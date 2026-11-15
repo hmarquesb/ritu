@@ -30,6 +30,7 @@ import {
   registrarRetornoDaConversa,
   resolverCaminhoDeCodigo,
 } from "./caminhos-de-codigo"
+import { criarContinuar } from "./continuar"
 import { anotarPendencia, ETAPA_DA_VARIANTE, perguntaDaVariantePendente } from "./pausa-de-codigo"
 
 export { type MensagemRecebida, mensagemRecebidaSchema } from "@/core/messages/texto"
@@ -43,7 +44,7 @@ export type RespostaDaConversa = {
   interpretacao?: Interpretacao
 }
 
-type Deps = {
+export type Deps = {
   stores: Stores
   tx: Transactor
   kb: KnowledgeBase
@@ -136,6 +137,7 @@ function modelosComApoio(atual: unknown, apoio: Apoio): Record<string, unknown> 
 
 export function createConversation(deps: Deps) {
   const { stores, tx, kb, clock, telemetry, runs, interpreter, companion } = deps
+  const continuar = criarContinuar(deps)
 
   async function etapaAoVivo(x: Execucao, etapa: NovaEtapa): Promise<RunEtapa> {
     x.aoVivo?.({ tipo: "etapa_iniciada", etapa: { tipo: etapa.tipo, nome: etapa.nome } })
@@ -378,6 +380,7 @@ export function createConversation(deps: Deps) {
   }
 
   return {
+    continuar,
     async conversar(
       contaId: string,
       mensagem: MensagemRecebida,

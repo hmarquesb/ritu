@@ -7,7 +7,13 @@ import { describe, expect, it } from "vitest"
 type SourceFile = { path: string; source: string }
 type ImportRecord = { raw: string; typeOnly: boolean }
 type ImportCtx = { raw: string; spec: string; typeOnly: boolean }
-type FileCtx = { path: string; isTest: boolean; nodes: ts.Node[]; imports: ImportCtx[] }
+type FileCtx = {
+  path: string
+  source: string
+  isTest: boolean
+  nodes: ts.Node[]
+  imports: ImportCtx[]
+}
 type Rule = { id: string; check: (file: FileCtx) => string[] }
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url))
@@ -240,6 +246,20 @@ const RULE_R8: Rule = {
   check: (file) => (isCore(file.path) && !file.isTest ? present(file.nodes.map(dateDetail)) : []),
 }
 
+// R10: identificador de modelo só em config/ e nos testes. Mensagem sem detalhe: "<arquivo>: R10".
+const MODEL_ID_TEXT = /gemini-[0-9]/
+const MODEL_ID_SCOPE = ["src", "scripts", "evals"]
+
+const RULE_R10: Rule = {
+  id: "R10",
+  check: (file) =>
+    !file.isTest &&
+    MODEL_ID_SCOPE.some((dir) => inDir(file.path, dir)) &&
+    MODEL_ID_TEXT.test(file.source)
+      ? [""]
+      : [],
+}
+
 const RULES: Rule[] = [
   RULE_R1,
   RULE_R2,
@@ -250,17 +270,24 @@ const RULES: Rule[] = [
   RULE_R6,
   RULE_R7,
   RULE_R8,
+  RULE_R10,
 ]
+
+const formatViolation = (path: string, id: string, detail: string): string =>
+  detail ? `${path}: ${id} ${detail}` : `${path}: ${id}`
 
 export function checkFile(path: string, source: string): string[] {
   const nodes = allNodes(parse(path, source))
   const file: FileCtx = {
     path,
+    source,
     isTest: TEST_FILE.test(path),
     nodes,
     imports: importsIn(path, nodes),
   }
-  return RULES.flatMap((rule) => rule.check(file).map((detail) => `${path}: ${rule.id} ${detail}`))
+  return RULES.flatMap((rule) =>
+    rule.check(file).map((detail) => formatViolation(path, rule.id, detail)),
+  )
 }
 
 // R9: grafo entre domínios (primeira pasta abaixo de src/core/). Arquivos soltos e testes ficam fora.
@@ -548,6 +575,29 @@ describe("R8 · sem relógio real no core", () => {
 
   it("new Date() fora do core é válido", () => {
     expectClean("src/infra/system-clock.ts", `const now = ${NEW_DATE}`)
+  })
+})
+
+describe("R10 · identificador de modelo só em config/ e testes", () => {
+  const MODEL_ID = "gemini-" + "3.5-flash-lite"
+
+  it("identificador de modelo em src/core gera a violação R10", () => {
+    expect(checkFile("src/core/x.ts", `export const m = "${MODEL_ID}"`)).toEqual([
+      "src/core/x.ts: R10",
+    ])
+  })
+
+  it("o mesmo texto em scripts e evals também é violação", () => {
+    expect(checkFile("scripts/x.ts", `const m = "${MODEL_ID}"`)).toEqual(["scripts/x.ts: R10"])
+    expect(checkFile("evals/x.ts", `const m = "${MODEL_ID}"`)).toEqual(["evals/x.ts: R10"])
+  })
+
+  it("o mesmo texto num teste não é violação", () => {
+    expectClean("src/core/x.test.ts", `const m = "${MODEL_ID}"`)
+  })
+
+  it("config/ fica fora da regra", () => {
+    expectClean("config/llm-cotas.ts", `export const m = "${MODEL_ID}"`)
   })
 })
 

@@ -1,6 +1,6 @@
 import { config } from "@config/index"
 import type { Metadata, Viewport } from "next"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import type { ReactNode } from "react"
 import { ToastRegion } from "@/components/base/toast"
 import { cx } from "@/components/cx"
@@ -23,12 +23,15 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const choice = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
+  // O React Aria injeta <style> em tempo de execução e lê o nonce desta meta.
+  const nonce = (await headers()).get("x-nonce") ?? undefined
   return (
     <html
       lang="pt-BR"
       data-theme={choice === "auto" ? undefined : choice}
       className={cx(titleFont.variable, bodyFont.variable)}
     >
+      <head>{nonce ? <meta name="csp-nonce" content={nonce} /> : null}</head>
       <body>
         <a
           href="#conteudo"

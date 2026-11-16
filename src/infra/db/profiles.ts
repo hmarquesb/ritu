@@ -1,5 +1,5 @@
 import type { TransactionSql } from "postgres"
-import type { ItemDoDia, ProfileStore } from "@/core/accounts/ports"
+import type { ItemTemporario, ProfileStore } from "@/core/accounts/ports"
 import type { Perfil } from "@/core/accounts/types"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
@@ -12,7 +12,7 @@ type EvitarSempre = EvitarItem & { desde: string }
 
 const arredonda2 = (n: number): number => Math.round(n * 100) / 100
 
-const mesmoEvitar = (a: ItemDoDia, b: ItemDoDia): boolean =>
+const mesmoEvitar = (a: ItemTemporario, b: ItemTemporario): boolean =>
   a.tipo === b.tipo && normalizar(a.valor) === normalizar(b.valor)
 
 function perfilVazio(contaId: string, agora: Date): Perfil {
@@ -146,7 +146,7 @@ export function createPgProfiles(sql: Conexao, clock: Clock): ProfileStore {
     },
 
     async evitarTemporario(contaId, dia) {
-      return sql<ItemDoDia[]>`
+      return sql<ItemTemporario[]>`
         select tipo, valor from evitar_temporario
         where conta_id = ${contaId} and dia = ${dia}::date
         order by tipo, valor`
@@ -154,10 +154,10 @@ export function createPgProfiles(sql: Conexao, clock: Clock): ProfileStore {
 
     async acrescentarEvitarTemporario(contaId, dia, itens) {
       await numaTransacao(sql, async (tx) => {
-        const atuais = await tx<ItemDoDia[]>`
+        const atuais = await tx<ItemTemporario[]>`
           select tipo, valor from evitar_temporario
           where conta_id = ${contaId} and dia = ${dia}::date`
-        const novos: ItemDoDia[] = []
+        const novos: ItemTemporario[] = []
         for (const item of itens) {
           if (![...atuais, ...novos].some((x) => mesmoEvitar(x, item))) novos.push(item)
         }

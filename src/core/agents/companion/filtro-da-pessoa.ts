@@ -1,4 +1,5 @@
-import type { ItemDoDia } from "@/core/accounts/ports"
+import { config } from "@config/index"
+import type { ItemTemporario } from "@/core/accounts/ports"
 import type { Perfil } from "@/core/accounts/types"
 import type { EvitarItem, FiltroPessoa } from "@/core/knowledge/filtros"
 import type { Restricao } from "@/core/knowledge/vocab"
@@ -6,7 +7,7 @@ import type { Preferencia } from "@/core/preferences/ports"
 
 type Entrada = {
   perfil: Perfil
-  evitarDoDia: ItemDoDia[]
+  evitarDoDia: ItemTemporario[]
   evitarDaMensagem: EvitarItem[]
   preferencias: Preferencia[]
 }
@@ -34,19 +35,31 @@ function naoGostaDeAlimento(preferencias: Preferencia[]): string[] {
     .map((p) => p.item_id)
 }
 
-// Restrição e "não como" do dia têm campo próprio: não entram em `evitar`.
-function evitarDoDia(itens: ItemDoDia[]): EvitarItem[] {
+// "Não como" (id ou texto) e restrição do dia têm campo próprio: não entram em `evitar`.
+function evitarDoDia(itens: ItemTemporario[]): EvitarItem[] {
   return itens.flatMap((item) =>
-    item.tipo === "restricao" || item.tipo === "nao_come" ? [] : [item],
+    item.tipo === "restricao" || item.tipo === "nao_come" || item.tipo === "nao_come_texto"
+      ? []
+      : [item],
   )
 }
 
-function restricoesDoDia(itens: ItemDoDia[]): Restricao[] {
+function restricoesDoDia(itens: ItemTemporario[]): Restricao[] {
   return itens.flatMap((item) => (item.tipo === "restricao" ? [item.valor] : []))
 }
 
-function naoComeDoDia(itens: ItemDoDia[]): string[] {
+function naoComeDoDia(itens: ItemTemporario[]): string[] {
   return itens.flatMap((item) => (item.tipo === "nao_come" ? [item.valor] : []))
+}
+
+function naoComeTextoDoDia(itens: ItemTemporario[]): string[] {
+  return itens.flatMap((item) => (item.tipo === "nao_come_texto" ? [item.valor] : []))
+}
+
+/** "Não como" da mensagem: id da base vira `nao_come`; nome livre vira `nao_come_texto`, cortado. */
+export function itemDoNaoCome(n: { alimento_id?: string; nome: string }): ItemTemporario {
+  if (n.alimento_id) return { tipo: "nao_come", valor: n.alimento_id }
+  return { tipo: "nao_come_texto", valor: n.nome.slice(0, config.conversa.maxNomeLivre) }
 }
 
 export function montarFiltro(p: Entrada): { filtro: FiltroPessoa; evitar_textos: string[] } {
@@ -62,8 +75,10 @@ export function montarFiltro(p: Entrada): { filtro: FiltroPessoa; evitar_textos:
     nao_gosta: [...new Set(naoGostaDeAlimento(p.preferencias))],
   }
 
-  // Só itens de "evitar sempre" que não casam com a base. "Não como" tem campo próprio.
-  const evitar_textos = [...new Set(valoresDoTipo(evitar, "texto"))]
+  // Só itens de "evitar sempre" que não casam com a base, e o "não como" em texto do dia.
+  const evitar_textos = [
+    ...new Set([...valoresDoTipo(evitar, "texto"), ...naoComeTextoDoDia(p.evitarDoDia)]),
+  ]
 
   return { filtro, evitar_textos }
 }

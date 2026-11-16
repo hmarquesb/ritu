@@ -27,11 +27,12 @@ export interface AccountRepository {
   apagarDemosVencidas(): Promise<number>
 }
 
-/** Item da lista temporária do dia. "nao_come" guarda id de alimento da base. */
-export type ItemDoDia =
+/** Item da lista temporária do dia. "nao_come" guarda id de alimento da base; "nao_come_texto", o nome que a base não conhece. */
+export type ItemTemporario =
   | EvitarItem
   | { tipo: "restricao"; valor: Restricao }
   | { tipo: "nao_come"; valor: string }
+  | { tipo: "nao_come_texto"; valor: string }
 
 export interface ProfileStore {
   /** Sem linha: perfil vazio. */
@@ -51,9 +52,9 @@ export interface ProfileStore {
   /** Sem duplicar. */
   acrescentarEvitarSempre(contaId: string, itens: EvitarItem[]): Promise<void>
   removerEvitarSempre(contaId: string, item: EvitarItem, opts: { confirmado: true }): Promise<void>
-  evitarTemporario(contaId: string, dia: string): Promise<ItemDoDia[]>
+  evitarTemporario(contaId: string, dia: string): Promise<ItemTemporario[]>
   /** Sem duplicar (tipo + valor). */
-  acrescentarEvitarTemporario(contaId: string, dia: string, itens: ItemDoDia[]): Promise<void>
+  acrescentarEvitarTemporario(contaId: string, dia: string, itens: ItemTemporario[]): Promise<void>
   /** Sem contaId. */
   apagarEvitarTemporarioAntesDe(dia: string): Promise<number>
 }

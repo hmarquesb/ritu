@@ -187,6 +187,23 @@ describe("montarFiltro: restrição e não como do dia", () => {
   })
 })
 
+describe("montarFiltro: não como em texto livre do dia", () => {
+  it("vai para evitar_textos sem repetir, e fica fora de nao_come e de evitar", () => {
+    const resultado = montarFiltro({
+      ...vazio,
+      perfil: perfil({ evitar_sempre: [{ tipo: "texto", valor: "camarão", desde: DESDE }] }),
+      evitarDoDia: [
+        { tipo: "nao_come_texto", valor: "jiló" },
+        { tipo: "nao_come_texto", valor: "camarão" },
+      ],
+    })
+
+    expect(resultado.evitar_textos).toEqual(["camarão", "jiló"])
+    expect(resultado.filtro.nao_come).toEqual([])
+    expect(resultado.filtro.evitar).toEqual([{ tipo: "texto", valor: "camarão" }])
+  })
+})
+
 describe("montarFiltro: restrições e preferências", () => {
   it("restrições do perfil entram no filtro", () => {
     const { filtro } = montarFiltro({

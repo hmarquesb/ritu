@@ -1,6 +1,6 @@
 import { config } from "@config/index"
 import { llmCotas } from "@config/llm-cotas"
-import type { AccountRepository, ItemDoDia, ProfileStore } from "@/core/accounts/ports"
+import type { AccountRepository, ItemTemporario, ProfileStore } from "@/core/accounts/ports"
 import type { Conta, Perfil } from "@/core/accounts/types"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
@@ -34,7 +34,7 @@ type Falta = {
   dia: string
 }
 
-type EvitarDoDia = { conta_id: string; dia: string; item: ItemDoDia }
+type EvitarDoDia = { conta_id: string; dia: string; item: ItemTemporario }
 
 type Voto = { conta_id: string; run_id: string; voto: "up" | "down" }
 
@@ -106,7 +106,7 @@ const anteriorA = (iso: string, limite: Date): boolean => Date.parse(iso) < limi
 const maisNovoPrimeiro = (a: { criado_em: string }, b: { criado_em: string }): number =>
   Date.parse(b.criado_em) - Date.parse(a.criado_em)
 
-const mesmoEvitar = (a: ItemDoDia, b: ItemDoDia): boolean =>
+const mesmoEvitar = (a: ItemTemporario, b: ItemTemporario): boolean =>
   a.tipo === b.tipo && normalizar(a.valor) === normalizar(b.valor)
 
 const estaVencida = (conta: Conta, clock: Clock): boolean =>

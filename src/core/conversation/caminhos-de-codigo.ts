@@ -1,6 +1,7 @@
-import type { ItemDoDia } from "@/core/accounts/ports"
+import type { ItemTemporario } from "@/core/accounts/ports"
 import type { Perfil } from "@/core/accounts/types"
 import { montarAnotacoes } from "@/core/agents/companion/anotacoes"
+import { itemDoNaoCome } from "@/core/agents/companion/filtro-da-pessoa"
 import type { Anotacao } from "@/core/agents/companion/saida"
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
@@ -40,10 +41,8 @@ function etapaDeGuardrail(nome: string): NovaEtapa {
 }
 
 // D1/D3: o que a pessoa disse para evitar vale no dia, mesmo que já esteja no perfil.
-export function itensDoDia(i: Interpretacao): ItemDoDia[] {
-  const naoCome = i.nao_come.flatMap((c) =>
-    c.alimento_id ? [{ tipo: "nao_come" as const, valor: c.alimento_id }] : [],
-  )
+export function itensDoDia(i: Interpretacao): ItemTemporario[] {
+  const naoCome = i.nao_come.map(itemDoNaoCome)
   const restricoes = i.restricoes.map((valor) => ({ tipo: "restricao" as const, valor }))
   return [...i.evitar, ...naoCome, ...restricoes]
 }

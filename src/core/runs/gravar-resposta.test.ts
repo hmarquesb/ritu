@@ -88,7 +88,7 @@ describe("gravarResposta", () => {
     expect(telemetry.metricas.map((m) => m.nome)).toEqual(["ritu_gosto_total"])
   })
 
-  it("Pular, item ausente, come e variante não gravam nada", async () => {
+  it("Pular, item ausente e variante não gravam nada", async () => {
     const { stores, telemetry, deps } = montar()
     const nada = async (p: Pergunta, r: RespostaDaPessoa) =>
       gravarResposta(deps, CONTA, "run-1", DIA, p, r)
@@ -96,17 +96,32 @@ describe("gravarResposta", () => {
     await nada(pergunta, casa())
     await nada(pergunta, casa({ alimento_id: "fora", resposta: "tenho" }))
     await nada(
-      { tipo: "come", texto: "?", alimento_id: "ovo", nome: "Ovo" },
-      { tipo: "come", resposta: "nao_como" },
-    )
-    await nada(
       { tipo: "variante", texto: "?", incomodo: "x", opcoes: [{ id: "a", texto: "A" }] },
       { tipo: "variante", variante: "a" },
     )
     expect(await stores.pantry.listar(CONTA)).toEqual([])
     expect(await stores.preferences.ler(CONTA)).toEqual([])
     expect(await stores.shortages.diasComFalta(CONTA, "2026-01-01")).toEqual([])
+    expect(await stores.profiles.evitarTemporario(CONTA, DIA)).toEqual([])
     expect(telemetry.metricas).toEqual([])
+  })
+
+  it("Não como da pergunta de come grava o alimento no temporário do dia", async () => {
+    const { stores, telemetry, deps } = montar()
+    const come: Pergunta = { tipo: "come", texto: "?", alimento_id: "ovo", nome: "Ovo" }
+    await gravarResposta(deps, CONTA, "run-1", DIA, come, { tipo: "come", resposta: "nao_como" })
+    expect(await stores.profiles.evitarTemporario(CONTA, DIA)).toEqual([
+      { tipo: "nao_come", valor: "ovo" },
+    ])
+    expect(await stores.pantry.listar(CONTA)).toEqual([])
+    expect(telemetry.metricas).toEqual([])
+  })
+
+  it("Como da pergunta de come não grava nada", async () => {
+    const { stores, deps } = montar()
+    const come: Pergunta = { tipo: "come", texto: "?", alimento_id: "ovo", nome: "Ovo" }
+    await gravarResposta(deps, CONTA, "run-1", DIA, come, { tipo: "come", resposta: "como" })
+    expect(await stores.profiles.evitarTemporario(CONTA, DIA)).toEqual([])
   })
 
   it("soma uma métrica por item", async () => {

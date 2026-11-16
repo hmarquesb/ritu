@@ -31,6 +31,16 @@ export async function gravarResposta(
   pergunta: Pergunta,
   resposta: RespostaDaPessoa,
 ): Promise<void> {
+  if (pergunta.tipo === "come" && resposta.tipo === "come") {
+    if (resposta.resposta !== "nao_como") return
+    const alimento_id = pergunta.alimento_id
+    await deps.tx.emTransacao((s) =>
+      s.profiles.acrescentarEvitarTemporario(contaId, dia, [
+        { tipo: "nao_come", valor: alimento_id },
+      ]),
+    )
+    return
+  }
   if (pergunta.tipo !== "casa" || resposta.tipo !== "casa") return
   const perguntados = new Set(pergunta.itens.map((i) => i.alimento_id))
   const itens = resposta.itens.filter((i) => perguntados.has(i.alimento_id))

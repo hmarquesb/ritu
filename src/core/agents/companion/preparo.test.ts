@@ -283,7 +283,17 @@ describe("preparar: casa, mensagem e perguntas", () => {
     expect(ids).not.toContain("leite")
     expect(await stores.profiles.evitarTemporario(CONTA, HOJE)).toEqual([
       { tipo: "nao_come", valor: "canela" },
+      { tipo: "nao_come_texto", valor: "coentro" },
       { tipo: "restricao", valor: "vegana" },
+    ])
+  })
+
+  it("não como em texto livre da mensagem vai para evitar_textos e fica no temporário do dia", async () => {
+    const { run, stores } = montar()
+    const dados = await run({ estados: ["com_frio"], nao_come_da_mensagem: [{ nome: "jiló" }] })
+    expect(dados.evitar_textos).toEqual(["jiló"])
+    expect(await stores.profiles.evitarTemporario(CONTA, HOJE)).toEqual([
+      { tipo: "nao_come_texto", valor: "jiló" },
     ])
   })
 

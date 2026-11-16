@@ -1,6 +1,6 @@
 import { config } from "@config/index"
 import { z } from "zod"
-import type { ItemDoDia } from "@/core/accounts/ports"
+import type { ItemTemporario } from "@/core/accounts/ports"
 import type { Clock } from "@/core/clock"
 import type { Prakriti } from "@/core/knowledge/adequacao"
 import { type EvitarItem, type FiltroPessoa, passaNoFiltro } from "@/core/knowledge/filtros"
@@ -36,7 +36,7 @@ import {
   intencaoSchema,
   retornoDaMensagemSchema,
 } from "./entrada"
-import { montarFiltro } from "./filtro-da-pessoa"
+import { itemDoNaoCome, montarFiltro } from "./filtro-da-pessoa"
 
 export type {
   Candidato,
@@ -164,10 +164,8 @@ type Casa = DadosDoPreparo["casa"]
 const HORAS_DE_FOLGA = 36
 const LIMITE_DE_RUNS = 50
 
-function naoComeERestricaoDaMensagem(entrada: EntradaDoAcompanhante): ItemDoDia[] {
-  const naoCome = (entrada.nao_come_da_mensagem ?? []).flatMap((n) =>
-    n.alimento_id ? [{ tipo: "nao_come" as const, valor: n.alimento_id }] : [],
-  )
+function naoComeERestricaoDaMensagem(entrada: EntradaDoAcompanhante): ItemTemporario[] {
+  const naoCome = (entrada.nao_come_da_mensagem ?? []).map(itemDoNaoCome)
   const restricoes = (entrada.restricoes_da_mensagem ?? []).map((valor) => ({
     tipo: "restricao" as const,
     valor,
@@ -180,10 +178,10 @@ async function gravarDaMensagem(
   contaId: string,
   dia: string,
   entrada: EntradaDoAcompanhante,
-): Promise<{ evitar: EvitarItem[]; doDia: ItemDoDia[] }> {
+): Promise<{ evitar: EvitarItem[]; doDia: ItemTemporario[] }> {
   const evitar = entrada.evitar_da_mensagem.map((texto) => resolverEvitar(texto, deps.kb))
   const doDia = naoComeERestricaoDaMensagem(entrada)
-  const itens: ItemDoDia[] = [...evitar, ...doDia]
+  const itens: ItemTemporario[] = [...evitar, ...doDia]
   if (itens.length > 0) await deps.stores.profiles.acrescentarEvitarTemporario(contaId, dia, itens)
   return { evitar, doDia }
 }

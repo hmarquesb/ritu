@@ -1,5 +1,6 @@
 import { config } from "@config/index"
 import type { Clock } from "@/core/clock"
+import type { UsageLimiter } from "@/core/limits/ports"
 import type { UsageLedger } from "@/core/llm/ledger"
 import type { Stores } from "@/core/stores"
 import { diaLocal, diasAtras } from "@/core/time/dia-local"
@@ -17,15 +18,17 @@ export type ResultadoLimpeza = {
   propostas_expiradas: number
   demos: number
   llm_uso: number
+  limites: number
 }
 
-// Apaga o que passou do prazo de memória e expira os runs em espera. Cortes por dia usam o fuso padrão.
+// Apaga o que passou do prazo de memória, expira os runs em espera e apaga os limites de antes de ontem. Cortes por dia usam o fuso padrão.
 export async function executarLimpeza(deps: {
   stores: Stores
   clock: Clock
   ledger: UsageLedger
+  limiter: UsageLimiter
 }): Promise<ResultadoLimpeza> {
-  const { stores, clock, ledger } = deps
+  const { stores, clock, ledger, limiter } = deps
   const agora = clock.now()
   const hoje = diaLocal(agora)
   const { memoria } = config
@@ -45,6 +48,7 @@ export async function executarLimpeza(deps: {
   const propostas_expiradas = await stores.proposals.expirarDosRuns(ids)
   const demos = await stores.accounts.apagarDemosVencidas()
   const llm_uso = await ledger.apagarAntigas()
+  const limites = await limiter.apagarAntesDe(diasAtras(hoje, 1))
 
   return {
     mensagens,
@@ -56,5 +60,6 @@ export async function executarLimpeza(deps: {
     propostas_expiradas,
     demos,
     llm_uso,
+    limites,
   }
 }

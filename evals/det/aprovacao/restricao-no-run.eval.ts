@@ -5,6 +5,7 @@ import { executarLimpeza } from "@/core/cleanup"
 import { gravarResposta } from "@/core/runs/gravar-resposta"
 import { getContainer } from "@/infra/container"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { cenariosComAprovacao, montarCenario, rodarCenario } from "../../../test/fixtures/cenarios"
@@ -44,7 +45,7 @@ async function ambiente() {
   // Vira o dia e roda a limpeza diária, que apaga o temporário de ontem.
   const virarDia = async () => {
     clock.advance(DIA_MS)
-    await executarLimpeza({ stores, clock, ledger })
+    await executarLimpeza({ stores, clock, ledger, limiter: createMemoryLimiter() })
   }
   return { stores, clock, telemetry, ledger, contaId, deps, ler, virarDia }
 }
@@ -198,7 +199,12 @@ describe("aprovadas no bloco: vão ao perfil e filtram no dia seguinte", () => {
     ])
 
     deps.clock.advance(DIA_MS)
-    await executarLimpeza({ stores: deps.stores, clock: deps.clock, ledger: deps.ledger })
+    await executarLimpeza({
+      stores: deps.stores,
+      clock: deps.clock,
+      ledger: deps.ledger,
+      limiter: createMemoryLimiter(),
+    })
     const seguinte = await preparar(
       { stores: deps.stores, kb, clock: deps.clock, telemetry: deps.telemetry },
       contaId,
@@ -217,7 +223,12 @@ describe("aprovadas no bloco: vão ao perfil e filtram no dia seguinte", () => {
     expect((await deps.stores.profiles.ler(contaId)).nao_come).toEqual([])
 
     deps.clock.advance(DIA_MS)
-    await executarLimpeza({ stores: deps.stores, clock: deps.clock, ledger: deps.ledger })
+    await executarLimpeza({
+      stores: deps.stores,
+      clock: deps.clock,
+      ledger: deps.ledger,
+      limiter: createMemoryLimiter(),
+    })
     const seguinte = await preparar(
       { stores: deps.stores, kb, clock: deps.clock, telemetry: deps.telemetry },
       contaId,

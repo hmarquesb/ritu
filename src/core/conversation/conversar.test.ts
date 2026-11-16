@@ -15,6 +15,7 @@ import { createApprovingJudge, createScriptedJudge } from "@/infra/fakes/fake-ju
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
@@ -291,7 +292,12 @@ describe("conversar: alertas", () => {
         status: "recusado",
       })
       m.clock.advance(24 * 60 * 60 * 1000)
-      await executarLimpeza({ stores: m.stores, clock: m.clock, ledger: m.ledger })
+      await executarLimpeza({
+        stores: m.stores,
+        clock: m.clock,
+        ledger: m.ledger,
+        limiter: createMemoryLimiter(),
+      })
       expect(await m.stores.messages.doDia(m.conta.id, run.dia)).toEqual([])
     })
   }

@@ -57,4 +57,9 @@ describe("nomes da telemetria", () => {
     expect(ATRIBUTOS_PERMITIDOS).toContain("pausa.tipo")
     expect(ATRIBUTOS_PERMITIDOS).toContain("modelo")
   })
+
+  it("METRICAS e ATRIBUTOS_PERMITIDOS têm a entrada", () => {
+    expect(METRICAS).toContain("ritu_entrada_total")
+    expect(ATRIBUTOS_PERMITIDOS).toContain("entrada.resultado")
+  })
 })

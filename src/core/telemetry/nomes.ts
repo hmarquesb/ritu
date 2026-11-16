@@ -44,6 +44,7 @@ export const METRICAS = [
   "ritu_para_ter_total",
   "ritu_rotina_resumo_total",
   "ritu_padroes_total",
+  "ritu_entrada_total",
 ] as const
 
 export type NomeDeMetrica = (typeof METRICAS)[number]
@@ -82,6 +83,7 @@ export const ATRIBUTOS_PERMITIDOS = [
   "resumo.origem",
   "padroes.contas",
   "padroes.propostos",
+  "entrada.resultado",
   // rótulos da tabela de métricas
   "caminho",
   "status",

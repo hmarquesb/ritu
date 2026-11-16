@@ -11,6 +11,7 @@ import type { Caminho } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
 import type { Stores } from "@/core/stores"
 import { diaLocal } from "@/core/time/dia-local"
+import type { createTouches } from "@/core/touches"
 import { createContainer } from "@/infra/container"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFakeWeather, type FakeWeather } from "@/infra/fakes/fake-weather"
@@ -35,6 +36,9 @@ export type DepsDoCenario = {
   companion: ReturnType<typeof createCompanion>
   interpreter: ReturnType<typeof createInterpreter>
   conversation: ReturnType<typeof createConversation>
+  touches: ReturnType<typeof createTouches>
+  // Ids dos retornos de `Cenario.retornos`, na mesma ordem (D12: toque `semeado`).
+  retornosSemeados: string[]
 }
 
 export type OpcoesDoCenario = {
@@ -161,20 +165,23 @@ async function criarRunEncerrado(
   return run.id
 }
 
-// Os retornos entram com o relógio em agora − diasAtras; depois o relógio volta a agora.
+// Os retornos entram com o relógio em agora − diasAtras; depois o relógio volta a agora. Devolve os ids, na ordem.
 async function aplicarRetornos(
   stores: Stores,
   clock: ReturnType<typeof createFixedClock>,
   contaId: string,
   c: Cenario,
-): Promise<void> {
+): Promise<string[]> {
+  const ids: string[] = []
   for (const r of c.retornos ?? []) {
     clock.set(isoMenos(c.agora, r.diasAtras))
     const dia = diaLocal(clock.now(), c.perfil.cidade?.fuso)
     const runId = await criarRunEncerrado(stores, contaId, dia, "acompanhante")
-    await stores.outcomes.criar(contaId, runId, [r.sugestao])
+    const [criado] = await stores.outcomes.criar(contaId, runId, [r.sugestao])
+    if (criado) ids.push(criado.id)
   }
   clock.set(c.agora)
+  return ids
 }
 
 // As mensagens anteriores entram com o relógio em agora; cada uma tem o seu run encerrado.
@@ -244,7 +251,7 @@ export async function montarCenario(
   await aplicarCasa(stores, clock, conta.id, c)
   await aplicarFaltas(stores, conta.id, c, c.perfil.cidade?.fuso)
   await aplicarPreferencias(stores, conta.id, c)
-  await aplicarRetornos(stores, clock, conta.id, c)
+  const retornosSemeados = await aplicarRetornos(stores, clock, conta.id, c)
   await aplicarMensagens(stores, clock, conta.id, c)
   aplicarClima(weather, c.clima)
 
@@ -263,6 +270,8 @@ export async function montarCenario(
       companion: container.companion,
       interpreter: container.interpreter,
       conversation: container.conversation,
+      touches: container.touches,
+      retornosSemeados,
     },
   }
 }

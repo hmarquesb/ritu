@@ -46,6 +46,22 @@ describe("montarCenario: retornos e mensagens anteriores", () => {
     expect(pendentes.every((r) => r.status === "aguardando")).toBe(true)
   })
 
+  it("retornosSemeados traz os ids na ordem de Cenario.retornos", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "semeados",
+      descricao: "dois retornos semeados",
+      retornos: [
+        { sugestao: refeicao, diasAtras: 2 },
+        { sugestao: cha, diasAtras: 0 },
+      ],
+    }
+    const { contaId, deps } = await montarCenario(c)
+    const pendentes = await deps.stores.outcomes.pendentes(contaId)
+    const idDe = (titulo: string) => pendentes.find((r) => r.sugestao.titulo === titulo)?.id
+    expect(deps.retornosSemeados).toEqual([idDe(refeicao.titulo), idDe(cha.titulo)])
+  })
+
   it("grava as mensagens anteriores no dia, com o caminho de cada run", async () => {
     const c: Cenario = {
       ...base,

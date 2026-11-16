@@ -6,11 +6,25 @@ import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { Restricao } from "@/core/knowledge/vocab"
 import type { SugestaoRegistrada } from "@/core/memory-schemas"
 import type { MensagemRecebida } from "@/core/messages/texto"
+import type { Resultado } from "@/core/outcomes/ports"
 import type { ItemTipo } from "@/core/preferences/ports"
 import type { RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Caminho } from "@/core/runs/ports"
+import type { MotivoDaTroca } from "@/core/touches"
 import type { CidadeDaPessoa, Clima } from "@/core/weather/ports"
 import type { PassoRoteirizado } from "@/infra/fakes/scripted-runtime"
+
+// Toque da pessoa na tela, depois da entrega e da aprovação (D12). Em `retorno`, com `semeado`, `sugestao` é a posição em `retornos`.
+export type Toque =
+  | { tipo: "retorno"; sugestao: number; resultado: Resultado; semeado?: true }
+  | { tipo: "gosto"; item: { tipo: ItemTipo; id: string }; gosto: "gosta" | "nao_gosta" | null }
+  | {
+      tipo: "troca"
+      sugestao: number
+      alimento_id: string
+      motivo: MotivoDaTroca
+      resposta?: "tenho" | "nao_tenho"
+    }
 
 // Cenário de demonstração: perfil, casa, faltas, clima e roteiro de um momento; com `mensagem`, passa pela conversa.
 export type Cenario = {
@@ -56,6 +70,8 @@ export type Cenario = {
     interpretacao: SaidaDoInterprete
     roteiro: PassoRoteirizado[]
   }
+  // Toques da pessoa, um por vez, depois da aprovação e antes de `depois`.
+  toques?: Toque[]
   roteiro: PassoRoteirizado[]
 }
 

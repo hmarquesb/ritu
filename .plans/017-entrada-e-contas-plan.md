@@ -658,6 +658,17 @@ export { expect }
 - pronto quando: digitar e clicar seleciona a opção; o E2E da T22 passa sem ArrowDown e com `toHaveCount(0)` no prazo padrão de 5 s.
 - fora: `src/core/`, `e2e/`.
 
+### C5 · Keep the combo box closed after a choice clears the field
+- nivel: tela (resolvida pelo orquestrador: 2ª falha da C4)
+- objetivo: depois de escolher uma sugestão, a lista fecha e não reabre quando o campo é limpo.
+- arquivos: `src/components/base/combo-box.tsx`
+- depende de: C4
+- contratos: com `allowsEmptyCollection` sempre ligado, o React Aria reabre a lista quando o `inputValue` controlado muda com o campo em foco (inclusive para `""` depois da escolha), e o resto da página fica escondido da árvore de acessibilidade. Agora `allowsEmptyCollection` vale só com texto no campo (`Boolean(props.inputValue)`), e um uso ainda pode sobrescrever.
+- comandos: lint, typecheck, test, build, `CI=1 npm run test:e2e`
+- pronto quando: no Evitar, escolher "Banana" fecha a lista e o campo "Outro alimento" fica acessível; E2E inteiro verde.
+- fora: `src/core/`.
+- nota: o clique interceptado pelo rótulo "Outro alimento" não era defeito de tela: o React Aria deixa a lista invisível (`opacity: 0`, `clip-path: inset(50%)`) enquanto a posiciona, e o teste clicava antes. A T22 espera a opção ser o alvo do ponteiro (`elementFromPoint`) antes de clicar.
+
 ## Ondas
 
 | Onda | Tarefas | Por quê |
@@ -676,4 +687,5 @@ export { expect }
 | 12 | T21 | E2E da Entrada (Playwright na porta 3000: uma rodada por vez) |
 | 12b | C2, C3 | Correções de tela e CSP reveladas pela T21; sem arquivo em comum. Depois, a T21 roda de novo e só então é commitada (C2 e C3 antes dela) |
 | 13 | T22 | E2E do onboarding |
+| 13c | C5, T22 | C5 pelo orquestrador; T22 de novo, sem contornos; commits C5 e depois T22 |
 | 13b | C4 | Defeitos de tela revelados pela T22; depois a T22 roda de novo, sem contornos, e é commitada depois da C4 |

@@ -2,10 +2,15 @@ import { llmCotas, type Papel } from "@config/llm-cotas"
 import type { createCompanion } from "@/core/agents/companion/responder"
 import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { SaidaDoInterprete } from "@/core/agents/interpreter/saida"
+import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memoria"
+import { resumoPorCodigo } from "@/core/agents/memory/resumo"
 import type { createConversation } from "@/core/conversation/conversar"
+import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
+import type { createPatterns } from "@/core/patterns"
+import type { createRoutine } from "@/core/routine"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
 import type { Caminho } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
@@ -37,6 +42,9 @@ export type DepsDoCenario = {
   interpreter: ReturnType<typeof createInterpreter>
   conversation: ReturnType<typeof createConversation>
   touches: ReturnType<typeof createTouches>
+  memory: MemoryAgent
+  routine: ReturnType<typeof createRoutine>
+  patterns: ReturnType<typeof createPatterns>
   // Ids dos retornos de `Cenario.retornos`, na mesma ordem (D12: toque `semeado`).
   retornosSemeados: string[]
 }
@@ -205,6 +213,92 @@ async function aplicarMensagens(
   }
 }
 
+// Notas de rotina, da mais antiga para a mais recente; com alguma, o resumo inicial é o de resumoPorCodigo.
+async function aplicarRotina(
+  stores: Stores,
+  clock: ReturnType<typeof createFixedClock>,
+  contaId: string,
+  c: Cenario,
+): Promise<void> {
+  const notas = [...(c.rotina ?? [])].sort((a, b) => b.diasAtras - a.diasAtras)
+  for (const nota of notas) {
+    clock.set(isoMenos(c.agora, nota.diasAtras))
+    await stores.routine.anotar(contaId, nota.texto)
+  }
+  clock.set(c.agora)
+  if (notas.length > 0) {
+    const ativas = await stores.routine.notasAtivas(contaId)
+    await stores.routine.gravarResumo(contaId, resumoPorCodigo(ativas))
+  }
+}
+
+// Histórico com o relógio em agora − diasAtras: cada item é um run done com momento; com sugestão, o retorno e, com resultado, a resposta.
+async function aplicarHistorico(
+  stores: Stores,
+  clock: ReturnType<typeof createFixedClock>,
+  contaId: string,
+  c: Cenario,
+): Promise<void> {
+  for (const h of c.historico ?? []) {
+    clock.set(isoMenos(c.agora, h.diasAtras))
+    const dia = diaLocal(clock.now(), c.perfil.cidade?.fuso)
+    const run = await stores.runs.criar(contaId, { caminho: "acompanhante", intencoes: [], dia })
+    await stores.runs.atualizar(contaId, run.id, {
+      status: "done",
+      com_incomodo: false,
+      momento: { estados: h.estados, momento_do_dia: "noite", gunas_buscadas: [] },
+    })
+    if (h.sugestao) {
+      const [retorno] = await stores.outcomes.criar(contaId, run.id, [h.sugestao])
+      if (retorno && h.resultado) {
+        await stores.outcomes.responder(contaId, retorno.id, h.resultado, "toque")
+      }
+    }
+  }
+  clock.set(c.agora)
+}
+
+// Padrões semeados (D12): propostos, e decididos quando o status não é candidato.
+async function aplicarPadroes(stores: Stores, contaId: string, c: Cenario): Promise<void> {
+  for (const p of c.padroes ?? []) {
+    const criado = await stores.patterns.propor(contaId, {
+      tipo: p.tipo,
+      chave: p.chave,
+      frase: p.frase,
+      ocorrencias: p.ocorrencias,
+    })
+    if (criado && p.status !== "candidato") {
+      await stores.patterns.decidir(contaId, criado.id, p.status)
+    }
+  }
+}
+
+// Memória do cenário (D7): com opts.llm, o mesmo cliente; sem ele, uma resposta roteirizada; com "sem_modelo", o apoio esgotado.
+async function criarMemoria(
+  c: Cenario,
+  opts: OpcoesDoCenario,
+  base: {
+    clock: ReturnType<typeof createFixedClock>
+    telemetry: MemoryTelemetry
+    router: ModelRouter
+    kb: KnowledgeBase
+  },
+): Promise<MemoryAgent> {
+  const { clock, telemetry, kb } = base
+  if (opts.llm) {
+    return createMemoryAgent({ router: base.router, client: opts.llm, kb, telemetry, clock })
+  }
+  if (c.memoria === "sem_modelo") {
+    const ledger = createMemoryLedger(clock)
+    await esgotarModelos(ledger, llmCotas.papeis.apoio)
+    const router = createModelRouter({ ledger, clock, telemetry })
+    return createMemoryAgent({ router, client: createFakeLlm([]), kb, telemetry, clock })
+  }
+  const respostas = c.memoria ? [c.memoria] : []
+  const client = createFakeLlm(respostas)
+  return createMemoryAgent({ router: base.router, client, kb, telemetry, clock })
+}
+
 /**
  * Monta um cenário em memória: stores, ledger e clima em memória, relógio fixo em c.agora,
  * base real de data/ (pelo container), telemetria em memória, roteador real sobre o ledger,
@@ -225,6 +319,14 @@ export async function montarCenario(
     opts.runtime ?? createScriptedRuntime([...c.roteiro, ...(c.depois?.roteiro ?? [])], clock)
   const router = createModelRouter({ ledger, clock, telemetry })
   const llm = opts.llm ?? createFakeLlm(interpretacoesDo(c))
+  // A Memória é criada na primeira chamada: o container ainda não existe quando os overrides são montados (D7).
+  let memoria: Promise<MemoryAgent> | undefined
+  const memory: MemoryAgent = {
+    resumir(notas) {
+      memoria ??= criarMemoria(c, opts, { clock, telemetry, router, kb: container.knowledge })
+      return memoria.then((m) => m.resumir(notas))
+    },
+  }
   // O container lê a base real de data/ na primeira vez; os stores consultam a mesma base.
   const stores = createMemoryStores(clock, {
     alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
@@ -239,6 +341,7 @@ export async function montarCenario(
     llm,
     stores,
     tx: stores,
+    memory,
   })
 
   const principal = opts.esgotar ? llmCotas.papeis[opts.esgotar][0] : undefined
@@ -253,6 +356,10 @@ export async function montarCenario(
   await aplicarPreferencias(stores, conta.id, c)
   const retornosSemeados = await aplicarRetornos(stores, clock, conta.id, c)
   await aplicarMensagens(stores, clock, conta.id, c)
+  await aplicarRotina(stores, clock, conta.id, c)
+  await aplicarHistorico(stores, clock, conta.id, c)
+  await aplicarPadroes(stores, conta.id, c)
+  if (c.detectar) await container.patterns.detectarPadroesDaConta(conta.id)
   aplicarClima(weather, c.clima)
 
   return {
@@ -271,6 +378,9 @@ export async function montarCenario(
       interpreter: container.interpreter,
       conversation: container.conversation,
       touches: container.touches,
+      memory: container.memory,
+      routine: container.routine,
+      patterns: container.patterns,
       retornosSemeados,
     },
   }

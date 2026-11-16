@@ -3,10 +3,11 @@ import type { EntradaDoAcompanhante } from "@/core/agents/companion/entrada"
 import type { SaidaDoInterprete } from "@/core/agents/interpreter/saida"
 import type { Prakriti } from "@/core/knowledge/adequacao"
 import type { EvitarItem } from "@/core/knowledge/filtros"
-import type { Restricao } from "@/core/knowledge/vocab"
+import type { Estado, Restricao } from "@/core/knowledge/vocab"
 import type { SugestaoRegistrada } from "@/core/memory-schemas"
 import type { MensagemRecebida } from "@/core/messages/texto"
 import type { Resultado } from "@/core/outcomes/ports"
+import type { StatusPadrao, TipoPadrao } from "@/core/patterns/ports"
 import type { ItemTipo } from "@/core/preferences/ports"
 import type { RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Caminho } from "@/core/runs/ports"
@@ -72,6 +73,27 @@ export type Cenario = {
   }
   // Toques da pessoa, um por vez, depois da aprovação e antes de `depois`.
   toques?: Toque[]
+  // Notas de rotina ativas; `diasAtras` diz quando cada nota foi feita. Com alguma, o resumo inicial é o de resumoPorCodigo.
+  rotina?: { texto: string; diasAtras: number }[]
+  // Resposta roteirizada da Memória; "sem_modelo" deixa o papel apoio sem modelo no dia.
+  memoria?: { resumo: string } | "sem_modelo"
+  // Runs `done` com momento, de dias passados; com `sugestao`, o retorno é criado e, com `resultado`, respondido.
+  historico?: {
+    diasAtras: number
+    estados: Estado[]
+    sugestao?: SugestaoRegistrada
+    resultado?: "ajudou" | "nao_ajudou" | "nao_fez"
+  }[]
+  // Roda a detecção de padrões da conta antes da mensagem.
+  detectar?: true
+  // Padrões semeados; o status "candidato" fica como foi proposto, os outros são decididos.
+  padroes?: {
+    tipo: TipoPadrao
+    chave: string
+    frase: string
+    ocorrencias: number
+    status: StatusPadrao
+  }[]
   roteiro: PassoRoteirizado[]
 }
 

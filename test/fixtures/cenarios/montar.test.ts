@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { Caminho } from "@/core/runs/ports"
 import { diaLocal } from "@/core/time/dia-local"
+import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { cenariosDeConversa } from "./index"
 import { montarCenario } from "./montar"
 import type { Cenario } from "./tipos"
@@ -145,5 +146,225 @@ describe("cenários de conversa", () => {
     await deps.conversation.conversar(contaId, c.mensagem)
     const pendentes = await deps.stores.outcomes.pendentes(contaId)
     expect(pendentes.map((r) => r.sugestao.titulo)).toEqual([refeicao.titulo])
+  })
+})
+
+const DIA_MS = 86_400_000
+const FRIO_AGITADA = ["com_frio", "agitada"] as const
+const CHA_DO_HISTORICO = {
+  tipo: "cha" as const,
+  pratica_id: "cha-gengibre-canela",
+  alimentos: ["gengibre", "canela"],
+  titulo: "Chá de gengibre com canela",
+}
+const CHAVE_DO_CHA = "com_frio+agitada|pratica:cha-gengibre-canela"
+
+// Histórico do chá (mesmo formato do job.test.ts): 3 ajudou e 1 nao_ajudou juntos, e 4 dias sozinhos.
+function historicoDoCha(): NonNullable<Cenario["historico"]> {
+  const juntos = [2, 3, 4, 5].map((diasAtras, i) => ({
+    diasAtras,
+    estados: [...FRIO_AGITADA],
+    sugestao: CHA_DO_HISTORICO,
+    resultado: i === 3 ? ("nao_ajudou" as const) : ("ajudou" as const),
+  }))
+  const sozinhos = [
+    { diasAtras: 6, estados: ["com_frio" as const] },
+    { diasAtras: 7, estados: ["com_frio" as const] },
+    { diasAtras: 8, estados: ["agitada" as const] },
+    { diasAtras: 9, estados: ["agitada" as const] },
+  ]
+  return [...juntos, ...sozinhos]
+}
+
+describe("montarCenario: rotina, histórico, padrões e Memória", () => {
+  it("duas notas viram duas ativas, e o resumo é a versão 1 com a mais recente primeiro", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "rotina",
+      descricao: "duas notas",
+      rotina: [
+        { texto: "você almoça fora durante a semana", diasAtras: 5 },
+        { texto: "você voltou a almoçar em casa", diasAtras: 1 },
+      ],
+    }
+    const { contaId, deps } = await montarCenario(c)
+    const ativas = await deps.stores.routine.notasAtivas(contaId)
+    expect(ativas.map((n) => n.texto).sort()).toEqual([
+      "você almoça fora durante a semana",
+      "você voltou a almoçar em casa",
+    ])
+    const resumo = await deps.stores.routine.resumo(contaId)
+    expect(resumo?.versao).toBe(1)
+    expect(resumo?.texto).toBe("Você voltou a almoçar em casa. Você almoça fora durante a semana.")
+  })
+
+  it("sem notas, não há resumo de rotina", async () => {
+    const { contaId, deps } = await montarCenario({ ...base, nome: "sem-rotina", descricao: "x" })
+    expect(await deps.stores.routine.resumo(contaId)).toBeUndefined()
+  })
+
+  it("histórico com sugestão e resultado vira run done com momento e retorno respondido", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "historico",
+      descricao: "um dia com chá ajudou",
+      historico: [
+        {
+          diasAtras: 3,
+          estados: [...FRIO_AGITADA],
+          sugestao: CHA_DO_HISTORICO,
+          resultado: "ajudou",
+        },
+      ],
+    }
+    const { contaId, deps } = await montarCenario(c)
+    const desde = new Date(Date.parse(AGORA) - 10 * DIA_MS)
+    const runs = await deps.stores.runs.recentes(contaId, desde, 10)
+    expect(runs).toHaveLength(1)
+    expect(runs[0]).toMatchObject({
+      status: "done",
+      com_incomodo: false,
+      momento: { estados: [...FRIO_AGITADA], momento_do_dia: "noite", gunas_buscadas: [] },
+      dia: diaLocal(new Date(Date.parse(AGORA) - 3 * DIA_MS)),
+    })
+    const respondidos = await deps.stores.outcomes.respondidosDesde(contaId, desde)
+    expect(respondidos).toHaveLength(1)
+    expect(respondidos[0]).toMatchObject({ resultado: "ajudou", origem: "toque" })
+    expect(await deps.stores.outcomes.pendentes(contaId)).toHaveLength(0)
+  })
+
+  it("histórico sem sugestão grava só o run, sem retorno", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "historico-sem-sugestao",
+      descricao: "só estados",
+      historico: [{ diasAtras: 2, estados: ["agitada"] }],
+    }
+    const { contaId, deps } = await montarCenario(c)
+    const desde = new Date(Date.parse(AGORA) - 10 * DIA_MS)
+    expect(await deps.stores.runs.recentes(contaId, desde, 10)).toHaveLength(1)
+    expect(await deps.stores.outcomes.respondidosDesde(contaId, desde)).toHaveLength(0)
+    expect(await deps.stores.outcomes.pendentes(contaId)).toHaveLength(0)
+  })
+
+  it('padrão confirmado aparece em listar(contaId, "confirmado")', async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "padrao",
+      descricao: "um padrão confirmado",
+      padroes: [
+        {
+          tipo: "estados_juntos",
+          chave: "agitada>com_frio",
+          frase: "Quando você está agitada, costuma estar com frio.",
+          ocorrencias: 4,
+          status: "confirmado",
+        },
+      ],
+    }
+    const { contaId, deps } = await montarCenario(c)
+    const confirmados = await deps.stores.patterns.listar(contaId, "confirmado")
+    expect(confirmados.map((p) => p.frase)).toEqual([
+      "Quando você está agitada, costuma estar com frio.",
+    ])
+  })
+
+  it("padrão recusado e candidato também são semeados no status pedido", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "padroes",
+      descricao: "recusado e candidato",
+      padroes: [
+        {
+          tipo: "estados_juntos",
+          chave: "agitada>com_frio",
+          frase: "Um.",
+          ocorrencias: 3,
+          status: "recusado",
+        },
+        {
+          tipo: "estados_juntos",
+          chave: "com_frio>agitada",
+          frase: "Dois.",
+          ocorrencias: 3,
+          status: "candidato",
+        },
+      ],
+    }
+    const { contaId, deps } = await montarCenario(c)
+    expect((await deps.stores.patterns.listar(contaId, "recusado")).map((p) => p.frase)).toEqual([
+      "Um.",
+    ])
+    expect((await deps.stores.patterns.listar(contaId, "candidato")).map((p) => p.frase)).toEqual([
+      "Dois.",
+    ])
+  })
+
+  it("com detectar, o histórico do chá propõe um candidato com a chave do par", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "detectar",
+      descricao: "chá",
+      historico: historicoDoCha(),
+      detectar: true,
+    }
+    const { contaId, deps } = await montarCenario(c)
+    const candidatos = await deps.stores.patterns.listar(contaId, "candidato")
+    expect(candidatos.map((p) => p.chave)).toEqual([CHAVE_DO_CHA])
+  })
+
+  it("sem detectar, o histórico do chá não propõe nada", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "sem-detectar",
+      descricao: "chá",
+      historico: historicoDoCha(),
+    }
+    const { contaId, deps } = await montarCenario(c)
+    expect(await deps.stores.patterns.listar(contaId)).toHaveLength(0)
+  })
+
+  it("memoria com resumo: a Memória devolve o resumo com origem modelo", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "memoria",
+      descricao: "resumo",
+      memoria: { resumo: "Você almoça fora e trabalha em casa." },
+    }
+    const { deps } = await montarCenario(c)
+    const r = await deps.memory.resumir([{ texto: "trabalho em casa", criado_em: AGORA }])
+    expect(r).toMatchObject({ origem: "modelo", texto: "Você almoça fora e trabalha em casa." })
+  })
+
+  it('memoria "sem_modelo": a Memória cai no código, sem modelo', async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "memoria-sem-modelo",
+      descricao: "sem modelo",
+      memoria: "sem_modelo",
+    }
+    const { deps } = await montarCenario(c)
+    const r = await deps.memory.resumir([{ texto: "trabalho em casa", criado_em: AGORA }])
+    expect(r).toMatchObject({ origem: "codigo", texto: "Trabalho em casa." })
+    expect(r.modelo).toBeUndefined()
+  })
+
+  it("sem memoria, a Memória cai no código", async () => {
+    const { deps } = await montarCenario({ ...base, nome: "sem-memoria", descricao: "x" })
+    const r = await deps.memory.resumir([{ texto: "trabalho em casa", criado_em: AGORA }])
+    expect(r.origem).toBe("codigo")
+  })
+
+  it("com llm passado nas opções, a Memória usa esse cliente", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "memoria-llm",
+      descricao: "x",
+      memoria: { resumo: "Outro resumo." },
+    }
+    const llm = createFakeLlm([{ resumo: "Você almoça fora." }])
+    const { deps } = await montarCenario(c, { llm })
+    const r = await deps.memory.resumir([{ texto: "almoço fora", criado_em: AGORA }])
+    expect(r).toMatchObject({ origem: "modelo", texto: "Você almoça fora." })
   })
 })

@@ -46,6 +46,7 @@
 | [0036](0036-aprendizado-gravado-e-toques-sem-agente.md) | Aprendizado gravado pelo Acompanhante numa transação e toques sem agente | Aceito |
 | [0037](0037-frase-do-padrao-por-codigo-e-memoria-so-para-o-resumo.md) | Frase do padrão por código e agente de Memória só para o resumo | Aceito |
 | [0038](0038-tarefas-em-ondas-e-trilha-adiantada.md) | Tarefas em ondas e trilha adiantada em worktree (substitui em parte a 0021) | Aceito |
+| [0039](0039-tokens-em-css-tema-por-cookie-e-fontes-locais.md) | Tokens em CSS com Tailwind v4 e `light-dark()`, tema por cookie lido no servidor, fontes locais | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

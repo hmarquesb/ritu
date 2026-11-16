@@ -119,3 +119,10 @@
 - Por quê: mede o mesmo (padrão confirmado com o item fora dos candidatos não vira sugestão) sem mudar o ranking.
 - Para o relatório: um chá cuja especiaria acabou continua sendo candidato (só perde nota). A dona decide se a casa deve tirar prática.
 - Desfazer: voltar à casa quando ela passar a tirar prática.
+
+## 016 · C1 (2026-11-16, trilha adiantada)
+
+- **O que faltava:** a T16 proíbe editar componentes e seções, mas o E2E de `/marca` revelou um defeito em `chip.tsx` (500 na página) e pode revelar outros, um de cada vez.
+- **O que decidi:** uma tarefa de correção C1 (nível tela), com os arquivos que tiverem defeito em `src/components/` e `src/app/marca/_secoes/`, executada pelo mesmo implementador da T16 na mesma rodada, com verificador e commit próprios (C1 antes da T16).
+- **Por quê:** evita um vai e volta por defeito entre duas tarefas que só ficam verdes juntas; os arquivos não se cruzam com os da T16.
+- **Como desfazer:** reverter o commit da C1 e reabrir cada correção como tarefa separada.

@@ -1,6 +1,6 @@
 # Design
 
-> Direção visual, a partir das imagens de referência em `design/`. As imagens servem de inspiração para cores, texturas e ilustração; **não definem o formato das telas**. Os valores exatos são fechados em `PREPARO.md` §5, e a spec 016 transforma isto em tokens.
+> Direção visual, a partir das imagens de referência em `design/`. As imagens servem de inspiração para cores, texturas e ilustração; **não definem o formato das telas**. Os valores vivem em `src/components/tokens/tokens.css` e aparecem todos na página `/marca`.
 
 ## 1. Sensação
 
@@ -8,26 +8,35 @@ Calma, quente e natural. Luz de fim de tarde, linho, madeira, cerâmica. Nada cl
 
 A tela principal é uma **conversa**: o agente fala em texto, como uma pessoa. Blocos visuais apoiam a fala, nunca a substituem.
 
-## 2. Elementos percebidos nas referências
+## 2. Elementos e valores
 
-| Elemento | Direção | Valor a fechar em `PREPARO.md` §5 |
+Os valores abaixo são os de `src/components/tokens/tokens.css` (claro · escuro). Nenhum componente ou página escreve cor, raio ou sombra à mão.
+
+| Elemento | Direção | Valor |
 |---|---|---|
-| Fundo | Off-white quente, cor de papel ou linho | Valor exato |
-| Superfícies | Cantos bem arredondados, sombra suave, leve textura de papel. O formato de "carta" fica para o dosha e o quiz | Raio e sombra |
-| Cor de apoio | Areia e bege | Valores |
-| Destaque | Terracota e âmbar (cúrcuma) | Valores; qual é o primário |
-| Natureza | Verde-sálvia, em pouca quantidade | Valor |
-| Texto | Marrom-café bem escuro, em vez de preto | Valor; contraste AA |
-| Ícones | Phosphor, peso `light` (traço fino); `thin` em tamanhos grandes | Tamanhos |
-| Ilustração | Mancha de aquarela com um ícone de traço fino por cima (como a chama do Pitta) | Uma mancha por dosha: Vata, Pitta, Kapha |
-| Títulos | Serifada elegante, de traço fino | Qual fonte |
-| Texto corrido | Sem serifa, legível no celular | Qual fonte |
-| Fotos | Ervas, especiarias, óleo, luz quente | Onde entram |
+| Fundo | Off-white quente, cor de papel ou linho; no escuro, marrom profundo | `canvas` `#F8F3EA` · `#1E1611`; faixas em `sunken` `#EFE7DA` · `#18110D` |
+| Superfícies | Cantos bem arredondados, sombra suave, leve textura de papel (`public/marca/papel.svg`, igual nos dois temas). O formato de "carta" fica para o dosha e o quiz | `surface` `#FDFAF4` · `#2A1F18`; `raised` `#FFFDF8` · `#35281F` (menu, diálogo, folha, dica); raios `sm` 0.625rem, `md` 1rem, `lg` 1.5rem, `card` 1.75rem, `pill`; sombras `soft` e `lift` |
+| Cor de apoio | Areia e bege | `line` `#E2D5C0` · `#4A3A2E` (divisória); `line-strong` `#94806A` · `#9A8571` (borda de campo, 3:1) |
+| Primária | Terracota: botão principal, link, seleção | `primary` `#9E4B2B` · `#E39570`, com `primary-hover`, `primary-pressed`, `on-primary` e `primary-soft` |
+| Destaque | Âmbar (cúrcuma), nunca como texto | `amber` `#D99A2B` · `#E6B455`; texto em `amber-ink`, fundo em `amber-soft` |
+| Natureza | Verde-sálvia, em pouca quantidade, nunca como texto | `sage` `#7C8F72` · `#8FA384`; confirmação em `sage-ink` e `sage-soft` |
+| Texto | Marrom-café bem escuro, em vez de preto | `ink` `#33241A` · `#F1E6D6`; secundário `ink-muted` `#6B5646` · `#C4B19C`; foco `focus` igual ao texto |
+| Erro | Vermelho de barro | `danger` `#9A2B38` · `#F2A0A6`; fundo `danger-soft` |
+| Doshas | Uma cor por dosha, para borda e ícone; nunca o único sinal | `vata` `#5E7FA3` · `#9DB9D8`; `pitta` `#B5562A` · `#E9A070`; `kapha` `#5F7A52` · `#A8C19A` |
+| Carta | A aquarela só funciona sobre papel claro | `paper` `#F6F1E7` e `paper-ink` `#33241A`, iguais nos dois temas |
+| Ícones | Phosphor, peso `light` (traço fino); `thin` em tamanhos grandes | 16, 20 e 24 px em `light`; 32 px para cima em `thin` (`ICON` em `src/components/base/icon-size.ts`) |
+| Ilustração | Mancha de aquarela com um ícone de traço fino por cima | `DoshaBlot`: mancha de `public/marca/` com Wind (Vata), Fire (Pitta) ou Drop (Kapha), sempre sobre `paper` |
+| Títulos | Serifada elegante, de traço fino | Cormorant Garamond, peso 600 (500 no `display`), só de `title-sm` (1.375rem) para cima |
+| Texto corrido | Sem serifa, legível no celular | Figtree; `body` 1rem / 1.6; fala do agente em `prose` 1.0625rem / 1.7, largura `prose` 34rem |
+| Movimento | Curto e discreto | `ease-ritu`; 120, 200 e 320 ms; animações `rise`, `fade` e `sheet` |
+| Fotos | Ervas, especiarias, óleo, luz quente | Só a imagem da Entrada |
+
+Todo par de texto e fundo previsto passa em AA nos dois temas, conferido por `src/components/tokens/tokens.test.ts`.
 
 ## 3. Regras
 
 - Celular primeiro. Uma coluna, toques grandes.
-- Tema claro e escuro, com o mesmo cuidado (o escuro é marrom profundo, não preto).
+- Tema claro e escuro, com o mesmo cuidado (o escuro é marrom profundo, não preto). O tema segue o aparelho, com escolha manual (Claro · Escuro · Automático) guardada no cookie `ritu_theme` e lida no servidor.
 - Contraste WCAG AA em todo texto.
 - Cada dosha tem a sua cor de mancha; a cor nunca é o único sinal.
 - A fala do agente é texto corrido, com boa leitura no celular: largura confortável, entrelinha generosa, sem moldura pesada.
@@ -57,20 +66,24 @@ Meta: **WCAG 2.2 AA**, medida pelo axe no E2E (`QA.md`).
 
 ### Base
 
-Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e acessibilidade e nenhum estilo. Todo o visual vem dos tokens.
+Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e acessibilidade e nenhum estilo. Todo o visual vem dos tokens. Ficam em `src/components/base/`, um arquivo por componente, e aparecem em `/marca` com todos os estados. Todo controle tem pelo menos 44 px de altura (ou de área de toque, no tamanho `sm`).
 
-| Componente | Primitivo do React Aria |
-|---|---|
-| Botão, botão de ícone | `Button` |
-| Campo de texto, área de texto | `TextField` |
-| Rótulo tocável (ingrediente, atalho) | `ToggleButton`, `TagGroup` |
-| Menu | `MenuTrigger`, `Menu` |
-| Diálogo e folha que sobe de baixo | `DialogTrigger`, `Modal` |
-| Abas | `Tabs` |
-| Busca com sugestões | `ComboBox` |
-| Chave liga/desliga, caixa de seleção | `Switch`, `Checkbox` |
-| Aviso breve | `UNSTABLE_ToastRegion` ou componente próprio com `aria-live` (conferir a versão instalada) |
-| Dica | `TooltipTrigger` |
+| Componente | Primitivo do React Aria | Arquivo |
+|---|---|---|
+| Botão, botão de ícone | `Button` | `button.tsx`, `icon-button.tsx` |
+| Campo de texto, área de texto | `TextField` | `text-field.tsx` |
+| Rótulo tocável (ingrediente, atalho) | `ToggleButton`, `TagGroup` | `chip.tsx` |
+| Menu | `MenuTrigger`, `Menu` | `menu.tsx` |
+| Diálogo e folha que sobe de baixo | `DialogTrigger`, `Modal` | `dialog.tsx` |
+| Abas | `Tabs` | `tabs.tsx` |
+| Busca com sugestões | `ComboBox` | `combo-box.tsx` |
+| Chave liga/desliga, caixa de seleção | `Switch`, `Checkbox` | `switch.tsx`, `checkbox.tsx` |
+| Aviso breve | `UNSTABLE_ToastRegion` (API instável, isolada neste arquivo) | `toast.tsx` |
+| Dica | `TooltipTrigger` | `tooltip.tsx` |
+| Link de texto | `Link` | `text-link.tsx` |
+| Superfície, indicador de carregamento, bloco de estado (carregando, erro, vazio, esperando você, cota esgotada) | — | `surface.tsx`, `spinner.tsx`, `state-block.tsx` |
+| Logo e mancha do dosha | — | `src/components/brand/` |
+| Seletor de tema | `ToggleButtonGroup` | `src/components/theme/theme-switcher.tsx` |
 
 ### Do Ritu
 
@@ -97,4 +110,14 @@ Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e ace
 
 ## 5. Arquivos
 
-*A preencher em `PREPARO.md` §5:* logo, imagem da Entrada, cartas dos doshas, demais referências.
+| Arquivo | O que é |
+|---|---|
+| `design/ritu-logo.jpeg` | Logo de referência (símbolo e palavra) |
+| `design/vata-card.jpeg`, `design/pitta-card.jpeg`, `design/kapha-card.jpeg` | Cartas de referência dos doshas, de onde saem as manchas |
+| `design/login-cover.jpeg` | Imagem da Entrada |
+| `design/login-screen-reference.jpeg` | Referência de clima da Entrada (não define o formato da tela) |
+| `design/derivados/` | Recortes feitos das referências: as três manchas e o símbolo do logo |
+| `public/marca/simbolo-ritu.png` | Máscara do símbolo do logo (640 × 640, só alfa), pintada com a cor do texto pelo `Logo` |
+| `public/marca/mancha-vata.webp`, `mancha-pitta.webp`, `mancha-kapha.webp` | Manchas de aquarela (512 × 512, fundo transparente, sem ícone), usadas pelo `DoshaBlot` |
+| `public/marca/papel.svg` | Textura de papel (ruído fino, 240 × 240, repetível) sobre o fundo da página |
+| `src/app/fonts/` | Cormorant Garamond e Figtree em `woff2` variável, com a licença OFL |

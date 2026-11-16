@@ -99,3 +99,23 @@
 - **Decidido:** correção C1 no runner (intérprete com registro em memória, como os outros tipos; causa de c1-08/c1-11) e a opção `--casos` para repetir só os 22 casos com erro, com o relatório em `evals/resultados/c2-conversa-parcial.md`. O resultado do checkpoint é a rodada completa (32 casos válidos) mais a parcial (22).
 - **Por quê:** fecha o checkpoint hoje com ~22 chamadas a mais, em vez de uma segunda rodada completa (~100 chamadas).
 - **Desfazer:** rodar a rodada completa de novo noutro dia e apagar o parcial.
+
+## 012 · T14 · Filtro do padrão no fim de um run sem pausa (D17)
+- Faltava: o plano (D9) lia o filtro do checkpoint, mas o checkpoint só é gravado quando o run pausa; um run que entrega direto não teria filtro e nunca ofereceria padrão.
+- Decidido: sem filtro no checkpoint, o fim do run monta o filtro do dia pelas portas (perfil, lista temporária do dia, preferências) com `montarFiltro`, sem os itens só da mensagem (os do dia já estão na lista temporária).
+- Por quê: não muda o que é gravado no run (checkpoint continua só na pausa) e usa a mesma função do preparo.
+- Desfazer: gravar o checkpoint também na entrega e voltar a ler só `filtroDoRun`.
+
+## 012 · T26 · Casos 7 e 8 do c3 com o momento só "com frio" (D18)
+- Faltava: o plano pedia o padrão "com frio e agitada → chá de gengibre com canela" com o chá entre os candidatos, mas na base `agitada` evita a guna `movel`, que o chá tem; com `agitada` o chá nunca é candidato.
+- Decidido: os casos 7 e 8 usam o momento só `com_frio` e o padrão `com_frio|pratica:cha-gengibre-canela` ("Quando você está com frio, chá de gengibre com canela costuma te ajudar."). A base não foi mexida.
+- Por quê: conteúdo da base é decisão da dona; mudar a chave do caso preserva o que ele mede (padrão confirmado aparece só quando o item é candidato).
+- Para o relatório: a detecção pode confirmar um padrão "com frio e agitada → chá" vindo do histórico, mas, com `agitada`, o chá nunca chega aos candidatos; a frase entra no contexto e o agente não pode sugerir o chá. A dona decide se a base ou a regra muda.
+- Desfazer: voltar ao par quando a base deixar o chá passar com `agitada`.
+
+## 012 · T26 · Caso 8 do c3 tira o chá pelo horário (D19)
+- Faltava: o plano tirava o chá dos candidatos com "a canela acabou", mas a casa não tira prática dos candidatos (só pesa a nota; "acabou" só segura refeição).
+- Decidido: o caso 8 repete o 7 à noite; o chá só vale de manhã e à tarde e sai dos candidatos, enquanto o padrão continua no contexto.
+- Por quê: mede o mesmo (padrão confirmado com o item fora dos candidatos não vira sugestão) sem mudar o ranking.
+- Para o relatório: um chá cuja especiaria acabou continua sendo candidato (só perde nota). A dona decide se a casa deve tirar prática.
+- Desfazer: voltar à casa quando ela passar a tirar prática.

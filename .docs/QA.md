@@ -109,6 +109,14 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - `restricao-no-run`: restrição, "não como" e nome livre ditos no run filtram no dia, somem no dia seguinte e vão ao perfil quando aprovados.
 - `privacidade`: texto da pessoa, nome de alimento e texto das linhas não vão para span, métrica, log nem resumo de etapa.
 
+**Rotina e padrões** (`evals/det/rotina-e-padroes/`: `ajuda-em-estado`, `estados-juntos`, `job`, `padrao-no-bloco`, `padrao-decisao`, `padrao-e-filtro`, `resumo`, `resumo-por-codigo`, `aprovacao-com-rotina`, `teto-de-notas`, `notas-pela-pessoa`, `nota-como-dado`, `privacidade`)
+- `ajuda-em-estado` e `estados-juntos`: o mínimo de 3 ocorrências e os 75%, nas bordas, a chave, a frase e o que a detecção ignora (run com incômodo, retorno sem item).
+- `job`: a detecção diária só propõe o que ainda não está guardado, respeita o teto de candidatos abertos, não chama modelo e segue quando uma conta falha.
+- `padrao-no-bloco`, `padrao-decisao` e `padrao-e-filtro`: um padrão por resposta, o mais antigo, uma vez por dia e até 3 vezes; confirmar, recusar (linha desligada com outra ligada), "Agora não" e expiração; padrão de item que o filtro barra não aparece nem vai ao prompt.
+- `resumo`, `resumo-por-codigo` e `aprovacao-com-rotina`: o resumo com modelo, por código, com uma nota só e vazio; resumo inválido ou sem modelo cai no código; a aprovação refaz o resumo e não falha com ele.
+- `teto-de-notas`, `notas-pela-pessoa` e `nota-como-dado`: `rotina_cheia` com 30 notas; corrigir e apagar nota refazem o resumo; nota com instrução embutida chega ao prompt como dado.
+- `privacidade`: nota, resumo, frase e item do padrão não vão para span, métrica, log nem resumo de etapa.
+
 **Retorno e memória**
 - Toda sugestão entregue cria um retorno aguardando.
 - Retorno contado na conversa é ligado à sugestão certa e fecha o retorno.
@@ -142,7 +150,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
 
-84 casos (12 no `c1`, 42 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
+62 casos (12 no `c1`, 42 no `c2`, 8 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
 
 | Família | O que mede | Métrica |
 |---|---|---|
@@ -173,7 +181,7 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 |---|---|---|
 | `c1-base` | Fim da entrega 1 | Conteúdo, fidelidade, explicação, trajetória, autocorreção, custo |
 | `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 42 do `c2` (20 de intérprete e 22 de conversa: 8 de perguntas, 6 de propostas, 5 de aprendizado e 3 de para ter em casa), 54 no total. Mede Intenção (acerto e falsos alertas), Perguntas (necessárias feitas, desnecessárias evitadas e recusas de `ask_user` por run), Propostas (acerto da proposta e média de recusas do código por run), Aprendizado e Para ter em casa (acerto, por caso e no total), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1`. Nos casos de pergunta, o runner responde às pausas (até 3 por run) |
-| `c3-confiavel` | Fim da entrega 2 | Todas as famílias |
+| `c3-confiavel` | Fim da entrega 2 | Roda as pastas `c1`, `c2` e `c3` (62 casos hoje: os 54 do `c2-conversa` e os 8 de Memória do `c3`). Mede também a família Memória (resumo e resposta com padrão confirmado), além de todas as anteriores |
 | `c4-site` | Fim da entrega 3 | Todas, pelas rotas reais do site |
 | `c5-publico` | Fim da entrega 4 | Todas, com os prompts e a configuração de produção |
 

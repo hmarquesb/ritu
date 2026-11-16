@@ -22,6 +22,13 @@
 > Para o relatório (011 D10): a concorrência dos toques (trava da linha do run) só se prova no Postgres; soma à pendência de `test:db`.
 > Checkpoint `c2-conversa` (2026-11-16, para o relatório): rodada completa com 22 erros de ambiente (intérprete usava o registro de uso do Postgres; c1-08/c1-11 pausavam e o runner não respondia), corrigidos na 011 C1 (ffa5c57) e repetidos com `--casos` (`c2-conversa-parcial.md`). Juntas: intenção 18/20 (2 com tempo esgotado de 15 s, c2-02 e c2-15), 0 falsos alertas; perguntas 2/2 e 3/3; propostas 2/4; aprendizado 3/5; para ter 2/3; deve 23/34, não pode 33/34, trajetória 30/34, válida na 1ª 5/34, corrigiu 24/27 (3 terminaram sem corrigir), 0 trocas de modelo. A causa do erro de c1-11 foi confirmada pela repetição (passou a rodar com a pausa respondida).
 
+> Para o relatório (012 D4): com a regra da spec, quem conversa sempre com os mesmos dois estados recebe primeiro "andam juntos" antes de "o que ajuda"; os históricos dos cenários ganharam dias soltos para isso não acontecer.
+> Para o relatório (012 D1/D14): `montarFiltro` foi para `src/core/filtro-da-pessoa.ts`; o juiz do caso 5 do `c3` usa instruções escritas no plano, não na spec.
+> Para o relatório (012 D17): o fim de um run sem pausa monta o filtro do dia pelas portas (perfil, lista do dia, preferências), sem os itens só da mensagem.
+> Para o relatório, dona decide (012 D18): `agitada` evita a guna `movel` do chá de gengibre com canela; um padrão "com frio e agitada → chá" pode ser confirmado pelo histórico, mas com `agitada` o chá nunca é candidato.
+> Para o relatório, dona decide (012 D19): a casa não tira prática dos candidatos (chá cuja especiaria acabou só perde nota).
+> `test:db` e `npm run padroes` da 012 não rodaram (sem docker): somam à pendência de `test:db`.
+
 | Spec | Tarefa | Nível | Status | Commit |
 |---|---|---|---|---|
 | 002 | C13-T1 · Add the explicit food list to preparation slots | mecanica | concluida | 47631ee |
@@ -113,3 +120,29 @@
 | 011 | T21 · Let eval:llm conversation cases measure learning and para-ter | mecanica | concluida | 8b092b1 |
 | 011 | T22 · Add the 8 learning cases of c2 | mecanica | concluida | f770592 |
 | 011 | C1 · Let eval:llm run without Postgres and rerun selected cases | nucleo | concluida | ffa5c57 |
+| 012 | T1 · Add the patterns config, the telemetry names and the memoria step type | mecanica | concluida | 83136a6 |
+| 012 | T2 · Export contemIncomodo and refuse a 31st routine note in memoria.propor | mecanica | concluida | 16a7bda |
+| 012 | T3 · Add respondidosDesde, contasComRunDesde and porTool to the stores | mecanica | concluida | f7905b2 |
+| 012 | T4 · Add the memory agent output, input, code summary and prompt memoria.v1 | mecanica | concluida | 12cabc4 |
+| 012 | T5 · Add the memory agent and atualizarResumo | nucleo | concluida | 2da8411 |
+| 012 | T6 · Add apagarNota and corrigirNota | mecanica | concluida | aa12f99 |
+| 012 | T7 · Add the pattern key and sentence builders | mecanica | concluida | 9593f62 |
+| 012 | T8 · Add the pure pattern detections | mecanica | concluida | 0176fa6 |
+| 012 | T9 · Move the person filter to a loose core file | mecanica | concluida | 1a409df |
+| 012 | T10 · Add padraoVale and filter confirmed patterns in the preparation | mecanica | concluida | d3601e9 |
+| 012 | T11 · Add the daily pattern detection job | nucleo | concluida | ed67e82 |
+| 012 | T12 · Add decidirPadrao and apagarPadrao | mecanica | concluida | d2694c4 |
+| 012 | T13 · Add the padrao.confirmar proposal and the routine cap in the executor | mecanica | concluida | 9f01ba5 |
+| 012 | T14 · Offer one candidate pattern at the end of the companion run | nucleo | concluida | da8157d |
+| 012 | T15 · Decide patterns and refresh the routine summary on approval | nucleo | concluida | a86549b |
+| 012 | T16 · Add the companion prompt v6 | mecanica | concluida | 97efcd4 |
+| 012 | T17 · Wire routine and patterns in the container and add npm run padroes | mecanica | concluida | 9d1e6cf |
+| 012 | T18 · Let scenarios seed routine notes, history and patterns | mecanica | concluida | a258f56 |
+| 012 | T19 · Add the six routine and pattern scenarios | mecanica | concluida | 1359b6a |
+| 012 | T20 · Show the routine summary and the patterns in the demo | mecanica | concluida | 5aedfa4 |
+| 012 | T21 · Add the routine and patterns deterministic evals, part 1 | mecanica | concluida | fefd452 |
+| 012 | T22 · Add the routine and patterns deterministic evals, part 2 | mecanica | concluida | e45c6f5 |
+| 012 | T23 · Add the routine and patterns deterministic evals, part 3 | mecanica | concluida | c2d4939 |
+| 012 | T24 · Add the routine and patterns deterministic evals, part 4 | mecanica | concluida | 3f92f5f |
+| 012 | T25 · Let eval:llm run memory cases and add the c3-confiavel checkpoint | mecanica | concluida | ec17be5 |
+| 012 | T26 · Add the 8 memory cases of c3 | mecanica | concluida | af3d544 |

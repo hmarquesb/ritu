@@ -34,7 +34,9 @@ Um agente **decide o caminho**, **age**, **observa o resultado** e **corrige**. 
 | **Intérprete** | Texto da mensagem + últimas mensagens do dia + lista numerada das sugestões que esperam retorno | — | `{intencoes[], estados[], incomodo, alerta, itens_casa[], retorno, fato_de_rotina, evitar[], nao_come[], gosta[], restricoes[], suspeito}` | `apoio` |
 | **Acompanhante** (o agente principal) | Saída do Intérprete + contexto montado no preparo | Catálogo de §4 | `{resposta, geral, explicacao, sugestoes[], evitar[], incertos[], para_ter, propostas[]}` | `decisao` |
 | **Juiz** (guardrail de saída) | Saída do Acompanhante + linhas da base citadas | — | `{aprovado, violacoes[]}` | `apoio` |
-| **Memória** | Notas de rotina aprovadas | — | Resumo de rotina compactado | `apoio` |
+| **Memória** | Notas de rotina ativas (texto e data) | — | `{resumo}`, o resumo de rotina compactado (`memoria.v1`) | `apoio` |
+
+O Acompanhante usa o prompt `acompanhante.v6`: além do contexto da v5, recebe `resumo_de_rotina` e `padroes` (os confirmados, até 10) e dá preferência ao padrão que fala do momento de agora quando o item está entre os candidatos. Resumo e padrões vão ao contexto neutralizados, como dados, e padrão não autoriza nada fora dos candidatos. O Memória só compacta: não escolhe o que anotar nem grava (regra 4).
 
 ### Intenções e caminhos
 
@@ -176,9 +178,9 @@ O validador recebe o clima só se `clima.agora` devolveu `ok` no run.
 | `memoria.propor` | Anotar o fato de rotina que o Intérprete apontou. O agente decide se propõe; o texto é a frase do Intérprete |
 | `lista.propor` | Pôr na lista "Para ter em casa" um alimento que a pessoa respondeu que não tem e que faltou para uma sugestão. No máximo um por resposta, e nunca quando há candidato a "vale ter em casa" |
 
-As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3) e devolvem `proposto: true` com a proposta ou `proposto: false` com um código de recusa, que não pausa o run e conta no teto de recusas do loop. `finalizar` recolhe as aceitas. O prompt `acompanhante.v5` diz quando propor, manda não falar do bloco no texto e diz quando registrar um retorno (`resultado.registrar`).
+As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3) e devolvem `proposto: true` com a proposta ou `proposto: false` com um código de recusa, que não pausa o run e conta no teto de recusas do loop. `finalizar` recolhe as aceitas. O prompt `acompanhante.v6` diz quando propor, manda não falar do bloco no texto e diz quando registrar um retorno (`resultado.registrar`).
 
-- `memoria.propor` (só `tipo: rotina`) recusa com `com_incomodo`, `sem_fato` (o Intérprete não apontou fato de rotina), `fato_com_incomodo` (o fato traz palavra de incômodo da base) e `ja_anotado` (já é uma nota ativa).
+- `memoria.propor` (só `tipo: rotina`) recusa com `com_incomodo`, `sem_fato` (o Intérprete não apontou fato de rotina), `fato_com_incomodo` (o fato traz palavra de incômodo da base), `ja_anotado` (já é uma nota ativa) e `rotina_cheia` (30 notas ativas).
 - `lista.propor` recusa com `com_incomodo`, `fora_da_base`, `sem_nao_tenho` (a pessoa não respondeu que não tem), `com_para_ter` (já há candidato a "vale ter em casa"), `fora_do_candidato` (o alimento não está no candidato indicado), `ja_na_lista`, `ja_recusado` e `filtrado` (o filtro da pessoa barra o alimento).
 - No fim do run, repetidas viram uma só: uma nota de rotina por texto e no máximo uma proposta de lista.
 
@@ -188,7 +190,7 @@ As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3)
 
 ## 5. Aprovação (plano → aprovação → ação)
 
-- As propostas saem juntas, no fim do run, num **bloco de aprovação**: "Posso anotar isto?", com uma linha por assunto (até 6, `config/aprovacao.ts`), cada uma com liga/desliga, e os botões Anotar e Agora não. O código as monta de duas fontes, as anotações que ele tirou da mensagem e as que o agente propôs, e **ordena**: "evitar sempre", restrição, "não como", gosto, casa (tem), casa (acabou), lista e, por último, rotina. As que passam do teto não são criadas.
+- As propostas saem juntas, no fim do run, num **bloco de aprovação**: "Posso anotar isto?", com uma linha por assunto (até 6, `config/aprovacao.ts`), cada uma com liga/desliga, e os botões Anotar e Agora não. O código as monta de duas fontes, as anotações que ele tirou da mensagem e as que o agente propôs, e **ordena**: "evitar sempre", restrição, "não como", gosto, casa (tem), casa (acabou), lista, rotina e, por último, padrão. As que passam do teto não são criadas.
 - O texto de cada linha é montado por código, a partir do conteúdo guardado e dos nomes da base, na hora de ler. O que a pessoa lê é o que é gravado.
 - Run com incômodo não cria proposta nenhuma, nem as do código, e termina em `done`. Os caminhos `alerta`, `fora`, `ofensa` e `ajuda` também não têm bloco.
 - A resposta do agente é gravada **antes** de criar as propostas, e aparece antes do bloco: a pessoa não precisa aprovar nada para receber valor. Se criar as propostas falhar, o run vai a `failed` e a resposta sai igual, sem bloco.
@@ -197,9 +199,10 @@ As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3)
 - A decisão roda numa transação que começa pela troca de status `waiting_for_approval → done`, condicional. Toque duplo ou duas abas gravam uma vez só: quem chega depois recebe `RunNaoContinuavelError`. Id que não é de uma linha pendente do run é `aprovacao_invalida`. Se uma gravação falha, nada da decisão fica pela metade.
 - Proposta sem resposta em 30 min expira (30 exatos ainda valem): `aprovar` passa o run e as propostas a `expired` e devolve `aprovacao_expirada`, sem gravar. Uma mensagem nova com o bloco aberto também fecha o run anterior e expira as propostas dele. Expirada não conta como decisão.
 - O que a mensagem diz sobre restrição e "não como" vale no dia sem esperar o bloco; "Agora não" não grava nada no perfil, mas o filtro do dia continua (§6).
-- Padrões detectados (§6) entram no mesmo bloco, por último e no máximo um por resposta: *"Notei isto. Está certo?"* Linha aprovada confirma o padrão. Linha desligada, com outra ligada, recusa para sempre. "Agora não" e a expiração deixam o padrão para depois: ele volta no máximo uma vez por dia e até 3 vezes; depois disso, só dá para confirmar em "O que sei sobre você".
+- Padrões detectados (§6) entram no mesmo bloco, por último e no máximo um por resposta, só nas respostas do agente (`padrao.confirmar`): *"Notei isto. Está certo?"* e a frase do padrão. Vai o candidato mais antigo que o filtro do dia deixa valer; o filtro vem do checkpoint e, num run que não pausou, é montado no fim do run com o perfil, o "evitar" do dia e os gostos. Linha aprovada confirma o padrão. Linha desligada, com outra ligada, recusa para sempre. "Agora não" e a expiração deixam o padrão para depois: ele volta no máximo uma vez por dia e até 3 vezes; depois disso, só dá para confirmar em "O que sei sobre você".
 - A indicação de "vale ter em casa" (§6) entra no mesmo bloco, como proposta de lista. Proposta de lista recusada (linha desligada ou "Agora não"), por qualquer dos dois motivos, vale para sempre: o alimento não volta a ser proposto nem indicado. Proposta que expira sem resposta não conta como recusa.
 - O executor é uma **tabela fechada** de tipo de proposta para gravação, sem caso genérico, e só acrescenta. Nenhuma proposta remove ou troca o que já está guardado. Antes de gravar, confere o conteúdo pelo schema estrito e a base: `alimento_id` fora da base, ou "evitar sempre" de alimento ou grupo que a base não conhece, deixa a linha `recusada` e o run ganha a etapa `proposta_invalida`. Casa e "não como" de nome livre são válidos. Por proposta, o executor grava: casa tem (registra em casa), casa acabou (marca que acabou), "evitar sempre", restrição e "não como" (acrescentam ao perfil), gosto, nota de rotina e item da lista.
+- Aprovada uma nota de rotina, o resumo de rotina é refeito depois da transação (§6); se falhar, a aprovação fica como está e o run ganha uma etapa de erro.
 - Cada proposta, aprovação e recusa vira etapa do rastro (`OBSERVABILITY.md` §3).
 
 ## 6. Memória
@@ -269,7 +272,7 @@ O prompt recebe contadores, não conteúdo: `mensagens_hoje` (só as da pessoa),
 
 - O Intérprete aponta um `fato_de_rotina` quando a pessoa conta algo que muda a recomendação por mais de um dia.
 - O Acompanhante propõe anotar (`memoria.propor`). Aprovado, vira uma nota com data.
-- Logo depois da aprovação, o agente de Memória recebe as notas ativas e devolve o **resumo de rotina**: junta repetidas, resolve contradição a favor da mais recente e respeita o teto. Com uma nota só, o resumo é a própria nota, sem modelo. O resumo é validado antes de gravar (tamanho e nada de incômodo); a versão anterior fica guardada.
+- Logo depois da aprovação, o agente de Memória recebe as notas ativas e devolve o **resumo de rotina**: junta repetidas, resolve contradição a favor da mais recente e respeita o teto. Com uma nota só, o resumo é a própria nota, sem modelo; sem notas, não há resumo e o contexto não leva `resumo_de_rotina`. O resumo é validado antes de gravar (tamanho e nada de incômodo) e só é gravado quando muda; a versão anterior fica guardada. O mesmo acontece quando a pessoa corrige ou apaga uma nota (`ARCHITECTURE.md` §3). A nota corrigida tem até 200 caracteres e a mesma checagem de incômodo.
 - Sem modelo, ou com resumo inválido, o código monta o resumo com as notas mais recentes primeiro. O resumo nunca fica desatualizado.
 - As notas não mudam sozinhas: contradição se resolve no resumo, e nota só sai quando a pessoa tira. Com 30 notas ativas, uma nota nova não é proposta.
 
@@ -277,9 +280,9 @@ O prompt recebe contadores, não conteúdo: `mensagens_hoje` (só as da pessoa),
 
 - Um job diário em código procura regularidades nos **registros estruturados** dos últimos 60 dias (estados do momento, sugestão, resultado). Nunca lê texto livre nem incômodos, e não chama modelo.
 - Dois tipos: **o que ajuda em um estado**, por sugestão específica ("com frio e agitada → chá de gengibre com canela"), e **estados que andam juntos** ("pesada → sem energia").
-- Critério: pelo menos 3 ocorrências e 75% de consistência. Em "o que ajuda", ocorrência é um "ajudou", e a consistência é a parte de "ajudou" entre "ajudou" e "não ajudou". Em "andam juntos", ocorrência é um dia.
+- A chave do padrão é o item e até 2 estados; a frase vem de um modelo em código, com o título da sugestão sem artigo e em minúscula. Critério: pelo menos 3 ocorrências e 75% de consistência. Em "o que ajuda", ocorrência é um "ajudou", e a consistência é a parte de "ajudou" entre "ajudou" e "não ajudou". Em "andam juntos", ocorrência é um dia.
 - A frase é montada por código, a partir de um modelo de frase: *"Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar."*
-- O padrão fica como **candidato** até a pessoa confirmar (até 3 candidatos por conta); recusado, não volta a ser proposto. Só o confirmado vai ao prompt.
+- O padrão fica como **candidato** até a pessoa confirmar (até 3 candidatos por conta); recusado, não volta a ser proposto, e um item que já tem padrão guardado, em qualquer status, não ganha outro com os mesmos estados. Só o confirmado vai ao prompt. A pessoa também pode confirmar, recusar ou apagar um padrão sem passar pelo bloco (`ARCHITECTURE.md` §3).
 - Padrão de uma sugestão que o filtro da pessoa barra hoje ("evitar sempre", restrição, "não como", "não gosto") não é proposto nem vai ao prompt.
 
 ### Transparência

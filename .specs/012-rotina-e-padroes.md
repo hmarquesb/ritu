@@ -1,6 +1,7 @@
 ---
 title: Rotina e padrões
-status: approved
+status: implemented
+implemented: af3d544
 entrega: 2
 created: 2026-11-15
 ---
@@ -47,34 +48,34 @@ A 011 passou a gravar retornos com resultado e a 007 grava o momento de cada run
 
 ## Critérios de aceite
 
-- [ ] **Resumo depois da aprovação:** aprovar uma proposta de rotina grava a nota e uma versão nova do resumo; o `preparar` seguinte devolve `resumo_de_rotina` com o texto novo. A versão anterior continua em `rotina_resumos`.
-- [ ] **Quem escreve:** sem nota ativa, o resumo é vazio; com uma, é a própria nota, sem chamada de modelo; com duas ou mais, uma chamada do papel `apoio`.
-- [ ] **Reserva por código:** sem modelo para `apoio`, com erro do modelo ou com resumo inválido (vazio, acima do teto ou com palavra de incômodo), o resumo gravado é o de `resumoPorCodigo`, e a aprovação termina normalmente.
-- [ ] **Teto e contradição:** `resumoPorCodigo` nunca passa de `resumoRotinaCaracteres` e, quando não cabe tudo, fica com as notas mais recentes.
-- [ ] **Resumo igual não grava:** `atualizarResumo` duas vezes seguidas, sem mudança nas notas, não cria versão nova.
-- [ ] **Falha não derruba a aprovação:** exceção em `atualizarResumo` vira etapa `erro` de nome `resumo_de_rotina`; `aprovar` devolve o resultado, com a nota gravada.
-- [ ] **Teto de notas:** com 30 notas ativas, `memoria.propor` recusa com `rotina_cheia`, e o executor não grava a 31ª.
-- [ ] **Notas pela pessoa:** `apagarNota` desativa a nota e atualiza o resumo no mesmo pedido; `corrigirNota` troca o texto e atualiza o resumo; texto vazio, acima de 200 caracteres ou com palavra de incômodo devolve `nota_invalida`; nota de outra conta devolve `nota_invalida`.
-- [ ] **Nota é dado:** nota com "ignore suas regras" e com `<` e `>` chega ao prompt da Memória dentro de `<notas_de_rotina>`, com os sinais trocados por `‹` e `›`.
-- [ ] **Padrão "o que ajuda":** 3 "ajudou" e 1 "não ajudou" da mesma sugestão em runs com os mesmos estados geram um candidato com a frase do modelo de frase; 2 "ajudou" e 1 "não ajudou" não geram; 3 "ajudou" e 2 "não ajudou" não geram.
-- [ ] **Padrão "andam juntos":** `pesada` e `sem_energia` no mesmo run em 3 dias, de 4 dias com `pesada`, geram "Quando você está pesada, costuma estar também sem energia."; em 3 de 5 dias, não geram.
-- [ ] **Só registros estruturados:** a detecção lê `runs.momento`, `runs.dia`, `runs.com_incomodo` e `retornos`; nunca `mensagens`. Run com incômodo não conta. "Não fiz" não conta.
-- [ ] **Sem modelo:** `detectarPadroes` não chama `LlmClient` nem `AgentRuntime`.
-- [ ] **Um padrão por sugestão e estado:** com um padrão já guardado (em qualquer status) para a mesma sugestão e com algum estado em comum, a detecção não propõe outro. Padrão recusado não volta.
-- [ ] **Candidatos abertos:** a conta nunca tem mais de `maxCandidatosAbertos` padrões em `candidato`.
-- [ ] **No bloco:** run do caminho `acompanhante`, com resposta do agente e sem incômodo, traz no máximo uma linha "Notei isto. Está certo? …", depois das outras; com o bloco cheio, a linha fica para a próxima resposta.
-- [ ] **Sim:** linha aprovada muda o padrão para `confirmado`, e o `preparar` seguinte leva a frase em `padroes`.
-- [ ] **Não:** "Anotar" com a linha do padrão desligada e outra ligada muda o padrão para `recusado`.
-- [ ] **Fica para depois:** `aprovar` com lista vazia ("Agora não"), expiração ou mensagem nova deixam o padrão em `candidato`.
-- [ ] **Sem cobrança:** o mesmo padrão não aparece duas vezes no mesmo dia; depois de `vezesSemResposta` aparições sem sim nem não, não aparece mais no bloco e continua em `patterns.listar(contaId, "candidato")`.
-- [ ] **Filtro:** padrão de uma sugestão que `passaNoFiltro` reprova hoje ("evitar sempre", restrição, "não como", "não gosto") não vai ao bloco nem a `padroes` no prompt.
-- [ ] **Pela tela:** `decidirPadrao` confirma ou recusa um candidato; padrão de outra conta ou já decidido devolve `padrao_invalido`; `apagarPadrao` apaga.
-- [ ] **Privacidade:** nenhum span, métrica, log ou `resumo` de etapa leva texto de nota, resumo, frase de padrão, nome de alimento ou título de sugestão.
-- [ ] **Incômodo fora:** nenhuma linha de `rotina_notas`, `rotina_resumos` ou `padroes` dos cenários contém palavra de `incomodos.yaml`.
-- [ ] `npm run demo` roda os seis cenários novos sem rede, com código 0.
-- [ ] `npm run padroes` roda a detecção no banco do `DATABASE_URL` e imprime as contagens.
-- [ ] `npm run eval:llm -- --checkpoint c3-confiavel --listar` lista os 8 casos novos sem chamar modelo.
-- [ ] Gates: `lint`, `typecheck`, `test`, `eval:det`, `dup`, `build`, `test:db`.
+- [x] **Resumo depois da aprovação:** aprovar uma proposta de rotina grava a nota e uma versão nova do resumo; o `preparar` seguinte devolve `resumo_de_rotina` com o texto novo. A versão anterior continua em `rotina_resumos`.
+- [x] **Quem escreve:** sem nota ativa, o resumo é vazio; com uma, é a própria nota, sem chamada de modelo; com duas ou mais, uma chamada do papel `apoio`.
+- [x] **Reserva por código:** sem modelo para `apoio`, com erro do modelo ou com resumo inválido (vazio, acima do teto ou com palavra de incômodo), o resumo gravado é o de `resumoPorCodigo`, e a aprovação termina normalmente.
+- [x] **Teto e contradição:** `resumoPorCodigo` nunca passa de `resumoRotinaCaracteres` e, quando não cabe tudo, fica com as notas mais recentes.
+- [x] **Resumo igual não grava:** `atualizarResumo` duas vezes seguidas, sem mudança nas notas, não cria versão nova.
+- [x] **Falha não derruba a aprovação:** exceção em `atualizarResumo` vira etapa `erro` de nome `resumo_de_rotina`; `aprovar` devolve o resultado, com a nota gravada.
+- [x] **Teto de notas:** com 30 notas ativas, `memoria.propor` recusa com `rotina_cheia`, e o executor não grava a 31ª.
+- [x] **Notas pela pessoa:** `apagarNota` desativa a nota e atualiza o resumo no mesmo pedido; `corrigirNota` troca o texto e atualiza o resumo; texto vazio, acima de 200 caracteres ou com palavra de incômodo devolve `nota_invalida`; nota de outra conta devolve `nota_invalida`.
+- [x] **Nota é dado:** nota com "ignore suas regras" e com `<` e `>` chega ao prompt da Memória dentro de `<notas_de_rotina>`, com os sinais trocados por `‹` e `›`.
+- [x] **Padrão "o que ajuda":** 3 "ajudou" e 1 "não ajudou" da mesma sugestão em runs com os mesmos estados geram um candidato com a frase do modelo de frase; 2 "ajudou" e 1 "não ajudou" não geram; 3 "ajudou" e 2 "não ajudou" não geram.
+- [x] **Padrão "andam juntos":** `pesada` e `sem_energia` no mesmo run em 3 dias, de 4 dias com `pesada`, geram "Quando você está pesada, costuma estar também sem energia."; em 3 de 5 dias, não geram.
+- [x] **Só registros estruturados:** a detecção lê `runs.momento`, `runs.dia`, `runs.com_incomodo` e `retornos`; nunca `mensagens`. Run com incômodo não conta. "Não fiz" não conta.
+- [x] **Sem modelo:** `detectarPadroes` não chama `LlmClient` nem `AgentRuntime`.
+- [x] **Um padrão por sugestão e estado:** com um padrão já guardado (em qualquer status) para a mesma sugestão e com algum estado em comum, a detecção não propõe outro. Padrão recusado não volta.
+- [x] **Candidatos abertos:** a conta nunca tem mais de `maxCandidatosAbertos` padrões em `candidato`.
+- [x] **No bloco:** run do caminho `acompanhante`, com resposta do agente e sem incômodo, traz no máximo uma linha "Notei isto. Está certo? …", depois das outras; com o bloco cheio, a linha fica para a próxima resposta.
+- [x] **Sim:** linha aprovada muda o padrão para `confirmado`, e o `preparar` seguinte leva a frase em `padroes`.
+- [x] **Não:** "Anotar" com a linha do padrão desligada e outra ligada muda o padrão para `recusado`.
+- [x] **Fica para depois:** `aprovar` com lista vazia ("Agora não"), expiração ou mensagem nova deixam o padrão em `candidato`.
+- [x] **Sem cobrança:** o mesmo padrão não aparece duas vezes no mesmo dia; depois de `vezesSemResposta` aparições sem sim nem não, não aparece mais no bloco e continua em `patterns.listar(contaId, "candidato")`.
+- [x] **Filtro:** padrão de uma sugestão que `passaNoFiltro` reprova hoje ("evitar sempre", restrição, "não como", "não gosto") não vai ao bloco nem a `padroes` no prompt.
+- [x] **Pela tela:** `decidirPadrao` confirma ou recusa um candidato; padrão de outra conta ou já decidido devolve `padrao_invalido`; `apagarPadrao` apaga.
+- [x] **Privacidade:** nenhum span, métrica, log ou `resumo` de etapa leva texto de nota, resumo, frase de padrão, nome de alimento ou título de sugestão.
+- [x] **Incômodo fora:** nenhuma linha de `rotina_notas`, `rotina_resumos` ou `padroes` dos cenários contém palavra de `incomodos.yaml`.
+- [x] `npm run demo` roda os seis cenários novos sem rede, com código 0.
+- [x] `npm run padroes` roda a detecção no banco do `DATABASE_URL` e imprime as contagens.
+- [x] `npm run eval:llm -- --checkpoint c3-confiavel --listar` lista os 8 casos novos sem chamar modelo.
+- [x] Gates: `lint`, `typecheck`, `test`, `eval:det`, `dup`, `build`, `test:db`.
 
 ## O que fazer
 

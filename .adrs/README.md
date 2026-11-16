@@ -44,6 +44,7 @@
 | [0034](0034-fim-do-run-e-aprovacao-numa-transacao.md) | Fim do run da conversa e aprovação numa transação, com troca de status condicional | Aceito |
 | [0035](0035-temporario-do-dia-com-restricao-e-nao-como.md) | Restrição e "não como" ditos na conversa valem no dia, sem esperar aprovação | Aceito |
 | [0036](0036-aprendizado-gravado-e-toques-sem-agente.md) | Aprendizado gravado pelo Acompanhante numa transação e toques sem agente | Aceito |
+| [0037](0037-frase-do-padrao-por-codigo-e-memoria-so-para-o-resumo.md) | Frase do padrão por código e agente de Memória só para o resumo | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

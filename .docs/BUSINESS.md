@@ -309,7 +309,7 @@ A memória tem níveis. Cada nível aparece na página **"O que sei sobre você"
 | **Casa** | O que tem, com estado e data (§9) | "Abóbora: confirmada há 2 dias" | Aprovação ou edição direta |
 | **Gostos e resultados** | Por alimento e por prática | "Gosta de canela · Chá de gengibre ajudou 3 vezes" | Toques da pessoa e retornos |
 | **O que fez falta** | Alimentos que teriam entrado numa resposta e não estavam em casa (§9) | "Cardamomo: fez falta 4 vezes nos últimos 30 dias" | Automático, por código; apagado depois de 30 dias |
-| **Rotina** | Fatos da vida que mudam a recomendação | "Almoça fora durante a semana", "Acorda às 5 h às terças" | Só com aprovação |
+| **Rotina** | Fatos da vida que mudam a recomendação (até 30 notas ativas; o Ritu usa um resumo delas) | "Almoça fora durante a semana", "Acorda às 5 h às terças" | Só com aprovação; a pessoa corrige ou apaga cada nota |
 | **Padrões** | Regularidades que o Ritu percebeu nos registros | "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar" | O Ritu pergunta *"Notei isto. Está certo?"*; só vale depois do sim. Sem resposta, a pergunta volta no máximo uma vez por dia e até 3 vezes |
 | **Conversa** | As mensagens dos últimos 7 dias | — | Automático; apagado depois de 7 dias |
 

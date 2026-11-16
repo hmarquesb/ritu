@@ -54,9 +54,9 @@ Um run pausado continua **no mesmo trace** quando retoma: o `trace_id` fica salv
 
 `run` leva `prompt.versao` quando o caminho tem agente, e `run.intencoes` é a lista de ids de intenção do caminho escolhido (ADR 0029). Etapa `interprete`: `resumo` só com ids de intenção (ou `alerta`), nunca o texto. Etapa `pergunta`: `resumo` é `casa: N itens` (ou `casa: 1 item`), `come` ou `variante`, nunca os alimentos nem a resposta; o `nome` é `ask_user` na pergunta do agente e `variante` na do código. Caminhos `alerta` e `fora` gravam uma etapa `guardrail` com status `recusado` e nome `alerta_fisico`, `alerta_emocional`, `suspeito` ou `fora`, sem modelo nem tokens. `tool.chamada` das tools de clima leva `cache.hit`.
 
-Aprovação (`AI.md` §5): cada linha do bloco grava uma etapa `proposta`, com `nome` igual à tool (`casa.propor`, `memoria.propor`, `lista.propor`) e `resumo` só de tipo e contagem (`casa: 2 itens`, `evitar_sempre: 1 item`, `rotina`, `lista`), nunca o texto da linha, o alimento nem a nota. A decisão grava uma etapa `aprovacao` com `resumo` `N de M` (linhas gravadas de linhas pendentes). Linha que o executor recusa por conteúdo que a base não conhece grava a etapa `erro` `proposta_invalida`, com status `falhou` e sem resumo. A gravação da entrega (`AI.md` §6) que falha grava a etapa `erro` `registro_da_entrega`, com status `falhou` e sem resumo; o run segue e a resposta sai. A pausa para aprovação emite o evento `pausa` com `pausa.tipo = aprovacao` e soma `ritu_pausas_total{tipo: "aprovacao"}`. As métricas da decisão (`ritu_propostas_total`, `ritu_para_ter_total`, `ritu_gosto_total`) só somam depois que a transação termina, para uma decisão desfeita não contar.
+Aprovação (`AI.md` §5): cada linha do bloco grava uma etapa `proposta`, com `nome` igual à tool (`casa.propor`, `memoria.propor`, `lista.propor`) e `resumo` só de tipo e contagem (`casa: 2 itens`, `evitar_sempre: 1 item`, `rotina`, `lista`, `padrao`), nunca o texto da linha, o alimento nem a nota. A decisão grava uma etapa `aprovacao` com `resumo` `N de M` (linhas gravadas de linhas pendentes). Linha que o executor recusa por conteúdo que a base não conhece grava a etapa `erro` `proposta_invalida`, com status `falhou` e sem resumo. Aprovada uma nota de rotina, o resumo refeito grava a etapa `memoria` de nome `resumo_de_rotina`, com `resumo` igual à origem (`vazio`, `direto`, `modelo` ou `codigo`), mais modelo e tokens quando houve chamada; a etapa fica no run mesmo quando o resumo não mudou. Se o resumo falha, a aprovação segue e o run grava a etapa `erro` `resumo_de_rotina`, com status `falhou` e sem resumo. A gravação da entrega (`AI.md` §6) que falha grava a etapa `erro` `registro_da_entrega`, com status `falhou` e sem resumo; o run segue e a resposta sai. A pausa para aprovação emite o evento `pausa` com `pausa.tipo = aprovacao` e soma `ritu_pausas_total{tipo: "aprovacao"}`. As métricas da decisão (`ritu_propostas_total`, `ritu_para_ter_total`, `ritu_gosto_total`) só somam depois que a transação termina, para uma decisão desfeita não contar.
 
-Spans fora de um run: `toque` (`tipo`: `retorno`, `gosto` ou `troca`; na troca, `motivo`: `trocar`, `nao_tenho` ou `nao_gosto`, e `resultado`: `trocou`, `perguntar` ou `sem_substituto`; nunca o alimento nem a sugestão), `memoria.resumo` (`resumo.origem`) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`).
+Spans fora de um run: `toque` (`tipo`: `retorno`, `gosto` ou `troca`; na troca, `motivo`: `trocar`, `nao_tenho` ou `nao_gosto`, e `resultado`: `trocou`, `perguntar` ou `sem_substituto`; nunca o alimento nem a sugestão), `memoria.resumo` (`resumo.origem`: `modelo` ou `codigo`; só abre quando o agente de Memória é chamado, com duas notas ou mais, e dentro do run da aprovação ele fica no trace do run) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`, a detecção diária; erro numa conta vira log `error` com o código do erro e não para o job).
 
 Spans, métricas, atributos e códigos de log são uma lista fechada em `src/core/telemetry/nomes.ts`, com os atributos obrigatórios de cada span, o tipo e os rótulos de cada métrica e o nível de cada log. Nome novo entra lá primeiro.
 
@@ -83,8 +83,8 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_juiz_avisos_total` | contador | `motivo` |
 | `ritu_pausas_total` | contador | `tipo` |
 | `ritu_propostas_total` | contador | `tool`, `decisao` |
-| `ritu_rotina_resumo_total` | contador | `origem` (vazio, direto, modelo, codigo) |
-| `ritu_padroes_total` | contador | `tipo`, `etapa` (detectado, confirmado, recusado) |
+| `ritu_rotina_resumo_total` | contador | `origem` (vazio, direto, modelo, codigo); soma quando o resumo gravado muda |
+| `ritu_padroes_total` | contador | `tipo` (ajuda_em_estado, estados_juntos), `etapa` (detectado, confirmado, recusado); a decisão só soma depois que a transação termina |
 | `ritu_feedback_total` | contador | `voto` |
 | `ritu_retorno_total` | contador | `resultado`, `origem` (toque, conversa) |
 | `ritu_troca_ingrediente_total` | contador | `resultado` (trocou, sem_substituto) |
@@ -102,7 +102,7 @@ JSON estruturado. Cada código tem um nível fixo; dentro de um run, todo log le
 |---|---|
 | `info` | `run_inicio`, `run_retomado`, `run_fim` |
 | `warn` | `clima_indisponivel`, `troca_de_modelo`, `sem_modelo`, `llm_erro`, `resposta_segura`, `atributo_proibido` |
-| `error` | `run_falhou`, `padroes_falha_na_conta`, `erro_inesperado` |
+| `error` | `run_falhou`, `padroes_conta_falhou`, `erro_inesperado` |
 
 ### Painel e alertas como código
 

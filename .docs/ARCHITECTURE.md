@@ -96,7 +96,7 @@ running → waiting_for_input → running → … → done
 | Não tenho · Ainda tenho · Sempre tenho · adicionar · tirar | `POST /api/casa` | `casa`. "Não tenho" também grava uma falta em `faltas`. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa` |
 | Tirar um item da lista "Para ter em casa" | `POST /api/lista` | `lista_ter_em_casa` |
 | 👍 / 👎 na resposta | `POST /api/feedback` | `feedback` |
-| Confirmar ou recusar um padrão | `POST /api/padroes/:id` | `padroes` |
+| Confirmar ou recusar um padrão · apagar um padrão | `POST /api/padroes/:id` | `padroes` |
 
 As rotas só autenticam, validam a entrada e chamam funções do core, em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
 
@@ -106,6 +106,16 @@ As rotas só autenticam, validam a entrada e chamam funções do core, em `src/c
 | `tocarGosto(deps, contaId, item, gosto)` | `/api/preferencias` | Grava `gosta`, `nao_gosta` ou limpa (`null`). Item fora da base: `toque_invalido` |
 | `trocarIngrediente(deps, contaId, { runId, sugestao, alimento_id, motivo })` | `/api/sugestoes/:id/trocar` | Com motivo `trocar`, `nao_tenho` ou `nao_gosto`: anota o que o motivo pede e devolve `trocou` (com a sugestão nova), `perguntar` (com a pergunta sobre o substituto mais próximo) ou `sem_substituto` |
 | `responderTroca(deps, contaId, { runId, sugestao, alimento_id, candidato, resposta })` | `/api/sugestoes/:id/trocar` | Resposta `tenho` (registra em casa e troca) ou `nao_tenho` (anota a falta e devolve `sem_substituto`) |
+
+Rotina e padrões têm funções do core que as rotas de "O que sei sobre você" chamam, em `src/core/routine/` e `src/core/patterns/`. Também recebem a `contaId` da sessão e confirmam que o item é da conta; item que não existe ou não é dela: `nota_invalida` ou `padrao_invalido`.
+
+| Função | O que faz |
+|---|---|
+| `apagarNota(deps, contaId, notaId)` | Desativa a nota ativa e refaz o resumo de rotina |
+| `corrigirNota(deps, contaId, notaId, texto)` | Numa transação, desativa a nota e anota outra com o texto novo (até 200 caracteres, sem palavra de incômodo); refaz o resumo e devolve a nota nova |
+| `decidirPadrao(deps, contaId, padraoId, decisao)` | Confirma ou recusa um padrão `candidato` (`confirmado` ou `recusado`) |
+| `apagarPadrao(deps, contaId, padraoId)` | Apaga o padrão, em qualquer status |
+| `detectarPadroes(deps)` | Job diário (`npm run padroes`): detecta e propõe candidatos para as contas com run recente; erro numa conta não para as outras |
 
 `sugestao` é a posição na saída do run, a partir de 0; `alimento_id` é o ingrediente tocado, pelo id efetivo. A troca só usa substituto confirmado em casa, com teto de três por item. A transação da troca começa travando a linha do run, então dois toques seguidos esperam um pelo outro. O erro `toque_invalido` é lançado fora da transação, e as métricas só somam depois do commit.
 
@@ -189,6 +199,7 @@ src/
   core/                      # sem framework
     knowledge/               # base, substitutos, combinações, explicação
     weather/  pantry/  preferences/  routine/  patterns/  limits/  guardrails/
+    filtro-da-pessoa.ts      # filtro do dia (perfil, temporários, gostos), usado pelo preparo e pelos padrões
     ranking/                 # ordenação dos candidatos
     llm/                     # ModelRouter, papéis, cotas
     agents/
@@ -201,8 +212,8 @@ src/
     container.ts             # composition root
   app/                       # Next.js: telas e rotas
   components/                # UI (base em React Aria + componentes do Ritu)
-config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts
-scripts/                     # demo.ts (terminal), eval.ts, cleanup.ts, smoke.ts
+config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts
+scripts/                     # demo.ts (terminal), eval.ts, cleanup.ts, padroes.ts, smoke.ts
 data/                        # base ayurvédica em YAML
 seed/                        # perfil de demonstração
 evals/                       # casos, runner, resultados por checkpoint e COMPARACAO.md

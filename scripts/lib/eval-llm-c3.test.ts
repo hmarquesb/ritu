@@ -105,6 +105,7 @@ const entradaConversa = (saida: SaidaDoAcompanhante): EntradaDaConversa => ({
   propostas: [],
   propostasRecusadas: 0,
   retornosFechados: [],
+  juiz: { tentativas: 0, aprovado: null, motivos: [] },
 })
 
 // Notas com uma palavra própria cada (a marca), e o resto igual: a marca é o que a expectativa procura.

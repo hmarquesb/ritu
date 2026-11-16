@@ -22,7 +22,9 @@ export const casosC3: CasoC3[] = [
 
 export type {
   CasoC3,
+  CasoJuiz,
   CasoMemoria,
   ExpectativaDaMemoria,
+  ExpectativaDoJuiz,
   NotaDoCaso,
 } from "./tipos"

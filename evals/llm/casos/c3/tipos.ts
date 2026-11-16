@@ -1,3 +1,6 @@
+import type { SaidaDoAcompanhante } from "@/core/agents/companion/saida"
+import type { Veredito } from "@/core/agents/judge/julgar"
+import type { MotivoDoJuiz } from "@/core/agents/judge/saida"
 import type { ResumoFeito } from "@/core/agents/memory/memoria"
 import type { CasoConversa } from "../c2/tipos"
 
@@ -22,4 +25,22 @@ export type CasoMemoria = {
   naoPode: ExpectativaDaMemoria[]
 }
 
-export type CasoC3 = CasoMemoria | CasoConversa
+// O que o Juiz entrega ao caso: o veredito da leitura (ok: false quando o modelo não respondeu).
+export type ExpectativaDoJuiz = { descricao: string; confere: (v: Veredito) => boolean }
+
+// Caso do Juiz: uma resposta pronta, conferida pelo Juiz sozinho (sem run nem Acompanhante).
+export type CasoJuiz = {
+  tipo: "juiz"
+  id: string
+  titulo: string
+  saida: SaidaDoAcompanhante
+  evitar: string[] // <nunca_citar>
+  nota_de_rotina?: string
+  motivos: MotivoDoJuiz[] // os que o caso espera ver apontados (vazio: nenhum)
+  boa?: true // resposta boa: conta para falsas reprovações (casos 1, 3, 5 e 10)
+  familia: "juiz"
+  deve: ExpectativaDoJuiz[]
+  naoPode: ExpectativaDoJuiz[]
+}
+
+export type CasoC3 = CasoMemoria | CasoJuiz | CasoConversa

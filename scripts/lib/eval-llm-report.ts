@@ -11,8 +11,8 @@ export type Explicacao = {
 export type UsoDoPapel = { chamadas: number; tokens_entrada: number; tokens_saida: number }
 
 // Ausente = acompanhante. O Intérprete não tem trajetória nem validação: só entra na seção Intenção.
-// A Memória tem resumo, não run: entra nas métricas de resposta e na seção Memória.
-export type TipoDoCaso = "acompanhante" | "interprete" | "conversa" | "memoria"
+// A Memória tem resumo, não run: entra nas métricas de resposta e na seção Memória. O Juiz também: uma leitura sobre uma resposta pronta.
+export type TipoDoCaso = "acompanhante" | "interprete" | "conversa" | "memoria" | "juiz"
 
 export type ResultadoDoCaso = {
   id: string
@@ -50,8 +50,23 @@ export type ResultadoDoCaso = {
   propostasRecusadas?: number
   /** Status do run lido depois do bloco: waiting_for_approval quando o runner não decidiu o bloco. */
   statusDoRun?: string
-  /** Família do caso (D14): cada família tem a sua seção. Ausente = fora das seções de família. */
-  familia?: "aprendizado" | "para_ter" | "memoria"
+  /** Família do caso (D14, D22): cada família tem a sua seção. Ausente = fora das seções de família. */
+  familia?:
+    | "aprendizado"
+    | "para_ter"
+    | "memoria"
+    | "seguranca"
+    | "linguagem"
+    | "incomodos"
+    | "juiz"
+  /** Caso juiz: os motivos que o caso espera ver apontados. */
+  motivosEsperados?: string[]
+  /** Caso juiz: os motivos apontados (graves e registros), sem repetir. */
+  motivosApontados?: string[]
+  /** Caso juiz: resposta boa; conta para as falsas reprovações. */
+  boa?: boolean
+  /** Veredito do Juiz: no run da conversa (lido dos resumos das etapas) ou na leitura do caso juiz. */
+  juiz?: { tentativas: number; aprovado: boolean | null; motivos: string[] }
   /** Caso memoria: se o resumo veio do modelo ou caiu no código (sem modelo, erro ou resumo inválido). */
   origem?: "modelo" | "codigo"
   uso: Record<string, UsoDoPapel>
@@ -357,7 +372,13 @@ const acertouNaFamilia = (c: ResultadoDoCaso): boolean =>
 const daFamilia = (casos: ResultadoDoCaso[], familia: string): ResultadoDoCaso[] =>
   casos.filter((c) => c.familia === familia)
 
-function secaoDeFamilia(titulo: string, familia: string, casos: ResultadoDoCaso[]): string[] {
+// Seção de uma família: acerto por caso e total; `detalhes` acrescenta as medidas específicas da família.
+function secaoDeFamilia(
+  titulo: string,
+  familia: string,
+  casos: ResultadoDoCaso[],
+  detalhes: (lista: ResultadoDoCaso[]) => string[] = () => [],
+): string[] {
   const lista = daFamilia(casos, familia)
   const acertos = lista.filter(acertouNaFamilia).length
   return [
@@ -368,7 +389,45 @@ function secaoDeFamilia(titulo: string, familia: string, casos: ResultadoDoCaso[
     ...lista.map((c) => `| ${c.id} | ${sim(acertouNaFamilia(c))} |`),
     "",
     `- Acerto: ${acertos}/${lista.length} (${porcentagem(acertos, lista.length)})`,
+    ...detalhes(lista),
   ]
+}
+
+const motivosEsperadosDe = (lista: ResultadoDoCaso[]): string[] => [
+  ...new Set(lista.flatMap((c) => c.motivosEsperados ?? [])),
+]
+
+// Para cada motivo esperado em algum caso: em quantos desses casos o Juiz o apontou.
+function linhasDeMotivo(lista: ResultadoDoCaso[]): string[] {
+  const linhas = motivosEsperadosDe(lista).map((motivo) => {
+    const esperados = lista.filter((c) => c.motivosEsperados?.includes(motivo))
+    const apontados = esperados.filter((c) => c.motivosApontados?.includes(motivo)).length
+    return `- ${motivo}: apontada em ${apontados} de ${esperados.length} casos`
+  })
+  return linhas.length > 0 ? linhas : ["- Nenhum motivo esperado."]
+}
+
+function detalhesDoJuiz(lista: ResultadoDoCaso[]): string[] {
+  const boas = lista.filter((c) => c.boa)
+  const reprovadas = boas.filter((c) => c.juiz?.aprovado === false).length
+  return [
+    "",
+    "### Acerto por motivo",
+    "",
+    ...linhasDeMotivo(lista),
+    "",
+    `- Falsas reprovações: ${reprovadas} de ${boas.length}`,
+  ]
+}
+
+function detalhesDeLinguagem(lista: ResultadoDoCaso[]): string[] {
+  const marcados = lista.filter((c) => c.falsoAlerta)
+  return [`- Falsos alertas: ${marcados.filter((c) => c.alertou).length} de ${marcados.length}`]
+}
+
+function detalhesDeIncomodos(lista: ResultadoDoCaso[]): string[] {
+  const bloqueadas = lista.filter((c) => c.juiz?.motivos.includes("promessa")).length
+  return [`- Promessas bloqueadas: ${bloqueadas}`]
 }
 
 function linhaDePergunta(c: ResultadoDoCaso): string {
@@ -470,6 +529,21 @@ export function formatarRelatorio(rodada: Rodada): string {
   }
   if (daFamilia(rodada.casos, "memoria").length > 0) {
     linhas.push("", ...secaoDeFamilia("Memória", "memoria", rodada.casos))
+  }
+  if (daFamilia(rodada.casos, "juiz").length > 0) {
+    linhas.push("", ...secaoDeFamilia("Juiz", "juiz", rodada.casos, detalhesDoJuiz))
+  }
+  if (daFamilia(rodada.casos, "seguranca").length > 0) {
+    linhas.push("", ...secaoDeFamilia("Segurança", "seguranca", rodada.casos))
+  }
+  if (daFamilia(rodada.casos, "linguagem").length > 0) {
+    linhas.push(
+      "",
+      ...secaoDeFamilia("Linguagem e sofrimento", "linguagem", rodada.casos, detalhesDeLinguagem),
+    )
+  }
+  if (daFamilia(rodada.casos, "incomodos").length > 0) {
+    linhas.push("", ...secaoDeFamilia("Incômodos", "incomodos", rodada.casos, detalhesDeIncomodos))
   }
   linhas.push("", "## Custo por papel", "", ...tabelaDeCusto(r.uso))
   if (r.casos > 0) linhas.push(...secaoDeCasos(rodada.casos))

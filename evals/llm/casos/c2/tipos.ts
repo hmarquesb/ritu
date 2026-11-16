@@ -46,6 +46,8 @@ export type ExpectativaDaConversa = {
     propostasRecusadas: number
     // Títulos (sugestao.titulo) dos retornos de cenario.retornos que saíram de outcomes.pendentes no fim do caso.
     retornosFechados: string[]
+    // Veredito do Juiz no run: tentativas lidas, se aprovou (null sem leitura) e os motivos apontados.
+    juiz: { tentativas: number; aprovado: boolean | null; motivos: string[] }
   }) => boolean
 }
 
@@ -62,8 +64,10 @@ export type CasoConversa = {
   pergunta?: "necessaria" | "desnecessaria"
   // Só nos casos com proposta: se o run devia propor algo no bloco (esperada) ou não propor nada (nenhuma).
   proposta?: "esperada" | "nenhuma"
-  // Família que o caso mede no relatório (D14): Aprendizado, Para ter em casa ou Memória. Sem família, o caso não entra nessas seções.
-  familia?: "aprendizado" | "para_ter" | "memoria"
+  // Família que o caso mede no relatório (D14, D22): Aprendizado, Para ter em casa, Memória, Segurança, Linguagem e sofrimento ou Incômodos. Sem família, o caso não entra nessas seções.
+  familia?: "aprendizado" | "para_ter" | "memoria" | "seguranca" | "linguagem" | "incomodos"
+  // Só nos casos de linguagem: a mensagem não devia gerar alerta; o relatório conta quando gerou.
+  falsoAlerta?: true
   deve: ExpectativaDaConversa[]
   naoPode: ExpectativaDaConversa[]
 }

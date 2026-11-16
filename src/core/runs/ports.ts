@@ -101,6 +101,8 @@ export interface RunRepository {
   etapas(contaId: string, runId: string): Promise<RunEtapa[]>
   /** Só status done. */
   recentes(contaId: string, desde: Date, limite: number): Promise<Run[]>
+  /** Sem contaId; contas com run done criado a partir de desde, cada uma uma vez. */
+  contasComRunDesde(desde: Date): Promise<string[]>
   contarMensagensDoDia(contaId: string, dia: string): Promise<number>
   votar(contaId: string, runId: string, voto: "up" | "down"): Promise<void>
   /** Sem contaId; devolve os ids. */

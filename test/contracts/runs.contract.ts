@@ -253,5 +253,24 @@ export function runsContract(make: () => Promise<ContractEnv> | ContractEnv): vo
       expect(await runs.buscar(a, run.id)).toMatchObject({ status: "running" })
       expect((await runs.etapas(a, run.id)).map((e) => e.nome)).toEqual(["buscar_clima"])
     })
+
+    it("contasComRunDesde traz cada conta uma vez, só com run done criado a partir da data", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { runs } = env.stores
+      const encerrar = async (contaId: string, status: StatusRun) => {
+        const run = await abrir(env.stores, contaId)
+        await runs.atualizar(contaId, run.id, { status })
+      }
+      await encerrar(b, "done")
+      env.clock.advance(UM_DIA)
+      const desde = env.clock.now()
+
+      await encerrar(a, "done")
+      await encerrar(a, "done")
+      await encerrar(b, "failed")
+      await encerrar(b, "running")
+
+      expect(await runs.contasComRunDesde(desde)).toEqual([a])
+    })
   })
 }

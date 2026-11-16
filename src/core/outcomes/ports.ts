@@ -20,6 +20,8 @@ export interface OutcomeStore {
   criar(contaId: string, runId: string, sugestoes: SugestaoRegistrada[]): Promise<Retorno[]>
   /** Mais recente primeiro. */
   pendentes(contaId: string): Promise<Retorno[]>
+  /** Respondidos da conta com respondido_em a partir de desde. */
+  respondidosDesde(contaId: string, desde: Date): Promise<Retorno[]>
   /** Só o aguardando muda; mudou diz se este chamado mudou. Retorno inexistente ou de outra conta: undefined. */
   responder(
     contaId: string,

@@ -132,5 +132,35 @@ export function proposalsContract(make: () => Promise<ContractEnv> | ContractEnv
         [proposta.id]: "pendente",
       })
     })
+
+    it("porTool traz as propostas da tool com qualquer decisão, da mais recente para a mais antiga", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { proposals } = env.stores
+      const runId = await abrirRun(env.stores, a)
+      const runB = await abrirRun(env.stores, b)
+      const criar = async (tool: string) => {
+        const [proposta] = await proposals.criar(a, runId, [{ tool, conteudo: {} }])
+        if (!proposta) throw new Error("proposta não criada")
+        env.clock.advance(UM_MINUTO)
+        return proposta
+      }
+      const p1 = await criar("tool-x")
+      const p2 = await criar("tool-x")
+      const p3 = await criar("tool-y")
+      const p4 = await criar("tool-x")
+      await proposals.decidir(a, p2.id, "aprovada")
+      await proposals.decidir(a, p4.id, "recusada")
+      await proposals.criar(b, runB, [{ tool: "tool-x", conteudo: {} }])
+
+      const daTool = await proposals.porTool(a, "tool-x")
+      expect(daTool.map((p) => p.id)).toEqual([p4.id, p2.id, p1.id])
+      expect(decisoesPorId(daTool)).toEqual({
+        [p4.id]: "recusada",
+        [p2.id]: "aprovada",
+        [p1.id]: "pendente",
+      })
+      expect((await proposals.porTool(a, "tool-y")).map((p) => p.id)).toEqual([p3.id])
+      expect((await proposals.porTool(b, "tool-x")).map((p) => p.conta_id)).toEqual([b])
+    })
   })
 }

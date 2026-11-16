@@ -56,6 +56,14 @@ export function createPgProposals(sql: Conexao, clock: Clock): ProposalStore {
       return linhas.map(propostaDe)
     },
 
+    async porTool(contaId, tool) {
+      const linhas = await sql<PropostaRow[]>`
+        select id, run_id, conta_id, tool, conteudo, decisao, criado_em, decidida_em
+        from propostas where conta_id = ${contaId} and tool = ${tool}
+        order by criado_em desc, id desc`
+      return linhas.map(propostaDe)
+    },
+
     async expirarDosRuns(runIds) {
       if (runIds.length === 0) return 0
       const expiradas = await sql`

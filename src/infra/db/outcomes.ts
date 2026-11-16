@@ -32,6 +32,14 @@ export function createPgOutcomes(sql: Conexao, clock: Clock): OutcomeStore {
       return linhas.map(retornoDe)
     },
 
+    async respondidosDesde(contaId, desde) {
+      const linhas = await sql<RetornoRow[]>`
+        select id, conta_id, run_id, sugestao, status, resultado, origem, criado_em, respondido_em
+        from retornos
+        where conta_id = ${contaId} and status = 'respondido' and respondido_em >= ${desde}`
+      return linhas.map(retornoDe)
+    },
+
     async responder(contaId, retornoId, resultado: Resultado, origem) {
       return numaTransacao(sql, async (tx) => {
         // Só o aguardando muda; um já respondido fica como está.

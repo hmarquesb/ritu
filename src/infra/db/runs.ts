@@ -161,6 +161,13 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
       return linhas.map(runDe)
     },
 
+    async contasComRunDesde(desde) {
+      const linhas = await sql<{ conta_id: string }[]>`
+        select distinct conta_id from runs
+        where status = 'done' and criado_em >= ${desde} and conta_id is not null`
+      return linhas.map((linha) => linha.conta_id)
+    },
+
     async contarMensagensDoDia(contaId, dia) {
       const [linha] = await sql<{ total: number }[]>`
         select count(*)::int as total from mensagens

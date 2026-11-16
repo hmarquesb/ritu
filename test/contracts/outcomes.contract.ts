@@ -6,6 +6,7 @@ import { type ContractEnv, criarDuasContas } from "./env"
 const DIA = "2026-01-15"
 const UM_MINUTO = 60_000
 const UM_DIA = 86_400_000
+const UMA_HORA = 3_600_000
 
 const sugestao = (titulo: string): SugestaoRegistrada => ({
   tipo: "cha",
@@ -238,6 +239,26 @@ export function outcomesContract(make: () => Promise<ContractEnv> | ContractEnv)
       expect(await outcomes.pendentes(a)).toMatchObject([
         { id: retorno.id, status: "aguardando", resultado: null },
       ])
+    })
+
+    it("respondidosDesde traz só os respondidos a partir da data, da própria conta", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { outcomes } = env.stores
+      const runA = await criarRun(env.stores, a)
+      const runB = await criarRun(env.stores, b)
+      const antes = await criarRetorno(env.stores, a, runA, "antes")
+      await outcomes.responder(a, antes.id, "ajudou", "toque")
+
+      env.clock.advance(2 * UMA_HORA)
+      const depois = await criarRetorno(env.stores, a, runA, "depois")
+      await outcomes.responder(a, depois.id, "nao_ajudou", "conversa")
+      await criarRetorno(env.stores, a, runA, "aguardando")
+      const deOutra = await criarRetorno(env.stores, b, runB, "de outra conta")
+      await outcomes.responder(b, deOutra.id, "ajudou", "toque")
+
+      const desde = new Date("2026-01-15T13:00:00.000Z")
+      expect((await outcomes.respondidosDesde(a, desde)).map((r) => r.id)).toEqual([depois.id])
+      expect((await outcomes.respondidosDesde(b, desde)).map((r) => r.id)).toEqual([deOutra.id])
     })
   })
 }

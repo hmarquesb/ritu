@@ -23,6 +23,8 @@ export interface ProposalStore {
     decisao: "aprovada" | "recusada",
   ): Promise<Proposta | undefined>
   recusadas(contaId: string, tool: string): Promise<Proposta[]>
+  /** Todas as decisões da tool, da mais recente para a mais antiga. */
+  porTool(contaId: string, tool: string): Promise<Proposta[]>
   /** Sem contaId. */
   expirarDosRuns(runIds: string[]): Promise<number>
 }

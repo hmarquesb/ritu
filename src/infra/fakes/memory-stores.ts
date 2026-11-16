@@ -711,6 +711,17 @@ function criarOutcomes(db: Db, clock: Clock): OutcomeStore {
           .sort(maisNovoPrimeiro),
       )
     },
+    async respondidosDesde(contaId, desde) {
+      return copia(
+        db.estado.retornos.filter(
+          (r) =>
+            r.conta_id === contaId &&
+            r.status === "respondido" &&
+            r.respondido_em !== null &&
+            Date.parse(r.respondido_em) >= desde.getTime(),
+        ),
+      )
+    },
     async responder(contaId, retornoId, resultado, origem) {
       const retorno = retornoDaConta(contaId, retornoId)
       if (!retorno) return undefined
@@ -834,6 +845,14 @@ function criarRuns(db: Db, clock: Clock): RunRepository {
       )
       return copia(feitos.sort(maisNovoPrimeiro).slice(0, limite))
     },
+    async contasComRunDesde(desde) {
+      const contas = db.estado.runs.flatMap((r) =>
+        r.status === "done" && r.conta_id !== null && Date.parse(r.criado_em) >= desde.getTime()
+          ? [r.conta_id]
+          : [],
+      )
+      return [...new Set(contas)]
+    },
     async contarMensagensDoDia(contaId, dia) {
       return db.estado.mensagens.filter(
         (m) => m.conta_id === contaId && m.dia === dia && m.autor === "pessoa",
@@ -892,6 +911,13 @@ function criarProposals(db: Db, clock: Clock): ProposalStore {
         db.estado.propostas.filter(
           (p) => p.conta_id === contaId && p.tool === tool && p.decisao === "recusada",
         ),
+      )
+    },
+    async porTool(contaId, tool) {
+      return copia(
+        db.estado.propostas
+          .filter((p) => p.conta_id === contaId && p.tool === tool)
+          .sort(maisNovoPrimeiro),
       )
     },
     async expirarDosRuns(runIds) {

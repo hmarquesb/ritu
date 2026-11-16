@@ -5,6 +5,7 @@ import { createJudge, type Judge } from "@/core/agents/judge/julgar"
 import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memoria"
 import type { Clock } from "@/core/clock"
 import { createConversation } from "@/core/conversation/conversar"
+import type { DemoSeed } from "@/core/demo-seed"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
 import type { LlmClient } from "@/core/llm/client"
@@ -27,6 +28,7 @@ import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createGeminiClient } from "@/infra/gemini/client"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
+import { loadDemoSeed } from "@/infra/knowledge/yaml-seed"
 import { createMastraRuntime } from "@/infra/mastra/runtime"
 import { createOpenMeteoCities } from "@/infra/open-meteo/cities"
 import { createOpenMeteoWeather } from "@/infra/open-meteo/weather"
@@ -71,6 +73,10 @@ function bancoPreguicoso(): DbClient {
 // Leitura crua de data/ para scripts (sem validar): o script valida com validarBase.
 export function readKnowledgeData(dir?: string): DadosDaBase {
   return readDadosDaBase(dir)
+}
+
+export function readDemoSeed(dir?: string): DemoSeed {
+  return loadDemoSeed(dir)
 }
 
 export function createContainer(overrides?: Partial<Container>): Container {

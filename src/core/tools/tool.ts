@@ -4,8 +4,9 @@ import type { Prakriti } from "@/core/knowledge/adequacao"
 import type { FiltroPessoa } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { SinaisPessoa } from "@/core/knowledge/substitutos"
+import type { Resultado } from "@/core/outcomes/ports"
 import type { TipoDeSugestao } from "@/core/ranking/tipos"
-import type { Stores } from "@/core/stores"
+import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import type { CidadeDaPessoa, WeatherSource } from "@/core/weather/ports"
 
@@ -21,6 +22,9 @@ export type ContextoDoRun = {
   na_lista: string[]
   lista_recusada: string[]
   notas_ativas: string[]
+  retorno?: { resultado: Resultado; registrado: boolean }
+  /** Retornos aguardando, numerados como o Intérprete os viu. Ausente vale []. */
+  pendentes?: { n: number; retorno_id: string }[]
 }
 
 export type ToolContext = {
@@ -37,6 +41,7 @@ export type ToolContext = {
   /** Ids de alimentos da base citados na mensagem; ajustam o que `casa.ler` devolve. */
   casaDaMensagem?: { tem: string[]; acabou: string[] }
   run?: ContextoDoRun
+  tx?: Transactor
 }
 
 export type Tool<I, O> = {

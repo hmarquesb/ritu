@@ -12,5 +12,9 @@ export function contextoDoRun(dados: DadosDoPreparo): ContextoDoRun {
     na_lista: dados.na_lista,
     lista_recusada: dados.lista_recusada,
     notas_ativas: dados.notas_ativas,
+    ...(dados.retorno
+      ? { retorno: { resultado: dados.retorno.resultado, registrado: dados.retorno.registrado } }
+      : {}),
+    pendentes: dados.retornos_pendentes.map((r) => ({ n: r.n, retorno_id: r.retorno_id })),
   }
 }

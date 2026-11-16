@@ -18,6 +18,7 @@ function montar(iso = "2026-11-15T18:00:00.000Z") {
   const deps = { stores, kb, clock, telemetry }
   return {
     stores,
+    clock,
     telemetry,
     run: (e: Partial<EntradaDoAcompanhante>, opts?: { perguntasFeitas?: number }) =>
       preparar(deps, CONTA, entrada(e), opts),
@@ -506,5 +507,59 @@ describe("preparar: dados das tools de proposta", () => {
       notas_ativas: [],
       nao_tem_do_run: [],
     })
+  })
+})
+
+describe("preparar: retornos pendentes do run", () => {
+  const sugestao = (titulo: string) => ({
+    tipo: "cha" as const,
+    pratica_id: "cha-x",
+    alimentos: ["gengibre"],
+    titulo,
+  })
+  const registrada = { resultado: "nao_ajudou" as const, registrado: false }
+
+  async function semear(m: ReturnType<typeof montar>, n: number) {
+    // o mais antigo primeiro: o mais recente fica no topo de pendentes
+    for (let i = 0; i < n; i++) {
+      m.clock.set(i === 0 ? "2026-11-14T15:00:00.000Z" : "2026-11-15T15:00:00.000Z")
+      await m.stores.outcomes.criar(CONTA, `run-${i}`, [sugestao(`Chá ${i}`)])
+    }
+    m.clock.set("2026-11-15T18:00:00.000Z")
+  }
+
+  it("numera os pendentes na ordem de pendentes, com ha_dias", async () => {
+    const m = montar()
+    await semear(m, 3)
+    const dados = await m.run({ retorno: registrada })
+    const pendentes = await m.stores.outcomes.pendentes(CONTA)
+    expect(dados.retornos_pendentes.map((r) => r.retorno_id)).toEqual(pendentes.map((r) => r.id))
+    expect(dados.retornos_pendentes.map((r) => r.n)).toEqual([1, 2, 3])
+    expect(dados.retornos_pendentes.map((r) => r.ha_dias)).toEqual([0, 0, 1])
+    expect(dados.retornos_pendentes[0]?.tipo).toBe("cha")
+    expect(dadosDoPreparoSchema.safeParse(dados).success).toBe(true)
+  })
+
+  it("com seis aguardando, só os cinco primeiros", async () => {
+    const m = montar()
+    await semear(m, 6)
+    const dados = await m.run({ retorno: registrada })
+    expect(dados.retornos_pendentes).toHaveLength(5)
+  })
+
+  it("com registrado true ou sem retorno, fica vazio", async () => {
+    const m = montar()
+    await semear(m, 2)
+    expect(
+      (await m.run({ retorno: { ...registrada, registrado: true } })).retornos_pendentes,
+    ).toEqual([])
+    expect((await m.run({})).retornos_pendentes).toEqual([])
+  })
+
+  it("checkpoint antigo, sem o campo, continua válido", async () => {
+    const m = montar()
+    const { retornos_pendentes: _fora, ...antigo } = await m.run({})
+    const lido = dadosDoPreparoSchema.parse(antigo)
+    expect(lido.retornos_pendentes).toEqual([])
   })
 })

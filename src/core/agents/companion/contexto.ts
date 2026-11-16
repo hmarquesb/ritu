@@ -78,6 +78,16 @@ function retornoDaMensagem(dados: DadosDoPreparo): Record<string, unknown> | und
   return compacto({ ...r, titulo: r.titulo ? neutralizar(r.titulo) : undefined })
 }
 
+function retornosPendentes(dados: DadosDoPreparo): Record<string, unknown>[] | undefined {
+  if (!dados.retorno || dados.retorno.registrado) return undefined
+  return dados.retornos_pendentes.map((r) => ({
+    n: r.n,
+    tipo: r.tipo,
+    titulo: neutralizar(r.titulo),
+    ha_dias: r.ha_dias,
+  }))
+}
+
 function paraTer(dados: DadosDoPreparo): Record<string, unknown> | undefined {
   const p = dados.para_ter
   if (!p) return undefined
@@ -97,6 +107,7 @@ export function montarMensagemInicial(dados: DadosDoPreparo, texto?: string): st
     casa_da_mensagem: casaDaMensagem(dados),
     gosta_da_mensagem: gostaDaMensagem(dados),
     retorno: retornoDaMensagem(dados),
+    retornos_pendentes: retornosPendentes(dados),
     fato_de_rotina: dados.fato_de_rotina ? neutralizar(dados.fato_de_rotina) : undefined,
     momento: momento(dados),
     geral: dados.geral ? true : undefined,

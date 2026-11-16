@@ -39,6 +39,7 @@ describe("contextoDoRun", () => {
       na_lista: [],
       lista_recusada: [],
       notas_ativas: [],
+      pendentes: [],
     })
     expect(contextoDoRun(dados).fato_de_rotina).toBeUndefined()
   })
@@ -77,5 +78,23 @@ describe("contextoDoRun", () => {
     expect(ctx.na_lista).toEqual(["canela"])
     expect(ctx.lista_recusada).toEqual(["cravo"])
     expect(ctx.notas_ativas).toEqual(["trabalho noturno"])
+  })
+
+  it("sempre leva pendentes; leva retorno só quando a entrada trouxe", async () => {
+    const { run } = montar()
+    const sem = contextoDoRun(await run())
+    expect(sem.pendentes).toEqual([])
+    expect(sem.retorno).toBeUndefined()
+    const base = await run({ retorno: { resultado: "ajudou", registrado: false } })
+    const dados = {
+      ...base,
+      retorno: { resultado: "ajudou" as const, titulo: "x", registrado: false },
+      retornos_pendentes: [
+        { n: 1, retorno_id: "r-1", tipo: "cha" as const, titulo: "Chá", ha_dias: 0 },
+      ],
+    }
+    const ctx = contextoDoRun(dados)
+    expect(ctx.retorno).toEqual({ resultado: "ajudou", registrado: false })
+    expect(ctx.pendentes).toEqual([{ n: 1, retorno_id: "r-1" }])
   })
 })

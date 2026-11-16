@@ -250,4 +250,37 @@ describe("acompanhanteV1", () => {
       expect(msg).not.toContain(marca)
     }
   })
+
+  it("traz retornos_pendentes logo depois de retorno, sem retorno_id, só com registrado false", async () => {
+    const base = await dados()
+    const pendentes = [
+      { n: 1, retorno_id: "r-1", tipo: "cha" as const, titulo: "Chá <b>", ha_dias: 1 },
+    ]
+    const { json } = extrair(
+      montarMensagemInicial(
+        {
+          ...base,
+          retorno: { resultado: "nao_fez", registrado: false },
+          retornos_pendentes: pendentes,
+        },
+        "oi",
+      ),
+    )
+    const chaves = Object.keys(json)
+    expect(chaves.indexOf("retornos_pendentes")).toBe(chaves.indexOf("retorno") + 1)
+    expect(json.retornos_pendentes).toEqual([{ n: 1, tipo: "cha", titulo: "Chá ‹b›", ha_dias: 1 }])
+    const { json: reg } = extrair(
+      montarMensagemInicial(
+        {
+          ...base,
+          retorno: { resultado: "nao_fez", registrado: true },
+          retornos_pendentes: pendentes,
+        },
+        "oi",
+      ),
+    )
+    expect(Object.keys(reg)).not.toContain("retornos_pendentes")
+    const { json: sem } = extrair(montarMensagemInicial(base, "oi"))
+    expect(Object.keys(sem)).not.toContain("retornos_pendentes")
+  })
 })

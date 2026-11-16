@@ -148,6 +148,17 @@ export const dadosDoPreparoSchema = z.object({
   casa_da_mensagem: casaDaMensagemSchema.optional(),
   gosta_da_mensagem: z.array(z.string()).optional(),
   retorno: retornoDaMensagemSchema.optional(),
+  retornos_pendentes: z
+    .array(
+      z.object({
+        n: z.number().int(),
+        retorno_id: z.string(),
+        tipo: z.enum(["cha", "refeicao", "oleo", "pratica"]),
+        titulo: z.string(),
+        ha_dias: z.number().int(),
+      }),
+    )
+    .default([]),
   fato_de_rotina: z.string().optional(),
   perguntas: z
     .object({ feitas: z.number().int().nonnegative(), alimentos: z.array(z.string()) })
@@ -636,8 +647,29 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
       : {}),
     ...gostoDaMensagem(entrada, kb),
     ...(entrada.retorno ? { retorno: entrada.retorno } : {}),
+    retornos_pendentes: retornosPendentes(entrada, pendentes, c.dia, perfil.cidade_fuso),
     ...(entrada.fato_de_rotina ? { fato_de_rotina: entrada.fato_de_rotina } : {}),
   }
+}
+
+function retornosPendentes(
+  entrada: EntradaDoAcompanhante,
+  pendentes: Awaited<ReturnType<Stores["outcomes"]["pendentes"]>>,
+  dia: string,
+  fuso: string | null,
+): DadosDoPreparo["retornos_pendentes"] {
+  if (!entrada.retorno || entrada.retorno.registrado) return []
+  return pendentes.slice(0, config.conversa.interprete.pendentesNoContexto).map((r, i) => ({
+    n: i + 1,
+    retorno_id: r.id,
+    tipo: r.sugestao.tipo,
+    titulo: r.sugestao.titulo,
+    ha_dias: diasEntre(diaLocal(new Date(r.criado_em), fuso ?? undefined), dia),
+  }))
+}
+
+function diasEntre(de: string, ate: string): number {
+  return Math.round((Date.parse(ate) - Date.parse(de)) / 86_400_000)
 }
 
 function nomesDaCasaDaMensagem(

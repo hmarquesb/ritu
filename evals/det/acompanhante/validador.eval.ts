@@ -116,6 +116,7 @@ function dados(mudar: Partial<DadosDoPreparo> = {}): DadosDoPreparo {
     na_lista: [],
     lista_recusada: [],
     notas_ativas: [],
+    retornos_pendentes: [],
     ...mudar,
   }
 }

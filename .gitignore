@@ -15,6 +15,8 @@ playwright-report/
 
 # apoio local, fora do repositório
 .local/
+# falhas e andamento do eval com LLM, com o texto dos casos (spec 014)
+evals/local/
 .claude/settings.local.json
 
 # Ritu: só o que for dos artefatos de build e dependências locais

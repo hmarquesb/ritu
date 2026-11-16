@@ -5,6 +5,12 @@ import { fraseDaTroca } from "@/core/knowledge/substitutos"
 import { type Funcao, funcaoSchema, GUNAS, type Guna, gunaSchema } from "@/core/knowledge/vocab"
 import type { RespostaSemModelo } from "@/core/llm/sem-modelo"
 import { type Anotacao, anotacaoSchema } from "@/core/proposals/anotacao"
+import {
+  type ConteudoDaProposta,
+  conteudoDaPropostaSchema,
+  type PropostaNaSaida,
+  propostaNaSaidaSchema,
+} from "@/core/proposals/conteudo"
 import type { EstadoNaCasa, ParaTer, TipoDeSugestao } from "@/core/ranking/tipos"
 import type { DadosDoPreparo } from "./preparo"
 import { textosDoAcompanhante } from "./textos"
@@ -99,6 +105,8 @@ export type SaidaDoAcompanhante = {
   citados: string[]
   para_ter?: ParaTer & { verbos: string[]; motivo: string }
   anotacoes: Anotacao[]
+  propostas: PropostaNaSaida[]
+  propostas_do_agente?: ConteudoDaProposta[]
 }
 
 const itemEntregueSchema = z.object({
@@ -152,6 +160,8 @@ export const saidaDoAcompanhanteSchema = z.object({
     })
     .optional(),
   anotacoes: z.array(anotacaoSchema),
+  propostas: z.array(propostaNaSaidaSchema).default([]),
+  propostas_do_agente: z.array(conteudoDaPropostaSchema).optional(),
 })
 
 type ItemEntregue = SugestaoEntregue["itens"][number]
@@ -286,6 +296,7 @@ export function completarSaida(
     citados: entrega.citados,
     ...(para_ter ? { para_ter } : {}),
     anotacoes: [],
+    propostas: [],
   }
 }
 
@@ -301,6 +312,7 @@ export function saidaDeCodigo(resposta: string, anotacoes: Anotacao[]): SaidaDoA
     incertos: [],
     citados: [],
     anotacoes,
+    propostas: [],
   }
 }
 
@@ -316,6 +328,7 @@ export function saidaSegura(dados?: DadosDoPreparo): SaidaDoAcompanhante {
     incertos: [],
     citados: [],
     anotacoes: [],
+    propostas: [],
   }
 }
 
@@ -352,5 +365,6 @@ export function saidaSemModelo(
     incertos: [],
     citados: [],
     anotacoes: [],
+    propostas: [],
   }
 }

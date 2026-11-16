@@ -705,6 +705,7 @@ describe("expectativas da conversa de Perguntas", () => {
     incertos: [],
     citados: [],
     anotacoes: [],
+    propostas: [],
     ...p,
   })
 

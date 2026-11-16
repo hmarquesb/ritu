@@ -29,6 +29,7 @@ function runDe(saida: Partial<SaidaDoAcompanhante>): ResultadoDoRun {
       incertos: [],
       citados: [],
       anotacoes: [],
+      propostas: [],
       ...saida,
     },
     status: "done",

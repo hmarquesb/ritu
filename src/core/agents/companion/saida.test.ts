@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { respostaSemModelo } from "@/core/llm/sem-modelo"
+import type { ConteudoDaProposta } from "@/core/proposals/conteudo"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import type { DadosDoPreparo } from "./preparo"
 import {
@@ -234,6 +235,7 @@ describe("saidaDeCodigo", () => {
       evitar: [],
       incertos: [],
       citados: [],
+      propostas: [],
       anotacoes,
     })
     expect(saidaDoAcompanhanteSchema.safeParse(saida).success).toBe(true)
@@ -264,6 +266,7 @@ describe("saidaSegura", () => {
       evitar: [],
       incertos: [],
       citados: [],
+      propostas: [],
       anotacoes: [],
     })
     expect(saidaSegura(dados({ geral: true })).geral).toBe(true)
@@ -292,5 +295,58 @@ describe("saidaSemModelo", () => {
     )
     expect(saida.sugestoes[0]?.verbos).toEqual(r.praticas[0]?.verbos)
     expect(saidaDoAcompanhanteSchema.safeParse(saida).success).toBe(true)
+  })
+})
+
+describe("propostas na saída", () => {
+  const propostaDoAgente: ConteudoDaProposta = {
+    tool: "casa.propor",
+    acao: "tem",
+    itens: [{ alimento_id: "canela", nome: "Canela" }],
+  }
+
+  it("as quatro montadoras devolvem propostas vazias e sem propostas_do_agente", () => {
+    const r = respostaSemModelo(
+      {
+        estados: ["agitada"],
+        momento_do_dia: "tarde",
+        filtro: { evitar: [], restricoes: [], nao_come: [], nao_gosta: [] },
+      },
+      kb,
+    )
+    const saidas = [
+      completarSaida(entrega(), dados(), kb),
+      saidaDeCodigo("Ok.", []),
+      saidaSegura(),
+      saidaSemModelo(r, dados(), kb),
+    ]
+    for (const saida of saidas) {
+      expect(saida.propostas).toEqual([])
+      expect("propostas_do_agente" in saida).toBe(false)
+    }
+  })
+
+  it("o schema aceita propostas_do_agente e o mantém no parse", () => {
+    const saida = { ...saidaDeCodigo("Boa.", []), propostas_do_agente: [propostaDoAgente] }
+    const r = saidaDoAcompanhanteSchema.safeParse(saida)
+    expect(r.success).toBe(true)
+    expect(r.success && r.data.propostas_do_agente).toEqual([propostaDoAgente])
+  })
+
+  it("uma saída antiga sem propostas passa com lista vazia", () => {
+    const { propostas: _, ...antiga } = saidaDeCodigo("Boa.", [])
+    const r = saidaDoAcompanhanteSchema.safeParse(antiga)
+    expect(r.success).toBe(true)
+    expect(r.success && r.data.propostas).toEqual([])
+  })
+
+  it("propostas aceita as linhas do bloco (id, tool e texto)", () => {
+    const linha = { id: "p1", tool: "casa.propor", texto: "Canela: tem em casa" }
+    const r = saidaDoAcompanhanteSchema.safeParse({
+      ...saidaDeCodigo("Ok.", []),
+      propostas: [linha],
+    })
+    expect(r.success).toBe(true)
+    expect(r.success && r.data.propostas).toEqual([linha])
   })
 })

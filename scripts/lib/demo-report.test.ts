@@ -51,6 +51,7 @@ function etapa(ordem: number, tipo: string, nome: string, resumo: string | null)
 function saidaDeExemplo(): SaidaDoAcompanhante {
   return {
     anotacoes: [],
+    propostas: [],
     origem: "agente",
     resposta: "Um chá de gengibre com canela agora ajuda a aquecer.",
     geral: false,

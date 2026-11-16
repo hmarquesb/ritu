@@ -1,11 +1,29 @@
 import { describe, expect, it } from "vitest"
 import { preparar } from "@/core/agents/companion/preparo"
-import type { SaidaDoAcompanhante, SugestaoEntregue } from "@/core/agents/companion/saida"
+import {
+  type SaidaDoAcompanhante,
+  type SugestaoEntregue,
+  saidaDoAcompanhanteSchema,
+} from "@/core/agents/companion/saida"
+import { montarEntradaDoJuiz } from "@/core/agents/judge/entrada"
+import type { Veredito } from "@/core/agents/judge/julgar"
+import type { MotivoDoJuiz } from "@/core/agents/judge/saida"
 import type { ResumoFeito } from "@/core/agents/memory/memoria"
+import { textosDaConversa } from "@/core/conversation/textos"
+import { conferirEntrada } from "@/core/guardrails/entrada"
 import type { Estado } from "@/core/knowledge/vocab"
 import { createContainer } from "@/infra/container"
 import type { ResultadoDoRun } from "../../evals/llm/casos/c1/tipos"
 import type { CasoConversa, ExpectativaDaConversa } from "../../evals/llm/casos/c2/tipos"
+import { casosC3 } from "../../evals/llm/casos/c3"
+import {
+  aponta,
+  aprovado,
+  naoAponta,
+  nenhumApontamento,
+  reprovado,
+  vereditoValido,
+} from "../../evals/llm/casos/c3/juiz/expectativas"
 import { casoMemoria06 } from "../../evals/llm/casos/c3/memoria/06-almoco-fora-sem-cozinhar"
 import { casoMemoria07 } from "../../evals/llm/casos/c3/memoria/07-cha-com-padrao"
 import { casoMemoria08 } from "../../evals/llm/casos/c3/memoria/08-cha-fora-dos-candidatos"
@@ -23,7 +41,17 @@ import {
   trazAsMaisRecentes,
   umaFraseSobre,
 } from "../../evals/llm/casos/c3/memoria/expectativas"
-import type { NotaDoCaso } from "../../evals/llm/casos/c3/tipos"
+import {
+  aprovadoPeloJuiz,
+  caminho,
+  comAvisoDeIncomodo,
+  juizNaoApontou,
+  semDosagem,
+  semPromessa,
+  semTexto,
+  textoFixo,
+} from "../../evals/llm/casos/c3/seguranca/expectativas"
+import type { CasoJuiz, NotaDoCaso } from "../../evals/llm/casos/c3/tipos"
 import { montarCenario } from "../../test/fixtures/cenarios/montar"
 
 type EntradaDaConversa = Parameters<ExpectativaDaConversa["confere"]>[0]
@@ -256,5 +284,205 @@ describe("cenários dos casos 6 a 8", () => {
   it("controle: o mesmo caso à tarde põe o chá nos candidatos", async () => {
     const aTarde = { ...casoMemoria08.cenario, agora: "2026-06-15T19:30:00.000Z" }
     expect(await candidatosDoCaso(aTarde, ESTADOS_DO_CHA)).toContain("cha-gengibre-canela")
+  })
+})
+
+// Veredito lido do Juiz, com os motivos apontados (ok: true), ou uma leitura que falhou.
+const vereditoOk = (motivos: MotivoDoJuiz[] = [], aprovadoDoVeredito = true): Veredito => ({
+  ok: true,
+  aprovado: aprovadoDoVeredito,
+  graves: [],
+  registros: [],
+  saude_na_proposta: false,
+  apontamentos: motivos.map((motivo) => ({ motivo, trecho: "trecho" })),
+  modelo: "modelo-teste",
+  tokens: { entrada: 0, saida: 0 },
+  trocas: 0,
+  duracao_ms: 0,
+})
+
+const vereditoErro: Veredito = { ok: false, motivo: "erro", duracao_ms: 0 }
+
+// Os casos do Juiz (1 a 13) e os de conversa novos (14 a 22), pelo id.
+const casosJuiz = casosC3.filter((c): c is CasoJuiz => c.tipo === "juiz")
+const novosDeConversa = casosC3.filter(
+  (c): c is CasoConversa => c.tipo === "conversa" && /^c3-s\d{2}-/.test(c.id),
+)
+
+describe("casos novos do c3 (Juiz e segurança)", () => {
+  it("casosC3 tem 30 casos, com ids únicos", () => {
+    expect(casosC3).toHaveLength(30)
+    expect(new Set(casosC3.map((c) => c.id)).size).toBe(30)
+  })
+
+  it("13 casos de Juiz, todos da família juiz", () => {
+    expect(casosJuiz).toHaveLength(13)
+    expect(casosJuiz.every((c) => c.familia === "juiz")).toBe(true)
+  })
+
+  it("9 casos de conversa novos, com as famílias da tabela", () => {
+    expect(novosDeConversa).toHaveLength(9)
+    const familias: Record<string, string> = {
+      "14": "seguranca",
+      "15": "seguranca",
+      "16": "seguranca",
+      "17": "incomodos",
+      "18": "linguagem",
+      "19": "linguagem",
+      "20": "linguagem",
+      "21": "linguagem",
+      "22": "incomodos",
+    }
+    for (const [numero, familia] of Object.entries(familias)) {
+      const caso = novosDeConversa.find((c) => c.id.startsWith(`c3-s${numero}-`))
+      expect(caso?.familia).toBe(familia)
+    }
+  })
+
+  it("os casos boa são 1, 3, 5 e 10", () => {
+    const boa = casosJuiz.filter((c) => c.boa === true).map((c) => c.id.slice(0, 9))
+    expect(boa).toEqual(["c3-j01-re", "c3-j03-po", "c3-j05-co", "c3-j10-is"])
+  })
+
+  it("as saídas dos casos de Juiz passam em saidaDoAcompanhanteSchema", () => {
+    for (const caso of casosJuiz) {
+      expect(saidaDoAcompanhanteSchema.safeParse(caso.saida).success).toBe(true)
+    }
+  })
+
+  it("montarEntradaDoJuiz de cada caso de Juiz monta sem erro", () => {
+    const kb = createContainer().knowledge
+    for (const caso of casosJuiz) {
+      const entrada = montarEntradaDoJuiz({
+        saida: caso.saida,
+        evitar: caso.evitar,
+        nota_de_rotina: caso.nota_de_rotina,
+        kb,
+      })
+      expect(entrada.length).toBeGreaterThan(0)
+    }
+  })
+
+  it("os cenários dos casos 14 a 22 montam sem erro", async () => {
+    for (const caso of novosDeConversa) {
+      await expect(montarCenario({ ...caso.cenario, roteiro: [] })).resolves.toBeDefined()
+    }
+  })
+
+  it("as frases dos casos 14 e 19 dão ok em conferirEntrada", () => {
+    for (const numero of ["14", "19"]) {
+      const caso = novosDeConversa.find((c) => c.id.startsWith(`c3-s${numero}-`))
+      expect(conferirEntrada(caso?.cenario.mensagem.texto ?? "").resultado).toBe("ok")
+    }
+  })
+})
+
+describe("expectativas do Juiz", () => {
+  it("vereditoValido passa com veredito ok e falha com erro de leitura", () => {
+    expect(vereditoValido().confere(vereditoOk())).toBe(true)
+    expect(vereditoValido().confere(vereditoErro)).toBe(false)
+  })
+
+  it("aponta passa quando o motivo foi apontado, e falha sem ele ou sem leitura", () => {
+    expect(aponta("promessa").confere(vereditoOk(["promessa"]))).toBe(true)
+    expect(aponta("promessa").confere(vereditoOk([]))).toBe(false)
+    expect(aponta("promessa").confere(vereditoErro)).toBe(false)
+  })
+
+  it("naoAponta passa sem o motivo, e falha com ele", () => {
+    expect(naoAponta("dosagem").confere(vereditoOk(["promessa"]))).toBe(true)
+    expect(naoAponta("dosagem").confere(vereditoOk(["dosagem"]))).toBe(false)
+  })
+
+  it("aprovado passa com aprovação e falha com reprovação", () => {
+    expect(aprovado().confere(vereditoOk([], true))).toBe(true)
+    expect(aprovado().confere(vereditoOk(["promessa"], false))).toBe(false)
+  })
+
+  it("reprovado passa com reprovação e falha com aprovação", () => {
+    expect(reprovado().confere(vereditoOk(["promessa"], false))).toBe(true)
+    expect(reprovado().confere(vereditoOk([], true))).toBe(false)
+  })
+
+  it("nenhumApontamento passa sem apontamento e falha com um de registro", () => {
+    expect(nenhumApontamento().confere(vereditoOk([]))).toBe(true)
+    expect(nenhumApontamento().confere(vereditoOk(["jargao"]))).toBe(false)
+  })
+})
+
+describe("expectativas de segurança e linguagem", () => {
+  const comCaminho = (c: Parameters<typeof caminho>[0]): EntradaDaConversa => ({
+    ...entradaConversa(saidaPronta()),
+    resposta: { run_id: "run-eval", status: "done", caminho: c },
+  })
+
+  it("caminho passa com o caminho pedido e falha com outro", () => {
+    expect(caminho("fora").confere(comCaminho("fora"))).toBe(true)
+    expect(caminho("fora").confere(comCaminho("acompanhante"))).toBe(false)
+  })
+
+  it("textoFixo passa com o texto fixo da chave e falha com outro texto", () => {
+    expect(
+      textoFixo("fora").confere(entradaConversa(saidaPronta({ resposta: textosDaConversa.fora }))),
+    ).toBe(true)
+    expect(textoFixo("fora").confere(entradaConversa(saidaPronta()))).toBe(false)
+  })
+
+  it("semTexto passa sem a palavra e falha com ela, sem caixa nem acento", () => {
+    expect(semTexto("jejum").confere(entradaConversa(saidaPronta()))).toBe(true)
+    expect(
+      semTexto("jejum").confere(entradaConversa(saidaPronta({ resposta: "Evite JEJUM longo." }))),
+    ).toBe(false)
+  })
+
+  it("semDosagem passa sem dose e falha com cápsula", () => {
+    expect(semDosagem().confere(entradaConversa(saidaPronta()))).toBe(true)
+    expect(
+      semDosagem().confere(
+        entradaConversa(saidaPronta({ resposta: "Tome 2 cápsulas de ashwagandha." })),
+      ),
+    ).toBe(false)
+  })
+
+  it("semPromessa passa com 'não cura' e falha com promessa de cura ou de resolver", () => {
+    const passa = entradaConversa(saidaPronta({ resposta: "Esse chá pode ajudar, mas não cura." }))
+    const cura = entradaConversa(saidaPronta({ resposta: "Esse chá cura gastrite." }))
+    const resolve = entradaConversa(saidaPronta({ resposta: "Esse chá resolve a dor." }))
+    expect(semPromessa().confere(passa)).toBe(true)
+    expect(semPromessa().confere(cura)).toBe(false)
+    expect(semPromessa().confere(resolve)).toBe(false)
+  })
+
+  it("comAvisoDeIncomodo passa com aviso de incômodo e falha só com aviso geral", () => {
+    const com = entradaConversa(saidaPronta({ avisos: [{ tipo: "incomodo", texto: "Aviso." }] }))
+    const geral = entradaConversa(saidaPronta({ avisos: [{ tipo: "geral", texto: "Aviso." }] }))
+    expect(comAvisoDeIncomodo().confere(com)).toBe(true)
+    expect(comAvisoDeIncomodo().confere(geral)).toBe(false)
+  })
+
+  it("aprovadoPeloJuiz passa com juiz aprovado e falha com reprovado", () => {
+    const base = entradaConversa(saidaPronta())
+    expect(
+      aprovadoPeloJuiz().confere({ ...base, juiz: { tentativas: 1, aprovado: true, motivos: [] } }),
+    ).toBe(true)
+    expect(
+      aprovadoPeloJuiz().confere({
+        ...base,
+        juiz: { tentativas: 1, aprovado: false, motivos: ["promessa"] },
+      }),
+    ).toBe(false)
+  })
+
+  it("juizNaoApontou passa sem o motivo e falha com ele", () => {
+    const base = entradaConversa(saidaPronta())
+    expect(
+      juizNaoApontou("conselho").confere({ ...base, juiz: { ...base.juiz, motivos: ["tom"] } }),
+    ).toBe(true)
+    expect(
+      juizNaoApontou("conselho").confere({
+        ...base,
+        juiz: { ...base.juiz, motivos: ["conselho"] },
+      }),
+    ).toBe(false)
   })
 })

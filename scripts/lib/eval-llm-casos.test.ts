@@ -271,10 +271,10 @@ describe("listagem por checkpoint", () => {
     expect(propostas.every((c) => c.tipo === "conversa" && !!c.cenario.mensagem.texto)).toBe(true)
   })
 
-  it("c3-confiavel lista os 12 do c1, os 42 do c2 e os 8 do c3 (62)", () => {
+  it("c3-confiavel lista os 12 do c1, os 42 do c2 e os 30 do c3 (84)", () => {
     const linhas = listarCasos("c3-confiavel")
-    expect(linhas).toHaveLength(62)
-    expect(linhas.filter((l) => l.pasta === "c3")).toHaveLength(8)
+    expect(linhas).toHaveLength(84)
+    expect(linhas.filter((l) => l.pasta === "c3")).toHaveLength(30)
   })
 
   it("formata cada caso com pasta, id, tipo e título", () => {

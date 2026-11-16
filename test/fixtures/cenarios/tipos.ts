@@ -48,6 +48,14 @@ export type Cenario = {
   mensagens?: { autor: "pessoa" | "agente"; texto: string; caminho?: Caminho }[]
   // Respostas da pessoa às pausas, na ordem em que as perguntas saem (rodarCenario).
   respostas?: RespostaDaPessoa[]
+  // Decisão do bloco de aprovação: posições das linhas (a partir de 1), ou "agora_nao" (nada). Sem ela, o bloco fica aberto.
+  aprovacao?: { aprovar: number[] } | "agora_nao"
+  // Segunda mensagem da mesma conversa, depois do bloco (D16).
+  depois?: {
+    mensagem: MensagemRecebida
+    interpretacao: SaidaDoInterprete
+    roteiro: PassoRoteirizado[]
+  }
   roteiro: PassoRoteirizado[]
 }
 

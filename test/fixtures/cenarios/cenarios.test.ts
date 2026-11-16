@@ -1,8 +1,31 @@
 import { describe, expect, it } from "vitest"
-import { cenarios, cenariosComPausa, cenariosDeConversa, montarCenario } from "./index"
+import { preparar } from "@/core/agents/companion/preparo"
+import { createContainer } from "@/infra/container"
+import {
+  cenarios,
+  cenariosComAprovacao,
+  cenariosComPausa,
+  cenariosDeConversa,
+  montarCenario,
+} from "./index"
+import type { DepsDoCenario } from "./montar"
 import { rodarCenario } from "./rodar"
 
 const NOVOS_COM_PAUSA = Object.keys(cenariosComPausa)
+
+// Preparo da mensagem "e no jantar?" (momento, sem estados): o mesmo que o Acompanhante roda na segunda mensagem.
+function preparoDaSegunda(deps: DepsDoCenario, contaId: string) {
+  return preparar(
+    {
+      stores: deps.stores,
+      kb: createContainer().knowledge,
+      clock: deps.clock,
+      telemetry: deps.telemetry,
+    },
+    contaId,
+    { intencoes: ["momento"], estados: [], evitar_da_mensagem: [] },
+  )
+}
 
 async function rodarNovo(nome: string) {
   const c = cenariosComPausa[nome]
@@ -105,5 +128,78 @@ describe("cenários com pausa", () => {
       )
       expect(rodada.perguntas, nome).toHaveLength(0)
     }
+  })
+})
+
+describe("cenários com aprovação", () => {
+  it("aprovacao-parcial tem casa e rotina no bloco, grava só a casa e não anota a rotina", async () => {
+    const c = cenariosComAprovacao["aprovacao-parcial"]
+    if (!c) throw new Error("cenário ausente: aprovacao-parcial")
+    const { contaId, deps } = await montarCenario(c)
+    const rodada = await rodarCenario(deps, contaId, c)
+    expect(rodada.bloco?.propostas.map((p) => p.tool)).toEqual(["casa.propor", "memoria.propor"])
+    expect(rodada.bloco?.aprovadas).toHaveLength(1)
+    expect(rodada.bloco?.resultado.gravadas.map((p) => p.tool)).toEqual(["casa.propor"])
+    const itens = await deps.stores.pantry.listar(contaId)
+    expect(itens.some((i) => i.alimento_id === "abobora")).toBe(true)
+    expect(await deps.stores.routine.notasAtivas(contaId)).toEqual([])
+  })
+
+  it("faltou-hoje pausa pela casa e põe o gengibre na lista depois de aprovar", async () => {
+    const c = cenariosComAprovacao["faltou-hoje"]
+    if (!c) throw new Error("cenário ausente: faltou-hoje")
+    const { contaId, deps } = await montarCenario(c)
+    const rodada = await rodarCenario(deps, contaId, c)
+    expect(rodada.perguntas).toHaveLength(1)
+    const textos = rodada.bloco?.propostas.map((p) => p.texto) ?? []
+    expect(textos).toHaveLength(1)
+    expect(textos[0]?.startsWith('Gengibre na lista "Para ter em casa" (faltou para ')).toBe(true)
+    const lista = await deps.stores.shortages.lista(contaId)
+    expect(lista.map((i) => i.alimento_id)).toEqual(["gengibre"])
+  })
+
+  it("vegetariana: Agora não não grava a restrição e a segunda mensagem sai sem o que ela barra", async () => {
+    const c = cenariosComAprovacao.vegetariana
+    if (!c) throw new Error("cenário ausente: vegetariana")
+    const { contaId, deps } = await montarCenario(c)
+    const rodada = await rodarCenario(deps, contaId, c)
+    expect(rodada.bloco?.propostas.map((p) => p.texto)).toEqual(["Sua alimentação é vegetariana"])
+    expect(rodada.bloco?.aprovadas).toEqual([])
+    const perfil = await deps.stores.profiles.ler(contaId)
+    expect(perfil.restricoes).toEqual([])
+    expect(rodada.depois?.final.status).toBe("done")
+    // A restrição de hoje está na lista do dia, que a primeira mensagem gravou; o preparo da segunda a lê.
+    const dados = await preparoDaSegunda(deps, contaId)
+    expect(dados.filtro.restricoes).toContain("vegetariana")
+    expect(dados.candidatos.length).toBeGreaterThan(0)
+  })
+
+  it("vegetariana: antes da primeira mensagem, o preparo não traz a restrição do dia (controle)", async () => {
+    const c = cenariosComAprovacao.vegetariana
+    if (!c) throw new Error("cenário ausente: vegetariana")
+    const { contaId, deps } = await montarCenario(c)
+    const dados = await preparoDaSegunda(deps, contaId)
+    expect(dados.filtro.restricoes).not.toContain("vegetariana")
+  })
+
+  it("casa-sozinha aprova o bloco e Minha casa tem abóbora, couve e pitaia", async () => {
+    const c = cenariosDeConversa["casa-sozinha"]
+    if (!c) throw new Error("cenário ausente: casa-sozinha")
+    const { contaId, deps } = await montarCenario(c)
+    const rodada = await rodarCenario(deps, contaId, c)
+    expect(rodada.bloco?.resultado.gravadas).toHaveLength(1)
+    const itens = await deps.stores.pantry.listar(contaId)
+    const ids = itens.map((i) => i.alimento_id)
+    expect(ids).toEqual(expect.arrayContaining(["abobora", "couve"]))
+    expect(itens.some((i) => i.nome_livre === "pitaia")).toBe(true)
+  })
+
+  it("o registro de aprovação tem os três novos e a conversa segue com sete", () => {
+    expect(Object.keys(cenariosComAprovacao).sort()).toEqual([
+      "aprovacao-parcial",
+      "faltou-hoje",
+      "vegetariana",
+    ])
+    expect(Object.keys(cenariosDeConversa)).toHaveLength(7)
   })
 })

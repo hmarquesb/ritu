@@ -11,6 +11,7 @@ export const casaSozinha: Cenario = {
   casa: frioAgitada.casa,
   clima: frioAgitada.clima,
   mensagem: { texto: "fui à feira, trouxe abóbora, couve e pitaia", atalhos: [] },
+  aprovacao: { aprovar: [1] },
   interpretacao: {
     intencoes: ["casa"],
     estados: [],

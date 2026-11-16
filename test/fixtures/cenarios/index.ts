@@ -1,4 +1,5 @@
 import { alertaEmocional } from "./alerta-emocional"
+import { aprovacaoParcial } from "./aprovacao-parcial"
 import { autocorrecao } from "./autocorrecao"
 import { casaIncerta } from "./casa-incerta"
 import { casaSozinha } from "./casa-sozinha"
@@ -7,6 +8,7 @@ import { dorDeCabeca } from "./dor-de-cabeca"
 import { duasIntencoes } from "./duas-intencoes"
 import { estomagoPesado } from "./estomago-pesado"
 import { evitarSozinho } from "./evitar-sozinho"
+import { faltouHoje } from "./faltou-hoje"
 import { frioAgitada } from "./frio-agitada"
 import { ofensa } from "./ofensa"
 import { perguntaManga } from "./pergunta-manga"
@@ -15,6 +17,7 @@ import { retornoConversa } from "./retorno-conversa"
 import { semModelo } from "./sem-modelo"
 import { soAtalhos } from "./so-atalhos"
 import type { Cenario as CenarioBase, CenarioComEntrada, CenarioDeConversa } from "./tipos"
+import { vegetariana } from "./vegetariana"
 
 // Os cenários da 007 têm entrada: é o tipo que os consumidores veem como Cenario.
 export type Cenario = CenarioComEntrada
@@ -56,6 +59,13 @@ export const cenariosComPausa: Record<string, CenarioDeConversa> = {
   "casa-vazia": comMensagem(casaVazia),
   "dor-de-cabeca": comMensagem(dorDeCabeca),
   "pergunta-recusada": comMensagem(perguntaRecusada),
+}
+
+// Os três da aprovação (D16): passam pela conversa, com decisão do bloco e, nos que têm `depois`, segunda mensagem.
+export const cenariosComAprovacao: Record<string, CenarioDeConversa> = {
+  "aprovacao-parcial": comMensagem(aprovacaoParcial),
+  "faltou-hoje": comMensagem(faltouHoje),
+  vegetariana: comMensagem(vegetariana),
 }
 
 export { type DepsDoCenario, montarCenario, type OpcoesDoCenario } from "./montar"

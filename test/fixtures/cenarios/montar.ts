@@ -1,6 +1,7 @@
 import { llmCotas, type Papel } from "@config/llm-cotas"
 import type { createCompanion } from "@/core/agents/companion/responder"
 import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
+import type { SaidaDoInterprete } from "@/core/agents/interpreter/saida"
 import type { createConversation } from "@/core/conversation/conversar"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
@@ -42,6 +43,12 @@ export type OpcoesDoCenario = {
   llm?: LlmClient
   // Esgota, no dia, só o modelo principal do papel (registrarRateLimit × rateLimitsParaEsgotarODia).
   esgotar?: Papel
+}
+
+// Fila do Intérprete: a da mensagem e, com `depois`, a da segunda mensagem (D16).
+function interpretacoesDo(c: Cenario): SaidaDoInterprete[] {
+  const filas = [c.interpretacao, c.depois?.interpretacao]
+  return filas.filter((i): i is SaidaDoInterprete => i !== undefined)
 }
 
 const isoMenos = (iso: string, dias: number): string =>
@@ -207,9 +214,10 @@ export async function montarCenario(
   const telemetry = createMemoryTelemetry()
   const ledger = createMemoryLedger(clock)
   const weather = createFakeWeather()
-  const runtime = opts.runtime ?? createScriptedRuntime(c.roteiro, clock)
+  const runtime =
+    opts.runtime ?? createScriptedRuntime([...c.roteiro, ...(c.depois?.roteiro ?? [])], clock)
   const router = createModelRouter({ ledger, clock, telemetry })
-  const llm = opts.llm ?? createFakeLlm(c.interpretacao ? [c.interpretacao] : [])
+  const llm = opts.llm ?? createFakeLlm(interpretacoesDo(c))
   // O container lê a base real de data/ na primeira vez; os stores consultam a mesma base.
   const stores = createMemoryStores(clock, {
     alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),

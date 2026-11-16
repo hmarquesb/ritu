@@ -508,6 +508,75 @@ describe("formatarRelatorio · como ficou, gravado e toques", () => {
   })
 })
 
+describe("formatarRelatorio · rotina e padrões", () => {
+  const rotina = { versao: 2, texto: "Você acorda cedo e almoça em casa." }
+  const padroes: NonNullable<DadosDoRelatorio["padroes"]> = [
+    {
+      frase: "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar.",
+      status: "confirmado",
+    },
+    { frase: "Quando você está sem energia, costuma estar também pesada.", status: "candidato" },
+  ]
+  function dadosComBloco(extra: Partial<DadosDoRelatorio>): DadosDoRelatorio {
+    const dados = dadosDeExemplo()
+    const saida = { ...saidaDeExemplo(), propostas: propostasDoBloco }
+    return {
+      ...dados,
+      resposta: { ...dados.resposta, saida },
+      decisao: { aprovadas: 1, gravadas: [propostaDaCasa] },
+      ...extra,
+    }
+  }
+
+  it("sem rotina nem padrões, o relatório é igual ao de hoje", () => {
+    const dados = dadosDeExemplo()
+    const vazio = formatarRelatorio({ ...dados, rotina: undefined, padroes: [] })
+    expect(vazio).toBe(formatarRelatorio(dados))
+    expect(vazio).not.toContain("Rotina")
+    expect(vazio).not.toContain("Padrões")
+  })
+
+  it("com rotina de texto vazio, a seção Rotina não aparece", () => {
+    const texto = formatarRelatorio({ ...dadosDeExemplo(), rotina: { versao: 1, texto: "" } })
+    expect(texto).not.toContain("Rotina")
+  })
+
+  it("mostra Rotina com a versão e o texto, antes da resposta", () => {
+    const texto = formatarRelatorio({ ...dadosDeExemplo(), rotina })
+    expect(texto).toContain("Rotina\n  v2: Você acorda cedo e almoça em casa.")
+    expect(texto.indexOf("Rotina")).toBeLessThan(texto.indexOf("\nResposta\n"))
+    expect(texto.indexOf("Etapas")).toBeLessThan(texto.indexOf("Rotina"))
+  })
+
+  it("sem padrão, a seção Padrões não aparece", () => {
+    const texto = formatarRelatorio(dadosComBloco({ padroes: [] }))
+    expect(texto).not.toContain("Padrões")
+  })
+
+  it("mostra Padrões com a frase e o status, depois da decisão do bloco", () => {
+    const texto = formatarRelatorio(dadosComBloco({ padroes }))
+    expect(texto).toContain(
+      `Padrões\n  ${padroes[0]?.frase} · confirmado\n  ${padroes[1]?.frase} · candidato`,
+    )
+    expect(texto.indexOf("Decisão: Anotar 1 de 2")).toBeLessThan(texto.indexOf("Padrões"))
+    expect(texto.indexOf("Padrões")).toBeLessThan(texto.indexOf("Sugestões"))
+  })
+
+  it("com depois, cada relatório mostra a rotina e os padrões do seu bloco", () => {
+    const segundo = { ...dadosComBloco({ rotina: { versao: 3, texto: "Agora almoça fora." } }) }
+    const texto = formatarRelatorio(
+      dadosComBloco({
+        rotina,
+        padroes,
+        depois: { mensagem: "e agora?", relatorio: segundo },
+      }),
+    )
+    const depois = texto.indexOf("Depois: e agora?")
+    expect(texto.indexOf("v2: Você acorda")).toBeLessThan(depois)
+    expect(texto.indexOf("v3: Agora almoça fora.")).toBeGreaterThan(depois)
+  })
+})
+
 describe("linhaDoToque", () => {
   it("mostra o retorno com o resultado em português", () => {
     const ajudou: TocadoDoRelatorio = {

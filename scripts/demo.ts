@@ -14,6 +14,7 @@ import { textoDaMensagem } from "@/core/messages/texto"
 import type { ItemDaCasa } from "@/core/pantry/types"
 import type { ItemTipo } from "@/core/preferences/ports"
 import type { PropostaNaSaida } from "@/core/proposals/conteudo"
+import type { ResumoDeRotina } from "@/core/routine/ports"
 import type { EventoAoVivo } from "@/core/runs/loop"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { ResultadoDaTroca } from "@/core/touches"
@@ -25,6 +26,7 @@ import {
   cenariosComPausa,
   cenariosDeAprendizado,
   cenariosDeConversa,
+  cenariosDeMemoria,
   type DepsDoCenario,
   montarCenario,
   type OpcoesDoCenario,
@@ -61,6 +63,7 @@ function listarCenarios(): void {
     ...Object.values(cenariosComPausa),
     ...Object.values(cenariosComAprovacao),
     ...Object.values(cenariosDeAprendizado),
+    ...Object.values(cenariosDeMemoria),
   ]
   for (const c of todos) {
     console.log(`  ${c.nome}  ${c.descricao}`)
@@ -73,6 +76,7 @@ function acharCenario(nome: string): Cenario | CenarioDeConversa | undefined {
   if (Object.hasOwn(cenariosComPausa, nome)) return cenariosComPausa[nome]
   if (Object.hasOwn(cenariosComAprovacao, nome)) return cenariosComAprovacao[nome]
   if (Object.hasOwn(cenariosDeAprendizado, nome)) return cenariosDeAprendizado[nome]
+  if (Object.hasOwn(cenariosDeMemoria, nome)) return cenariosDeMemoria[nome]
   return undefined
 }
 
@@ -157,6 +161,8 @@ type Contexto = {
   contaId: string
   kb: KnowledgeBase
   coletor: ReturnType<typeof coletorDePensamentos>
+  // Resumo de rotina lido antes da primeira mensagem (o que ela usou).
+  rotinaAntes: ResumoDeRotina | undefined
 }
 
 // Nome do item da casa: pelo nome da base quando tem alimento_id; senão, o nome livre.
@@ -268,9 +274,11 @@ function linhasDosToques(ctx: Contexto, feitos: ToqueFeito[]): string[] {
   })
 }
 
+// Rotina e padrões: a rotina é a que a mensagem usou (passada por quem chama); os padrões, os da conta agora.
 async function relatorioDaRodada(
   ctx: Contexto,
   rodada: RodadaDoCenario,
+  rotina: ResumoDeRotina | undefined,
 ): Promise<DadosDoRelatorio> {
   const runId = rodada.final.run_id
   const run = await ctx.deps.stores.runs.buscar(ctx.contaId, runId)
@@ -278,6 +286,7 @@ async function relatorioDaRodada(
   const etapas = await ctx.deps.stores.runs.etapas(ctx.contaId, runId)
   const decidido = rodada.bloco
   const toques = rodada.toques ? linhasDosToques(ctx, rodada.toques) : undefined
+  const padroes = await ctx.deps.stores.patterns.listar(ctx.contaId)
   return {
     nome: ctx.cenario.nome,
     resposta: rodada.final,
@@ -287,6 +296,8 @@ async function relatorioDaRodada(
     disclaimer: config.app.disclaimer,
     perguntas: rodada.perguntas,
     ...camposDaConversa(rodada.final),
+    ...(rotina ? { rotina: { versao: rotina.versao, texto: rotina.texto } } : {}),
+    padroes: padroes.map((p) => ({ frase: p.frase, status: p.status })),
     nomeDoEvitar: nomeDoEvitarDaBase(ctx.kb),
     minhaCasa: await minhaCasaDo(ctx),
     comoFicou: await comoFicouDo(ctx),
@@ -305,14 +316,16 @@ async function relatorioDaRodada(
 
 // Com `depois`, a segunda mensagem vira um relatório aninhado, depois da linha "Depois: ...".
 async function dadosDaSessao(ctx: Contexto, rodada: RodadaDoCenario): Promise<DadosDoRelatorio> {
-  const principal = await relatorioDaRodada(ctx, rodada)
+  const principal = await relatorioDaRodada(ctx, rodada, ctx.rotinaAntes)
   const depois = ctx.cenario.depois
   if (!rodada.depois || !depois) return principal
+  // A segunda mensagem usa o resumo como ficou depois da decisão do bloco (a rodada já terminou: nada muda depois dele).
+  const rotinaDepois = await ctx.deps.stores.routine.resumo(ctx.contaId)
   return {
     ...principal,
     depois: {
       mensagem: textoDaMensagem(depois.mensagem, ctx.kb),
-      relatorio: await relatorioDaRodada(ctx, rodada.depois),
+      relatorio: await relatorioDaRodada(ctx, rodada.depois, rotinaDepois),
     },
   }
 }
@@ -334,6 +347,7 @@ async function rodarDemo(
     ...(esgotar ? { esgotar } : {}),
   }
   const { contaId, deps } = await montarCenario(cenario, opcoes)
+  const rotinaAntes = await deps.stores.routine.resumo(contaId)
   const coletor = coletorDePensamentos()
   const terminal = interativo ? leitorDoTerminal() : undefined
   try {
@@ -346,7 +360,14 @@ async function rodarDemo(
           }
         : {}),
     })
-    const ctx: Contexto = { cenario, deps, contaId, kb: container.knowledge, coletor }
+    const ctx: Contexto = {
+      cenario,
+      deps,
+      contaId,
+      kb: container.knowledge,
+      coletor,
+      rotinaAntes,
+    }
     console.log(formatarRelatorio(await dadosDaSessao(ctx, rodada)))
     return 0
   } finally {

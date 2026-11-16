@@ -4,6 +4,7 @@ import type { SaidaDoAcompanhante, SugestaoEntregue } from "@/core/agents/compan
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { Resultado } from "@/core/outcomes/ports"
+import type { StatusPadrao } from "@/core/patterns/ports"
 import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import { textoDaResposta } from "@/core/runs/pergunta"
@@ -54,6 +55,10 @@ export type DadosDoRelatorio = {
   minhaCasa?: { nome: string; estado: "tem" | "acabou" }[]
   // Segunda mensagem da conversa (com `depois`), com o relatório do seu run.
   depois?: { mensagem: string; relatorio: DadosDoRelatorio }
+  // Resumo de rotina em uso: o lido antes da mensagem (no `depois`, o lido depois da decisão do bloco). Sem texto, não aparece.
+  rotina?: { versao: number; texto: string }
+  // Padrões da conta depois da decisão do bloco; sem nenhum, a seção não aparece.
+  padroes?: { frase: string; status: StatusPadrao }[]
   // Retornos aguardando da conta depois da rodada, mais recente primeiro.
   comoFicou?: { titulo: string }[]
   // O que a entrega e a lista gravaram: faltas somadas, itens marcados como sugeridos e a lista Para ter em casa.
@@ -328,6 +333,18 @@ export function linhaDoToque(t: TocadoDoRelatorio): string {
   return linhaDaTroca(t)
 }
 
+// Rotina em uso: a versão e o texto do resumo. Sem texto, a seção não aparece.
+function secaoRotina(rotina: DadosDoRelatorio["rotina"]): string[] {
+  if (!rotina || rotina.texto.trim() === "") return []
+  return ["Rotina", `  v${rotina.versao}: ${rotina.texto}`]
+}
+
+// Padrões da conta: uma linha por padrão, com a frase e o status.
+function secaoPadroes(padroes: DadosDoRelatorio["padroes"]): string[] {
+  if (!padroes || padroes.length === 0) return []
+  return ["Padrões", ...padroes.map((p) => `  ${p.frase} · ${p.status}`)]
+}
+
 function secaoComoFicou(comoFicou: DadosDoRelatorio["comoFicou"]): string[] {
   if (!comoFicou || comoFicou.length === 0) return []
   return ["Como ficou?", ...comoFicou.map((r) => `  ${r.titulo}`)]
@@ -370,8 +387,10 @@ export function formatarRelatorio(d: DadosDoRelatorio): string {
     secaoEntendi(d.caminho, d.interpretacao, nomeDoEvitar),
     secaoEtapas(d.etapas, d.pensamentos),
     ...(d.perguntas ?? []).map(blocoDaPergunta),
+    secaoRotina(d.rotina),
     secaoResposta(saida?.resposta ?? ""),
     secaoDoBloco(d),
+    secaoPadroes(d.padroes),
     secaoComoFicou(d.comoFicou),
     secaoGravado(d.gravado),
     secaoToques(d.toques),

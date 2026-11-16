@@ -5,6 +5,7 @@ import {
   cenarios,
   cenariosComAprovacao,
   cenariosComPausa,
+  cenariosDeAprendizado,
   cenariosDeConversa,
   montarCenario,
 } from "./index"
@@ -201,5 +202,177 @@ describe("cenários com aprovação", () => {
       "vegetariana",
     ])
     expect(Object.keys(cenariosDeConversa)).toHaveLength(7)
+  })
+})
+
+// Os seis da 011: cada um confere o que a coluna "Mostra" pede, nos stores, na saída, nas etapas e no checkpoint.
+async function rodarAprendizado(nome: string) {
+  const c = cenariosDeAprendizado[nome]
+  if (!c) throw new Error(`cenário ausente: ${nome}`)
+  const { contaId, deps } = await montarCenario(c)
+  const rodada = await rodarCenario(deps, contaId, c)
+  return { c, contaId, deps, rodada }
+}
+
+describe("cenários de aprendizado (011)", () => {
+  it("o registro de aprendizado tem os seis e a conversa segue com sete", () => {
+    expect(Object.keys(cenariosDeAprendizado).sort()).toEqual([
+      "dois-nao-ajudou",
+      "entrega-registrada",
+      "gosto-escrito",
+      "nao-tenho-com-pergunta",
+      "retorno-pelo-agente",
+      "troca-por-toque",
+    ])
+    expect(Object.keys(cenariosDeConversa)).toHaveLength(7)
+  })
+
+  it("entrega-registrada: três retornos aguardando, faltas gravadas, cardamomo aprovado na lista", async () => {
+    const { contaId, deps, rodada } = await rodarAprendizado("entrega-registrada")
+    expect(rodada.final.status).toBe("waiting_for_approval")
+    expect(rodada.bloco?.propostas.map((p) => p.tool)).toEqual(["lista.propor"])
+    expect(rodada.bloco?.propostas[0]?.texto.startsWith("Cardamomo na lista")).toBe(true)
+    expect(rodada.bloco?.resultado.gravadas).toHaveLength(1)
+    const pendentes = await deps.stores.outcomes.pendentes(contaId)
+    expect(pendentes).toHaveLength(3)
+    const lista = await deps.stores.shortages.lista(contaId)
+    expect(lista.map((i) => [i.alimento_id, i.motivo, i.detalhe])).toEqual([
+      ["cardamomo", "fez_falta", "3"],
+    ])
+    // O cardamomo já tinha três faltas (nao_tenho) e não entra de novo nas faltas de hoje: o que a entrega grava é o que faltou no preparo.
+    const faltas = await deps.stores.shortages.diasComFalta(contaId, "2026-06-15")
+    expect(faltas.map((f) => f.alimento_id).sort()).toEqual(["mandioca", "tofu"])
+    expect(faltas.every((f) => f.ultimo_dia === "2026-06-15")).toBe(true)
+    const sugeridos = await deps.stores.preferences.ler(contaId, [
+      { tipo: "pratica", id: "cha-gengibre-canela" },
+    ])
+    expect(sugeridos[0]?.ultima_sugestao_em).not.toBeNull()
+  })
+
+  it("troca-por-toque: canela troca por cravo na hora, sem etapa llm nova", async () => {
+    const c = cenariosDeAprendizado["troca-por-toque"]
+    if (!c) throw new Error("cenário ausente: troca-por-toque")
+    const { contaId, deps } = await montarCenario(c)
+    const semToque = { ...c, toques: undefined }
+    const antes = await rodarCenario(deps, contaId, semToque)
+    const llmAntes = (await deps.stores.runs.etapas(contaId, antes.final.run_id)).filter(
+      (e) => e.tipo === "llm",
+    )
+    const resultado = await deps.touches.trocarIngrediente(contaId, {
+      runId: antes.final.run_id,
+      sugestao: 0,
+      alimento_id: "canela",
+      motivo: "trocar",
+    })
+    expect(resultado.resultado).toBe("trocou")
+    if (resultado.resultado !== "trocou") throw new Error("troca não aconteceu")
+    const item = resultado.sugestao.itens.find((i) => i.alimento_id === "canela")
+    expect(item?.troca?.alimento_id).toBe("cravo")
+    expect(item?.troca?.frase).toBe("Troquei canela por cravo: os dois aquecem e aliviam o peso.")
+    const llmDepois = (await deps.stores.runs.etapas(contaId, antes.final.run_id)).filter(
+      (e) => e.tipo === "llm",
+    )
+    expect(llmDepois).toHaveLength(llmAntes.length)
+    const retornoId = antes.final.saida?.sugestoes[0]?.retorno_id
+    const aguardando = (await deps.stores.outcomes.pendentes(contaId)).find(
+      (r) => r.id === retornoId,
+    )
+    expect(aguardando?.sugestao.alimentos).toEqual(expect.arrayContaining(["cravo", "gengibre"]))
+    expect(aguardando?.sugestao.alimentos).not.toContain("canela")
+  })
+
+  it("troca-por-toque: o toque de rodarCenario grava a troca e o cenário termina", async () => {
+    const { rodada } = await rodarAprendizado("troca-por-toque")
+    expect(rodada.toques?.[0]).toMatchObject({ tipo: "troca", resultado: { resultado: "trocou" } })
+  })
+
+  it("nao-tenho-com-pergunta: gengibre acabou, pergunta pelo candidato, Não tenho nele, semSubstituto", async () => {
+    const { contaId, deps, rodada } = await rodarAprendizado("nao-tenho-com-pergunta")
+    const [toque] = rodada.toques ?? []
+    expect(toque?.tipo).toBe("troca")
+    if (toque?.tipo !== "troca") throw new Error("toque ausente")
+    expect(toque.resultado.resultado).toBe("perguntar")
+    if (toque.resultado.resultado !== "perguntar") throw new Error("sem pergunta")
+    const candidato = toque.resultado.pergunta.alimento_id
+    expect(toque.resultado.pergunta.texto).toBe(
+      `Você tem ${toque.resultado.pergunta.nome.toLowerCase()} em casa?`,
+    )
+    expect(toque.resposta).toEqual({
+      resultado: "sem_substituto",
+      texto: "Não achei uma troca para gengibre com o que você tem em casa.",
+    })
+    const casa = await deps.stores.pantry.listar(contaId)
+    expect(casa.find((i) => i.alimento_id === "gengibre")?.estado).toBe("acabou")
+    const faltas = await deps.stores.shortages.diasComFalta(contaId, "2026-01-01")
+    expect(faltas.map((f) => f.alimento_id)).toEqual(
+      expect.arrayContaining(["gengibre", candidato]),
+    )
+    const metricas = deps.telemetry.metricas
+    expect(
+      metricas.filter(
+        (m) =>
+          m.nome === "ritu_troca_ingrediente_total" && m.rotulos?.resultado === "sem_substituto",
+      ),
+    ).toHaveLength(1)
+    expect(
+      metricas.filter((m) => m.nome === "ritu_faltas_total" && m.rotulos?.origem === "nao_tenho"),
+    ).toHaveLength(2)
+  })
+
+  it("dois-nao-ajudou: o chá sai da primeira resposta e vai para o fim do seu tipo no preparo seguinte", async () => {
+    const { contaId, deps, rodada } = await rodarAprendizado("dois-nao-ajudou")
+    expect(rodada.toques?.map((t) => t.tipo === "retorno" && t.retorno.resultado)).toEqual([
+      "nao_ajudou",
+      "nao_ajudou",
+    ])
+    const pratica = await deps.stores.preferences.ler(contaId, [
+      { tipo: "pratica", id: "cha-gengibre" },
+    ])
+    expect(pratica[0]?.nao_ajudou).toBe(2)
+    const sugeridos = rodada.final.saida?.sugestoes.map((s) => s.pratica_id) ?? []
+    expect(sugeridos).not.toContain("cha-gengibre")
+    expect(rodada.depois?.final.status).toBe("done")
+    // O preparo da mensagem seguinte (com_frio), como o da segunda mensagem do cenário; o checkpoint do run encerrado não guarda o preparo.
+    const dados = await preparar(
+      {
+        stores: deps.stores,
+        kb: createContainer().knowledge,
+        clock: deps.clock,
+        telemetry: deps.telemetry,
+      },
+      contaId,
+      { intencoes: ["momento"], estados: ["com_frio"], evitar_da_mensagem: [] },
+    )
+    // A ordem completa (candidatos_completos) põe o chá com dois "não ajudou" seguidos no fim dos chás; o corte por tipo o tira do contexto.
+    const chasNaOrdem = dados.candidatos_completos.filter((id) => id.startsWith("cha-"))
+    expect(chasNaOrdem.length).toBeGreaterThanOrEqual(2)
+    expect(chasNaOrdem[chasNaOrdem.length - 1]).toBe("cha-gengibre")
+    expect(dados.candidatos.some((c) => c.id === "cha-gengibre")).toBe(false)
+  })
+
+  it("retorno-pelo-agente: o ajudou da mensagem fecha o pendente 1 com origem conversa", async () => {
+    const { contaId, deps, rodada } = await rodarAprendizado("retorno-pelo-agente")
+    expect(rodada.final.status).toBe("done")
+    // O pendente 1 é o arroz (o mais recente); o chá da própria resposta também fica aguardando.
+    const pendentes = (await deps.stores.outcomes.pendentes(contaId)).map((r) => r.id)
+    expect(pendentes).not.toContain(deps.retornosSemeados[0])
+    expect(pendentes).toContain(deps.retornosSemeados[1])
+    const conversa = deps.telemetry.metricas.filter(
+      (m) =>
+        m.nome === "ritu_retorno_total" &&
+        m.rotulos?.resultado === "ajudou" &&
+        m.rotulos?.origem === "conversa",
+    )
+    expect(conversa).toHaveLength(1)
+  })
+
+  it("gosto-escrito: a linha Você gosta de gengibre vai no bloco, é aprovada e grava a preferência", async () => {
+    const { contaId, deps, rodada } = await rodarAprendizado("gosto-escrito")
+    expect(rodada.bloco?.propostas.map((p) => p.texto)).toEqual(["Você gosta de gengibre"])
+    expect(rodada.bloco?.aprovadas).toHaveLength(1)
+    const [pref] = await deps.stores.preferences.ler(contaId, [
+      { tipo: "alimento", id: "gengibre" },
+    ])
+    expect(pref?.gosto).toBe("gosta")
   })
 })

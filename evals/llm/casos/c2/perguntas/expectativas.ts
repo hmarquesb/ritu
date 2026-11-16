@@ -87,8 +87,9 @@ export const sugestaoQueRefresca = (): ExpectativaDaConversa =>
     ),
   )
 
+// O runner não aprova: o run termina done ou parado no bloco de aprovação.
 export const terminou = (): ExpectativaDaConversa =>
-  exp("termina o run", (r) => r.resposta.status === "done")
+  exp("termina o run", (r) => ["done", "waiting_for_approval"].includes(r.resposta.status))
 
 // O item que a pessoa marcou como "não gosto" não sai na saída.
 export const semItemNaoGostado = (): ExpectativaDaConversa =>

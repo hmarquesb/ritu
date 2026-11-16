@@ -41,6 +41,14 @@ export type ResultadoDoCaso = {
   perguntas?: string[]
   /** Etapas ask_user recusadas pelo código no run. */
   recusadas?: number
+  /** Caso conversa de proposta: se o run devia propor no bloco (esperada) ou não propor (nenhuma). Ausente = sem seção Propostas. */
+  proposta?: "esperada" | "nenhuma"
+  /** Propostas da saída do run (o bloco). Ausente quando o run não chegou a uma saída. */
+  propostas?: number
+  /** Chamadas de tool de proposta recusadas pelo código no run. */
+  propostasRecusadas?: number
+  /** Status do run lido depois do bloco: waiting_for_approval quando o runner não decidiu o bloco. */
+  statusDoRun?: string
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaMs: number
@@ -288,6 +296,55 @@ export function resumirPerguntas(casos: ResultadoDoCaso[]): ResumoDePerguntas {
   }
 }
 
+export type ResumoDePropostas = {
+  casos: number
+  corretas: number
+  recusadas: number
+  runs: number
+}
+
+// Acerto de uma proposta: a esperada tem ao menos uma e todos os deve; a nenhuma não tem nenhuma. Erro não acerta.
+function acertouAProposta(c: ResultadoDoCaso): boolean {
+  if (c.erro || c.propostas === undefined) return false
+  if (c.proposta === "esperada") return c.propostas > 0 && todosOk(c.deve)
+  return c.propostas === 0
+}
+
+function comProposta(casos: ResultadoDoCaso[]): ResultadoDoCaso[] {
+  return casos.filter((c) => c.proposta !== undefined)
+}
+
+export function resumirPropostas(casos: ResultadoDoCaso[]): ResumoDePropostas {
+  const marcados = comProposta(casos)
+  const runs = casos.filter((c) => c.tipo === "conversa" && c.propostasRecusadas !== undefined)
+  return {
+    casos: marcados.length,
+    corretas: marcados.filter(acertouAProposta).length,
+    recusadas: soma(runs.map((c) => c.propostasRecusadas ?? 0)),
+    runs: runs.length,
+  }
+}
+
+function linhaDeProposta(c: ResultadoDoCaso): string {
+  const quantas = c.erro ? `erro: ${c.erro}` : String(c.propostas ?? "n/d")
+  return `| ${c.id} | ${c.proposta} | ${quantas} | ${sim(acertouAProposta(c))} |`
+}
+
+function secaoDePropostas(casos: ResultadoDoCaso[]): string[] {
+  const r = resumirPropostas(casos)
+  const media = r.runs === 0 ? "0" : (r.recusadas / r.runs).toFixed(2)
+  return [
+    "## Propostas",
+    "",
+    "| Caso | Esperada | Propostas | Acertou |",
+    "|---|---|---|---|",
+    ...comProposta(casos).map(linhaDeProposta),
+    "",
+    `- Propostas corretas: ${r.corretas}/${r.casos} (${porcentagem(r.corretas, r.casos)})`,
+    `- Propostas recusadas pelo código por run: ${media} (${r.recusadas} no total, em ${r.runs} runs)`,
+  ]
+}
+
 function linhaDePergunta(c: ResultadoDoCaso): string {
   const rotulo = c.pergunta === "necessaria" ? "necessária" : "desnecessária"
   const feitas = (c.perguntas ?? []).join(", ") || "nenhuma"
@@ -378,6 +435,7 @@ export function formatarRelatorio(rodada: Rodada): string {
   if (r.casos > 0) linhas.push(...secaoDeRespostas(r))
   if (r.interprete.casos > 0) linhas.push("", ...secaoDoInterprete(rodada.casos, r.interprete))
   if (comPergunta(rodada.casos).length > 0) linhas.push("", ...secaoDePerguntas(rodada.casos))
+  if (comProposta(rodada.casos).length > 0) linhas.push("", ...secaoDePropostas(rodada.casos))
   linhas.push("", "## Custo por papel", "", ...tabelaDeCusto(r.uso))
   if (r.casos > 0) linhas.push(...secaoDeCasos(rodada.casos))
   linhas.push("", "## Falhas", "", ...(falhas.length > 0 ? falhas : ["Nenhuma."]))

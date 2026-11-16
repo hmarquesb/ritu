@@ -401,6 +401,67 @@ describe("seção Perguntas", () => {
   })
 })
 
+describe("seção Propostas", () => {
+  const conversa = (id: string, parcial: Partial<ResultadoDoCaso>) =>
+    caso({ id, tipo: "conversa", propostasRecusadas: 0, ...parcial })
+
+  const casos = [
+    conversa("pr1", { proposta: "esperada", propostas: 1, propostasRecusadas: 1 }),
+    conversa("pr2", { proposta: "esperada", propostas: 0 }),
+    conversa("pr3", { proposta: "nenhuma", propostas: 0 }),
+    conversa("pr4", { proposta: "nenhuma", propostas: 2, propostasRecusadas: 1 }),
+    conversa("pr5", {
+      proposta: "esperada",
+      propostas: 1,
+      deve: [{ descricao: "a", ok: false }],
+    }),
+    conversa("pr6", { proposta: "esperada", erro: "pausou_acima_do_teto" }),
+  ]
+
+  it("mostra acerto por caso e o total, com a média de recusas por run", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v4",
+      totalDeCasos: 6,
+      casos,
+    })
+    expect(texto).toContain("## Propostas")
+    expect(texto).toContain("| pr1 | esperada | 1 | sim |")
+    expect(texto).toContain("| pr2 | esperada | 0 | não |")
+    expect(texto).toContain("| pr3 | nenhuma | 0 | sim |")
+    expect(texto).toContain("| pr4 | nenhuma | 2 | não |")
+    expect(texto).toContain("| pr5 | esperada | 1 | não |")
+    expect(texto).toContain("| pr6 | esperada | erro: pausou_acima_do_teto | não |")
+    expect(texto).toContain("- Propostas corretas: 2/6 (33%)")
+    expect(texto).toContain(
+      "- Propostas recusadas pelo código por run: 0.33 (2 no total, em 6 runs)",
+    )
+  })
+
+  it("esperada sem proposta, ou nenhuma com proposta, não acerta", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v4",
+      totalDeCasos: 2,
+      casos: [
+        conversa("x1", { proposta: "esperada", propostas: 0 }),
+        conversa("x2", { proposta: "nenhuma", propostas: 1 }),
+      ],
+    })
+    expect(texto).toContain("- Propostas corretas: 0/2 (0%)")
+  })
+
+  it("sem casos com proposta, a seção não aparece, mesmo com recusas", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v4",
+      totalDeCasos: 1,
+      casos: [conversa("y", { propostasRecusadas: 1 })],
+    })
+    expect(texto).not.toContain("## Propostas")
+  })
+})
+
 describe("seções sem caso do tipo não aparecem", () => {
   it("só com Intérprete, não há Métricas, Casos nem Violações", () => {
     const texto = formatarRelatorio({

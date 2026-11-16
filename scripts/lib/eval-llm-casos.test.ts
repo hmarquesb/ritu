@@ -62,6 +62,7 @@ import {
 } from "../../src/infra/fakes/scripted-runtime"
 import { cenariosComPausa, cenariosDeConversa, montarCenario } from "../../test/fixtures/cenarios"
 import {
+  cenarioDoRunner,
   conferir,
   contarEtapas,
   despachar,
@@ -347,6 +348,59 @@ const passa = (
   return e.confere({ interpretacao: { ...base, ...dados }, caminho: c })
 }
 
+describe("runner da conversa com proposta", () => {
+  const casaSozinha = cenariosDeConversa["casa-sozinha"]
+  if (!casaSozinha) throw new Error("cenário casa-sozinha ausente")
+  const { roteiro, respostas: _respostas, ...semRoteiro } = casaSozinha
+
+  const casoDeProposta = (parcial: Partial<CasoConversa> = {}): CasoConversa => ({
+    tipo: "conversa",
+    id: "t-proposta",
+    titulo: "Compras da feira",
+    cenario: semRoteiro,
+    proposta: "esperada",
+    deve: [
+      {
+        descricao: "termina no bloco, com ao menos uma proposta",
+        confere: ({ resposta, propostas }) =>
+          resposta.status === "waiting_for_approval" && propostas.length > 0,
+      },
+    ],
+    naoPode: [],
+    ...parcial,
+  })
+
+  const opcoes = () => ({
+    runtime: createScriptedRuntime(roteiro),
+    llm: createFakeLlm([casaSozinha.interpretacao]),
+  })
+
+  it("o caso termina no bloco: a expectativa vê as propostas e o resultado sai com a contagem", async () => {
+    const r = await rodarConversa(casoDeProposta(), opcoes())
+
+    expect(r.erro).toBeUndefined()
+    expect(r.deve.every((x) => x.ok)).toBe(true)
+    expect(r.proposta).toBe("esperada")
+    expect(r.propostas).toBeGreaterThan(0)
+    expect(r.propostasRecusadas).toBe(0)
+  })
+
+  it("o runner não decide o bloco: o run lido do store depois do caso segue waiting_for_approval", async () => {
+    const r = await rodarConversa(casoDeProposta(), opcoes())
+    expect(r.statusDoRun).toBe("waiting_for_approval")
+  })
+
+  it("o cenário do runner sai sem a decisão do bloco, para que nunca se aprove", () => {
+    const original = cenariosDeConversa["casa-sozinha"]
+    const sem = cenarioDoRunner(semRoteiro)
+
+    expect("aprovacao" in sem).toBe(false)
+    expect(sem.mensagem).toEqual(semRoteiro.mensagem)
+    expect(semRoteiro.aprovacao).toEqual({ aprovar: [1] })
+    expect(original?.aprovacao).toEqual({ aprovar: [1] })
+  })
+})
+
 describe("runner da conversa com pausa", () => {
   const casaIncerta = cenariosComPausa["casa-incerta"]
   if (!casaIncerta) throw new Error("cenário casa-incerta ausente")
@@ -515,12 +569,20 @@ describe("contagem de recusas e de chamadas antes da pausa", () => {
       etapa("validacao", "ask_user", 4, "recusado"),
       etapa("llm", "decisao", 5),
     ]
-    expect(contarEtapas(etapas)).toEqual({ recusadas: 1, llmAntesDaPrimeiraPausa: 1 })
+    expect(contarEtapas(etapas)).toEqual({
+      recusadas: 1,
+      llmAntesDaPrimeiraPausa: 1,
+      propostasRecusadas: 0,
+    })
   })
 
   it("sem pausa, conta todas as chamadas de modelo", () => {
     const etapas = [etapa("llm", "decisao", 1), etapa("llm", "decisao", 2)]
-    expect(contarEtapas(etapas)).toEqual({ recusadas: 0, llmAntesDaPrimeiraPausa: 2 })
+    expect(contarEtapas(etapas)).toEqual({
+      recusadas: 0,
+      llmAntesDaPrimeiraPausa: 2,
+      propostasRecusadas: 0,
+    })
   })
 
   it("só ask_user recusado conta; outra tool recusada e ask_user aceito não", () => {
@@ -528,7 +590,23 @@ describe("contagem de recusas e de chamadas antes da pausa", () => {
       etapa("validacao", "finalizar", 1, "recusado"),
       etapa("validacao", "ask_user", 2, "ok"),
     ]
-    expect(contarEtapas(etapas)).toEqual({ recusadas: 0, llmAntesDaPrimeiraPausa: 0 })
+    expect(contarEtapas(etapas)).toEqual({
+      recusadas: 0,
+      llmAntesDaPrimeiraPausa: 0,
+      propostasRecusadas: 0,
+    })
+  })
+
+  it("conta as propostas recusadas pelo código: tool de proposta com resumo recusado:", () => {
+    const comResumo = (e: RunEtapa, resumo: string | null): RunEtapa => ({ ...e, resumo })
+    const etapas = [
+      comResumo(etapa("tool", "memoria.propor", 1), "recusado: conteudo_invalido"),
+      comResumo(etapa("tool", "lista.propor", 2), "recusado: fora_da_lista"),
+      comResumo(etapa("tool", "lista.propor", 3), "proposto"),
+      comResumo(etapa("tool", "finalizar", 4), "recusado: validacao"),
+      comResumo(etapa("tool", "memoria.propor", 5), null),
+    ]
+    expect(contarEtapas(etapas).propostasRecusadas).toBe(2)
   })
 })
 
@@ -741,6 +819,8 @@ describe("expectativas da conversa de Perguntas", () => {
     perguntas: [],
     recusadas: 0,
     llmAntesDaPrimeiraPausa: 0,
+    propostas: [],
+    propostasRecusadas: 0,
     ...p,
   })
 
@@ -869,6 +949,13 @@ describe("expectativas da conversa de Perguntas", () => {
       resposta: { run_id: "run-eval", status: "waiting_for_input", caminho: "acompanhante" },
     }
     expect(passa(terminou(), pausado)).toBe(false)
+  })
+
+  it("terminou aceita o run parado no bloco de aprovação, que é onde o runner para", () => {
+    const noBloco: Partial<Entrada> = {
+      resposta: { run_id: "run-eval", status: "waiting_for_approval", caminho: "casa" },
+    }
+    expect(passa(terminou(), noBloco)).toBe(true)
   })
 
   it("semItemNaoGostado confere que o item marcado como não gosto não sai", () => {

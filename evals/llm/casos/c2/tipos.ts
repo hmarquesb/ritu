@@ -3,6 +3,7 @@ import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { RespostaDaConversa } from "@/core/conversation/conversar"
 import type { Estado } from "@/core/knowledge/vocab"
 import type { SugestaoRegistrada } from "@/core/memory-schemas"
+import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Caminho } from "@/core/runs/ports"
 import type { CenarioDeConversa } from "../../../../test/fixtures/cenarios/tipos"
@@ -39,6 +40,10 @@ export type ExpectativaDaConversa = {
     recusadas: number
     // Chamadas de modelo antes da primeira pergunta (todas, sem pergunta).
     llmAntesDaPrimeiraPausa: number
+    // Propostas da saída (vazio sem saída); o runner não aprova, então o caso termina no bloco.
+    propostas: PropostaNaSaida[]
+    // Chamadas de tool de proposta (memoria.propor, lista.propor) recusadas pelo código no run.
+    propostasRecusadas: number
   }) => boolean
 }
 
@@ -53,6 +58,8 @@ export type CasoConversa = {
   respostas?: (RespostaDaPessoa | ((p: Pergunta) => RespostaDaPessoa))[]
   // Só nos casos de pergunta: se o run devia perguntar (necessaria) ou não (desnecessaria).
   pergunta?: "necessaria" | "desnecessaria"
+  // Só nos casos com proposta: se o run devia propor algo no bloco (esperada) ou não propor nada (nenhuma).
+  proposta?: "esperada" | "nenhuma"
   deve: ExpectativaDaConversa[]
   naoPode: ExpectativaDaConversa[]
 }

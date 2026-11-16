@@ -133,6 +133,7 @@ function rodarQualquer(container: Container, caso: CasoDoEval): Promise<Resultad
         kb: container.knowledge,
         clock: container.clock,
       }),
+    // A conversa para no bloco de aprovação: o runner nunca aprova (D18).
     conversa: (c) => rodarConversa(c, { runtime: container.runtime, llm: container.llm }),
   })
 }

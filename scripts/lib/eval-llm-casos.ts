@@ -292,7 +292,13 @@ export async function rodarInterprete(
 
 export type OpcoesDaConversa = { runtime: AgentRuntime; llm: LlmClient }
 
-export type ContagemDasEtapas = { recusadas: number; llmAntesDaPrimeiraPausa: number }
+export type ContagemDasEtapas = {
+  recusadas: number
+  llmAntesDaPrimeiraPausa: number
+  propostasRecusadas: number
+}
+
+const FERRAMENTAS_DE_PROPOSTA = ["memoria.propor", "lista.propor"]
 
 /** Recusas de ask_user e chamadas de modelo antes da primeira pergunta; sem pergunta, todas as chamadas. */
 export function contarEtapas(etapas: RunEtapa[]): ContagemDasEtapas {
@@ -303,7 +309,24 @@ export function contarEtapas(etapas: RunEtapa[]): ContagemDasEtapas {
   const corte =
     ordensDasPerguntas.length > 0 ? Math.min(...ordensDasPerguntas) : Number.POSITIVE_INFINITY
   const llmAntesDaPrimeiraPausa = etapas.filter((e) => e.tipo === "llm" && e.ordem < corte).length
-  return { recusadas, llmAntesDaPrimeiraPausa }
+  const propostasRecusadas = etapas.filter(
+    (e) =>
+      e.tipo === "tool" &&
+      FERRAMENTAS_DE_PROPOSTA.includes(e.nome) &&
+      (e.resumo ?? "").startsWith("recusado:"),
+  ).length
+  return { recusadas, llmAntesDaPrimeiraPausa, propostasRecusadas }
+}
+
+/**
+ * Cenário que o runner da conversa roda, sem a decisão do bloco de aprovação (D18).
+ * Com `aprovacao` o runner aprovaria; sem ela o bloco fica aberto e o caso termina em waiting_for_approval.
+ */
+export function cenarioDoRunner<C extends { aprovacao?: unknown }>(
+  cenario: C,
+): Omit<C, "aprovacao"> {
+  const { aprovacao: _decisao, ...resto } = cenario
+  return resto
 }
 
 // A conversa devolve resposta de conversa; a de acompanhante não passa por aqui.
@@ -317,7 +340,7 @@ const MOTIVO_PAUSA_ACIMA_DO_TETO = "pausou mais de 3 vezes"
 // Caso falho por pausa acima do teto: as expectativas contam como não cumpridas, no formato do Intérprete com erro.
 function pausadoAcimaDoTeto(
   caso: CasoConversa,
-  d: { latenciaMs: number; perguntas: string[]; recusadas: number },
+  d: { latenciaMs: number; perguntas: string[]; recusadas: number; propostasRecusadas: number },
 ): ResultadoDoCaso {
   return {
     id: caso.id,
@@ -334,6 +357,8 @@ function pausadoAcimaDoTeto(
     pergunta: caso.pergunta,
     perguntas: d.perguntas,
     recusadas: d.recusadas,
+    proposta: caso.proposta,
+    propostasRecusadas: d.propostasRecusadas,
     uso: {},
     trocas: 0,
     latenciaMs: d.latenciaMs,
@@ -355,7 +380,7 @@ export async function rodarConversa(
   caso: CasoConversa,
   opts: OpcoesDaConversa,
 ): Promise<ResultadoDoCaso> {
-  const cenario = { ...caso.cenario, roteiro: [] }
+  const cenario = { ...cenarioDoRunner(caso.cenario), roteiro: [] }
   const { contaId, deps } = await montarCenario(cenario, opts)
   const inicio = performance.now()
   const rodada = await rodarCenario(deps, contaId, cenario, {
@@ -370,12 +395,18 @@ export async function rodarConversa(
   const perguntas = rodada.perguntas.map((p) => p.pergunta.tipo)
   // Ainda pausado depois do teto de retomadas: o caso falha com o motivo e a rodada segue.
   if (resposta.status === "waiting_for_input") {
-    return pausadoAcimaDoTeto(caso, { latenciaMs, perguntas, recusadas: contagem.recusadas })
+    return pausadoAcimaDoTeto(caso, {
+      latenciaMs,
+      perguntas,
+      recusadas: contagem.recusadas,
+      propostasRecusadas: contagem.propostasRecusadas,
+    })
   }
   if (!resposta.saida) throw new Error(`run ${resposta.run_id} pausou sem saída`)
   if (resposta.saida.origem === "sem_modelo") throw new SemModeloError()
   const r = colherResultado(resposta.saida, resposta.status, etapas)
-  const alvo = { resposta, resultado: r, perguntas: rodada.perguntas, ...contagem }
+  const propostas = resposta.saida.propostas
+  const alvo = { resposta, resultado: r, perguntas: rodada.perguntas, propostas, ...contagem }
   return {
     ...resultadoDaResposta({
       caso,
@@ -390,5 +421,9 @@ export async function rodarConversa(
     pergunta: caso.pergunta,
     perguntas,
     recusadas: contagem.recusadas,
+    proposta: caso.proposta,
+    propostas: propostas.length,
+    propostasRecusadas: contagem.propostasRecusadas,
+    statusDoRun: run.status,
   }
 }

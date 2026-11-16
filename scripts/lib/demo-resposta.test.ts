@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest"
+import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta } from "@/core/runs/pergunta"
-import { formatarPergunta, respostaDoTexto } from "./demo-resposta"
+import { aprovadasDoTexto, formatarBloco, formatarPergunta, respostaDoTexto } from "./demo-resposta"
+
+const propostasDeExemplo: PropostaNaSaida[] = [
+  { id: "p1", tool: "casa.propor", texto: "Você tem abóbora em casa" },
+  { id: "p2", tool: "memoria.propor", texto: "Você gosta de couve" },
+  {
+    id: "p3",
+    tool: "lista.propor",
+    texto: 'Gengibre na lista "Para ter em casa" (faltou para hoje)',
+  },
+]
 
 const perguntaDeCasa: Pergunta = {
   tipo: "casa",
@@ -119,5 +130,42 @@ describe("respostaDoTexto · come e variante", () => {
     expect(respostaDoTexto(perguntaDeVariante, [""])).toEqual({ tipo: "pular" })
     expect(respostaDoTexto(perguntaDeVariante, ["0"])).toEqual({ tipo: "pular" })
     expect(respostaDoTexto(perguntaDeVariante, ["3"])).toEqual({ tipo: "pular" })
+  })
+})
+
+describe("formatarBloco", () => {
+  it("põe o cabeçalho, uma linha marcada por proposta e os dois botões", () => {
+    expect(formatarBloco(propostasDeExemplo.slice(0, 2))).toBe(
+      [
+        "Posso anotar isto?",
+        "  1. [x] Você tem abóbora em casa",
+        "  2. [x] Você gosta de couve",
+        "[Agora não] [Anotar]",
+      ].join("\n"),
+    )
+  })
+})
+
+describe("aprovadasDoTexto", () => {
+  it("linha vazia anota tudo", () => {
+    expect(aprovadasDoTexto(propostasDeExemplo, "")).toEqual(["p1", "p2", "p3"])
+  })
+
+  it("um número desliga essa linha", () => {
+    expect(aprovadasDoTexto(propostasDeExemplo, "2")).toEqual(["p1", "p3"])
+  })
+
+  it("números separados por vírgula desligam essas linhas", () => {
+    expect(aprovadasDoTexto(propostasDeExemplo, "1, 3")).toEqual(["p2"])
+  })
+
+  it("n ou N é Agora não: nada é aprovado", () => {
+    expect(aprovadasDoTexto(propostasDeExemplo, "n")).toEqual([])
+    expect(aprovadasDoTexto(propostasDeExemplo, "N")).toEqual([])
+  })
+
+  it("número fora da faixa é ignorado: não desliga linha nenhuma", () => {
+    expect(aprovadasDoTexto(propostasDeExemplo, "9")).toEqual(["p1", "p2", "p3"])
+    expect(aprovadasDoTexto(propostasDeExemplo, "0, 2")).toEqual(["p1", "p3"])
   })
 })

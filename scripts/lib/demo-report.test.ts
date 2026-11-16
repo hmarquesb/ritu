@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest"
 import type { RespostaDoRun } from "@/core/agents/companion/responder"
-import type { Anotacao, SaidaDoAcompanhante } from "@/core/agents/companion/saida"
+import type { SaidaDoAcompanhante } from "@/core/agents/companion/saida"
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
+import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Run, RunEtapa } from "@/core/runs/ports"
-import { type DadosDoRelatorio, formatarRelatorio } from "./demo-report"
+import { type DadosDoRelatorio, type DecisaoDoBloco, formatarRelatorio } from "./demo-report"
 
 const DISCLAIMER = "Não é orientação médica."
 
@@ -25,12 +26,17 @@ function interpretacaoDeExemplo(): Interpretacao {
   }
 }
 
-function anotacoesDeExemplo(): Anotacao[] {
-  return [
-    { tipo: "casa_tem", itens: [{ alimento_id: "gengibre", nome: "Gengibre" }] },
-    { tipo: "casa_acabou", itens: [{ nome: "Leite" }] },
-  ]
+const propostaDaCasa: PropostaNaSaida = {
+  id: "p1",
+  tool: "casa.propor",
+  texto: "Você tem abóbora em casa",
 }
+const propostaDeGosto: PropostaNaSaida = {
+  id: "p2",
+  tool: "memoria.propor",
+  texto: "Você gosta de couve",
+}
+const propostasDoBloco: PropostaNaSaida[] = [propostaDaCasa, propostaDeGosto]
 
 function etapa(ordem: number, tipo: string, nome: string, resumo: string | null): RunEtapa {
   return {
@@ -246,21 +252,24 @@ describe("formatarRelatorio", () => {
     expect(texto).toContain("evitar: Amendoim")
   })
 
-  it("mostra Posso anotar depois da resposta, uma linha por anotação, com o tipo e os nomes", () => {
-    const saida = { ...saidaDeExemplo(), anotacoes: anotacoesDeExemplo() }
+  it("não mostra mais a seção Posso anotar das anotações, mesmo com anotações na saída", () => {
     const dados = dadosDeExemplo()
+    const saida = {
+      ...saidaDeExemplo(),
+      anotacoes: [
+        { tipo: "casa_tem" as const, itens: [{ alimento_id: "gengibre", nome: "Gengibre" }] },
+      ],
+    }
     const texto = formatarRelatorio({ ...dados, resposta: { ...dados.resposta, saida } })
-    expect(texto).toContain("Posso anotar")
-    expect(texto).toContain("tem em casa: Gengibre")
-    expect(texto).toContain("acabou em casa: Leite")
-    expect(texto.indexOf("Posso anotar")).toBeGreaterThan(texto.indexOf("Resposta"))
-    expect(texto.indexOf("Posso anotar")).toBeLessThan(texto.indexOf("Avisos"))
+    expect(texto).not.toContain("tem em casa: Gengibre")
+    expect(texto).not.toContain("Posso anotar\n")
   })
 
-  it("não mostra Entendi nem Posso anotar num run da 007", () => {
+  it("não mostra Entendi nem o bloco de aprovação num run da 007", () => {
     const texto = formatarRelatorio(dadosDeExemplo())
     expect(texto).not.toContain("Entendi")
-    expect(texto).not.toContain("Posso anotar")
+    expect(texto).not.toContain("Posso anotar isto?")
+    expect(texto).not.toContain("Bloco aberto")
   })
 
   it("mostra os modelos de apoio do Intérprete no resumo", () => {
@@ -330,5 +339,88 @@ describe("formatarRelatorio · perguntas", () => {
     })
     expect(texto).toContain("status: waiting_for_input")
     expect(texto).toContain("origem: pausa")
+  })
+})
+
+describe("formatarRelatorio · bloco de aprovação", () => {
+  function dadosComBloco(
+    extra: Partial<Pick<DadosDoRelatorio, "decisao" | "minhaCasa" | "depois">> = {},
+    propostas: PropostaNaSaida[] = propostasDoBloco,
+  ): DadosDoRelatorio {
+    const dados = dadosDeExemplo()
+    const saida = { ...saidaDeExemplo(), propostas }
+    return { ...dados, resposta: { ...dados.resposta, saida }, ...extra }
+  }
+  const decisaoParcial: DecisaoDoBloco = {
+    aprovadas: 1,
+    gravadas: [propostaDaCasa],
+  }
+
+  it("mostra o bloco depois da resposta, com a decisão e o gravado antes das sugestões", () => {
+    const texto = formatarRelatorio(dadosComBloco({ decisao: decisaoParcial }))
+    expect(texto).toContain(
+      "Posso anotar isto?\n  1. [x] Você tem abóbora em casa\n  2. [x] Você gosta de couve\n[Agora não] [Anotar]",
+    )
+    expect(texto).toContain("Decisão: Anotar 1 de 2")
+    expect(texto).toContain("Gravado:\n  - Você tem abóbora em casa")
+    expect(texto.indexOf("\nResposta\n")).toBeLessThan(texto.indexOf("Posso anotar isto?"))
+    expect(texto.indexOf("Gravado:")).toBeLessThan(texto.indexOf("Sugestões"))
+  })
+
+  it("com Agora não, a decisão diz Agora não e o gravado é nada", () => {
+    const texto = formatarRelatorio(dadosComBloco({ decisao: { aprovadas: 0, gravadas: [] } }))
+    expect(texto).toContain("Decisão: Agora não")
+    expect(texto).toContain("Gravado: nada")
+  })
+
+  it("sem decisão, o bloco fica aberto", () => {
+    const texto = formatarRelatorio(dadosComBloco())
+    expect(texto).toContain("Posso anotar isto?")
+    expect(texto).toContain("Bloco aberto")
+    expect(texto).not.toContain("Decisão:")
+  })
+
+  it("sem propostas, nada do bloco aparece", () => {
+    const texto = formatarRelatorio(dadosComBloco({}, []))
+    expect(texto).not.toContain("Posso anotar isto?")
+    expect(texto).not.toContain("Bloco aberto")
+    expect(texto).not.toContain("Decisão:")
+  })
+
+  it("mostra Minha casa com nome e estado quando uma casa.propor foi gravada", () => {
+    const texto = formatarRelatorio(
+      dadosComBloco({
+        decisao: decisaoParcial,
+        minhaCasa: [
+          { nome: "Abóbora", estado: "tem" },
+          { nome: "Couve", estado: "acabou" },
+        ],
+      }),
+    )
+    expect(texto).toContain("Minha casa:\n  - Abóbora (tem)\n  - Couve (acabou)")
+  })
+
+  it("não mostra Minha casa quando a gravada não é da casa", () => {
+    const texto = formatarRelatorio(
+      dadosComBloco({
+        decisao: { aprovadas: 1, gravadas: [propostaDeGosto] },
+        minhaCasa: [{ nome: "Abóbora", estado: "tem" }],
+      }),
+    )
+    expect(texto).toContain("Gravado:\n  - Você gosta de couve")
+    expect(texto).not.toContain("Minha casa:")
+  })
+
+  it("com depois, mostra a linha Depois e o relatório da segunda mensagem", () => {
+    const segundo = { ...dadosDeExemplo(), nome: "vegetariana" }
+    const texto = formatarRelatorio(
+      dadosComBloco({
+        decisao: { aprovadas: 0, gravadas: [] },
+        depois: { mensagem: "sou vegetariana, o que eu como agora?", relatorio: segundo },
+      }),
+    )
+    const depois = texto.indexOf("Depois: sou vegetariana, o que eu como agora?")
+    expect(depois).toBeGreaterThan(texto.indexOf("trace_id: abc123"))
+    expect(texto.indexOf("Cenário: vegetariana")).toBeGreaterThan(depois)
   })
 })

@@ -1,12 +1,13 @@
 import { z } from "zod"
 import type { RespostaDoRun } from "@/core/agents/companion/responder"
-import type { Anotacao, SaidaDoAcompanhante, SugestaoEntregue } from "@/core/agents/companion/saida"
+import type { SaidaDoAcompanhante, SugestaoEntregue } from "@/core/agents/companion/saida"
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { EvitarItem } from "@/core/knowledge/filtros"
+import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import { textoDaResposta } from "@/core/runs/pergunta"
 import type { Caminho, Run, RunEtapa } from "@/core/runs/ports"
-import { formatarPergunta } from "./demo-resposta"
+import { formatarBloco, formatarPergunta } from "./demo-resposta"
 
 export type ResumoDoRun = Pick<
   Run,
@@ -27,6 +28,9 @@ export type RespostaDoRelatorio = Pick<RespostaDoRun, "run_id" | "saida"> & {
 // Pensamento do modelo: a frase que sai antes da tool seguinte. depoisDaOrdem é a ordem da última etapa já feita.
 export type Pensamento = { depoisDaOrdem: number; texto: string }
 
+// Decisão do bloco de aprovação: quantas linhas ficaram marcadas e o que foi gravado.
+export type DecisaoDoBloco = { aprovadas: number; gravadas: PropostaNaSaida[] }
+
 export type DadosDoRelatorio = {
   nome: string
   resposta: RespostaDoRelatorio
@@ -34,26 +38,23 @@ export type DadosDoRelatorio = {
   etapas: RunEtapa[]
   pensamentos: Pensamento[]
   disclaimer: string
-  // Só a conversa tem caminho e interpretação; sem eles, os blocos Entendi e Posso anotar não aparecem.
+  // Só a conversa tem caminho e interpretação; sem eles, o bloco Entendi não aparece.
   caminho?: Caminho
   interpretacao?: Interpretacao
   // Nome de quem o Evitar cita; padrão: o próprio valor.
   nomeDoEvitar?: (item: EvitarItem) => string
   // Pausas do run, na ordem em que aconteceram; sem pausa, não há blocos Pergunta.
   perguntas?: { pergunta: Pergunta; resposta: RespostaDaPessoa }[]
+  // Decisão do bloco de aprovação; sem ela, o bloco ficou aberto.
+  decisao?: DecisaoDoBloco
+  // Itens da casa depois do run; aparecem quando uma casa.propor foi gravada.
+  minhaCasa?: { nome: string; estado: "tem" | "acabou" }[]
+  // Segunda mensagem da conversa (com `depois`), com o relatório do seu run.
+  depois?: { mensagem: string; relatorio: DadosDoRelatorio }
 }
 
 type Item = SugestaoEntregue["itens"][number]
 type Para = NonNullable<SaidaDoAcompanhante["para_ter"]>
-
-const ROTULO_DA_ANOTACAO: Record<Anotacao["tipo"], string> = {
-  casa_tem: "tem em casa",
-  casa_acabou: "acabou em casa",
-  evitar_sempre: "evitar sempre",
-  nao_come: "não come",
-  gosta: "gosta",
-  restricao: "restrição",
-}
 
 const ROTULO_DA_ACAO: Record<"tem" | "acabou", string> = { tem: "tem", acabou: "acabou" }
 
@@ -106,26 +107,38 @@ function secaoResposta(texto: string): string[] {
   return ["Resposta", ...texto.split("\n").map((linha) => `  ${linha}`)]
 }
 
-function nomeDoItemAnotado(item: { nome: string } | string): string {
-  return typeof item === "string" ? item : item.nome
+// O que foi gravado: o texto de cada proposta, ou "nada".
+function linhasDoGravado(gravadas: PropostaNaSaida[]): string[] {
+  if (gravadas.length === 0) return ["Gravado: nada"]
+  return ["Gravado:", ...gravadas.map((g) => `  - ${g.texto}`)]
 }
 
-function nomesDaAnotacao(a: Anotacao, nomeDoEvitar: (item: EvitarItem) => string): string[] {
-  if (a.tipo === "evitar_sempre") return a.itens.map(nomeDoEvitar)
-  if (a.tipo === "restricao") return a.itens
-  return a.itens.map(nomeDoItemAnotado)
-}
-
-function linhaDaAnotacao(a: Anotacao, nomeDoEvitar: (item: EvitarItem) => string): string {
-  return `  - ${ROTULO_DA_ANOTACAO[a.tipo]}: ${nomesDaAnotacao(a, nomeDoEvitar).join(", ")}`
-}
-
-function secaoAnotacoes(
-  anotacoes: Anotacao[],
-  nomeDoEvitar: (item: EvitarItem) => string,
+// Minha casa só aparece quando a pessoa aprovou alguma linha da casa.
+function secaoMinhaCasa(
+  gravadas: PropostaNaSaida[],
+  minhaCasa: DadosDoRelatorio["minhaCasa"],
 ): string[] {
-  if (anotacoes.length === 0) return []
-  return ["Posso anotar", ...anotacoes.map((a) => linhaDaAnotacao(a, nomeDoEvitar))]
+  if (!minhaCasa || !gravadas.some((g) => g.tool === "casa.propor")) return []
+  if (minhaCasa.length === 0) return ["Minha casa: vazia"]
+  return ["Minha casa:", ...minhaCasa.map((i) => `  - ${i.nome} (${ROTULO_DA_ACAO[i.estado]})`)]
+}
+
+// "Agora não" quando nada foi marcado; senão, quantas foram anotadas de quantas.
+function linhasDaDecisao(d: DecisaoDoBloco, total: number): string[] {
+  if (d.aprovadas === 0) return ["Decisão: Agora não", ...linhasDoGravado([])]
+  return [`Decisão: Anotar ${d.gravadas.length} de ${total}`, ...linhasDoGravado(d.gravadas)]
+}
+
+// O bloco vem depois da resposta: as linhas, a decisão e o gravado. Sem decisão, fica aberto.
+function secaoDoBloco(d: DadosDoRelatorio): string[] {
+  const propostas = d.resposta.saida?.propostas ?? []
+  if (propostas.length === 0) return []
+  if (!d.decisao) return [formatarBloco(propostas), "Bloco aberto"]
+  return [
+    formatarBloco(propostas),
+    ...linhasDaDecisao(d.decisao, propostas.length),
+    ...secaoMinhaCasa(d.decisao.gravadas, d.minhaCasa),
+  ]
 }
 
 function linhasDoRetorno(r: NonNullable<Interpretacao["retorno"]>): string {
@@ -237,7 +250,7 @@ export function formatarRelatorio(d: DadosDoRelatorio): string {
     secaoEtapas(d.etapas, d.pensamentos),
     ...(d.perguntas ?? []).map(blocoDaPergunta),
     secaoResposta(saida?.resposta ?? ""),
-    secaoAnotacoes(saida?.anotacoes ?? [], nomeDoEvitar),
+    secaoDoBloco(d),
     secaoSugestoes(saida?.sugestoes ?? []),
     secaoEvitar(saida?.evitar ?? []),
     secaoValeTerEmCasa(saida?.para_ter),
@@ -245,8 +258,12 @@ export function formatarRelatorio(d: DadosDoRelatorio): string {
     [d.disclaimer],
     secaoResumo(resposta, run),
   ]
-  return blocos
+  const principal = blocos
     .filter((bloco) => bloco.length > 0)
     .map((bloco) => bloco.join("\n"))
     .join("\n\n")
+  if (!d.depois) return principal
+  return [principal, `Depois: ${d.depois.mensagem}`, formatarRelatorio(d.depois.relatorio)].join(
+    "\n\n",
+  )
 }

@@ -1,4 +1,7 @@
 // Texto da pergunta para o terminal e leitura da resposta digitada. Funções puras: o script só lê as linhas.
+
+import type { PropostaNaSaida } from "@/core/proposals/conteudo"
+import { textosDasPropostas } from "@/core/proposals/textos"
 import type { Pergunta, RespostaDaPessoa, RespostaDeCasa } from "@/core/runs/pergunta"
 
 const LETRAS_DE_CASA: Record<string, RespostaDeCasa> = {
@@ -69,4 +72,26 @@ export function respostaDoTexto(p: Pergunta, linhas: string[]): RespostaDaPessoa
   if (p.tipo === "casa") return respostaDeCasaDoTexto(p, linhas)
   if (p.tipo === "come") return respostaDeComeDoTexto(linhas[0] ?? "")
   return respostaDeVarianteDoTexto(p, linhas[0] ?? "")
+}
+
+// Bloco de aprovação como o terminal mostra: cabeçalho, uma linha marcada por proposta e os dois botões.
+export function formatarBloco(propostas: PropostaNaSaida[]): string {
+  const linhas = propostas.map((p, i) => `  ${i + 1}. [x] ${p.texto}`)
+  const botoes = `[${textosDasPropostas.agoraNao}] [${textosDasPropostas.anotar}]`
+  return [textosDasPropostas.cabecalho, ...linhas, botoes].join("\n")
+}
+
+// Ids aprovados: Enter anota tudo; números separados por vírgula desligam essas linhas; n é Agora não;
+// número fora da faixa não desliga nada.
+export function aprovadasDoTexto(propostas: PropostaNaSaida[], linha: string): string[] {
+  const texto = linha.trim()
+  if (texto === "") return propostas.map((p) => p.id)
+  if (texto.toLowerCase() === "n") return []
+  const desligadas = new Set(
+    texto.split(",").flatMap((parte) => {
+      const numero = numeroEscolhido(parte, propostas.length)
+      return numero === undefined ? [] : [numero]
+    }),
+  )
+  return propostas.filter((_, i) => !desligadas.has(i + 1)).map((p) => p.id)
 }

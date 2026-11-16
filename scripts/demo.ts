@@ -1,6 +1,7 @@
 // Demonstração do Acompanhante e da conversa. Sem argumento, lista os cenários. Com --cenario, roda um deles
 // com o runtime roteirizado, sem rede. Com --llm (⚠️ chama o modelo real), troca o runtime e o cliente do modelo.
-// Com --interativo, lê do terminal a resposta de cada pergunta (uma linha por item de casa, ou uma por pergunta).
+// Com --interativo, lê do terminal a resposta de cada pergunta (uma linha por item de casa, ou uma por pergunta)
+// e a decisão do bloco de aprovação (Enter anota tudo, números desligam linhas, n é Agora não).
 // Uso: npm run demo | npm run demo -- --cenario <nome> [--esgotar decisao] [--llm] [--interativo]
 import { createInterface } from "node:readline"
 import { parseArgs } from "node:util"
@@ -9,21 +10,32 @@ import type { RespostaDoRun } from "@/core/agents/companion/responder"
 import type { RespostaDaConversa } from "@/core/conversation/conversar"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
+import { textoDaMensagem } from "@/core/messages/texto"
+import type { ItemDaCasa } from "@/core/pantry/types"
+import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { EventoAoVivo } from "@/core/runs/loop"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import { getContainer } from "@/infra/container"
 import {
   type Cenario,
   cenarios,
+  cenariosComAprovacao,
   cenariosComPausa,
   cenariosDeConversa,
+  type DepsDoCenario,
   montarCenario,
   type OpcoesDoCenario,
+  type RodadaDoCenario,
   rodarCenario,
 } from "../test/fixtures/cenarios"
 import type { CenarioDeConversa } from "../test/fixtures/cenarios/tipos"
 import { type DadosDoRelatorio, formatarRelatorio, type Pensamento } from "./lib/demo-report"
-import { formatarPergunta, respostaDoTexto } from "./lib/demo-resposta"
+import {
+  aprovadasDoTexto,
+  formatarBloco,
+  formatarPergunta,
+  respostaDoTexto,
+} from "./lib/demo-resposta"
 
 function papelValido(nome: string): nome is Papel {
   return Object.hasOwn(llmCotas.papeis, nome)
@@ -35,6 +47,7 @@ function listarCenarios(): void {
     ...Object.values(cenarios),
     ...Object.values(cenariosDeConversa),
     ...Object.values(cenariosComPausa),
+    ...Object.values(cenariosComAprovacao),
   ]
   for (const c of todos) {
     console.log(`  ${c.nome}  ${c.descricao}`)
@@ -45,18 +58,25 @@ function acharCenario(nome: string): Cenario | CenarioDeConversa | undefined {
   if (Object.hasOwn(cenarios, nome)) return cenarios[nome]
   if (Object.hasOwn(cenariosDeConversa, nome)) return cenariosDeConversa[nome]
   if (Object.hasOwn(cenariosComPausa, nome)) return cenariosComPausa[nome]
+  if (Object.hasOwn(cenariosComAprovacao, nome)) return cenariosComAprovacao[nome]
   return undefined
 }
 
-// Guarda os pensamentos com a ordem da última etapa concluída, para o relatório encaixar cada um.
+// Guarda os pensamentos de cada run. Um pensamento vem logo antes da tool que o usa, então vai para a etapa seguinte.
 function coletorDePensamentos() {
-  const pensamentos: Pensamento[] = []
-  let ultimaOrdem = 0
+  const porRun = new Map<string, Pensamento[]>()
+  let pendentes: string[] = []
   return {
-    pensamentos,
+    pensamentosDo(runId: string): Pensamento[] {
+      return porRun.get(runId) ?? []
+    },
     aoVivo(e: EventoAoVivo): void {
-      if (e.tipo === "etapa_concluida") ultimaOrdem = e.etapa.ordem
-      if (e.tipo === "pensamento") pensamentos.push({ depoisDaOrdem: ultimaOrdem, texto: e.texto })
+      if (e.tipo === "pensamento") pendentes.push(e.texto)
+      if (e.tipo !== "etapa_concluida") return
+      const lista = porRun.get(e.etapa.run_id) ?? []
+      lista.push(...pendentes.map((texto) => ({ depoisDaOrdem: e.etapa.ordem - 1, texto })))
+      porRun.set(e.etapa.run_id, lista)
+      pendentes = []
     },
   }
 }
@@ -99,12 +119,86 @@ async function responderNoTerminal(leitor: Leitor, p: Pergunta): Promise<Respost
   return respostaDoTexto(p, linhas)
 }
 
-// Caminho e interpretação só existem na conversa; sem eles, os blocos Entendi e Posso anotar não aparecem.
+// Mostra o bloco e lê uma linha: Enter anota tudo, números separados por vírgula desligam essas linhas, n é Agora não.
+async function decidirNoTerminal(leitor: Leitor, propostas: PropostaNaSaida[]): Promise<string[]> {
+  console.log(formatarBloco(propostas))
+  console.log(
+    "  Enter anota tudo; números separados por vírgula tiram essas linhas; n é Agora não.",
+  )
+  process.stdout.write("> ")
+  return aprovadasDoTexto(propostas, await leitor.proxima())
+}
+
+// Caminho e interpretação só existem na conversa; sem eles, o bloco Entendi não aparece.
 function camposDaConversa(
   r: RespostaDaConversa | RespostaDoRun,
 ): Pick<DadosDoRelatorio, "caminho" | "interpretacao"> {
   if (!("caminho" in r)) return {}
   return { caminho: r.caminho, ...(r.interpretacao ? { interpretacao: r.interpretacao } : {}) }
+}
+
+type Contexto = {
+  cenario: Cenario | CenarioDeConversa
+  deps: DepsDoCenario
+  contaId: string
+  kb: KnowledgeBase
+  coletor: ReturnType<typeof coletorDePensamentos>
+}
+
+// Nome do item da casa: pelo nome da base quando tem alimento_id; senão, o nome livre.
+function nomeDaCasa(item: ItemDaCasa, kb: KnowledgeBase): string {
+  if (item.alimento_id) return kb.alimento(item.alimento_id)?.nome ?? item.alimento_id
+  return item.nome_livre ?? ""
+}
+
+async function minhaCasaDo(ctx: Contexto): Promise<NonNullable<DadosDoRelatorio["minhaCasa"]>> {
+  const itens = await ctx.deps.stores.pantry.listar(ctx.contaId)
+  return itens.map((item) => ({ nome: nomeDaCasa(item, ctx.kb), estado: item.estado }))
+}
+
+async function relatorioDaRodada(
+  ctx: Contexto,
+  rodada: RodadaDoCenario,
+): Promise<DadosDoRelatorio> {
+  const runId = rodada.final.run_id
+  const run = await ctx.deps.stores.runs.buscar(ctx.contaId, runId)
+  if (!run) throw new Error(`run ${runId} não encontrado`)
+  const etapas = await ctx.deps.stores.runs.etapas(ctx.contaId, runId)
+  const decidido = rodada.bloco
+  return {
+    nome: ctx.cenario.nome,
+    resposta: rodada.final,
+    run,
+    etapas,
+    pensamentos: ctx.coletor.pensamentosDo(runId),
+    disclaimer: config.app.disclaimer,
+    perguntas: rodada.perguntas,
+    ...camposDaConversa(rodada.final),
+    nomeDoEvitar: nomeDoEvitarDaBase(ctx.kb),
+    minhaCasa: await minhaCasaDo(ctx),
+    ...(decidido
+      ? {
+          decisao: {
+            aprovadas: decidido.aprovadas.length,
+            gravadas: decidido.resultado.gravadas,
+          },
+        }
+      : {}),
+  }
+}
+
+// Com `depois`, a segunda mensagem vira um relatório aninhado, depois da linha "Depois: ...".
+async function dadosDaSessao(ctx: Contexto, rodada: RodadaDoCenario): Promise<DadosDoRelatorio> {
+  const principal = await relatorioDaRodada(ctx, rodada)
+  const depois = ctx.cenario.depois
+  if (!rodada.depois || !depois) return principal
+  return {
+    ...principal,
+    depois: {
+      mensagem: textoDaMensagem(depois.mensagem, ctx.kb),
+      relatorio: await relatorioDaRodada(ctx, rodada.depois),
+    },
+  }
 }
 
 async function rodarDemo(
@@ -129,23 +223,15 @@ async function rodarDemo(
   try {
     const rodada = await rodarCenario(deps, contaId, cenario, {
       aoVivo: coletor.aoVivo,
-      ...(terminal ? { responder: (p) => responderNoTerminal(terminal, p) } : {}),
+      ...(terminal
+        ? {
+            responder: (p: Pergunta) => responderNoTerminal(terminal, p),
+            decidir: (propostas: PropostaNaSaida[]) => decidirNoTerminal(terminal, propostas),
+          }
+        : {}),
     })
-    const run = await deps.stores.runs.buscar(contaId, rodada.final.run_id)
-    if (!run) throw new Error(`run ${rodada.final.run_id} não encontrado`)
-    const etapas = await deps.stores.runs.etapas(contaId, rodada.final.run_id)
-    const dados: DadosDoRelatorio = {
-      nome: cenario.nome,
-      resposta: rodada.final,
-      run,
-      etapas,
-      pensamentos: coletor.pensamentos,
-      disclaimer: config.app.disclaimer,
-      perguntas: rodada.perguntas,
-      ...camposDaConversa(rodada.final),
-      nomeDoEvitar: nomeDoEvitarDaBase(container.knowledge),
-    }
-    console.log(formatarRelatorio(dados))
+    const ctx: Contexto = { cenario, deps, contaId, kb: container.knowledge, coletor }
+    console.log(formatarRelatorio(await dadosDaSessao(ctx, rodada)))
     return 0
   } finally {
     terminal?.fechar()

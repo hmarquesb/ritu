@@ -31,7 +31,7 @@ import { escolherCaminho } from "../../src/core/runs/caminhos"
 import type { Pergunta, RespostaDaPessoa } from "../../src/core/runs/pergunta"
 import type { Run, RunEtapa } from "../../src/core/runs/ports"
 import { createMemoryTelemetry } from "../../src/infra/fakes/memory-telemetry"
-import { montarCenario, rodarCenario } from "../../test/fixtures/cenarios"
+import { type DepsDoCenario, montarCenario, rodarCenario } from "../../test/fixtures/cenarios"
 import type { ChecagemDeExpectativa, ResultadoDoCaso, TipoDoCaso } from "./eval-llm-report"
 
 export type CasoDoEval = CasoC1 | CasoC2
@@ -319,14 +319,31 @@ export function contarEtapas(etapas: RunEtapa[]): ContagemDasEtapas {
 }
 
 /**
- * Cenário que o runner da conversa roda, sem a decisão do bloco de aprovação (D18).
+ * Cenário que o runner da conversa roda, sem a decisão do bloco de aprovação (D18) e sem toques (D14).
  * Com `aprovacao` o runner aprovaria; sem ela o bloco fica aberto e o caso termina em waiting_for_approval.
+ * Os toques são da pessoa na tela: o runner nunca toca.
  */
-export function cenarioDoRunner<C extends { aprovacao?: unknown }>(
+export function cenarioDoRunner<C extends { aprovacao?: unknown; toques?: unknown }>(
   cenario: C,
-): Omit<C, "aprovacao"> {
-  const { aprovacao: _decisao, ...resto } = cenario
+): Omit<C, "aprovacao" | "toques"> {
+  const { aprovacao: _decisao, toques: _toques, ...resto } = cenario
   return resto
+}
+
+/**
+ * Títulos dos retornos de `cenario.retornos` que saíram de `outcomes.pendentes` no fim do caso (D14).
+ * A posição de cada retorno em `retornos` casa com o id em `retornosSemeados`.
+ */
+async function retornosFechadosDo(
+  deps: DepsDoCenario,
+  contaId: string,
+  cenario: { retornos?: { sugestao: { titulo: string } }[] },
+): Promise<string[]> {
+  const pendentes = new Set((await deps.stores.outcomes.pendentes(contaId)).map((r) => r.id))
+  return (cenario.retornos ?? []).flatMap((r, i) => {
+    const id = deps.retornosSemeados[i]
+    return id !== undefined && !pendentes.has(id) ? [r.sugestao.titulo] : []
+  })
 }
 
 // A conversa devolve resposta de conversa; a de acompanhante não passa por aqui.
@@ -346,6 +363,7 @@ function pausadoAcimaDoTeto(
     id: caso.id,
     titulo: caso.titulo,
     tipo: "conversa",
+    familia: caso.familia,
     deve: falsas(caso.deve),
     naoPode: falsas(caso.naoPode),
     trajetoriaOk: true,
@@ -406,7 +424,15 @@ export async function rodarConversa(
   if (resposta.saida.origem === "sem_modelo") throw new SemModeloError()
   const r = colherResultado(resposta.saida, resposta.status, etapas)
   const propostas = resposta.saida.propostas
-  const alvo = { resposta, resultado: r, perguntas: rodada.perguntas, propostas, ...contagem }
+  const retornosFechados = await retornosFechadosDo(deps, contaId, cenario)
+  const alvo = {
+    resposta,
+    resultado: r,
+    perguntas: rodada.perguntas,
+    propostas,
+    retornosFechados,
+    ...contagem,
+  }
   return {
     ...resultadoDaResposta({
       caso,
@@ -418,6 +444,7 @@ export async function rodarConversa(
       deve: conferir(caso.deve, alvo),
       naoPode: conferir(caso.naoPode, alvo),
     }),
+    familia: caso.familia,
     pergunta: caso.pergunta,
     perguntas,
     recusadas: contagem.recusadas,

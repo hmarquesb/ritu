@@ -44,6 +44,8 @@ export type ExpectativaDaConversa = {
     propostas: PropostaNaSaida[]
     // Chamadas de tool de proposta (memoria.propor, lista.propor) recusadas pelo código no run.
     propostasRecusadas: number
+    // Títulos (sugestao.titulo) dos retornos de cenario.retornos que saíram de outcomes.pendentes no fim do caso.
+    retornosFechados: string[]
   }) => boolean
 }
 
@@ -60,6 +62,8 @@ export type CasoConversa = {
   pergunta?: "necessaria" | "desnecessaria"
   // Só nos casos com proposta: se o run devia propor algo no bloco (esperada) ou não propor nada (nenhuma).
   proposta?: "esperada" | "nenhuma"
+  // Família que o caso mede no relatório (D14): Aprendizado ou Para ter em casa. Sem família, o caso não entra nessas seções.
+  familia?: "aprendizado" | "para_ter"
   deve: ExpectativaDaConversa[]
   naoPode: ExpectativaDaConversa[]
 }

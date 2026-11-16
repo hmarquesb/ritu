@@ -49,6 +49,8 @@ export type ResultadoDoCaso = {
   propostasRecusadas?: number
   /** Status do run lido depois do bloco: waiting_for_approval quando o runner não decidiu o bloco. */
   statusDoRun?: string
+  /** Família do caso conversa (D14): cada família tem a sua seção. Ausente = fora das seções de família. */
+  familia?: "aprendizado" | "para_ter"
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaMs: number
@@ -345,6 +347,27 @@ function secaoDePropostas(casos: ResultadoDoCaso[]): string[] {
   ]
 }
 
+// Acerto de uma família: sem erro, todos os deve ok e todos os naoPode ok (naoPode ok = o que não podia acontecer não aconteceu).
+const acertouNaFamilia = (c: ResultadoDoCaso): boolean =>
+  !c.erro && todosOk(c.deve) && todosOk(c.naoPode)
+
+const daFamilia = (casos: ResultadoDoCaso[], familia: string): ResultadoDoCaso[] =>
+  casos.filter((c) => c.familia === familia)
+
+function secaoDeFamilia(titulo: string, familia: string, casos: ResultadoDoCaso[]): string[] {
+  const lista = daFamilia(casos, familia)
+  const acertos = lista.filter(acertouNaFamilia).length
+  return [
+    `## ${titulo}`,
+    "",
+    "| Caso | Acertou |",
+    "|---|---|",
+    ...lista.map((c) => `| ${c.id} | ${sim(acertouNaFamilia(c))} |`),
+    "",
+    `- Acerto: ${acertos}/${lista.length} (${porcentagem(acertos, lista.length)})`,
+  ]
+}
+
 function linhaDePergunta(c: ResultadoDoCaso): string {
   const rotulo = c.pergunta === "necessaria" ? "necessária" : "desnecessária"
   const feitas = (c.perguntas ?? []).join(", ") || "nenhuma"
@@ -436,6 +459,12 @@ export function formatarRelatorio(rodada: Rodada): string {
   if (r.interprete.casos > 0) linhas.push("", ...secaoDoInterprete(rodada.casos, r.interprete))
   if (comPergunta(rodada.casos).length > 0) linhas.push("", ...secaoDePerguntas(rodada.casos))
   if (comProposta(rodada.casos).length > 0) linhas.push("", ...secaoDePropostas(rodada.casos))
+  if (daFamilia(rodada.casos, "aprendizado").length > 0) {
+    linhas.push("", ...secaoDeFamilia("Aprendizado", "aprendizado", rodada.casos))
+  }
+  if (daFamilia(rodada.casos, "para_ter").length > 0) {
+    linhas.push("", ...secaoDeFamilia("Para ter em casa", "para_ter", rodada.casos))
+  }
   linhas.push("", "## Custo por papel", "", ...tabelaDeCusto(r.uso))
   if (r.casos > 0) linhas.push(...secaoDeCasos(rodada.casos))
   linhas.push("", "## Falhas", "", ...(falhas.length > 0 ? falhas : ["Nenhuma."]))

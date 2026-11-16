@@ -487,3 +487,69 @@ describe("seções sem caso do tipo não aparecem", () => {
     expect(texto).not.toContain("Custo do papel apoio")
   })
 })
+
+describe("seções Aprendizado e Para ter em casa", () => {
+  const conversa = (id: string, parcial: Partial<ResultadoDoCaso>) =>
+    caso({ id, tipo: "conversa", ...parcial })
+
+  it("Aprendizado mostra acerto por caso e o total; erro e naoPode falho não acertam", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v4",
+      totalDeCasos: 4,
+      casos: [
+        conversa("a1", { familia: "aprendizado" }),
+        conversa("a2", { familia: "aprendizado", deve: [{ descricao: "x", ok: false }] }),
+        conversa("a3", { familia: "aprendizado", naoPode: [{ descricao: "y", ok: false }] }),
+        conversa("a4", { familia: "aprendizado", erro: "pausou_acima_do_teto" }),
+      ],
+    })
+    expect(texto).toContain("## Aprendizado")
+    expect(texto).toContain("| a1 | sim |")
+    expect(texto).toContain("| a2 | não |")
+    expect(texto).toContain("| a3 | não |")
+    expect(texto).toContain("| a4 | não |")
+    expect(texto).toContain("- Acerto: 1/4 (25%)")
+  })
+
+  it("Para ter em casa mostra acerto por caso e o total", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v4",
+      totalDeCasos: 2,
+      casos: [
+        conversa("p1", { familia: "para_ter" }),
+        conversa("p2", { familia: "para_ter", deve: [{ descricao: "x", ok: false }] }),
+      ],
+    })
+    expect(texto).toContain("## Para ter em casa")
+    expect(texto).toContain("| p1 | sim |")
+    expect(texto).toContain("| p2 | não |")
+    expect(texto).toContain("- Acerto: 1/2 (50%)")
+  })
+
+  it("cada caso aparece só na seção da sua família", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v4",
+      totalDeCasos: 2,
+      casos: [conversa("ap", { familia: "aprendizado" }), conversa("pt", { familia: "para_ter" })],
+    })
+    const [antes, depois = ""] = texto.split("## Para ter em casa")
+    expect(antes).toContain("| ap | sim |")
+    expect(antes).not.toContain("| pt | sim |")
+    expect(depois).toContain("| pt | sim |")
+    expect(depois).not.toContain("| ap | sim |")
+  })
+
+  it("sem casos das famílias, as seções não aparecem", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c1-base",
+      promptVersao: "acompanhante.v2",
+      totalDeCasos: 1,
+      casos: [caso({ id: "a" })],
+    })
+    expect(texto).not.toContain("## Aprendizado")
+    expect(texto).not.toContain("## Para ter em casa")
+  })
+})

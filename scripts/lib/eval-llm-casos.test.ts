@@ -72,7 +72,12 @@ import {
   createScriptedRuntime,
   type PassoRoteirizado,
 } from "../../src/infra/fakes/scripted-runtime"
-import { cenariosComPausa, cenariosDeConversa, montarCenario } from "../../test/fixtures/cenarios"
+import {
+  cenariosComPausa,
+  cenariosDeAprendizado,
+  cenariosDeConversa,
+  montarCenario,
+} from "../../test/fixtures/cenarios"
 import {
   cenarioDoRunner,
   conferir,
@@ -406,6 +411,17 @@ describe("runner da conversa com proposta", () => {
   it("o runner não decide o bloco: o run lido do store depois do caso segue waiting_for_approval", async () => {
     const r = await rodarConversa(casoDeProposta(), opcoes())
     expect(r.statusDoRun).toBe("waiting_for_approval")
+  })
+
+  it("o cenário do runner sai sem toques, e os retornos ficam", () => {
+    const comToque = {
+      ...semRoteiro,
+      toques: [{ tipo: "retorno" as const, sugestao: 0, resultado: "ajudou" as const }],
+    }
+    const sem = cenarioDoRunner(comToque)
+
+    expect("toques" in sem).toBe(false)
+    expect(sem.retornos).toEqual(semRoteiro.retornos)
   })
 
   it("o cenário do runner sai sem a decisão do bloco, para que nunca se aprove", () => {
@@ -839,6 +855,7 @@ describe("expectativas da conversa de Perguntas", () => {
     llmAntesDaPrimeiraPausa: 0,
     propostas: [],
     propostasRecusadas: 0,
+    retornosFechados: [],
     ...p,
   })
 
@@ -1091,6 +1108,7 @@ describe("expectativas da conversa de Propostas", () => {
     llmAntesDaPrimeiraPausa: 0,
     propostas: [],
     propostasRecusadas: 0,
+    retornosFechados: [],
     ...p,
   })
 
@@ -1193,5 +1211,51 @@ describe("expectativas da conversa de Propostas", () => {
         passa(naoDizQueAnotou(), { resultado: resultadoCom(saidaPronta({ resposta: texto })) }),
       ).toBe(false)
     }
+  })
+})
+
+describe("runner da conversa com retornos fechados", () => {
+  const retornoPeloAgente = cenariosDeAprendizado["retorno-pelo-agente"]
+  if (!retornoPeloAgente) throw new Error("cenário retorno-pelo-agente ausente")
+  const { roteiro, ...semRoteiro } = retornoPeloAgente
+  const FECHADO = "Arroz bem cozido com abóbora e ghee"
+  const PENDENTE = "Chá de gengibre com canela"
+
+  const casoDeRetorno = (): CasoConversa => ({
+    tipo: "conversa",
+    id: "t-retorno",
+    titulo: "Retorno contado na mensagem",
+    familia: "aprendizado",
+    cenario: semRoteiro,
+    deve: [
+      {
+        descricao: "fecha o retorno de ontem pelo título",
+        confere: ({ retornosFechados }) => retornosFechados.includes(FECHADO),
+      },
+    ],
+    naoPode: [
+      {
+        descricao: "não fecha o chá, que segue pendente",
+        confere: ({ retornosFechados }) => !retornosFechados.includes(PENDENTE),
+      },
+    ],
+  })
+
+  const opcoes = () => ({
+    runtime: createScriptedRuntime(roteiro),
+    llm: createFakeLlm([retornoPeloAgente.interpretacao]),
+  })
+
+  it("o retorno que o agente fechou entra em retornosFechados, pelo título da sugestão", async () => {
+    const r = await rodarConversa(casoDeRetorno(), opcoes())
+
+    expect(r.erro).toBeUndefined()
+    expect(r.deve).toEqual([{ descricao: "fecha o retorno de ontem pelo título", ok: true }])
+    expect(r.naoPode).toEqual([{ descricao: "não fecha o chá, que segue pendente", ok: true }])
+  })
+
+  it("o resultado leva a família do caso", async () => {
+    const r = await rodarConversa(casoDeRetorno(), opcoes())
+    expect(r.familia).toBe("aprendizado")
   })
 })

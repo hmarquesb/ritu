@@ -1,10 +1,12 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { stringify } from "yaml"
-import type { DemoSeed } from "@/core/demo-seed"
+import { type DemoSeed, validarSeed } from "@/core/demo-seed"
 import { KnowledgeInvalidError } from "@/core/knowledge/knowledge-base"
+import { loadKnowledgeBase } from "./yaml-knowledge"
 import { loadDemoSeed } from "./yaml-seed"
 
 type Conversa = DemoSeed["historico"][number]
@@ -91,5 +93,23 @@ describe("loadDemoSeed", () => {
   it("lança KnowledgeInvalidError quando o arquivo está ausente", () => {
     const erros = errosDe(() => loadDemoSeed(dir))
     expect(erros).toEqual(["demo.yaml: arquivo ausente ou ilegível"])
+  })
+})
+
+// Raiz do repositório a partir deste arquivo (src/infra/knowledge/): seed e base reais, sem depender do cwd.
+const RAIZ = fileURLToPath(new URL("../../..", import.meta.url))
+
+describe("seed de demonstração contra a base real", () => {
+  it("seed/demo.yaml passa em validarSeed contra data/", () => {
+    const seed = loadDemoSeed(join(RAIZ, "seed"))
+    const kb = loadKnowledgeBase(join(RAIZ, "data"))
+    expect(validarSeed(seed, kb, new Date())).toEqual([])
+  })
+
+  it("um id de alimento inexistente no seed aparece como achado", () => {
+    const seed = structuredClone(loadDemoSeed(join(RAIZ, "seed")))
+    seed.casa.unshift({ alimento_id: "alimento-inexistente", dias_atras: 1 })
+    const kb = loadKnowledgeBase(join(RAIZ, "data"))
+    expect(validarSeed(seed, kb, new Date()).length).toBeGreaterThan(0)
   })
 })

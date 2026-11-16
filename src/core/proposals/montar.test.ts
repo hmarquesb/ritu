@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { Anotacao } from "@/core/proposals/anotacao"
 import type { ConteudoDaProposta } from "@/core/proposals/conteudo"
 import type { MensagemDoLoop } from "@/core/runs/agent-runtime"
-import { montarPropostas, propostasDoAgente } from "./montar"
+import { montarPropostas, propostaDoParaTer, propostasDoAgente } from "./montar"
 
 const rotina = (texto: string): ConteudoDaProposta => ({
   tool: "memoria.propor",
@@ -100,6 +100,33 @@ describe("propostasDoAgente", () => {
       },
     ]
     expect(propostasDoAgente(mensagens)).toEqual([])
+  })
+})
+
+describe("propostaDoParaTer", () => {
+  it("com para_ter, uma linha lista.propor com fez_falta e o número de vezes", () => {
+    expect(propostaDoParaTer({ para_ter: { alimento_id: "mel", vezes: 3 } })).toEqual([
+      { tool: "lista.propor", alimento_id: "mel", motivo: "fez_falta", detalhe: "3" },
+    ])
+  })
+
+  it("sem para_ter, nenhuma linha", () => {
+    expect(propostaDoParaTer({})).toEqual([])
+  })
+
+  it("a linha do para_ter fica na posição de lista, antes da rotina", () => {
+    const extras = propostaDoParaTer({ para_ter: { alimento_id: "mel", vezes: 2 } })
+    expect(
+      montarPropostas({
+        anotacoes: [casaTem("couve")],
+        doAgente: [rotina("Almoço fora às terças")],
+        extras,
+      }),
+    ).toEqual([
+      { tool: "casa.propor", acao: "tem", itens: [{ nome: "couve" }] },
+      { tool: "lista.propor", alimento_id: "mel", motivo: "fez_falta", detalhe: "2" },
+      rotina("Almoço fora às terças"),
+    ])
   })
 })
 

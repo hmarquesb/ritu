@@ -129,6 +129,56 @@ describe("fecharComPropostas", () => {
     expect(await m.stores.proposals.doRun(m.conta.id, m.run.id)).toHaveLength(6)
   })
 
+  it("com para_ter, a linha da lista entra no bloco e o run vai a waiting_for_approval", async () => {
+    const m = await montar()
+    const saida = {
+      ...saidaDeCodigo("Oi.", [casaTem]),
+      para_ter: {
+        alimento_id: "mel",
+        nome: "Mel",
+        vezes: 3,
+        contribui: [],
+        linha_base: "alimentos:mel",
+        verbos: [],
+        motivo: "x",
+      },
+    }
+    const final = await fecharComPropostas(m.deps, pedido(m, { saida }))
+    const run = await m.stores.runs.buscar(m.conta.id, m.run.id)
+    expect(run?.status).toBe("waiting_for_approval")
+    const linhas = await m.stores.proposals.doRun(m.conta.id, m.run.id)
+    expect(linhas.map((l) => l.tool)).toEqual(["casa.propor", "lista.propor"])
+    expect(linhas[1]?.conteudo).toEqual({
+      alimento_id: "mel",
+      motivo: "fez_falta",
+      detalhe: "3",
+    })
+    expect(final.propostas.map((p) => p.tool)).toEqual(["casa.propor", "lista.propor"])
+  })
+
+  it("com para_ter e incômodo, nenhuma linha e done", async () => {
+    const m = await montar()
+    const saida = {
+      ...saidaDeCodigo("Oi.", []),
+      para_ter: {
+        alimento_id: "mel",
+        nome: "Mel",
+        vezes: 3,
+        contribui: [],
+        linha_base: "alimentos:mel",
+        verbos: [],
+        motivo: "x",
+      },
+    }
+    const final = await fecharComPropostas(
+      m.deps,
+      pedido(m, { saida, anotacoes: [], comIncomodo: true }),
+    )
+    expect(final.propostas).toEqual([])
+    expect(await m.stores.proposals.doRun(m.conta.id, m.run.id)).toEqual([])
+    expect((await m.stores.runs.buscar(m.conta.id, m.run.id))?.status).toBe("done")
+  })
+
   it("nenhum resumo, span, métrica ou log leva o texto da pessoa", async () => {
     const m = await montar()
     await fecharComPropostas(m.deps, pedido(m))

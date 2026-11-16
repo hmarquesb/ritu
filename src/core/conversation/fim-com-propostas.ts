@@ -1,6 +1,6 @@
 import type { Anotacao, SaidaDoAcompanhante } from "@/core/agents/companion/saida"
 import { type ConteudoDaProposta, semTool } from "@/core/proposals/conteudo"
-import { montarPropostas } from "@/core/proposals/montar"
+import { montarPropostas, propostaDoParaTer } from "@/core/proposals/montar"
 import { textoDaProposta } from "@/core/proposals/textos"
 import type { EventoAoVivo } from "@/core/runs/loop"
 import type { Caminho, NovaEtapa } from "@/core/runs/ports"
@@ -50,6 +50,7 @@ function propostasDoFim(p: Pedido): ConteudoDaProposta[] {
   return montarPropostas({
     anotacoes: p.anotacoes,
     doAgente: p.saida.propostas_do_agente ?? [],
+    extras: propostaDoParaTer(p.saida),
   })
 }
 

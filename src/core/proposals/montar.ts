@@ -35,6 +35,22 @@ export function propostasDoAgente(mensagens: MensagemDoLoop[]): ConteudoDaPropos
   })
 }
 
+/** Linha da lista "Para ter em casa" para o item que a pessoa já sentiu falta (para_ter da saída). */
+export function propostaDoParaTer(saida: {
+  para_ter?: { alimento_id: string; vezes: number }
+}): ConteudoDaProposta[] {
+  const paraTer = saida.para_ter
+  if (!paraTer) return []
+  return [
+    {
+      tool: "lista.propor",
+      alimento_id: paraTer.alimento_id,
+      motivo: "fez_falta",
+      detalhe: String(paraTer.vezes),
+    },
+  ]
+}
+
 // Ordem do bloco: evitar sempre, restrição, não como, gosta, casa tem, casa acabou, lista, rotina.
 const ORDEM = [
   "evitar_sempre",

@@ -76,7 +76,7 @@ describe("cenários de demonstração", () => {
 })
 
 // Cenários cujas anotações viram proposta: o run termina esperando a aprovação.
-const COM_BLOCO_DE_APROVACAO = ["casa-sozinha", "evitar-sozinho", "duas-intencoes"]
+const COM_BLOCO_DE_APROVACAO = ["casa-sozinha", "evitar-sozinho", "duas-intencoes", "so-atalhos"]
 
 describe("cenários com pausa", () => {
   it.each(NOVOS_COM_PAUSA)("%s roda até done com origem do agente", async (nome) => {

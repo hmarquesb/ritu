@@ -51,6 +51,31 @@ function comRotina(c: CenarioDeConversa): CenarioDeConversa["roteiro"] {
   ]
 }
 
+// O `para_ter` vai nos argumentos do `finalizar` roteirizado (o roteiro de frio-agitada tem um).
+function temParaTer(c: CenarioDeConversa): boolean {
+  return c.roteiro.some((passo) =>
+    passo.chamadas?.some(
+      (chamada) =>
+        chamada.nome === "finalizar" &&
+        "para_ter" in (chamada.argumentos as Record<string, unknown>),
+    ),
+  )
+}
+
+function semParaTer(c: CenarioDeConversa): CenarioDeConversa {
+  return {
+    ...c,
+    roteiro: c.roteiro.map((passo) => ({
+      ...passo,
+      chamadas: passo.chamadas?.map((chamada) => {
+        if (chamada.nome !== "finalizar") return chamada
+        const { para_ter: _paraTer, ...argumentos } = chamada.argumentos as Record<string, unknown>
+        return { ...chamada, argumentos }
+      }),
+    })),
+  }
+}
+
 async function abrir(
   c: CenarioDeConversa,
   antes?: (deps: DepsDoCenario, contaId: string) => Promise<void>,
@@ -294,7 +319,10 @@ describe("bloco: nada duplicado", () => {
 
 describe("bloco: run sem nada a propor", () => {
   it("termina em done, sem linhas e sem bloco", async () => {
-    const { contaId, deps, runId, rodada } = await abrir(base("so-atalhos"))
+    // Controle: o cenário de origem tem para_ter (e daria linha); a entrada usada não tem.
+    expect(temParaTer(base("so-atalhos"))).toBe(true)
+    expect(temParaTer(semParaTer(base("so-atalhos")))).toBe(false)
+    const { contaId, deps, runId, rodada } = await abrir(semParaTer(base("so-atalhos")))
 
     expect(rodada.final.status).toBe("done")
     expect(rodada.final.saida?.propostas).toEqual([])

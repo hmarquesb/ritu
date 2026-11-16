@@ -176,12 +176,20 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
     },
 
     async votar(contaId, runId, voto) {
-      // O select só acha o run da conta: run de outra conta não gera linha nenhuma.
-      await sql`
-        insert into feedback (run_id, conta_id, voto, criado_em)
-        select id, conta_id, ${voto}::text, ${clock.now()}::timestamptz
-        from runs where id = ${runId} and conta_id = ${contaId}
-        on conflict (run_id) do update set voto = excluded.voto`
+      return numaTransacao(sql, async (tx) => {
+        const [anterior] = await tx<{ voto: "up" | "down" }[]>`
+          select f.voto from feedback f join runs r on r.id = f.run_id
+          where f.run_id = ${runId} and r.conta_id = ${contaId}
+          for update of f`
+        // O select só acha o run da conta: run de outra conta não gera linha nenhuma.
+        const gravados = await tx<{ voto: "up" | "down" }[]>`
+          insert into feedback (run_id, conta_id, voto, criado_em)
+          select id, conta_id, ${voto}::text, ${clock.now()}::timestamptz
+          from runs where id = ${runId} and conta_id = ${contaId}
+          on conflict (run_id) do update set voto = excluded.voto
+          returning voto`
+        return gravados.length > 0 ? (anterior?.voto ?? null) : null
+      })
     },
 
     async expirarEmEsperaAntesDe(limite) {

@@ -209,12 +209,21 @@ export function runsContract(make: () => Promise<ContractEnv> | ContractEnv): vo
       expect(await runs.contarMensagensDoDia(a, DIA)).toBe(2)
     })
 
-    it("votar aceita up e depois down no mesmo run", async () => {
+    it("votar devolve o voto anterior: null na primeira vez, depois o que estava gravado", async () => {
       const { a } = await criarDuasContas(env.stores)
       const run = await abrir(env.stores, a)
 
-      await expect(env.stores.runs.votar(a, run.id, "up")).resolves.toBeUndefined()
-      await expect(env.stores.runs.votar(a, run.id, "down")).resolves.toBeUndefined()
+      await expect(env.stores.runs.votar(a, run.id, "up")).resolves.toBeNull()
+      await expect(env.stores.runs.votar(a, run.id, "down")).resolves.toBe("up")
+      await expect(env.stores.runs.votar(a, run.id, "down")).resolves.toBe("down")
+    })
+
+    it("votar de outra conta devolve null e não grava nada", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const run = await abrir(env.stores, a)
+
+      await expect(env.stores.runs.votar(b, run.id, "down")).resolves.toBeNull()
+      await expect(env.stores.runs.votar(a, run.id, "up")).resolves.toBeNull()
     })
 
     it("expirarEmEsperaAntesDe expira os runs em espera com atualizado_em antes do limite e devolve os ids", async () => {

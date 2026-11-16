@@ -224,6 +224,7 @@ export function createRunService(deps: DepsDoServico) {
         "run.id": run.id,
         "run.caminho": run.caminho,
         ...(conta ? { "conta.tipo": conta.tipo } : {}),
+        ...(run.prompt_versao ? { "prompt.versao": run.prompt_versao } : {}),
       },
       async (span) => {
         const id = traceparent ?? telemetry.traceparentAtual()

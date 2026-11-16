@@ -63,7 +63,10 @@ export const climaAgoraTool = definirTool({
   resumir: resumoDeClima,
   async executar(_entrada, ctx) {
     const cidade = ctx.clima.cidade
-    if (!cidade) return { status: "sem_cidade" }
+    if (!cidade) {
+      ctx.telemetry.atribuirAoSpanAtual({ "cache.hit": false })
+      return { status: "sem_cidade" }
+    }
     const clima = await climaDaCidade(ctx, cidade)
     if (!clima) return { status: "indisponivel" }
     return {
@@ -86,7 +89,10 @@ export const climaProximasHorasTool = definirTool({
   resumir: resumoDeClima,
   async executar(_entrada, ctx) {
     const cidade = ctx.clima.cidade
-    if (!cidade) return { status: "sem_cidade" }
+    if (!cidade) {
+      ctx.telemetry.atribuirAoSpanAtual({ "cache.hit": false })
+      return { status: "sem_cidade" }
+    }
     const clima = await climaDaCidade(ctx, cidade)
     if (!clima) return { status: "indisponivel" }
     return { status: "ok", cidade: cidade.nome, ...tendenciaDasProximasHoras(clima) }

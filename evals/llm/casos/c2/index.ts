@@ -1,3 +1,8 @@
+import { casoAprendizado01 } from "./aprendizado/01-cha-nao-ajudou-duas-vezes"
+import { casoAprendizado02 } from "./aprendizado/02-nao-gosto-nao-aparece"
+import { casoAprendizado03 } from "./aprendizado/03-gosto-aparece"
+import { casoAprendizado04 } from "./aprendizado/04-retorno-de-ontem-fechado"
+import { casoAprendizado05 } from "./aprendizado/05-melhorei-sem-pista-como-ficou"
 import { caso01 } from "./intencao/01-frio-sem-fome"
 import { caso02 } from "./intencao/02-manga-pergunta-pitta"
 import { caso03 } from "./intencao/03-almoco-fora-na-semana"
@@ -18,6 +23,9 @@ import { caso17 } from "./intencao/17-prompt-suspeito"
 import { caso18 } from "./intencao/18-apagar-dados"
 import { caso19 } from "./intencao/19-vegetariana"
 import { caso20 } from "./intencao/20-nao-como-coentro"
+import { casoParaTer06 } from "./para-ter/06-para-ter-com-faltas"
+import { casoParaTer07 } from "./para-ter/07-sem-candidato"
+import { casoParaTer08 } from "./para-ter/08-incomodo-sem-para-ter"
 import { casoPergunta01 } from "./perguntas/01-frio-so-incertos"
 import { casoPergunta02 } from "./perguntas/02-frio-casa-confirmada"
 import { casoPergunta03 } from "./perguntas/03-almoco-casa-vazia"
@@ -34,7 +42,7 @@ import { casoPropostas05 } from "./propostas/05-vegetariana-sem-barrado"
 import { casoPropostas06 } from "./propostas/06-almoco-fora-nao-diz-que-anotou"
 import type { CasoC2 } from "./tipos"
 
-// Casos da pasta c2 (Intérprete e conversa). A família Intenção tem 20 casos do Intérprete; as famílias Perguntas (8) e Propostas (6), casos de conversa.
+// Casos da pasta c2 (Intérprete e conversa). A família Intenção tem 20 casos do Intérprete; as famílias Perguntas (8), Propostas (6), Aprendizado (5) e Para ter em casa (3), casos de conversa.
 export const casosC2: CasoC2[] = [
   caso01,
   caso02,
@@ -70,6 +78,14 @@ export const casosC2: CasoC2[] = [
   casoPropostas04,
   casoPropostas05,
   casoPropostas06,
+  casoAprendizado01,
+  casoAprendizado02,
+  casoAprendizado03,
+  casoAprendizado04,
+  casoAprendizado05,
+  casoParaTer06,
+  casoParaTer07,
+  casoParaTer08,
 ]
 
 export type {

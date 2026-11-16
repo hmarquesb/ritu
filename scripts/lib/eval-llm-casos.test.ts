@@ -9,6 +9,17 @@ import { casosC1, type ResultadoDoRun } from "../../evals/llm/casos/c1"
 import type { CasoConversa, CasoInterprete } from "../../evals/llm/casos/c2"
 import { casosC2 } from "../../evals/llm/casos/c2"
 import {
+  apareceNasSugestoes,
+  apontaComoFicou,
+  chamouResultadoRegistrar,
+  fechouRetorno,
+  naoAparece,
+  naoFechou,
+  nenhumRetornoFechado,
+  primeiroDoTipoNao,
+  reconheceRetorno,
+} from "../../evals/llm/casos/c2/aprendizado/expectativas"
+import {
   caminho,
   campoVazio,
   ehSuspeito,
@@ -31,6 +42,12 @@ import {
   temRestricao,
   temUmaDe,
 } from "../../evals/llm/casos/c2/intencao/expectativas"
+import {
+  comParaTer,
+  falaDasProximasVezes,
+  semFraseDeCompra,
+  semParaTer,
+} from "../../evals/llm/casos/c2/para-ter/expectativas"
 import {
   itensNaPergunta,
   naoGostaDoPrimeiroTenhoOsOutros,
@@ -155,20 +172,20 @@ describe("listagem por checkpoint", () => {
     expect(linhas.every((l) => l.pasta === "c1" && l.tipo === "acompanhante")).toBe(true)
   })
 
-  it("c2-conversa lista os 12 do c1 e os 34 do c2", () => {
+  it("c2-conversa lista os 12 do c1 e os 42 do c2", () => {
     const linhas = listarCasos("c2-conversa")
-    expect(linhas).toHaveLength(46)
+    expect(linhas).toHaveLength(54)
     expect(linhas.slice(0, 12).every((l) => l.pasta === "c1")).toBe(true)
     expect(linhas.slice(12).every((l) => l.pasta === "c2")).toBe(true)
     expect(linhas.slice(12).filter((l) => l.tipo === "interprete")).toHaveLength(20)
-    expect(linhas.slice(12).filter((l) => l.tipo === "conversa")).toHaveLength(14)
+    expect(linhas.slice(12).filter((l) => l.tipo === "conversa")).toHaveLength(22)
   })
 
-  it("c2 tem 20 casos do Intérprete, 8 de Perguntas e 6 de Propostas, com ids únicos", () => {
-    expect(casosC2).toHaveLength(34)
+  it("c2 tem 20 casos do Intérprete e 22 de conversa (8 Perguntas, 6 Propostas, 5 Aprendizado, 3 Para ter em casa), com ids únicos", () => {
+    expect(casosC2).toHaveLength(42)
     expect(casosC2.filter((c) => c.tipo === "interprete")).toHaveLength(20)
-    expect(casosC2.filter((c) => c.tipo === "conversa")).toHaveLength(14)
-    expect(new Set(casosC2.map((c) => c.id)).size).toBe(34)
+    expect(casosC2.filter((c) => c.tipo === "conversa")).toHaveLength(22)
+    expect(new Set(casosC2.map((c) => c.id)).size).toBe(42)
   })
 
   it("os 8 casos de Perguntas são de conversa e têm mensagem", () => {
@@ -1257,5 +1274,228 @@ describe("runner da conversa com retornos fechados", () => {
   it("o resultado leva a família do caso", async () => {
     const r = await rodarConversa(casoDeRetorno(), opcoes())
     expect(r.familia).toBe("aprendizado")
+  })
+})
+
+describe("expectativas de Aprendizado e Para ter em casa", () => {
+  type Entrada = Parameters<ExpectativaDaConversa["confere"]>[0]
+
+  const saidaPronta = (p: Partial<SaidaDoAcompanhante> = {}): SaidaDoAcompanhante => ({
+    origem: "agente",
+    resposta: "Um prato morno, sem tela.",
+    geral: false,
+    avisos: [],
+    explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
+    sugestoes: [],
+    evitar: [],
+    incertos: [],
+    citados: [],
+    anotacoes: [],
+    propostas: [],
+    ...p,
+  })
+
+  const sugestao = (
+    tipo: SugestaoEntregue["tipo"],
+    ids: string[],
+    extra: Partial<SugestaoEntregue> = {},
+  ): SugestaoEntregue => ({
+    tipo,
+    titulo: "Sugestão",
+    como_fazer: "Prepare e sirva.",
+    motivo: "Esquenta.",
+    linhas_base: [],
+    novidade: false,
+    verbos: [],
+    itens: ids.map((id) => ({
+      alimento_id: id,
+      nome: id,
+      contribui: [],
+      verbos: [],
+      linha_base: `alimentos:${id}`,
+      casa: "confirmado",
+    })),
+    ...extra,
+  })
+
+  const resultadoCom = (saida: SaidaDoAcompanhante, tools: string[] = []): ResultadoDoRun => ({
+    saida,
+    status: "done",
+    tools,
+    chamadasDeModelo: 1,
+    validacoes: ["ok"],
+  })
+
+  const entrada = (p: Partial<Entrada> = {}): Entrada => ({
+    resposta: { run_id: "run-eval", status: "done", caminho: "acompanhante" },
+    resultado: resultadoCom(saidaPronta()),
+    perguntas: [],
+    recusadas: 0,
+    llmAntesDaPrimeiraPausa: 0,
+    propostas: [],
+    propostasRecusadas: 0,
+    retornosFechados: [],
+    ...p,
+  })
+
+  const passa = (e: ExpectativaDaConversa, r: Partial<Entrada>): boolean => e.confere(entrada(r))
+
+  const paraTer = {
+    alimento_id: "cardamomo",
+    nome: "Cardamomo",
+    vezes: 3,
+    contribui: [],
+    linha_base: "alimentos:cardamomo",
+    verbos: [],
+    motivo: "Faltou três vezes.",
+  }
+
+  it("primeiroDoTipoNao reprova o chá dado quando ele é o primeiro do seu tipo", () => {
+    const outroPrimeiro = saidaPronta({
+      sugestoes: [
+        sugestao("cha", ["cardamomo"], { pratica_id: "cha-cardamomo" }),
+        sugestao("cha", ["gengibre"], { pratica_id: "cha-gengibre-canela" }),
+      ],
+    })
+    const primeiro = saidaPronta({
+      sugestoes: [sugestao("cha", ["gengibre"], { pratica_id: "cha-gengibre-canela" })],
+    })
+    const exp = primeiroDoTipoNao("cha-gengibre-canela", "cha")
+    expect(passa(exp, { resultado: resultadoCom(outroPrimeiro) })).toBe(true)
+    expect(passa(exp, { resultado: resultadoCom(primeiro) })).toBe(false)
+  })
+
+  it("apareceNasSugestoes exige o alimento num item de sugestão", () => {
+    const exp = apareceNasSugestoes("gengibre")
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestao("cha", ["gengibre"])] })),
+      }),
+    ).toBe(true)
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestao("cha", ["canela"])] })),
+      }),
+    ).toBe(false)
+  })
+
+  it("naoAparece reprova o alimento que sai num item, e passa quando ele não sai", () => {
+    const exp = naoAparece("gengibre")
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(
+          saidaPronta({
+            resposta: "Uma refeição morna.",
+            sugestoes: [sugestao("cha", ["canela"])],
+          }),
+        ),
+      }),
+    ).toBe(true)
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestao("cha", ["gengibre"])] })),
+      }),
+    ).toBe(false)
+  })
+
+  it("chamouResultadoRegistrar confere se resultado.registrar foi chamada", () => {
+    const exp = chamouResultadoRegistrar()
+    expect(passa(exp, { resultado: resultadoCom(saidaPronta(), ["resultado.registrar"]) })).toBe(
+      true,
+    )
+    expect(passa(exp, { resultado: resultadoCom(saidaPronta(), ["memoria.propor"]) })).toBe(false)
+  })
+
+  it("fechouRetorno exige o título nos retornos fechados", () => {
+    const exp = fechouRetorno("Arroz")
+    expect(passa(exp, { retornosFechados: ["Arroz"] })).toBe(true)
+    expect(passa(exp, { retornosFechados: ["Chá"] })).toBe(false)
+  })
+
+  it("naoFechou reprova o título que saiu dos pendentes", () => {
+    const exp = naoFechou("Chá")
+    expect(passa(exp, { retornosFechados: ["Arroz"] })).toBe(true)
+    expect(passa(exp, { retornosFechados: ["Chá"] })).toBe(false)
+  })
+
+  it("nenhumRetornoFechado reprova quando algum retorno fechou", () => {
+    const exp = nenhumRetornoFechado()
+    expect(passa(exp, { retornosFechados: [] })).toBe(true)
+    expect(passa(exp, { retornosFechados: ["Arroz"] })).toBe(false)
+  })
+
+  it("reconheceRetorno exige o retorno na primeira frase", () => {
+    const exp = reconheceRetorno()
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(
+          saidaPronta({ resposta: "Que bom que o arroz ajudou ontem. Agora, um chá." }),
+        ),
+      }),
+    ).toBe(true)
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(
+          saidaPronta({ resposta: "Para agora, um chá quente de gengibre. Ok." }),
+        ),
+      }),
+    ).toBe(false)
+  })
+
+  it("apontaComoFicou exige o texto com Como ficou", () => {
+    const exp = apontaComoFicou()
+    expect(
+      passa(exp, { resultado: resultadoCom(saidaPronta({ resposta: "Como ficou aquilo?" })) }),
+    ).toBe(true)
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(saidaPronta({ resposta: "Que bom, vou tomar um chá." })),
+      }),
+    ).toBe(false)
+  })
+
+  it("comParaTer exige o para_ter na saída", () => {
+    const exp = comParaTer()
+    expect(passa(exp, { resultado: resultadoCom(saidaPronta({ para_ter: paraTer })) })).toBe(true)
+    expect(passa(exp, { resultado: resultadoCom(saidaPronta()) })).toBe(false)
+  })
+
+  it("semParaTer reprova quando há para_ter na saída", () => {
+    const exp = semParaTer()
+    expect(passa(exp, { resultado: resultadoCom(saidaPronta()) })).toBe(true)
+    expect(passa(exp, { resultado: resultadoCom(saidaPronta({ para_ter: paraTer })) })).toBe(false)
+  })
+
+  it("falaDasProximasVezes exige a palavra próxima no texto", () => {
+    const exp = falaDasProximasVezes()
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(saidaPronta({ resposta: "Vale ter para as próximas vezes." })),
+      }),
+    ).toBe(true)
+    expect(
+      passa(exp, { resultado: resultadoCom(saidaPronta({ resposta: "Vale ter em casa." })) }),
+    ).toBe(false)
+  })
+
+  it("semFraseDeCompra reprova comprar, loja, mercado, preço, marca e R$", () => {
+    const exp = semFraseDeCompra()
+    expect(
+      passa(exp, {
+        resultado: resultadoCom(
+          saidaPronta({ resposta: "Um chá quente, para as próximas vezes." }),
+        ),
+      }),
+    ).toBe(true)
+    for (const texto of [
+      "Vale comprar cardamomo.",
+      "Vá à loja.",
+      "Compre no mercado.",
+      "Qual o preço?",
+      "Uma marca boa.",
+      "Custa R$ 10.",
+    ]) {
+      expect(passa(exp, { resultado: resultadoCom(saidaPronta({ resposta: texto })) })).toBe(false)
+    }
   })
 })

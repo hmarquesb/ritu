@@ -1,4 +1,5 @@
 import { alertaEmocional } from "./alerta-emocional"
+import { alertaPorCodigo } from "./alerta-por-codigo"
 import { aprovacaoParcial } from "./aprovacao-parcial"
 import { autocorrecao } from "./autocorrecao"
 import { casaIncerta } from "./casa-incerta"
@@ -14,7 +15,12 @@ import { evitarSozinho } from "./evitar-sozinho"
 import { faltouHoje } from "./faltou-hoje"
 import { frioAgitada } from "./frio-agitada"
 import { gostoEscrito } from "./gosto-escrito"
+import { injectionPorCodigo } from "./injection-por-codigo"
+import { juizBarra } from "./juiz-barra"
+import { juizCorrige } from "./juiz-corrige"
+import { juizForaDoAr } from "./juiz-fora-do-ar"
 import { naoTenhoComPergunta } from "./nao-tenho-com-pergunta"
+import { notaComSaude } from "./nota-com-saude"
 import { ofensa } from "./ofensa"
 import { padraoAgoraNao } from "./padrao-agora-nao"
 import { padraoConfirmado } from "./padrao-confirmado"
@@ -27,6 +33,7 @@ import { rotinaResumida } from "./rotina-resumida"
 import { rotinaSemModelo } from "./rotina-sem-modelo"
 import { semModelo } from "./sem-modelo"
 import { soAtalhos } from "./so-atalhos"
+import { sumirPorCodigo } from "./sumir-por-codigo"
 import type { Cenario as CenarioBase, CenarioComEntrada, CenarioDeConversa } from "./tipos"
 import { trocaPorToque } from "./troca-por-toque"
 import { vegetariana } from "./vegetariana"
@@ -98,6 +105,17 @@ export const cenariosDeMemoria: Record<string, CenarioDeConversa> = {
   "padrao-recusado": comMensagem(padraoRecusado),
   "padrao-agora-nao": comMensagem(padraoAgoraNao),
   "estados-juntos": comMensagem(estadosJuntos),
+}
+
+// Os sete da 013 (guardrails e Juiz) ficam num registro próprio (D20). Os três de código não chamam modelo; os do Juiz usam `juiz` do cenário.
+export const cenariosDeGuardrails: Record<string, CenarioDeConversa> = {
+  "alerta-por-codigo": comMensagem(alertaPorCodigo),
+  "sumir-por-codigo": comMensagem(sumirPorCodigo),
+  "injection-por-codigo": comMensagem(injectionPorCodigo),
+  "juiz-corrige": comMensagem(juizCorrige),
+  "juiz-barra": comMensagem(juizBarra),
+  "juiz-fora-do-ar": comMensagem(juizForaDoAr),
+  "nota-com-saude": comMensagem(notaComSaude),
 }
 
 export { type DepsDoCenario, montarCenario, type OpcoesDoCenario } from "./montar"

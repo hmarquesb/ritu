@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { preparar } from "@/core/agents/companion/preparo"
+import { textosDoAcompanhante } from "@/core/agents/companion/textos"
+import { textosDaConversa } from "@/core/conversation/textos"
 import { contemIncomodo } from "@/core/knowledge/incomodo-no-texto"
 import { createContainer } from "@/infra/container"
 import {
@@ -8,10 +10,13 @@ import {
   cenariosComPausa,
   cenariosDeAprendizado,
   cenariosDeConversa,
+  cenariosDeGuardrails,
   cenariosDeMemoria,
   montarCenario,
 } from "./index"
+import { RESPOSTA_DE_CONFORTO } from "./juiz-corrige"
 import type { DepsDoCenario } from "./montar"
+import { RESPOSTA_DA_NOTA } from "./nota-com-saude"
 import { rodarCenario } from "./rodar"
 
 const NOVOS_COM_PAUSA = Object.keys(cenariosComPausa)
@@ -497,5 +502,129 @@ describe("cenários de rotina e padrões (012)", () => {
         expect(contemIncomodo(texto, kb), `${nome}: ${texto}`).toBe(false)
       }
     }
+  })
+})
+
+// Os sete da 013 (guardrails e Juiz): cada um confere o que a coluna "Mostra" pede, nas etapas, no run, na saída e nas mensagens.
+const TIPOS_DE_MODELO: string[] = ["interprete", "llm", "juiz", "memoria"]
+
+async function rodarGuardrail(nome: string) {
+  const c = cenariosDeGuardrails[nome]
+  if (!c) throw new Error(`cenário ausente: ${nome}`)
+  const { contaId, deps } = await montarCenario(c)
+  const rodada = await rodarCenario(deps, contaId, c)
+  const etapas = await deps.stores.runs.etapas(contaId, rodada.final.run_id)
+  const run = await deps.stores.runs.buscar(contaId, rodada.final.run_id)
+  return { c, contaId, deps, rodada, etapas, run }
+}
+
+describe("cenários de guardrails e Juiz (013)", () => {
+  it("o registro de guardrails tem os sete e os outros registros não mudam de tamanho", () => {
+    expect(Object.keys(cenariosDeGuardrails).sort()).toEqual([
+      "alerta-por-codigo",
+      "injection-por-codigo",
+      "juiz-barra",
+      "juiz-corrige",
+      "juiz-fora-do-ar",
+      "nota-com-saude",
+      "sumir-por-codigo",
+    ])
+    expect(Object.keys(cenariosDeConversa)).toHaveLength(7)
+    expect(Object.keys(cenariosComPausa)).toHaveLength(4)
+    expect(Object.keys(cenariosComAprovacao)).toHaveLength(3)
+    expect(Object.keys(cenariosDeAprendizado)).toHaveLength(6)
+    expect(Object.keys(cenariosDeMemoria)).toHaveLength(6)
+  })
+
+  it("alerta-por-codigo: caminho alerta, guardrail por código, sem etapa de modelo, com incômodo", async () => {
+    const { rodada, etapas, run } = await rodarGuardrail("alerta-por-codigo")
+    expect(run?.caminho).toBe("alerta")
+    expect(
+      etapas.filter((e) => e.tipo === "guardrail").map((e) => [e.nome, e.resumo, e.status]),
+    ).toEqual([["alerta_fisico", "codigo", "recusado"]])
+    expect(etapas.filter((e) => TIPOS_DE_MODELO.includes(e.tipo))).toEqual([])
+    expect(rodada.final.saida?.resposta).toBe(textosDaConversa.alertaFisico)
+    expect(run?.com_incomodo).toBe(true)
+    expect(run?.tokens_entrada).toBe(0)
+  })
+
+  it("sumir-por-codigo: texto do CVV, nenhuma chamada de modelo, e as mensagens do run marcadas", async () => {
+    const { rodada, etapas, run, contaId, deps } = await rodarGuardrail("sumir-por-codigo")
+    expect(run?.caminho).toBe("alerta")
+    expect(
+      etapas.filter((e) => e.tipo === "guardrail").map((e) => [e.nome, e.resumo, e.status]),
+    ).toEqual([["alerta_emocional", "codigo", "recusado"]])
+    expect(etapas.filter((e) => TIPOS_DE_MODELO.includes(e.tipo))).toEqual([])
+    expect(rodada.final.saida?.resposta).toBe(textosDaConversa.alertaEmocional)
+    expect(run?.com_incomodo).toBe(true)
+    expect(run?.tokens_entrada).toBe(0)
+    const mensagens = (await deps.stores.messages.doDia(contaId, run?.dia ?? "")).filter(
+      (m) => m.run_id === rodada.final.run_id,
+    )
+    expect(mensagens.map((m) => m.com_incomodo)).toEqual([true, true])
+  })
+
+  it("injection-por-codigo: caminho fora, guardrail injection por código, nenhuma chamada de modelo", async () => {
+    const { rodada, etapas, run } = await rodarGuardrail("injection-por-codigo")
+    expect(run?.caminho).toBe("fora")
+    expect(
+      etapas.filter((e) => e.tipo === "guardrail").map((e) => [e.nome, e.resumo, e.status]),
+    ).toEqual([["injection", "codigo", "recusado"]])
+    expect(etapas.filter((e) => TIPOS_DE_MODELO.includes(e.tipo))).toEqual([])
+    expect(rodada.final.saida?.resposta).toBe(textosDaConversa.fora)
+    expect(run?.tokens_entrada).toBe(0)
+  })
+
+  it("juiz-corrige: a promessa sai, a nova tentativa no reforco corrige e o Juiz aprova na segunda leitura", async () => {
+    const { rodada, etapas, run } = await rodarGuardrail("juiz-corrige")
+    expect(rodada.final.status).toBe("done")
+    expect(rodada.final.saida?.origem).toBe("agente")
+    expect(rodada.final.saida?.resposta).toBe(RESPOSTA_DE_CONFORTO)
+    expect(etapas.filter((e) => e.tipo === "juiz").map((e) => [e.status, e.resumo])).toEqual([
+      ["recusado", "reprovado: promessa"],
+      ["ok", "aprovado"],
+    ])
+    expect(run?.juiz_tentativas).toBe(2)
+    expect(run?.juiz_aprovado).toBe(true)
+    expect(run?.modelos).toMatchObject({ reforco: [expect.any(String)] })
+  })
+
+  it("juiz-barra: a segunda entrega ainda reprovada vira resposta segura e não cria retorno", async () => {
+    const { rodada, etapas, run, contaId, deps } = await rodarGuardrail("juiz-barra")
+    expect(rodada.final.status).toBe("done")
+    expect(rodada.final.saida?.origem).toBe("segura")
+    expect(rodada.final.saida?.resposta).toBe(textosDoAcompanhante.respostaSegura)
+    expect(etapas.filter((e) => e.tipo === "juiz").map((e) => [e.status, e.resumo])).toEqual([
+      ["recusado", "reprovado: promessa"],
+      ["recusado", "reprovado: promessa"],
+    ])
+    expect(run?.juiz_tentativas).toBe(2)
+    expect(run?.juiz_aprovado).toBe(false)
+    expect(await deps.stores.outcomes.pendentes(contaId)).toEqual([])
+  })
+
+  it("juiz-fora-do-ar: sem modelo no Juiz, a entrega vira resposta segura e a etapa juiz falha", async () => {
+    const { rodada, etapas, run } = await rodarGuardrail("juiz-fora-do-ar")
+    expect(rodada.final.status).toBe("done")
+    expect(rodada.final.saida?.origem).toBe("segura")
+    expect(rodada.final.saida?.resposta).toBe(textosDoAcompanhante.respostaSegura)
+    expect(etapas.filter((e) => e.tipo === "juiz").map((e) => [e.status, e.resumo])).toEqual([
+      ["falhou", "indisponivel"],
+    ])
+    expect(run?.juiz_tentativas).toBe(1)
+    expect(run?.juiz_aprovado).toBeNull()
+  })
+
+  it("nota-com-saude: a resposta sai, a linha da rotina não vai ao bloco nem à rotina, e o registro traz saude_na_proposta", async () => {
+    const { rodada, etapas, run, contaId, deps } = await rodarGuardrail("nota-com-saude")
+    expect(rodada.final.saida?.origem).toBe("agente")
+    expect(rodada.final.saida?.resposta).toBe(RESPOSTA_DA_NOTA)
+    expect(rodada.final.saida?.propostas.map((p) => p.tool)).not.toContain("memoria.propor")
+    expect(rodada.bloco).toBeUndefined()
+    expect(await deps.stores.routine.notasAtivas(contaId)).toEqual([])
+    expect(etapas.filter((e) => e.tipo === "juiz").map((e) => [e.status, e.resumo])).toEqual([
+      ["ok", "aprovado; registros: saude_na_proposta"],
+    ])
+    expect(run?.juiz_aprovado).toBe(true)
   })
 })

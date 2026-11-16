@@ -70,13 +70,13 @@ const finalizar = (argumentos: unknown): PassoRoteirizado => ({
   chamadas: [{ nome: "finalizar", argumentos }],
 })
 
-// Tudo que fica fora das mensagens: casa, gostos, faltas, lista e o perfil de "não como".
+// Tudo que fica fora das mensagens: casa, gostos, lista e o perfil de "não como".
+// As faltas ficam de fora: a entrega do run grava as `teria_entrado`; elas são conferidas à parte.
 async function gravadoFora(deps: Awaited<ReturnType<typeof montar>>["deps"], contaId: string) {
   const perfil = await deps.stores.profiles.ler(contaId)
   return JSON.stringify({
     casa: await deps.stores.pantry.listar(contaId),
     gostos: await deps.stores.preferences.ler(contaId),
-    faltas: await deps.stores.shortages.diasComFalta(contaId, "2000-01-01"),
     lista: await deps.stores.shortages.lista(contaId),
     perfil_nao_come: perfil.nao_come,
   })
@@ -199,5 +199,12 @@ describe("como: a resposta Como não grava nada fora das mensagens", () => {
     expect(await gravadoFora(deps, contaId)).toBe(antes)
     const anotacoes = rodada.final.saida?.anotacoes ?? []
     expect(anotacoes.some((a) => a.tipo === "nao_come")).toBe(false)
+    // Só a entrega grava falta (teria_entrado): a resposta "Como" não cria nenhuma nao_tenho.
+    const origens = deps.telemetry.metricas
+      .filter((m) => m.nome === "ritu_faltas_total")
+      .map((m) => m.rotulos.origem)
+    expect(origens.filter((o) => o !== "teria_entrado")).toEqual([])
+    const faltas = await deps.stores.shortages.diasComFalta(contaId, "2000-01-01")
+    expect(faltas).toHaveLength(origens.length)
   })
 })

@@ -154,6 +154,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     get companion() {
       companion ??= createCompanion({
         stores: container.stores,
+        tx: container.tx,
         kb: container.knowledge,
         clock,
         weather: container.weather,

@@ -90,7 +90,16 @@ async function montar(o: Opcoes = {}) {
   const interpreter = createInterpreter({ router, client: llm, kb, telemetry, clock })
   const companion =
     o.companion ??
-    createCompanion({ stores, kb, clock, weather: createFakeWeather(), router, runs, telemetry })
+    createCompanion({
+      stores,
+      tx: stores,
+      kb,
+      clock,
+      weather: createFakeWeather(),
+      router,
+      runs,
+      telemetry,
+    })
   const conversation = createConversation({
     stores,
     tx: stores,

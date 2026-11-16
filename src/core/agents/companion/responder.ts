@@ -9,7 +9,7 @@ import { type EventoAoVivo, novoCheckpoint } from "@/core/runs/loop"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Run, RunEtapa } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
-import type { Stores } from "@/core/stores"
+import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import type { ToolContext } from "@/core/tools/tool"
 import type { CidadeDaPessoa, WeatherSource } from "@/core/weather/ports"
@@ -31,6 +31,7 @@ export type { RespostaDoRun } from "./fim-do-run"
 
 type Deps = {
   stores: Stores
+  tx: Transactor
   kb: KnowledgeBase
   clock: Clock
   weather: WeatherSource
@@ -108,8 +109,8 @@ function acompanharClima(
 }
 
 export function createCompanion(deps: Deps) {
-  const { stores, kb, clock, telemetry, runs, router } = deps
-  const fimDoRun = criarFimDoRun({ stores, kb, runs, telemetry })
+  const { stores, tx, kb, clock, telemetry, runs, router } = deps
+  const fimDoRun = criarFimDoRun({ stores, tx, kb, runs, telemetry })
 
   async function semModelo(
     contaId: string,
@@ -127,7 +128,12 @@ export function createCompanion(deps: Deps) {
         intencoes,
         fuso,
       }))
-    const saida = saidaSemModeloDe(kb, dados, perfil)
+    const saida = await fimDoRun.entregar(
+      contaId,
+      run.id,
+      saidaSemModeloDe(kb, dados, perfil),
+      dados,
+    )
     telemetry.contador("ritu_fallback_sem_llm_total")
     const gravar = campos(dados, {
       saida,

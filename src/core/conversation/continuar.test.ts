@@ -78,6 +78,7 @@ async function montar(o: { llm?: unknown[]; roteiro: PassoRoteirizado[] }) {
   } as typeof router
   const companion = createCompanion({
     stores,
+    tx: stores,
     kb,
     clock,
     weather: createFakeWeather(),
@@ -133,9 +134,10 @@ describe("continuar: pausa do agente", () => {
     })
     expect(casa.find((i) => i.alimento_id === "cenoura")?.estado).toBe("acabou")
     const faltas = await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")
-    expect(faltas.map((f) => f.alimento_id)).toEqual(["cenoura"])
+    // cenoura: "Não tenho"; ghee: o que teria entrado e não está em casa (a entrega grava).
+    expect(faltas.map((f) => f.alimento_id).sort()).toEqual(["cenoura", "ghee"])
     const metricas = m.telemetry.metricas.filter((x) => x.nome === "ritu_faltas_total")
-    expect(metricas).toHaveLength(1)
+    expect(metricas.map((x) => x.rotulos.origem).sort()).toEqual(["nao_tenho", "teria_entrado"])
     const run = await estado(m, p.run_id)
     expect(run.status).toBe("done")
     const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)
@@ -148,6 +150,20 @@ describe("continuar: pausa do agente", () => {
     expect(mensagens[2]?.texto).toBe("Tenho: abóbora · Não tenho: cenoura")
     expect(mensagens[1]?.texto).toBe(p.pergunta?.texto)
     expect(mensagens[3]?.texto).toBe(entregaOk.resposta)
+  })
+
+  it("o que entrou em casa por Tenho na pausa não vira falta da entrega", async () => {
+    const askGhee: PassoRoteirizado = {
+      chamadas: [{ nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["ghee"] } }],
+    }
+    const m = await montar({ roteiro: [askGhee, fim()] })
+    const p = await pausar(m)
+    await continuar(m, p.run_id, {
+      tipo: "casa",
+      itens: [{ alimento_id: "ghee", resposta: "tenho" }],
+    })
+    expect(await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")).toEqual([])
+    expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_faltas_total")).toHaveLength(0)
   })
 
   it("Não gosto grava o gosto e não mexe na casa", async () => {
@@ -169,7 +185,9 @@ describe("continuar: pausa do agente", () => {
     const p = await pausar(m)
     const r = await continuar(m, p.run_id, { tipo: "pular" })
     expect(r.status).toBe("done")
-    expect(await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")).toEqual([])
+    // Só a falta da entrega (o que teria entrado); a pergunta pulada não grava "Não tenho".
+    const faltas = await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")
+    expect(faltas.map((f) => f.alimento_id)).toEqual(["ghee"])
     expect(await m.stores.preferences.ler(m.conta.id)).toEqual([])
     const casa = await m.stores.pantry.listar(m.conta.id)
     expect(casa.every((i) => i.origem !== "pergunta")).toBe(true)
@@ -330,8 +348,10 @@ describe("continuar: recusas", () => {
     ])
     const erros = [a, b].filter((x) => x instanceof RunNaoContinuavelError)
     expect(erros).toHaveLength(1)
-    expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_faltas_total")).toHaveLength(1)
-    expect(await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")).toHaveLength(1)
+    const medidas = m.telemetry.metricas.filter((x) => x.nome === "ritu_faltas_total")
+    expect(medidas.map((x) => x.rotulos.origem).sort()).toEqual(["nao_tenho", "teria_entrado"])
+    const faltas = await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")
+    expect(faltas.map((f) => f.alimento_id).sort()).toEqual(["cenoura", "ghee"])
   })
 
   it("falha em gravarResposta: o erro sobe e o run volta a waiting_for_input", async () => {

@@ -66,7 +66,7 @@ async function montar(roteiro: PassoRoteirizado[], opts: { semModelo?: boolean }
   const runs = createRunService({ stores, tx: stores, runtime, clock, telemetry })
   const conta = await stores.accounts.criar({ tipo: "demo" })
   const companion = (r: ModelRouter = router) =>
-    createCompanion({ stores, kb, clock, weather, router: r, runs, telemetry })
+    createCompanion({ stores, tx: stores, kb, clock, weather, router: r, runs, telemetry })
   return { clock, stores, telemetry, weather, router, conta, companion, runtime, runs }
 }
 
@@ -124,6 +124,17 @@ describe("createCompanion.responder", () => {
     expect(run).toMatchObject({ caminho: "sem_modelo", status: "done" })
     const soma = m.telemetry.metricas.filter((x) => x.nome === "ritu_fallback_sem_llm_total")
     expect(soma.reduce((t, x) => t + x.valor, 0)).toBe(1)
+  })
+
+  it("sem vaga antes do loop (semModelo) grava retornos e faltas da entrega", async () => {
+    const m = await montar([], { semModelo: true })
+    const r = await m.companion().responder(m.conta.id, entrada({ estados: ["agitada"] }))
+    const retornos = await m.stores.outcomes.doRun(m.conta.id, r.run_id)
+    expect(r.saida?.sugestoes.length ?? 0).toBeGreaterThan(0)
+    expect(retornos.map((x) => x.id)).toEqual(r.saida?.sugestoes.map((s) => s.retorno_id))
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    const gravada = run?.saida as { sugestoes: { retorno_id?: string }[] }
+    expect(gravada.sugestoes.map((s) => s.retorno_id)).toEqual(retornos.map((x) => x.id))
   })
 
   it("sem modelo no meio do loop também dá saída sem_modelo, done e métrica", async () => {
@@ -276,6 +287,7 @@ describe("createCompanion.responder", () => {
       }
       const c = createCompanion({
         stores: m.stores,
+        tx: m.stores,
         kb,
         clock: m.clock,
         weather: m.weather,

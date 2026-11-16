@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { Pergunta } from "@/core/runs/pergunta"
 import type { ResultadoDoRun } from "@/core/runs/run-service"
 import { createRunService } from "@/core/runs/run-service"
+import type { Transactor } from "@/core/stores"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
@@ -10,6 +11,7 @@ import { createScriptedRuntime } from "@/infra/fakes/scripted-runtime"
 import type { EntradaDoAcompanhante } from "./entrada"
 import { criarFimDoRun } from "./fim-do-run"
 import { preparar } from "./preparo"
+import { type SugestaoEntregue, saidaSegura } from "./saida"
 
 const kb = createMiniKnowledge()
 
@@ -27,7 +29,7 @@ const perguntaDeCome: Pergunta = {
   nome: "arroz",
 }
 
-async function montar() {
+async function montar(opts: { tx?: (s: Transactor) => Transactor } = {}) {
   const clock = createFixedClock("2026-11-15T18:00:00.000Z")
   const stores = createMemoryStores(clock)
   const telemetry = createMemoryTelemetry()
@@ -39,7 +41,7 @@ async function montar() {
     telemetry,
   })
   const conta = await stores.accounts.criar({ tipo: "demo" })
-  const fim = criarFimDoRun({ stores, kb, runs, telemetry })
+  const fim = criarFimDoRun({ stores, tx: opts.tx?.(stores) ?? stores, kb, runs, telemetry })
   const dados = await preparar({ stores, kb, clock, telemetry }, conta.id, entrada())
   const perfil = await stores.profiles.ler(conta.id)
 
@@ -60,7 +62,7 @@ async function montar() {
     },
   })
 
-  return { stores, conta, fim, dados, perfil, pausa, run }
+  return { stores, conta, fim, dados, perfil, pausa, run, telemetry }
 }
 
 describe("criarFimDoRun.tratar · pausa", () => {
@@ -123,5 +125,112 @@ describe("criarFimDoRun.tratar · manterAberto", () => {
     const salvo = await m.stores.runs.buscar(m.conta.id, m.run.id)
     expect(salvo?.status).toBe("running")
     expect(salvo?.saida).toMatchObject({ origem: "sem_modelo" })
+  })
+})
+
+const sugestao: SugestaoEntregue = {
+  tipo: "cha",
+  pratica_id: "cha-a",
+  titulo: "Chá",
+  como_fazer: "",
+  itens: [],
+  verbos: [],
+  motivo: "",
+  linhas_base: [],
+  novidade: false,
+}
+
+describe("criarFimDoRun.tratar · registro da entrega", () => {
+  async function aberto(opts: Parameters<typeof montar>[0] = {}) {
+    const m = await montar(opts)
+    await m.stores.runs.mudarStatusSe(m.conta.id, m.run.id, "waiting_for_input", "running")
+    const run = { ...m.run, status: "running" as const }
+    const faltas = { ...m.dados, casa: { confirmados: [], incertos: [] }, faltas_do_run: ["leite"] }
+    const agente = { ...saidaSegura(m.dados), origem: "agente" as const, sugestoes: [sugestao] }
+    return { ...m, run, faltas, agente }
+  }
+  const retornos = (m: Awaited<ReturnType<typeof aberto>>) =>
+    m.stores.outcomes.doRun(m.conta.id, m.run.id)
+
+  it("fim entregue válido grava e a saída do run leva o retorno_id", async () => {
+    const m = await aberto()
+    const r = await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "entregue", saida: m.agente } },
+      m.faltas,
+      m.perfil,
+      {},
+    )
+    const [retorno] = await retornos(m)
+    expect(retorno?.status).toBe("aguardando")
+    expect(r.saida?.sugestoes[0]?.retorno_id).toBe(retorno?.id)
+    const salvo = await m.stores.runs.buscar(m.conta.id, m.run.id)
+    const gravada = salvo?.saida as { sugestoes: { retorno_id?: string }[] } | undefined
+    expect(gravada?.sugestoes[0]?.retorno_id).toBe(retorno?.id)
+    expect(await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")).toEqual([
+      expect.objectContaining({ alimento_id: "leite" }),
+    ])
+  })
+
+  it("fim sem_modelo grava as faltas", async () => {
+    const m = await aberto()
+    await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "sem_modelo" } },
+      m.faltas,
+      m.perfil,
+      {},
+    )
+    expect(await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")).toEqual([
+      expect.objectContaining({ alimento_id: "leite" }),
+    ])
+  })
+
+  it("saída inválida, limite e erro (saída segura) não gravam nada", async () => {
+    const fins = [
+      { tipo: "entregue" as const, saida: { lixo: true } },
+      { tipo: "limite" as const, motivo: "chamadas" as const },
+      { tipo: "erro" as const, codigo: "indisponivel" },
+    ]
+    for (const fimDoLoop of fins) {
+      const m = await aberto()
+      await m.fim.tratar(m.conta.id, { run: m.run, fim: fimDoLoop }, m.faltas, m.perfil, {})
+      expect(await retornos(m)).toEqual([])
+      expect(await m.stores.shortages.diasComFalta(m.conta.id, "2000-01-01")).toEqual([])
+    }
+  })
+
+  it("falha no registro: o run segue, grava a etapa erro e a resposta chega sem retorno_id", async () => {
+    const m = await aberto({
+      tx: (s) => ({
+        emTransacao: (fn) =>
+          s.emTransacao((st) =>
+            fn({
+              ...st,
+              shortages: {
+                ...st.shortages,
+                registrar: async () => {
+                  throw new Error("falha")
+                },
+              },
+            }),
+          ),
+      }),
+    })
+    const r = await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "entregue", saida: m.agente } },
+      m.faltas,
+      m.perfil,
+      {},
+    )
+    expect(r.status).toBe("done")
+    expect(r.saida?.sugestoes[0]?.retorno_id).toBeUndefined()
+    expect(await retornos(m)).toEqual([])
+    const etapas = await m.stores.runs.etapas(m.conta.id, m.run.id)
+    expect(etapas.filter((e) => e.tipo === "erro" && e.nome === "registro_da_entrega")).toEqual([
+      expect.objectContaining({ status: "falhou", resumo: null, modelo: null }),
+    ])
+    expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_faltas_total")).toHaveLength(0)
   })
 })

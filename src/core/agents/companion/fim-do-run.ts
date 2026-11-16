@@ -4,10 +4,11 @@ import type { FimDoTrecho } from "@/core/runs/loop"
 import type { Pergunta } from "@/core/runs/pergunta"
 import type { Run, RunMutavel } from "@/core/runs/ports"
 import type { createRunService, ResultadoDoRun } from "@/core/runs/run-service"
-import type { Stores } from "@/core/stores"
+import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import { conteudoDaPendenciaSchema } from "./pergunta-do-run"
 import type { DadosDoPreparo } from "./preparo"
+import { registrarEntrega } from "./registrar-entrega"
 import {
   type SaidaDoAcompanhante,
   saidaDoAcompanhanteSchema,
@@ -28,6 +29,7 @@ export type Perfil = Awaited<ReturnType<Stores["profiles"]["ler"]>>
 
 type DepsDoFim = {
   stores: Stores
+  tx: Transactor
   kb: KnowledgeBase
   runs: ReturnType<typeof createRunService>
   telemetry: Telemetry
@@ -89,7 +91,7 @@ type Desfecho = {
 
 // Trata o fim de um trecho do loop (de `responder` e de `continuar`): grava, encerra e responde.
 export function criarFimDoRun(deps: DepsDoFim) {
-  const { stores, kb, runs, telemetry } = deps
+  const { stores, tx, kb, runs, telemetry } = deps
 
   async function registrarErro(contaId: string, runId: string, nome: string): Promise<void> {
     const etapas = await stores.runs.etapas(contaId, runId)
@@ -142,6 +144,24 @@ export function criarFimDoRun(deps: DepsDoFim) {
     return { saida: saidaSegura(dados), alvo: "failed", erro: codigo, motivo: codigo }
   }
 
+  // Grava retornos, "já sugerido" e faltas. Se falhar, o run segue com a saída como veio e a etapa de erro.
+  async function entregar(
+    contaId: string,
+    runId: string,
+    saida: SaidaDoAcompanhante,
+    dados: DadosDoPreparo,
+  ): Promise<SaidaDoAcompanhante> {
+    try {
+      return await registrarEntrega(
+        { tx, telemetry },
+        { contaId, runId, dia: dados.dia, saida, dados },
+      )
+    } catch {
+      await registrarErro(contaId, runId, "registro_da_entrega")
+      return saida
+    }
+  }
+
   function medirParaTer(dados: DadosDoPreparo, saida: SaidaDoAcompanhante): void {
     if (!dados.para_ter) return
     telemetry.contador("ritu_para_ter_total", { etapa: "candidato" })
@@ -182,8 +202,11 @@ export function criarFimDoRun(deps: DepsDoFim) {
     manterAberto?: boolean,
   ): Promise<RespostaDoRun> {
     if (resultado.fim.tipo === "pausa") return pausa(contaId, resultado, dados, extra)
-    const { saida, alvo, erro, motivo } = desfecho(resultado.fim, dados, perfil)
+    const decidido = desfecho(resultado.fim, dados, perfil)
+    const { alvo, erro, motivo } = decidido
+    let { saida } = decidido
     if (erro) await registrarErro(contaId, resultado.run.id, erro)
+    if (alvo === "done") saida = await entregar(contaId, resultado.run.id, saida, dados)
     const status = await fechar(
       contaId,
       resultado.run,
@@ -202,5 +225,5 @@ export function criarFimDoRun(deps: DepsDoFim) {
     }
   }
 
-  return { tratar }
+  return { tratar, entregar }
 }

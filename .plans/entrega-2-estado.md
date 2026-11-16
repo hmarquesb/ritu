@@ -42,6 +42,8 @@
 > `test:db` da 013 não rodou (sem docker): soma à pendência do topo.
 > Fechamento da 013 (2026-11-16, sessão anterior, log trazido pela dona): lint, typecheck, `npm test` 2246/2246, `eval:det` 1040/1040, `dup` 0 clones, lista do `demo` com código 0. Build, os 38 cenários do `demo` e o E2E rodam no verificador depois da junção da 016.
 > **Junção antecipada da 016 (dona, 2026-11-16):** a branch `entrega-3` (016 `implemented`) foi juntada na `main` antes do portão 2, para destravar a 017 na trilha adiantada (exceção ao §0.6 da skill). A ADR 0039 da 016 virou 0040 (a 0039 da `main` é a do Juiz).
+> Verificador depois da junção (a0e68e4, 2026-11-16): APROVADO. lint, typecheck, build, dup 0, `eval:det` 1040/1040, `npm test` 2431/2431 na 2ª rodada (1ª: 1 falha sob carga, caso não identificado), E2E `CI=1` 47 passaram e 9 puladas (não investigadas), 38 cenários do `demo` com código 0 (`frio-agitada` falhou 1 vez sob carga e passou 6 de 6 depois), listas `c2` 54 e `c3` 84. **Docker disponível:** `db:migrate` nada a aplicar, ⚠️ `test:db` 120/120 (resolve a pendência de `test:db` da 009 a 013), `npm run padroes` código 0 (banco vazio).
+> Planos da 014 (20 tarefas, 9 ondas) e da 015 (20 tarefas, 8 ondas) escritos por subagente Opus; decisões D1–D21 (014) e D1–D15 (015) nas seções "Decisões do planejamento" de cada plano. Para o relatório (dona decide): 014 D4 tira o `--casos` do `eval:llm` (a tabela da spec não o tem); 015 D4: com o relógio fixo dos cenários, as latências do painel no `c3` saem 0; 015: runs fechados por `mudarStatus` não entram em `ritu_run_passos`; `ritu_juiz_total` falta na tabela de `OBSERVABILITY.md` (fechamento da 015).
 
 | Spec | Tarefa | Nível | Status | Commit |
 |---|---|---|---|---|
@@ -180,3 +182,43 @@
 | 013 | T18 · Add the 22 judge and safety cases of c3 | mecanica | concluida | 7f0a5bf |
 | 013 | C1 · Remove the clone between interpretar.ts and julgar.ts (npm run dup) | mecanica | concluida | cd1196f |
 | 013 | C2 · Raise the eval timeout, share the judge reasons reader and keep judge cases out of the response metrics | mecanica | concluida | d2d75cc |
+| 014 | T1 · Add the evals config | mecanica | pendente | |
+| 014 | T2 · Add the case families, marks and criteria types | mecanica | pendente | |
+| 014 | T3 · Mark the 84 cases with type, families and marks | mecanica | pendente | |
+| 014 | T4 · Add the case result types | mecanica | pendente | |
+| 014 | T5 · Add the metrics and the targets | mecanica | pendente | |
+| 014 | T6 · Add the round loop and the saved progress | mecanica | pendente | |
+| 014 | T7 · Add the eval grader | mecanica | pendente | |
+| 014 | T8 · Add the history and the generated comparison | mecanica | pendente | |
+| 014 | T9 · Add the round report and the local failures file | mecanica | pendente | |
+| 014 | T10 · Replace word checks by grader criteria in 15 cases | mecanica | pendente | |
+| 014 | T11 · Add the shared run collectors | mecanica | pendente | |
+| 014 | T12 · Add the run case runners (companion and conversation) | mecanica | pendente | |
+| 014 | T13 · Add the support case runners (interpreter, memory, judge) | mecanica | pendente | |
+| 014 | T14 · Add the case listing, the call estimate and the dispatcher with the grader | mecanica | pendente | |
+| 014 | T15 · Rewrite the eval:llm command on the new runner | mecanica | pendente | |
+| 014 | T16 · Remove the old runner and the old case fields | mecanica | pendente | |
+| 014 | T17 · Transcribe c1-base and c2-conversa to the history and generate the comparison | mecanica | pendente | |
+| 014 | T18 · Add the deterministic eval map | mecanica | pendente | |
+| 014 | T19 · Add the LLM case registry eval | mecanica | pendente | |
+| 014 | T20 · Add the evals CI job with the per-group summary | mecanica | pendente | |
+| 015 | T1 · Rewrite the telemetry names as typed registries and add the telemetry config | mecanica | pendente | |
+| 015 | T2 · Return the previous vote from votar | mecanica | pendente | |
+| 015 | T3 · Type the telemetry port by metric kind, propagate run.id to logs and enforce declared labels | nucleo | pendente | |
+| 015 | T4 · Measure each run segment and close the run with steps and logs | nucleo | pendente | |
+| 015 | T5 · Mark cache hits and log weather outages in the weather cache | mecanica | pendente | |
+| 015 | T6 · Measure model and tool latency, and log model swaps, missing models and model errors | nucleo | pendente | |
+| 015 | T7 · Count judge verdicts, log safe answers and tag the run span with the chosen path | mecanica | pendente | |
+| 015 | T8 · Add the vote touch | mecanica | pendente | |
+| 015 | T9 · Add the dashboard and alert definitions | mecanica | pendente | |
+| 015 | T10 · Add the Grafana dashboard and alert generators | mecanica | pendente | |
+| 015 | T11 · Add the painel:check library | mecanica | pendente | |
+| 015 | T12 · Add painel:gerar and painel:check, generate the dashboard files and lock them | mecanica | pendente | |
+| 015 | T13 · Build the OTel exporter options and turn on metrics and logs in Next | nucleo | pendente | |
+| 015 | T14 · Add the telemetry mirror for scenarios | nucleo | pendente | |
+| 015 | T15 · Add the vote eval | mecanica | pendente | |
+| 015 | T16 · Turn on OTel in demo and eval:llm | mecanica | pendente | |
+| 015 | T17 · Provision the dashboard and alerts in the local LGTM | mecanica | pendente | |
+| 015 | T18 · Test privacy through the real OTel adapter and the Mastra runtime | nucleo | pendente | |
+| 015 | T19 · Add the telemetry coverage eval | mecanica | pendente | |
+| 015 | T20 · Replace the companion privacy eval by the full one and map the new evals | mecanica | pendente | |

@@ -136,3 +136,10 @@
 - **O que decidi:** uma tarefa de correção C1 (nível tela), com os arquivos que tiverem defeito em `src/components/` e `src/app/marca/_secoes/`, executada pelo mesmo implementador da T16 na mesma rodada, com verificador e commit próprios (C1 antes da T16).
 - **Por quê:** evita um vai e volta por defeito entre duas tarefas que só ficam verdes juntas; os arquivos não se cruzam com os da T16.
 - **Como desfazer:** reverter o commit da C1 e reabrir cada correção como tarefa separada.
+
+## 014 e 015 · Planos (2026-11-16)
+
+- **Faltava:** decisões que as specs 014 e 015 não fixam (destino do runner, `--casos`, nome do log de padrões, espelho de telemetria nos cenários, relógio em `chamarComPapel`, entre outras).
+- **Decidido:** a opção mais conservadora em cada uma, listadas como D1–D21 em `.plans/014-evals-plan.md` e D1–D15 em `.plans/015-observabilidade-completa-plan.md` (seção "Decisões do planejamento").
+- **Para o relatório:** 014 D4 (`--casos` sai), 015 D1 (log `padroes_conta_falhou` mantido), 015 D4 (latências 0 nos cenários).
+- **Desfazer:** cada D diz o que muda; reverter a tarefa correspondente.

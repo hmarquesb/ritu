@@ -1,4 +1,5 @@
 import type { Clock } from "@/core/clock"
+import { sinaisDe } from "@/core/filtro-da-pessoa"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { SinaisPessoa } from "@/core/knowledge/substitutos"
 import type { ModelRouter } from "@/core/llm/router"
@@ -17,7 +18,6 @@ import { criarAcompanhante } from "./agente"
 import { montarMensagemInicial } from "./contexto"
 import { contextoDoRun } from "./contexto-do-run"
 import { type EntradaDoAcompanhante, entradaDoAcompanhanteSchema } from "./entrada"
-import { sinaisDe } from "./filtro-da-pessoa"
 import {
   campos,
   criarFimDoRun,

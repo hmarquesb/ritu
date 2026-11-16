@@ -1,5 +1,4 @@
 import { config } from "@config/index"
-import { montarFiltro, sinaisDe } from "@/core/agents/companion/filtro-da-pessoa"
 import { casaEAcabou } from "@/core/agents/companion/preparo"
 import { idEfetivo, sugestaoRegistrada } from "@/core/agents/companion/registrar-entrega"
 import {
@@ -7,6 +6,7 @@ import {
   type SugestaoEntregue,
   saidaDoAcompanhanteSchema,
 } from "@/core/agents/companion/saida"
+import { montarFiltro, sinaisDe } from "@/core/filtro-da-pessoa"
 import { type Substituto, substitutos } from "@/core/knowledge/substitutos"
 import { verbosDasGunas } from "@/core/knowledge/verbos"
 import { montarPergunta } from "@/core/runs/pergunta"

@@ -2,6 +2,7 @@ import { config } from "@config/index"
 import { z } from "zod"
 import type { ItemTemporario } from "@/core/accounts/ports"
 import type { Clock } from "@/core/clock"
+import { itemDoNaoCome, montarFiltro } from "@/core/filtro-da-pessoa"
 import type { Prakriti } from "@/core/knowledge/adequacao"
 import { type EvitarItem, type FiltroPessoa, passaNoFiltro } from "@/core/knowledge/filtros"
 import { resolverEvitar } from "@/core/knowledge/identificar"
@@ -36,7 +37,6 @@ import {
   intencaoSchema,
   retornoDaMensagemSchema,
 } from "./entrada"
-import { itemDoNaoCome, montarFiltro } from "./filtro-da-pessoa"
 
 export type {
   Candidato,

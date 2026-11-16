@@ -602,6 +602,20 @@ export { expect }
 - pronto quando: os três verdes.
 - fora: `evals/det/mapa.ts` (não existe; decisão A1).
 
+### C1 · Share the onboarding step submit helper
+- nivel: tela
+- objetivo: tirar a duplicação do envio de passo do onboarding (POST JSON, 401 → `/`, erro lança, sucesso devolve `proximo`) acusada pelo `npm run dup` na T19.
+- arquivos: `src/app/(comecar)/_lib/enviar-passo.ts` (novo), `src/app/(comecar)/comecar/aviso/aceitar.tsx`, `src/app/(comecar)/comecar/evitar/escolher-evitar.tsx`, `src/app/(comecar)/comecar/dosha/escolher-dosha.tsx`, `src/app/(comecar)/comecar/quiz/quiz.tsx` (só se repetir a mesma sequência)
+- depende de: T18, T19 (na mesma rodada, mesmo implementador)
+- leitura: nenhuma
+- skills: `frontend-design` (antes), `web-design-guidelines` (antes de entregar)
+- referencia: nenhuma
+- contratos: `enviarPasso(url: string, corpo: unknown): Promise<string>` em código cliente: `fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) })`; `401` → `window.location.assign("/")` e devolve uma promessa que não resolve (ou lança um erro marcado que o chamador ignora); não-2xx → lança `Error`; 2xx → devolve `proximo` do JSON. Os chamadores fazem `router.push(await enviarPasso(...))` e, no `catch`, `setErro`. Comportamento visível igual ao de hoje.
+- testes primeiro: nenhum unitário (a T22 cobre no E2E).
+- comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run dup` (0 clones)
+- pronto quando: `npm run dup` sem clones em `src/app/(comecar)/`; as telas de aviso, evitar, dosha e quiz se comportam como antes.
+- fora: textos, layout, rotas de API.
+
 ## Ondas
 
 | Onda | Tarefas | Por quê |
@@ -616,6 +630,6 @@ export { expect }
 | 8 | T16 | Mexe em `playwright.config.ts`: sozinha |
 | 9 | T14, T15, T17, T20 | Rotas e telas sem arquivo em comum, todas sobre a T13 |
 | 10 | T18, T23 | Onboarding precisa das rotas (T14); evals das rotas (T14, T15) |
-| 11 | T19 | Precisa da moldura do onboarding (T18) e da busca (T15) |
+| 11 | T19, C1 | T19 precisa da moldura (T18) e da busca (T15); C1 tira a duplicação que a T19 revelou: mesmo implementador, commits separados (T19, depois C1) |
 | 12 | T21 | E2E da Entrada (Playwright na porta 3000: uma rodada por vez) |
 | 13 | T22 | E2E do onboarding |

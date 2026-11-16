@@ -60,11 +60,15 @@
 | T20 · Build the signed-in frame, the demo banner and the empty conversation page | concluida | 5c637e1 |
 | T18 · Build the onboarding layout, the notice and the always-avoid step | concluida | a86c2ba |
 | T23 · Add the security deterministic evals | concluida | 31be27a |
-| T19 · Build the dosha and city step and the quiz | pendente | |
-| T21 · Write the entry E2E and take the entry screenshots | pendente | |
+| C1 · Share the onboarding step submit helper | concluida | dc55b5c |
+| T19 · Build the dosha and city step and the quiz | concluida | 6dc0b55 |
+| T21 · Write the entry E2E and take the entry screenshots | em andamento | |
 | T22 · Write the onboarding E2E and take the onboarding screenshots | pendente | |
 > Para o relatório (017 T8): no `seed/demo.yaml`, a conversa de ontem traz o escalda-pés como 1ª sugestão, mas a resposta fala do jantar primeiro; inverter se a tela mostrar os cards junto do texto. As respostas semeadas não levam "Não é orientação médica" no texto (o schema não exige; conferir que a tela acrescenta o aviso nas conversas semeadas).
 > 2026-11-16 (3ª sessão): vereditos da onda T14+T15 perdidos com o fim dos tokens; os verificadores rodaram de novo sobre os arquivos prontos (sem reimplementar). Resto da onda 9 (T17, T20) juntado com a onda 10 (T18, T23): sem arquivo em comum e dependências com commit.
 > 017 T18 e T23: uma reprovação cada nos gates da onda (teste de arquitetura: R5, `react-aria-components` em `src/app/`; R6, eval importando `@/infra/auth/ip`). Corrigidas pelo mesmo implementador. Na re-rodada, o `eval:det` completo ficou inconclusivo por carga da máquina (load > 260, outras sessões): timeouts em arquivos fora da onda; os evals da T23 passam isolados e o `eval:det` inteiro já tinha passado na 1ª rodada da onda. Conferir de novo no fechamento da 017.
 > Para o relatório (017 T23): `demonstracao.eval.ts` refaz o `hashDoIp` (HMAC sha256) dentro do eval, porque R6 proíbe importar `@/infra/auth/ip`; se o cálculo mudar em produção, a cópia não acompanha (o eval não testa o hash).
 > 017 T19: implementada e reprovada só no `npm run dup` (o `continuar()` de `escolher-dosha.tsx` repete o POST + 401 + `router.push(proximo)` de `aviso/aceitar.tsx` e `evitar/escolher-evitar.tsx`; o resto aprovado pelo verificador, com lint, typecheck, test e build verdes). Interrompida na passagem (5 h em 91%): os 4 arquivos foram guardados em `.local/t19-pendente/` (fora do git) e retirados da árvore. Ver `.local/PASSAGEM.md`.
+> 2026-11-16 (4ª sessão): retomada da passagem; T19 restaurada de `.local/t19-pendente/` e despachada com a C1 (A9).
+> 017 C1: uma reprovação por processo (skills de tela não carregadas; o bloco da C1 dizia "nenhuma", corrigido no plano); nada mudou no código. C1 commitada antes da T19 porque `escolher-dosha.tsx` já usa o helper.
+> Para o relatório (017 T19): no quiz, o último botão diz "Ver resultado" (a tarefa dizia "Próxima"); rótulos "Seu dosha", "Buscar cidade", "Misto", "Escolha dois dos três." e mensagens de erro ficam fixos nos componentes, fora de `config.textosEntrada`; a mensagem de 503 acrescenta "Você pode seguir sem ela.".

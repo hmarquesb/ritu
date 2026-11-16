@@ -15,6 +15,7 @@ import { pausas } from "./pausas"
 import { ranking } from "./ranking"
 import { resposta } from "./resposta"
 import { toques } from "./toques"
+import { ui } from "./ui"
 
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
@@ -37,6 +38,7 @@ export const config = {
   ranking,
   resposta,
   toques,
+  ui,
 } as const
 
 export type AppConfig = typeof config

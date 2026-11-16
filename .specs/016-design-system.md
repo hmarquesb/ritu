@@ -1,6 +1,7 @@
 ---
 title: Design system
-status: approved
+status: implemented
+implemented: f4ad97d
 entrega: 3
 created: 2026-11-15
 ---

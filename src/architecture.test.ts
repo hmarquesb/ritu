@@ -36,6 +36,11 @@ const PACKAGE_HOMES: Record<string, string[]> = {
   "next-auth": ["src/infra/auth/"],
   "@auth": ["src/infra/auth/"],
   yaml: ["src/infra/knowledge/"],
+  "react-aria-components": ["src/components/"],
+  "react-aria": ["src/components/"],
+  "react-stately": ["src/components/"],
+  "@react-aria": ["src/components/"],
+  "@react-stately": ["src/components/"],
 }
 const PUBLIC_PREFIX = "NEXT_PUBLIC_"
 const FORBIDDEN_PUBLIC_WORDS = ["KEY", "SECRET", "TOKEN", "PASSWORD", "DATABASE"]
@@ -515,6 +520,23 @@ describe("R5 · pacote só na sua pasta", () => {
   it("@google/genai só em src/infra/gemini", () => {
     expectClean("src/infra/gemini/client.ts", `${IMPORT} { GoogleGenAI } from "@google/genai"`)
     expectOnly("src/app/x.ts", `${IMPORT} { GoogleGenAI } from "@google/genai"`, "R5")
+  })
+
+  it("react-aria-components só em src/components", () => {
+    expectClean("src/components/x.tsx", `${IMPORT} { Button } from "react-aria-components"`)
+    expectOnly("src/app/x.tsx", `${IMPORT} { Button } from "react-aria-components"`, "R5")
+  })
+
+  it("react-aria, react-stately e @react-aria/@react-stately só em src/components", () => {
+    expectClean("src/components/x.tsx", `${IMPORT} { useButton } from "react-aria"`)
+    expectOnly("src/app/x.tsx", `${IMPORT} { useButton } from "react-aria"`, "R5")
+    expectOnly("src/app/x.tsx", `${IMPORT} { useMenu } from "@react-aria/menu"`, "R5")
+    expectOnly(
+      "src/app/x.tsx",
+      `${IMPORT} { useOverlayState } from "@react-stately/overlays"`,
+      "R5",
+    )
+    expectOnly("src/app/x.tsx", `${IMPORT} { useComboBoxState } from "react-stately"`, "R5")
   })
 
   it("yaml só em src/infra/knowledge", () => {

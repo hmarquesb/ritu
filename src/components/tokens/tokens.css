@@ -1,0 +1,162 @@
+/*
+ * Tokens do Ritu (Tailwind v4). Cada cor e `--ritu-<nome>: light-dark(claro, escuro)`.
+ * O tema vem de `data-theme` em <html>; sem ele, segue o sistema (color-scheme: light dark).
+ *
+ * Regras de tipo (os componentes aplicam):
+ * - title-sm, title e display: font-title, peso 600 (500 no display).
+ * - o resto: font-body, peso 400; 500 para rotulo; 600 para enfase.
+ * Espacamento: escala padrao do Tailwind (--spacing nao e zerado).
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --ritu-canvas: light-dark(#f8f3ea, #1e1611);
+  --ritu-sunken: light-dark(#efe7da, #18110d);
+  --ritu-surface: light-dark(#fdfaf4, #2a1f18);
+  --ritu-raised: light-dark(#fffdf8, #35281f);
+  --ritu-line: light-dark(#e2d5c0, #4a3a2e);
+  --ritu-line-strong: light-dark(#94806a, #9a8571);
+  --ritu-ink: light-dark(#33241a, #f1e6d6);
+  --ritu-ink-muted: light-dark(#6b5646, #c4b19c);
+  --ritu-primary: light-dark(#9e4b2b, #e39570);
+  --ritu-primary-hover: light-dark(#8e4226, #eba988);
+  --ritu-primary-pressed: light-dark(#7a3820, #f0b89c);
+  --ritu-on-primary: light-dark(#fff8ef, #2a140a);
+  --ritu-primary-soft: light-dark(#f3ddd0, #4a2a1c);
+  --ritu-amber: light-dark(#d99a2b, #e6b455);
+  --ritu-amber-ink: light-dark(#855608, #e6b455);
+  --ritu-amber-soft: light-dark(#f6e3b8, #4a3716);
+  --ritu-sage: light-dark(#7c8f72, #8fa384);
+  --ritu-sage-ink: light-dark(#4a6044, #a9bc9e);
+  --ritu-sage-soft: light-dark(#dfe7d8, #2c3a28);
+  --ritu-danger: light-dark(#9a2b38, #f2a0a6);
+  --ritu-danger-soft: light-dark(#f5dcdc, #4a2226);
+  --ritu-focus: light-dark(#33241a, #f1e6d6);
+  --ritu-vata: light-dark(#5e7fa3, #9db9d8);
+  --ritu-pitta: light-dark(#b5562a, #e9a070);
+  --ritu-kapha: light-dark(#5f7a52, #a8c19a);
+  --ritu-paper: light-dark(#f6f1e7, #f6f1e7);
+  --ritu-paper-ink: light-dark(#33241a, #33241a);
+  --ritu-scrim: light-dark(rgb(51 36 26 / 0.45), rgb(0 0 0 / 0.6));
+  --ritu-shadow: light-dark(rgb(74 52 36 / 0.14), rgb(0 0 0 / 0.5));
+
+  --ritu-fast: 120ms;
+  --ritu-base: 200ms;
+  --ritu-slow: 320ms;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --text-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+}
+
+@theme inline {
+  --color-canvas: var(--ritu-canvas);
+  --color-sunken: var(--ritu-sunken);
+  --color-surface: var(--ritu-surface);
+  --color-raised: var(--ritu-raised);
+  --color-line: var(--ritu-line);
+  --color-line-strong: var(--ritu-line-strong);
+  --color-ink: var(--ritu-ink);
+  --color-ink-muted: var(--ritu-ink-muted);
+  --color-primary: var(--ritu-primary);
+  --color-primary-hover: var(--ritu-primary-hover);
+  --color-primary-pressed: var(--ritu-primary-pressed);
+  --color-on-primary: var(--ritu-on-primary);
+  --color-primary-soft: var(--ritu-primary-soft);
+  --color-amber: var(--ritu-amber);
+  --color-amber-ink: var(--ritu-amber-ink);
+  --color-amber-soft: var(--ritu-amber-soft);
+  --color-sage: var(--ritu-sage);
+  --color-sage-ink: var(--ritu-sage-ink);
+  --color-sage-soft: var(--ritu-sage-soft);
+  --color-danger: var(--ritu-danger);
+  --color-danger-soft: var(--ritu-danger-soft);
+  --color-focus: var(--ritu-focus);
+  --color-vata: var(--ritu-vata);
+  --color-pitta: var(--ritu-pitta);
+  --color-kapha: var(--ritu-kapha);
+  --color-paper: var(--ritu-paper);
+  --color-paper-ink: var(--ritu-paper-ink);
+  --color-scrim: var(--ritu-scrim);
+}
+
+@theme {
+  --font-title: var(--font-cormorant), "Iowan Old Style", Georgia, serif;
+  --font-body: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.4;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-prose: 1.0625rem;
+  --text-prose--line-height: 1.7;
+  --text-title-sm: 1.375rem;
+  --text-title-sm--line-height: 1.25;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.2;
+  --text-display: 2.25rem;
+  --text-display--line-height: 1.1;
+
+  --radius-sm: 0.625rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-card: 1.75rem;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 1px 2px var(--ritu-shadow), 0 4px 16px -6px var(--ritu-shadow);
+  --shadow-lift: 0 2px 6px var(--ritu-shadow), 0 16px 40px -12px var(--ritu-shadow);
+
+  --container-prose: 34rem;
+  --container-content: 40rem;
+
+  --ease-ritu: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --animate-rise: rise var(--ritu-slow) var(--ease-ritu) both;
+  --animate-fade: fade var(--ritu-base) var(--ease-ritu) both;
+  --animate-sheet: sheet var(--ritu-slow) var(--ease-ritu) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.375rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheet {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}

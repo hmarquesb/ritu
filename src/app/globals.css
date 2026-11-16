@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "../components/tokens/tokens.css";
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--ritu-canvas);
+  color: var(--ritu-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  min-height: 100dvh;
+  isolation: isolate;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("/marca/papel.svg");
+  background-size: 240px 240px;
+}
+
+:focus-visible,
+[data-focus-visible] {
+  outline: 2px solid var(--ritu-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--ritu-primary-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: movimento reduzido precisa vencer qualquer estilo */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: movimento reduzido precisa vencer qualquer estilo */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: movimento reduzido precisa vencer qualquer estilo */
+    transition-duration: 0.01ms !important;
+  }
+}

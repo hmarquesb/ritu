@@ -213,16 +213,23 @@ src/
     telemetry/               # porta Telemetry e nomes de spans e métricas
   infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth, otel
     container.ts             # composition root
-  app/                       # Next.js: telas e rotas
-  components/                # UI (base em React Aria + componentes do Ritu)
-config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts
+  app/                       # Next.js: telas e rotas; marca/ é a vitrine do design system
+    fonts/                   # Cormorant Garamond e Figtree (woff2 variável, OFL)
+  components/                # UI: só aqui se importa react-aria-components (R5)
+    tokens/                  # tokens.css (o único lugar com cor, raio, sombra) e teste de contraste
+    theme/                   # cookie ritu_theme e seletor de tema
+    base/                    # componentes base sobre React Aria
+    brand/                   # Logo e DoshaBlot
+config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts
+public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
 scripts/                     # demo.ts (terminal), eval.ts, cleanup.ts, padroes.ts, smoke.ts
 data/                        # base ayurvédica em YAML
 seed/                        # perfil de demonstração
 evals/                       # casos, runner, resultados por checkpoint e COMPARACAO.md
 observability/               # painel e alertas gerados, provisionamento do Grafana
 mcp/                         # servidor MCP
-test/fixtures/  e2e/
+test/fixtures/
+e2e/                         # Playwright; apoio/ com usarTema e expectSemViolacoes (axe)
 ```
 
 ## 8. Serviços e planos

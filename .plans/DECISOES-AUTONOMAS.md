@@ -129,3 +129,10 @@
 - **013 · T17 · `eval-llm-c3.test.ts` entra na tarefa.** Faltava: o contrato novo (`juiz` obrigatório em `ExpectativaDaConversa.confere`) quebrava o tipo do helper `entradaConversa` de `scripts/lib/eval-llm-c3.test.ts`, fora da lista da T17. Decidido: incluir o arquivo na T17 só para acrescentar `juiz: { tentativas: 0, aprovado: null, motivos: [] }` ao helper. Por quê: acomodação de assinatura, sem mudar asserção. Desfazer: tornar `juiz` opcional na expectativa.
 
 - **013 · Onda 4 · commit com `eval:det` vermelho só por timeout.** Faltava: os gates da onda deram `eval:det` com 5 a 8 falhas, todas "Test timed out in 5000ms", em casos que mudam a cada rodada, inclusive em arquivos fora da onda, com load average acima de 160 (vitests da trilha da entrega 3 rodando em paralelo). Nenhuma falha de asserção; `evals/det/guardrails` passou inteiro numa terceira rodada. Decidido: commitar T13 a T17 (aprovadas pelos verificadores) e abrir a C2 (timeout dos evals determinísticos em `vitest.eval.config.ts`). Desfazer: reverter a C2.
+
+## 016 · C1 (2026-11-16, trilha adiantada)
+
+- **O que faltava:** a T16 proíbe editar componentes e seções, mas o E2E de `/marca` revelou um defeito em `chip.tsx` (500 na página) e pode revelar outros, um de cada vez.
+- **O que decidi:** uma tarefa de correção C1 (nível tela), com os arquivos que tiverem defeito em `src/components/` e `src/app/marca/_secoes/`, executada pelo mesmo implementador da T16 na mesma rodada, com verificador e commit próprios (C1 antes da T16).
+- **Por quê:** evita um vai e volta por defeito entre duas tarefas que só ficam verdes juntas; os arquivos não se cruzam com os da T16.
+- **Como desfazer:** reverter o commit da C1 e reabrir cada correção como tarefa separada.

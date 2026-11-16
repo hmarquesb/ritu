@@ -158,6 +158,8 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - Como pensei mostra as etapas na ordem.
 - Resposta do agente com `<script>` aparece como texto.
 - **Acessibilidade:** `@axe-core/playwright` sem violação `serious` ou `critical` em todas as telas, nos dois temas, em celular e desktop; o caminho da demonstração e o envio de uma mensagem funcionam só com teclado; a resposta final é anunciada numa região `aria-live`.
+- `/marca` passa no axe com a página parada e com cada sobreposição aberta (menu, diálogo, folha, lista da busca, dica, aviso breve), nos dois temas, em celular e desktop; e confere fontes só locais, tema automático e manual, teclado, alvos de 44 px, reflow em 320 px e movimento reduzido.
+- Toda spec de tela usa `usarTema` e `TEMAS` (`e2e/apoio/tema.ts`) e `expectSemViolacoes` (`e2e/apoio/a11y.ts`) em cada tela.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
 

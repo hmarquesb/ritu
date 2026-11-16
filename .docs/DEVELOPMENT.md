@@ -45,6 +45,11 @@ O teste de arquitetura garante a tabela.
 - Celular primeiro, responsivo, acessível: WCAG 2.2 AA, com as regras de `DESIGN.md` §3 "Acessibilidade", conferidas pelo axe no E2E.
 - A resposta do agente e o texto da pessoa são sempre renderizados como texto puro (`ARCHITECTURE.md` §4, "Proteção do site").
 - Componentes base escritos no Ritu sobre **React Aria Components** (`react-aria-components`), estilizados com Tailwind e os tokens de `DESIGN.md`. Sem shadcn/ui, sem Radix, sem biblioteca com visual pronto. Ícones: **Phosphor** (`@phosphor-icons/react`), peso `light`. Confira a API na versão instalada antes de usar.
+- **Só classes de token.** Cor, raio, sombra, tamanho de texto, curva e animação saem de `src/components/tokens/tokens.css`; o Tailwind não gera as classes padrão (`bg-red-500`, `rounded-xl`, `text-lg`). Nada de variante `dark:`: o tema troca pelos tokens. `design-guard.test.ts` acusa cor literal, `dark:`, `dangerouslySetInnerHTML`, biblioteca de UI com visual pronto e texto em `px`.
+- **React Aria só em `src/components/`** (regra R5 do teste de arquitetura). Páginas usam os componentes do Ritu.
+- **Variantes em mapa de objeto, com `cx`.** Duas classes da mesma propriedade no mesmo elemento valem pela ordem da folha do Tailwind, não pela do `className`: tamanho, padding e texto ficam só no mapa de variante, nunca na base e na variante ao mesmo tempo.
+- **Ícone em componente de servidor** vem da entrada SSR do Phosphor (`@phosphor-icons/react/ssr`).
+- **`/marca` é a vitrine:** todo componente base aparece lá com todos os estados, e o E2E dela é o gate de acessibilidade do design system.
 - A tela só chama rotas do servidor.
 - Estados de carregamento, erro, vazio, "esperando você" e "cota esgotada" em toda tela.
 - A resposta do agente é texto corrido, com as sugestões como apoio logo abaixo. Nenhuma tela mostra a resposta só como lista de cartões.

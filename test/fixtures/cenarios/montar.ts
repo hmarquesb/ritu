@@ -16,6 +16,7 @@ import type { AgentRuntime } from "@/core/runs/agent-runtime"
 import type { Caminho } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
 import type { Stores } from "@/core/stores"
+import type { Telemetry } from "@/core/telemetry/ports"
 import { diaLocal } from "@/core/time/dia-local"
 import type { createTouches } from "@/core/touches"
 import { createCachedWeatherSource } from "@/core/weather/cache"
@@ -26,6 +27,7 @@ import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry, type MemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createScriptedRuntime } from "@/infra/fakes/scripted-runtime"
+import { createTeeTelemetry } from "@/infra/fakes/tee-telemetry"
 import type { Cenario } from "./tipos"
 
 const DIA_EM_MS = 86_400_000
@@ -58,6 +60,8 @@ export type OpcoesDoCenario = {
   llm?: LlmClient
   // Esgota, no dia, só o modelo principal do papel (registrarRateLimit × rateLimitsParaEsgotarODia).
   esgotar?: Papel
+  // Espelho (D3): repassa toda a telemetria do cenário a esta, além da memória.
+  telemetria?: Telemetry
 }
 
 // Fila do Intérprete: a da mensagem e, com `depois`, a da segunda mensagem (D16).
@@ -352,7 +356,10 @@ export async function montarCenario(
     throw new Error(`cenário ${c.nome} sem entrada nem mensagem`)
   }
   const clock = createFixedClock(c.agora)
-  const telemetry = createMemoryTelemetry()
+  const memoriaDeTelemetria = createMemoryTelemetry()
+  const telemetry = opts.telemetria
+    ? createTeeTelemetry(memoriaDeTelemetria, opts.telemetria)
+    : memoriaDeTelemetria
   const ledger = createMemoryLedger(clock)
   const weather = createFakeWeather()
   const runtime =

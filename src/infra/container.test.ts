@@ -121,6 +121,40 @@ describe("container", () => {
     expect(container.tx).toBe(fake)
   })
 
+  it("routine e patterns existem sem abrir o banco e usam as deps do container", async () => {
+    const urlAnterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const { createMemoryStores, createMemoryLedger } = await import("@/infra/fakes/memory-stores")
+      const { createFakeLlm } = await import("@/infra/fakes/fake-llm")
+      const clock = createFixedClock("2026-01-15T12:00:00Z")
+      const fake = createMemoryStores(clock)
+
+      const semBanco = createContainer({ clock })
+      expect(() => semBanco.routine).not.toThrow()
+      expect(() => semBanco.patterns).not.toThrow()
+      expect(semBanco.routine).toBe(semBanco.routine)
+      expect(semBanco.patterns).toBe(semBanco.patterns)
+
+      const container = createContainer({
+        clock,
+        stores: fake,
+        tx: fake,
+        ledger: createMemoryLedger(clock),
+        llm: createFakeLlm([]),
+        knowledge: createMiniKnowledge(),
+      })
+      await expect(container.routine.atualizarResumo("conta-1")).resolves.toMatchObject({
+        origem: "vazio",
+        gravou: false,
+      })
+      await expect(container.patterns.detectarPadroesDaConta("conta-1")).resolves.toBe(0)
+    } finally {
+      if (urlAnterior !== undefined) process.env.DATABASE_URL = urlAnterior
+    }
+  })
+
   it("ledger existe sem abrir o banco e aceita override", async () => {
     const { createContainer } = await import("./container")
     const { createMemoryLedger } = await import("@/infra/fakes/memory-stores")

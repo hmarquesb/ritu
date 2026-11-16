@@ -9,6 +9,8 @@ import type { DadosDaBase } from "@/core/knowledge/schemas"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
+import { createPatterns } from "@/core/patterns"
+import { createRoutine } from "@/core/routine"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
 import { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
@@ -50,6 +52,8 @@ export type Container = {
   memory: MemoryAgent
   conversation: ReturnType<typeof createConversation>
   touches: ReturnType<typeof createTouches>
+  routine: ReturnType<typeof createRoutine>
+  patterns: ReturnType<typeof createPatterns>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -85,6 +89,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let memory: MemoryAgent | undefined
   let conversation: ReturnType<typeof createConversation> | undefined
   let touches: ReturnType<typeof createTouches> | undefined
+  let routine: ReturnType<typeof createRoutine> | undefined
+  let patterns: ReturnType<typeof createPatterns> | undefined
   let sdk: { encerrar(): Promise<void> } | undefined
   let telemetriaIniciada = false
   const container: Container = {
@@ -214,6 +220,26 @@ export function createContainer(overrides?: Partial<Container>): Container {
         telemetry: container.telemetry,
       })
       return touches
+    },
+    // Rotina e padrões: as deps são as do próprio container; nada disso abre o banco na criação.
+    get routine() {
+      routine ??= createRoutine({
+        stores: container.stores,
+        tx: container.tx,
+        memory: container.memory,
+        kb: container.knowledge,
+        telemetry: container.telemetry,
+      })
+      return routine
+    },
+    get patterns() {
+      patterns ??= createPatterns({
+        stores: container.stores,
+        kb: container.knowledge,
+        clock,
+        telemetry: container.telemetry,
+      })
+      return patterns
     },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {

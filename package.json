@@ -21,6 +21,7 @@
     "dup": "jscpd",
     "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/db-migrate.ts",
     "cleanup": "node --env-file-if-exists=.env.local --import tsx scripts/cleanup.ts",
+    "padroes": "node --env-file-if-exists=.env.local --import tsx scripts/padroes.ts",
     "cotas": "node --env-file-if-exists=.env.local --import tsx scripts/cotas.ts",
     "modelos:check": "node --env-file-if-exists=.env.local --import tsx scripts/modelos-check.ts",
     "env:check": "node --env-file-if-exists=.env.local --import tsx scripts/env-check.ts",

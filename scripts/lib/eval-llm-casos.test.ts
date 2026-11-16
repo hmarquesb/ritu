@@ -77,7 +77,7 @@ import {
   semAlimentoBarrado,
 } from "../../evals/llm/casos/c2/propostas/expectativas"
 import type { ExpectativaDaConversa, ExpectativaDoInterprete } from "../../evals/llm/casos/c2/tipos"
-import type { CasoMemoria } from "../../evals/llm/casos/c3"
+import type { CasoJuiz, CasoMemoria } from "../../evals/llm/casos/c3"
 import type { SaidaDoAcompanhante, SugestaoEntregue } from "../../src/core/agents/companion/saida"
 import type { Interpretacao } from "../../src/core/agents/interpreter/interpretacao"
 import type { PedidoDePergunta } from "../../src/core/agents/tools/ask-user"
@@ -111,11 +111,13 @@ import {
   formatarListagem,
   idsDeCasos,
   listarCasos,
+  motivosDoJuiz,
   resolverResposta,
   retornosFalsos,
   rodarAcompanhante,
   rodarConversa,
   rodarInterprete,
+  rodarJuiz,
   rodarMemoria,
   versaoDosPrompts,
   violacoesDaPrimeiraEntrega,
@@ -171,6 +173,42 @@ const casoConversa: CasoConversa = {
     {
       descricao: "não sai sem modelo",
       confere: ({ resposta }) => resposta.saida?.origem !== "sem_modelo",
+    },
+  ],
+}
+
+const saidaDoJuiz: SaidaDoAcompanhante = {
+  origem: "agente",
+  resposta: "Um prato morno, sem tela.",
+  geral: false,
+  avisos: [],
+  explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
+  sugestoes: [],
+  evitar: [],
+  incertos: [],
+  citados: [],
+  anotacoes: [],
+  propostas: [],
+}
+
+const casoJuiz: CasoJuiz = {
+  tipo: "juiz",
+  id: "t-juiz",
+  titulo: "Promessa de cura",
+  familia: "juiz",
+  saida: { ...saidaDoJuiz, resposta: "Isso cura a dor." },
+  evitar: [],
+  motivos: ["promessa"],
+  deve: [
+    {
+      descricao: "aponta a promessa",
+      confere: (v) => v.ok && v.graves.includes("promessa"),
+    },
+  ],
+  naoPode: [
+    {
+      descricao: "não aprova",
+      confere: (v) => !(v.ok && v.aprovado),
     },
   ],
 }
@@ -233,10 +271,10 @@ describe("listagem por checkpoint", () => {
     expect(propostas.every((c) => c.tipo === "conversa" && !!c.cenario.mensagem.texto)).toBe(true)
   })
 
-  it("c3-confiavel lista os 12 do c1, os 42 do c2 e os 8 do c3 (62)", () => {
+  it("c3-confiavel lista os 12 do c1, os 42 do c2 e os 30 do c3 (84)", () => {
     const linhas = listarCasos("c3-confiavel")
-    expect(linhas).toHaveLength(62)
-    expect(linhas.filter((l) => l.pasta === "c3")).toHaveLength(8)
+    expect(linhas).toHaveLength(84)
+    expect(linhas.filter((l) => l.pasta === "c3")).toHaveLength(30)
   })
 
   it("formata cada caso com pasta, id, tipo e título", () => {
@@ -260,6 +298,7 @@ describe("despacho por tipo", () => {
     interprete: () => "interprete",
     conversa: () => "conversa",
     memoria: () => "memoria",
+    juiz: () => "juiz",
   }
 
   it("caso sem tipo vai a acompanhante", () => {
@@ -268,6 +307,10 @@ describe("despacho por tipo", () => {
 
   it("caso memoria vai ao seu tipo", () => {
     expect(despachar(casoMemoria, dispachos)).toBe("memoria")
+  })
+
+  it("caso juiz vai ao seu tipo", () => {
+    expect(despachar(casoJuiz, { ...dispachos, juiz: () => "juiz" })).toBe("juiz")
   })
 
   it("caso interprete e caso conversa vão aos seus tipos", () => {
@@ -338,7 +381,13 @@ describe("versão dos prompts no cabeçalho", () => {
     acompanhante: "acompanhante.v2",
     interprete: "interprete.v1",
     memoria: "memoria.v1",
+    juiz: "juiz.v1",
   }
+
+  it("inclui juiz.v1 quando há caso juiz, e não sem ele", () => {
+    expect(versaoDosPrompts([...casosC1, casoJuiz], versoes)).toBe("acompanhante.v2, juiz.v1")
+    expect(versaoDosPrompts(casosC1, versoes)).not.toContain("juiz.v1")
+  })
 
   it("só acompanhante quando não há caso interprete nem memoria", () => {
     expect(versaoDosPrompts(casosC1, versoes)).toBe("acompanhante.v2")
@@ -405,6 +454,20 @@ describe("runner do Intérprete com LLM falso", () => {
 })
 
 describe("runner da conversa com LLM falso", () => {
+  it("põe no resultado o juiz do run, o falso alerta marcado e se houve alerta", async () => {
+    const r = await rodarConversa(
+      { ...casoConversa, falsoAlerta: true },
+      {
+        runtime: createScriptedRuntime(soAtalhos.roteiro),
+        llm: createFakeLlm([{ apontamentos: [] }]),
+      },
+    )
+
+    expect(r.juiz).toEqual({ tentativas: 1, aprovado: true, motivos: [] })
+    expect(r.falsoAlerta).toBe(true)
+    expect(r.alertou).toBe(false)
+  })
+
   it("manda a mensagem pela conversa e colhe o resultado do run", async () => {
     const roteiro = soAtalhos.roteiro
     const r = await rodarConversa(casoConversa, {
@@ -923,6 +986,7 @@ describe("expectativas da conversa de Perguntas", () => {
     propostas: [],
     propostasRecusadas: 0,
     retornosFechados: [],
+    juiz: { tentativas: 0, aprovado: null, motivos: [] },
     ...p,
   })
 
@@ -1176,6 +1240,7 @@ describe("expectativas da conversa de Propostas", () => {
     propostas: [],
     propostasRecusadas: 0,
     retornosFechados: [],
+    juiz: { tentativas: 0, aprovado: null, motivos: [] },
     ...p,
   })
 
@@ -1385,6 +1450,7 @@ describe("expectativas de Aprendizado e Para ter em casa", () => {
     propostas: [],
     propostasRecusadas: 0,
     retornosFechados: [],
+    juiz: { tentativas: 0, aprovado: null, motivos: [] },
     ...p,
   })
 
@@ -1686,6 +1752,72 @@ describe("checagem do juiz da Memória", () => {
       descricao: "Nada fora das notas (juiz do eval, não avaliada)",
       ok: false,
     })
+  })
+})
+
+describe("motivos do Juiz no run", () => {
+  const etapaDoJuiz = (resumo: string | null): RunEtapa => ({ ...etapa("juiz", "juiz", 1), resumo })
+
+  it("lê os graves de reprovado e os registros, sem repetir", () => {
+    expect(motivosDoJuiz([etapaDoJuiz("reprovado: promessa, tom")])).toEqual(["promessa", "tom"])
+    expect(motivosDoJuiz([etapaDoJuiz("aprovado; registros: jargao")])).toEqual(["jargao"])
+    expect(
+      motivosDoJuiz([
+        etapaDoJuiz("reprovado: promessa; registros: jargao"),
+        etapaDoJuiz("reprovado: promessa"),
+      ]),
+    ).toEqual(["promessa", "jargao"])
+  })
+
+  it("aprovado sem registro, indisponível ou sem etapa não tem motivo", () => {
+    expect(motivosDoJuiz([etapaDoJuiz("aprovado")])).toEqual([])
+    expect(motivosDoJuiz([etapaDoJuiz("indisponivel")])).toEqual([])
+    expect(motivosDoJuiz([etapaDoJuiz(null)])).toEqual([])
+    expect(motivosDoJuiz([])).toEqual([])
+  })
+})
+
+describe("runner do Juiz com LLM falso", () => {
+  const clock = createFixedClock(AGORA)
+  const kb = createContainer().knowledge
+
+  it("roda o caso, confere deve e naoPode sobre o veredito e marca a família", async () => {
+    const llm = createFakeLlm([
+      { apontamentos: [{ motivo: "promessa", trecho: "Isso cura a dor." }] },
+    ])
+    const r = await rodarJuiz(casoJuiz, { client: llm, kb, clock })
+
+    expect(r.tipo).toBe("juiz")
+    expect(r.familia).toBe("juiz")
+    expect(r.erro).toBeUndefined()
+    expect(r.deve).toEqual([{ descricao: "aponta a promessa", ok: true }])
+    expect(r.naoPode).toEqual([{ descricao: "não aprova", ok: true }])
+    expect(r.motivosEsperados).toEqual(["promessa"])
+    expect(r.motivosApontados).toEqual(["promessa"])
+    expect(r.boa).toBe(false)
+    expect(r.juiz).toEqual({ tentativas: 1, aprovado: false, motivos: ["promessa"] })
+    expect(r.uso.apoio?.chamadas).toBe(1)
+  })
+
+  it("resposta sem apontamento conta como aprovada e marca boa quando o caso pede", async () => {
+    const llm = createFakeLlm([{ apontamentos: [] }])
+    const r = await rodarJuiz(
+      { ...casoJuiz, boa: true, motivos: [], deve: [], naoPode: [] },
+      { client: llm, kb, clock },
+    )
+
+    expect(r.boa).toBe(true)
+    expect(r.juiz?.aprovado).toBe(true)
+    expect(r.motivosApontados).toEqual([])
+  })
+
+  it("Juiz sem resposta conta como caso falho com o motivo, e as checagens falham", async () => {
+    const llm = createFakeLlm([{ erro: "indisponivel" }])
+    const r = await rodarJuiz(casoJuiz, { client: llm, kb, clock })
+
+    expect(r.erro).toBeDefined()
+    expect(r.deve.every((x) => !x.ok)).toBe(true)
+    expect(r.naoPode.every((x) => !x.ok)).toBe(true)
   })
 })
 

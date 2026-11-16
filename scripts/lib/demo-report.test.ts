@@ -12,6 +12,7 @@ import {
   fraseDaTrocaNaSugestao,
   linhaDoToque,
   motivoDaLista,
+  motivosDoJuizDasEtapas,
   type TocadoDoRelatorio,
 } from "./demo-report"
 
@@ -136,6 +137,8 @@ function dadosDeExemplo(): DadosDoRelatorio {
     | "modelos"
     | "trocas_de_modelo"
     | "trace_id"
+    | "juiz_tentativas"
+    | "juiz_aprovado"
   > = {
     status: "done",
     passos: 4,
@@ -144,6 +147,8 @@ function dadosDeExemplo(): DadosDoRelatorio {
     modelos: { decisao: ["gemini-3.5-flash-lite"] },
     trocas_de_modelo: 1,
     trace_id: "abc123",
+    juiz_tentativas: 0,
+    juiz_aprovado: null,
   }
   return {
     nome: "frio-agitada",
@@ -574,6 +579,77 @@ describe("formatarRelatorio · rotina e padrões", () => {
     const depois = texto.indexOf("Depois: e agora?")
     expect(texto.indexOf("v2: Você acorda")).toBeLessThan(depois)
     expect(texto.indexOf("v3: Agora almoça fora.")).toBeGreaterThan(depois)
+  })
+})
+
+describe("formatarRelatorio · Juiz e reforço", () => {
+  function comJuiz(
+    tentativas: number,
+    aprovado: boolean | null,
+    extra: Partial<DadosDoRelatorio> = {},
+  ): DadosDoRelatorio {
+    const dados = dadosDeExemplo()
+    return {
+      ...dados,
+      run: { ...dados.run, juiz_tentativas: tentativas, juiz_aprovado: aprovado },
+      ...extra,
+    }
+  }
+
+  it("com juiz_tentativas 0, o relatório é igual ao de hoje", () => {
+    const texto = formatarRelatorio(comJuiz(0, null))
+    expect(texto).toBe(formatarRelatorio(dadosDeExemplo()))
+    expect(texto).not.toContain("juiz:")
+  })
+
+  it("com uma tentativa aprovada, mostra a linha do Juiz depois de trocas de modelo", () => {
+    const texto = formatarRelatorio(comJuiz(1, true))
+    expect(texto).toContain("  juiz: 1 tentativa(s), aprovado\n")
+    expect(texto).not.toContain("motivos")
+    expect(texto.indexOf("trocas de modelo")).toBeLessThan(texto.indexOf("  juiz: 1"))
+    expect(texto.indexOf("  juiz: 1")).toBeLessThan(texto.indexOf("trace_id"))
+  })
+
+  it("com duas tentativas reprovadas, mostra os motivos separados por vírgula", () => {
+    const texto = formatarRelatorio(comJuiz(2, false, { motivosDoJuiz: ["promessa", "tom"] }))
+    expect(texto).toContain("  juiz: 2 tentativa(s), reprovado; motivos: promessa, tom")
+  })
+
+  it("com juiz_aprovado nulo, diz indisponivel", () => {
+    expect(formatarRelatorio(comJuiz(1, null))).toContain("  juiz: 1 tentativa(s), indisponivel")
+  })
+
+  it("com modelos de reforço, mostra a linha reforço logo depois de modelo", () => {
+    const dados = dadosDeExemplo()
+    const texto = formatarRelatorio({
+      ...dados,
+      run: {
+        ...dados.run,
+        modelos: { decisao: ["gemini-a"], reforco: ["gemini-r"] },
+      },
+    })
+    expect(texto).toContain("  modelo: gemini-a\n  reforço: gemini-r\n")
+  })
+
+  it("sem modelos de reforço, a linha reforço não aparece", () => {
+    expect(formatarRelatorio(dadosDeExemplo())).not.toContain("reforço")
+  })
+
+  it("motivosDoJuizDasEtapas lê os motivos dos resumos das etapas juiz, sem repetir", () => {
+    const etapas = [
+      etapa(1, "juiz", "juiz", "reprovado: promessa, tom; registros: jargao"),
+      etapa(2, "juiz", "juiz", "reprovado: promessa; registros: saude_na_proposta"),
+      etapa(3, "juiz", "juiz", "aprovado; registros: jargao"),
+      etapa(4, "juiz", "juiz", "indisponivel"),
+      etapa(5, "llm", "modelo", "reprovado: falso"),
+    ]
+    expect(motivosDoJuizDasEtapas(etapas)).toEqual([
+      "promessa",
+      "tom",
+      "jargao",
+      "saude_na_proposta",
+    ])
+    expect(motivosDoJuizDasEtapas([etapa(1, "juiz", "juiz", "aprovado")])).toEqual([])
   })
 })
 

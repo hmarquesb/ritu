@@ -3,11 +3,10 @@ import type { z } from "zod"
 import type { SaidaDoAcompanhante } from "@/core/agents/companion/saida"
 import type { Clock } from "@/core/clock"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
-import { chamarComPapel, SemModeloError } from "@/core/llm/chamar"
 import type { LlmClient } from "@/core/llm/client"
-import { LlmError } from "@/core/llm/errors"
 import type { ModelRouter } from "@/core/llm/router"
 import type { Telemetry } from "@/core/telemetry/ports"
+import { chamarApoio } from "../chamada-de-apoio"
 import { juizV1 } from "../prompts/juiz.v1"
 import { montarEntradaDoJuiz } from "./entrada"
 import { type Apontamento, lerApontamentos, type MotivoDoJuiz, saidaDoJuizSchema } from "./saida"
@@ -90,42 +89,32 @@ export function createJudge(deps: Deps): Judge {
       return telemetry.span("juiz", { "juiz.tentativa": p.tentativa }, async (span) => {
         const inicio = clock.now().getTime()
         const duracao = () => clock.now().getTime() - inicio
-        try {
-          const r = await chamarComPapel(
-            { router, client, telemetry },
-            {
-              papel: "apoio",
-              instrucoes: juizV1.instrucoes,
-              entrada: montarEntradaDoJuiz({
-                saida: p.saida,
-                evitar: p.evitar,
-                nota_de_rotina: p.nota_de_rotina,
-                kb,
-              }),
-              schema: saidaDoJuizSchema,
-              preferir: p.preferir,
-            },
-          )
-          const { apontamentos, graves, registros, aprovado } = avaliar(r.dado, p.nota_de_rotina)
-          contar(telemetry, graves, registros)
-          span.atribuir({ "juiz.aprovado": aprovado })
-          return {
-            ok: true,
-            aprovado,
-            graves,
-            registros,
-            saude_na_proposta: apontamentos.some((a) => a.motivo === "saude_na_proposta"),
-            apontamentos,
-            modelo: r.modelo,
-            tokens: r.tokens,
-            trocas: r.trocas,
-            duracao_ms: duracao(),
-          }
-        } catch (e) {
-          if (!(e instanceof SemModeloError) && !(e instanceof LlmError)) throw e
-          const motivo = e instanceof SemModeloError ? "sem_modelo" : "erro"
-          span.falhar(motivo)
-          return { ok: false, motivo, duracao_ms: duracao() }
+        const r = await chamarApoio({ router, client, telemetry }, span, {
+          instrucoes: juizV1.instrucoes,
+          entrada: montarEntradaDoJuiz({
+            saida: p.saida,
+            evitar: p.evitar,
+            nota_de_rotina: p.nota_de_rotina,
+            kb,
+          }),
+          schema: saidaDoJuizSchema,
+          preferir: p.preferir,
+        })
+        if (!r.ok) return { ok: false, motivo: r.motivo, duracao_ms: duracao() }
+        const { apontamentos, graves, registros, aprovado } = avaliar(r.dado, p.nota_de_rotina)
+        contar(telemetry, graves, registros)
+        span.atribuir({ "juiz.aprovado": aprovado })
+        return {
+          ok: true,
+          aprovado,
+          graves,
+          registros,
+          saude_na_proposta: apontamentos.some((a) => a.motivo === "saude_na_proposta"),
+          apontamentos,
+          modelo: r.modelo,
+          tokens: r.tokens,
+          trocas: r.trocas,
+          duracao_ms: duracao(),
         }
       })
     },

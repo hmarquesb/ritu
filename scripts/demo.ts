@@ -26,6 +26,7 @@ import {
   cenariosComPausa,
   cenariosDeAprendizado,
   cenariosDeConversa,
+  cenariosDeGuardrails,
   cenariosDeMemoria,
   type DepsDoCenario,
   montarCenario,
@@ -41,6 +42,7 @@ import {
   fraseDaTrocaNaSugestao,
   linhaDoToque,
   motivoDaLista,
+  motivosDoJuizDasEtapas,
   type Pensamento,
   type TocadoDoRelatorio,
 } from "./lib/demo-report"
@@ -64,6 +66,7 @@ function listarCenarios(): void {
     ...Object.values(cenariosComAprovacao),
     ...Object.values(cenariosDeAprendizado),
     ...Object.values(cenariosDeMemoria),
+    ...Object.values(cenariosDeGuardrails),
   ]
   for (const c of todos) {
     console.log(`  ${c.nome}  ${c.descricao}`)
@@ -77,6 +80,7 @@ function acharCenario(nome: string): Cenario | CenarioDeConversa | undefined {
   if (Object.hasOwn(cenariosComAprovacao, nome)) return cenariosComAprovacao[nome]
   if (Object.hasOwn(cenariosDeAprendizado, nome)) return cenariosDeAprendizado[nome]
   if (Object.hasOwn(cenariosDeMemoria, nome)) return cenariosDeMemoria[nome]
+  if (Object.hasOwn(cenariosDeGuardrails, nome)) return cenariosDeGuardrails[nome]
   return undefined
 }
 
@@ -298,6 +302,7 @@ async function relatorioDaRodada(
     ...camposDaConversa(rodada.final),
     ...(rotina ? { rotina: { versao: rotina.versao, texto: rotina.texto } } : {}),
     padroes: padroes.map((p) => ({ frase: p.frase, status: p.status })),
+    motivosDoJuiz: motivosDoJuizDasEtapas(etapas),
     nomeDoEvitar: nomeDoEvitarDaBase(ctx.kb),
     minhaCasa: await minhaCasaDo(ctx),
     comoFicou: await comoFicouDo(ctx),

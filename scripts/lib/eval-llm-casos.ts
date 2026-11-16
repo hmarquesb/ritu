@@ -14,11 +14,12 @@ import {
   type CasoInterprete,
   casosC2,
 } from "../../evals/llm/casos/c2"
-import { type CasoC3, type CasoMemoria, casosC3 } from "../../evals/llm/casos/c3"
+import { type CasoC3, type CasoJuiz, type CasoMemoria, casosC3 } from "../../evals/llm/casos/c3"
 import { checkpoints } from "../../evals/llm/checkpoints"
 import type { RespostaDoRun } from "../../src/core/agents/companion/responder"
 import type { SaidaDoAcompanhante } from "../../src/core/agents/companion/saida"
 import { createInterpreter } from "../../src/core/agents/interpreter/interpretar"
+import { createJudge } from "../../src/core/agents/judge/julgar"
 import type { NotaParaResumo } from "../../src/core/agents/memory/entrada"
 import { createMemoryAgent, type ResumoFeito } from "../../src/core/agents/memory/memoria"
 import type { Clock } from "../../src/core/clock"
@@ -65,6 +66,7 @@ export const tipoDoCaso = (caso: { tipo?: TipoDoCaso }): TipoDoCaso => caso.tipo
 export const ehInterprete = (caso: CasoDoEval): caso is CasoInterprete => caso.tipo === "interprete"
 export const ehConversa = (caso: CasoDoEval): caso is CasoConversa => caso.tipo === "conversa"
 export const ehMemoria = (caso: CasoDoEval): caso is CasoMemoria => caso.tipo === "memoria"
+export const ehJuiz = (caso: CasoDoEval): caso is CasoJuiz => caso.tipo === "juiz"
 
 /** Casos do checkpoint, na ordem das pastas. Nome desconhecido dá erro com a lista; com `ids`, só esses casos, na ordem do checkpoint, e id desconhecido também dá erro com a lista dos válidos. */
 export function casosDoCheckpoint(
@@ -112,14 +114,15 @@ export function listarCasos(nome: string, ids?: string[]): LinhaDeCaso[] {
 export const formatarListagem = (linhas: LinhaDeCaso[]): string =>
   linhas.map((l) => `${l.pasta}  ${l.id}  ${l.tipo}  ${l.titulo}`).join("\n")
 
-/** Versão dos prompts do cabeçalho: sempre a do acompanhante; a do Intérprete e a da Memória entram com caso delas. */
+/** Versão dos prompts do cabeçalho: sempre a do acompanhante; a do Intérprete, a da Memória e a do Juiz entram com caso delas. */
 export function versaoDosPrompts(
   casos: CasoDoEval[],
-  versoes: { acompanhante: string; interprete: string; memoria: string },
+  versoes: { acompanhante: string; interprete: string; memoria: string; juiz: string },
 ): string {
   const usadas = [versoes.acompanhante]
   if (casos.some(ehInterprete)) usadas.push(versoes.interprete)
   if (casos.some(ehMemoria)) usadas.push(versoes.memoria)
+  if (casos.some(ehJuiz)) usadas.push(versoes.juiz)
   return usadas.join(", ")
 }
 
@@ -128,6 +131,7 @@ export type Rodadores<R> = {
   interprete: (caso: CasoInterprete) => R
   conversa: (caso: CasoConversa) => R
   memoria: (caso: CasoMemoria) => R
+  juiz: (caso: CasoJuiz) => R
 }
 
 /** Caso sem tipo (ou acompanhante) vai ao rodador do acompanhante. */
@@ -135,6 +139,7 @@ export function despachar<R>(caso: CasoDoEval, rodadores: Rodadores<R>): R {
   if (ehInterprete(caso)) return rodadores.interprete(caso)
   if (ehConversa(caso)) return rodadores.conversa(caso)
   if (ehMemoria(caso)) return rodadores.memoria(caso)
+  if (ehJuiz(caso)) return rodadores.juiz(caso)
   return rodadores.acompanhante(caso)
 }
 
@@ -447,6 +452,83 @@ export async function rodarMemoria(
   )
 }
 
+// O Juiz roda sozinho sobre uma resposta pronta: o runner monta o roteador como o do Intérprete (com o registro de uso em memória).
+export type DepsDoJuiz = {
+  client: LlmClient
+  kb: KnowledgeBase
+  clock: Clock
+}
+
+// Caso falho: o Juiz não respondeu. Como o Intérprete com erro, as checagens contam como não cumpridas.
+function juizComFalha(
+  caso: CasoJuiz,
+  motivo: "sem_modelo" | "erro",
+  latenciaMs: number,
+): ResultadoDoCaso {
+  return {
+    id: caso.id,
+    titulo: caso.titulo,
+    tipo: "juiz",
+    familia: "juiz",
+    deve: falsas(caso.deve),
+    naoPode: falsas(caso.naoPode),
+    trajetoriaOk: true,
+    chamadasDesnecessarias: 0,
+    validaNa1a: false,
+    houveViolacao: false,
+    corrigiuAposViolacao: false,
+    erro: motivo,
+    boa: caso.boa === true,
+    motivosEsperados: caso.motivos,
+    uso: {},
+    trocas: 0,
+    latenciaMs,
+    modelos: [],
+  }
+}
+
+/** Uma leitura do Juiz sobre a resposta do caso: deve e naoPode sobre o veredito, e os motivos apontados. */
+export async function rodarJuiz(caso: CasoJuiz, deps: DepsDoJuiz): Promise<ResultadoDoCaso> {
+  const telemetry = createMemoryTelemetry()
+  const router = createModelRouter({
+    ledger: createMemoryLedger(deps.clock),
+    clock: deps.clock,
+    telemetry,
+  })
+  const judge = createJudge({ ...deps, router, telemetry })
+  const v = await judge.julgar({
+    saida: caso.saida,
+    evitar: caso.evitar,
+    nota_de_rotina: caso.nota_de_rotina,
+    tentativa: 1,
+  })
+  if (!v.ok) return juizComFalha(caso, v.motivo, v.duracao_ms)
+  const apontados = [...new Set([...v.graves, ...v.registros])]
+  return {
+    id: caso.id,
+    titulo: caso.titulo,
+    tipo: "juiz",
+    familia: "juiz",
+    deve: conferir(caso.deve, v),
+    naoPode: conferir(caso.naoPode, v),
+    trajetoriaOk: true,
+    chamadasDesnecessarias: 0,
+    validaNa1a: true,
+    houveViolacao: false,
+    corrigiuAposViolacao: false,
+    boa: caso.boa === true,
+    motivosEsperados: caso.motivos,
+    motivosApontados: apontados,
+    juiz: { tentativas: 1, aprovado: v.aprovado, motivos: apontados },
+    uso: {
+      apoio: { chamadas: 1, tokens_entrada: v.tokens.entrada, tokens_saida: v.tokens.saida },
+    },
+    trocas: v.trocas,
+    latenciaMs: v.duracao_ms,
+    modelos: [v.modelo],
+  }
+}
+
 export type OpcoesDoAcompanhante = { runtime: AgentRuntime }
 
 export type RodadaDoAcompanhante = {
@@ -578,6 +660,8 @@ function pausadoAcimaDoTeto(
     houveViolacao: false,
     corrigiuAposViolacao: false,
     erro: MOTIVO_PAUSA_ACIMA_DO_TETO,
+    falsoAlerta: caso.falsoAlerta === true,
+    alertou: false,
     pergunta: caso.pergunta,
     perguntas: d.perguntas,
     recusadas: d.recusadas,
@@ -588,6 +672,22 @@ function pausadoAcimaDoTeto(
     latenciaMs: d.latenciaMs,
     modelos: [],
   }
+}
+
+// Motivos de um resumo da etapa juiz: "reprovado: a, b" e "registros: c", sozinhos ou depois de ";".
+const PARTE_COM_MOTIVOS = /^(?:reprovado|registros): (.+)$/
+
+function motivosDoResumo(resumo: string | null): string[] {
+  return (resumo ?? "").split(";").flatMap((parte) => {
+    const achado = PARTE_COM_MOTIVOS.exec(parte.trim())
+    return achado?.[1] ? achado[1].split(",").map((m) => m.trim()) : []
+  })
+}
+
+/** Motivos do Juiz no run, lidos dos resumos das etapas juiz (só códigos, sem repetir). */
+export function motivosDoJuiz(etapas: RunEtapa[]): string[] {
+  const todos = etapas.filter((e) => e.tipo === "juiz").flatMap((e) => motivosDoResumo(e.resumo))
+  return [...new Set(todos.filter((m) => m !== ""))]
 }
 
 /** Resposta de uma pausa: a função recebe a pergunta que saiu; posição vazia vira pular. */
@@ -631,6 +731,11 @@ export async function rodarConversa(
   const r = colherResultado(resposta.saida, resposta.status, etapas)
   const propostas = resposta.saida.propostas
   const retornosFechados = await retornosFechadosDo(deps, contaId, cenario)
+  const juiz = {
+    tentativas: run.juiz_tentativas,
+    aprovado: run.juiz_aprovado,
+    motivos: motivosDoJuiz(etapas),
+  }
   const alvo = {
     resposta,
     resultado: r,
@@ -638,6 +743,7 @@ export async function rodarConversa(
     propostas,
     retornosFechados,
     ...contagem,
+    juiz,
   }
   return {
     ...resultadoDaResposta({
@@ -651,6 +757,9 @@ export async function rodarConversa(
       naoPode: conferir(caso.naoPode, alvo),
     }),
     familia: caso.familia,
+    falsoAlerta: caso.falsoAlerta === true,
+    alertou: resposta.caminho === "alerta",
+    juiz,
     pergunta: caso.pergunta,
     perguntas,
     recusadas: contagem.recusadas,

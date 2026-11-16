@@ -22,6 +22,8 @@ export type ResumoDoRun = Pick<
   | "modelos"
   | "trocas_de_modelo"
   | "trace_id"
+  | "juiz_tentativas"
+  | "juiz_aprovado"
 >
 
 // Resposta do Acompanhante (run da 007) ou da conversa: o relatório só precisa destes campos.
@@ -65,6 +67,8 @@ export type DadosDoRelatorio = {
   gravado?: { faltas: number; sugeridos: number; lista: { nome: string; motivo: string }[] }
   // Uma linha por toque da pessoa (ver linhaDoToque).
   toques?: string[]
+  // Motivos do Juiz no run (ver motivosDoJuizDasEtapas); sem eles, a linha do Juiz não mostra motivos.
+  motivosDoJuiz?: string[]
 }
 
 // Toque já traduzido para o relatório: `numero` é a posição na sugestão ou no retorno, a partir de 1.
@@ -89,16 +93,46 @@ const ROTULO_DA_ACAO: Record<"tem" | "acabou", string> = { tem: "tem", acabou: "
 const modelosDoRun = z.object({
   decisao: z.array(z.string()).optional(),
   apoio: z.array(z.string()).optional(),
+  reforco: z.array(z.string()).optional(),
 })
 
 function listaDeModelos(lista: string[]): string {
   return lista.length > 0 ? lista.join(", ") : "nenhum"
 }
 
-function modelosDe(modelos: unknown): { decisao: string[]; apoio: string[] } {
+function modelosDe(modelos: unknown): { decisao: string[]; apoio: string[]; reforco: string[] } {
   const lidos = modelosDoRun.safeParse(modelos)
-  if (!lidos.success) return { decisao: [], apoio: [] }
-  return { decisao: lidos.data.decisao ?? [], apoio: lidos.data.apoio ?? [] }
+  if (!lidos.success) return { decisao: [], apoio: [], reforco: [] }
+  return {
+    decisao: lidos.data.decisao ?? [],
+    apoio: lidos.data.apoio ?? [],
+    reforco: lidos.data.reforco ?? [],
+  }
+}
+
+// Motivos do Juiz (D23): o que vem depois de `reprovado: ` e de `registros: ` nos resumos das etapas juiz, sem repetir.
+export function motivosDoJuizDasEtapas(etapas: RunEtapa[]): string[] {
+  const motivos = etapas
+    .filter((e) => e.tipo === "juiz" && e.resumo)
+    .flatMap((e) => motivosDoResumo(e.resumo ?? ""))
+  return [...new Set(motivos)]
+}
+
+// Os motivos de um resumo do Juiz: "reprovado: a, b; registros: c" dá a, b, c.
+function motivosDoResumo(resumo: string): string[] {
+  return resumo
+    .split("; ")
+    .filter((parte) => /^(reprovado|registros): /.test(parte))
+    .flatMap((parte) => parte.replace(/^(reprovado|registros): /, "").split(", "))
+}
+
+// Linha do Juiz (D23): só quando houve tentativa; os motivos aparecem quando há.
+function linhaDoJuiz(run: ResumoDoRun, motivos: string[]): string[] {
+  if (run.juiz_tentativas === 0) return []
+  const veredito =
+    run.juiz_aprovado === null ? "indisponivel" : run.juiz_aprovado ? "aprovado" : "reprovado"
+  const fim = motivos.length > 0 ? `; motivos: ${motivos.join(", ")}` : ""
+  return [`  juiz: ${run.juiz_tentativas} tentativa(s), ${veredito}${fim}`]
 }
 
 function linhaDaEtapa(e: RunEtapa): string {
@@ -248,7 +282,11 @@ function secaoAvisos(avisos: SaidaDoAcompanhante["avisos"]): string[] {
   return ["Avisos", ...avisos.map((a) => `  - ${a.texto}`)]
 }
 
-function secaoResumo(resposta: RespostaDoRelatorio, run: ResumoDoRun): string[] {
+function secaoResumo(
+  resposta: RespostaDoRelatorio,
+  run: ResumoDoRun,
+  motivosDoJuiz: string[],
+): string[] {
   const tokens = run.tokens_entrada + run.tokens_saida
   const modelos = modelosDe(run.modelos)
   return [
@@ -259,8 +297,10 @@ function secaoResumo(resposta: RespostaDoRelatorio, run: ResumoDoRun): string[] 
     `  passos: ${run.passos}`,
     `  tokens: ${tokens} (entrada ${run.tokens_entrada}, saída ${run.tokens_saida})`,
     `  modelo: ${listaDeModelos(modelos.decisao)}`,
+    ...(modelos.reforco.length > 0 ? [`  reforço: ${listaDeModelos(modelos.reforco)}`] : []),
     ...(modelos.apoio.length > 0 ? [`  apoio: ${listaDeModelos(modelos.apoio)}`] : []),
     `  trocas de modelo: ${run.trocas_de_modelo}`,
+    ...linhaDoJuiz(run, motivosDoJuiz),
     `  trace_id: ${run.trace_id ?? "nenhum"}`,
   ]
 }
@@ -399,7 +439,7 @@ export function formatarRelatorio(d: DadosDoRelatorio): string {
     secaoValeTerEmCasa(saida?.para_ter),
     secaoAvisos(saida?.avisos ?? []),
     [d.disclaimer],
-    secaoResumo(resposta, run),
+    secaoResumo(resposta, run, d.motivosDoJuiz ?? []),
   ]
   const principal = blocos
     .filter((bloco) => bloco.length > 0)

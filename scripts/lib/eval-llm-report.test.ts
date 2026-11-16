@@ -596,3 +596,115 @@ describe("seção Memória", () => {
     expect(texto).not.toContain("## Memória")
   })
 })
+
+describe("seções do Juiz, Segurança, Linguagem e Incômodos", () => {
+  const juizCaso = (id: string, parcial: Partial<ResultadoDoCaso>) =>
+    caso({ id, tipo: "juiz", familia: "juiz", ...parcial })
+  const familia = (
+    id: string,
+    familiaDoCaso: NonNullable<ResultadoDoCaso["familia"]>,
+    parcial: Partial<ResultadoDoCaso> = {},
+  ) => caso({ id, tipo: "conversa", familia: familiaDoCaso, ...parcial })
+  const rodadaCom = (casos: ResultadoDoCaso[]) =>
+    formatarRelatorio({
+      checkpoint: "c3-confiavel",
+      promptVersao: "acompanhante.v6, juiz.v1",
+      totalDeCasos: casos.length,
+      casos,
+    })
+
+  it("Juiz: acerto por caso e total, acerto por motivo e falsas reprovações", () => {
+    const texto = rodadaCom([
+      juizCaso("j1", {
+        boa: true,
+        juiz: { tentativas: 1, aprovado: true, motivos: [] },
+        motivosEsperados: [],
+        motivosApontados: [],
+      }),
+      juizCaso("j2", {
+        boa: true,
+        deve: [{ descricao: "x", ok: false }],
+        juiz: { tentativas: 1, aprovado: false, motivos: ["promessa"] },
+        motivosApontados: ["promessa"],
+      }),
+      juizCaso("j3", {
+        motivosEsperados: ["promessa", "tom"],
+        motivosApontados: ["promessa"],
+        juiz: { tentativas: 1, aprovado: false, motivos: ["promessa"] },
+      }),
+      juizCaso("j4", {
+        motivosEsperados: ["tom"],
+        motivosApontados: [],
+        juiz: { tentativas: 1, aprovado: true, motivos: [] },
+      }),
+    ])
+    expect(texto).toContain("## Juiz")
+    expect(texto).toContain("| j1 | sim |")
+    expect(texto).toContain("| j2 | não |")
+    expect(texto).toContain("- Acerto: 3/4 (75%)")
+    expect(texto).toContain("### Acerto por motivo")
+    expect(texto).toContain("- promessa: apontada em 1 de 1 casos")
+    expect(texto).toContain("- tom: apontada em 0 de 2 casos")
+    expect(texto).toContain("- Falsas reprovações: 1 de 2")
+  })
+
+  it("Juiz: sem caso boa, a falsa reprovação é 0 de 0", () => {
+    const texto = rodadaCom([juizCaso("j1", {})])
+    expect(texto).toContain("- Falsas reprovações: 0 de 0")
+  })
+
+  it("Segurança: mostra acerto por caso e o total", () => {
+    const texto = rodadaCom([
+      familia("s1", "seguranca"),
+      familia("s2", "seguranca", { naoPode: [{ descricao: "y", ok: false }] }),
+    ])
+    expect(texto).toContain("## Segurança")
+    expect(texto).toContain("| s1 | sim |")
+    expect(texto).toContain("| s2 | não |")
+    expect(texto).toContain("- Acerto: 1/2 (50%)")
+  })
+
+  it("Linguagem e sofrimento: acerto e falsos alertas, com os marcados e os que alertaram", () => {
+    const texto = rodadaCom([
+      familia("l1", "linguagem", { falsoAlerta: true, alertou: true }),
+      familia("l2", "linguagem", { falsoAlerta: true, alertou: false }),
+      familia("l3", "linguagem", { deve: [{ descricao: "x", ok: false }] }),
+    ])
+    expect(texto).toContain("## Linguagem e sofrimento")
+    expect(texto).toContain("- Acerto: 2/3 (67%)")
+    expect(texto).toContain("- Falsos alertas: 1 de 2")
+  })
+
+  it("Incômodos: acerto e promessas bloqueadas pelo Juiz", () => {
+    const texto = rodadaCom([
+      familia("i1", "incomodos", {
+        juiz: { tentativas: 1, aprovado: false, motivos: ["promessa"] },
+      }),
+      familia("i2", "incomodos", { juiz: { tentativas: 1, aprovado: true, motivos: ["jargao"] } }),
+      familia("i3", "incomodos", { naoPode: [{ descricao: "y", ok: false }] }),
+    ])
+    expect(texto).toContain("## Incômodos")
+    expect(texto).toContain("- Acerto: 2/3 (67%)")
+    expect(texto).toContain("- Promessas bloqueadas: 1")
+  })
+
+  it("sem casos de cada família, a seção não aparece", () => {
+    const texto = rodadaCom([caso({ id: "a" })])
+    expect(texto).not.toContain("## Juiz")
+    expect(texto).not.toContain("## Segurança")
+    expect(texto).not.toContain("## Linguagem e sofrimento")
+    expect(texto).not.toContain("## Incômodos")
+  })
+
+  it("as seções vêm depois de Memória e antes do custo por papel", () => {
+    const texto = rodadaCom([
+      caso({ id: "m1", tipo: "memoria", familia: "memoria" }),
+      juizCaso("j1", {}),
+      familia("s1", "seguranca"),
+    ])
+    const ordem = ["## Memória", "## Juiz", "## Segurança", "## Custo por papel"]
+    const posicoes = ordem.map((t) => texto.indexOf(t))
+    expect(posicoes.every((p) => p >= 0)).toBe(true)
+    expect([...posicoes].sort((a, b) => a - b)).toEqual(posicoes)
+  })
+})

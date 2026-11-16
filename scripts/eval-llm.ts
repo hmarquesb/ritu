@@ -9,6 +9,7 @@ import { z } from "zod"
 import { montarEntradaDaMemoria, type NotaParaResumo } from "@/core/agents/memory/entrada"
 import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
 import { interpreteV1 } from "@/core/agents/prompts/interprete.v1"
+import { juizV1 } from "@/core/agents/prompts/juiz.v1"
 import { memoriaV1 } from "@/core/agents/prompts/memoria.v1"
 import { chamarComPapel } from "@/core/llm/chamar"
 import { createModelRouter } from "@/core/llm/router"
@@ -33,6 +34,7 @@ import {
   rodarAcompanhante,
   rodarConversa,
   rodarInterprete,
+  rodarJuiz,
   rodarMemoria,
   versaoDosPrompts,
 } from "./lib/eval-llm-casos"
@@ -153,6 +155,8 @@ function rodarQualquer(container: Container, caso: CasoDoEval): Promise<Resultad
     // A conversa para no bloco de aprovação: o runner nunca aprova (D18).
     conversa: (c) => rodarConversa(c, { runtime: container.runtime, llm: container.llm }),
     memoria: (c) => rodarMemoriaComJuiz(container, c),
+    juiz: (c) =>
+      rodarJuiz(c, { client: container.llm, kb: container.knowledge, clock: container.clock }),
   })
 }
 
@@ -172,6 +176,7 @@ const rodar = (container: Container, checkpoint: string, casos: CasoDoEval[]): P
       acompanhante: acompanhanteV6.versao,
       interprete: interpreteV1.versao,
       memoria: memoriaV1.versao,
+      juiz: juizV1.versao,
     }),
     casos,
     rodarCaso: (caso) => rodarQualquer(container, caso),

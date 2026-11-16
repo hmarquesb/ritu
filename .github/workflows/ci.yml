@@ -35,9 +35,6 @@ jobs:
       - name: Testes
         run: npm test
 
-      - name: Evals determinísticos
-        run: npm run eval:det
-
       - name: Duplicação
         run: npm run dup
 
@@ -49,6 +46,26 @@ jobs:
 
       - name: E2E
         run: npm run test:e2e
+
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Evals determinísticos
+        run: npm run eval:det -- --reporter=default --reporter=json --outputFile.json=.vitest/eval-det.json
+
+      - name: Resumo dos evals determinísticos
+        if: always()
+        run: npm run --silent eval:det:resumo >> "$GITHUB_STEP_SUMMARY"
 
   db:
     runs-on: ubuntu-latest

@@ -6,6 +6,14 @@ import { ENV_VARS, envStatus, optionalEnv, requireEnv } from "./env"
 
 const ENV_EXAMPLE = fileURLToPath(new URL("../../.env.example", import.meta.url))
 
+describe("RITU_MODO", () => {
+  const variavel = ENV_VARS.find((item) => item.name === "RITU_MODO")
+
+  it("está no catálogo, opcional, da entrega 3, então o check da entrega 3 não falha sem ela", () => {
+    expect(variavel).toMatchObject({ name: "RITU_MODO", entrega: 3, obrigatoria: false })
+  })
+})
+
 const VALORES_DE_EXEMPLO = new Set([
   "DATABASE_URL",
   "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -43,7 +51,7 @@ describe("envStatus", () => {
   const status = envStatus({ DATABASE_URL: "x", EXTRA: "y" })
 
   it("lista só as variáveis do catálogo, sem as de fora", () => {
-    expect(status).toHaveLength(11)
+    expect(status).toHaveLength(12)
     expect(status.map((item) => item.name)).not.toContain("EXTRA")
   })
 

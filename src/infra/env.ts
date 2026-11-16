@@ -53,6 +53,12 @@ export const ENV_VARS: readonly EnvVar[] = [
     descricao: "Login Google; sem ela a Entrada mostra só a demonstração.",
   },
   {
+    name: "RITU_MODO",
+    entrega: 3,
+    obrigatoria: false,
+    descricao: "e2e: stores em memória para o Playwright. Recusada em produção.",
+  },
+  {
     name: "TESTER_IDS",
     entrega: 4,
     obrigatoria: false,

@@ -39,6 +39,7 @@ import { createMemoryLedger } from "../../src/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "../../src/infra/fakes/memory-telemetry"
 import { type DepsDoCenario, montarCenario, rodarCenario } from "../../test/fixtures/cenarios"
 import { MAXIMO_DE_RETOMADAS } from "../../test/fixtures/cenarios/rodar"
+import { motivosDoJuizDasEtapas } from "./demo-report"
 import type {
   ChecagemDeExpectativa,
   ResultadoDoCaso,
@@ -674,22 +675,6 @@ function pausadoAcimaDoTeto(
   }
 }
 
-// Motivos de um resumo da etapa juiz: "reprovado: a, b" e "registros: c", sozinhos ou depois de ";".
-const PARTE_COM_MOTIVOS = /^(?:reprovado|registros): (.+)$/
-
-function motivosDoResumo(resumo: string | null): string[] {
-  return (resumo ?? "").split(";").flatMap((parte) => {
-    const achado = PARTE_COM_MOTIVOS.exec(parte.trim())
-    return achado?.[1] ? achado[1].split(",").map((m) => m.trim()) : []
-  })
-}
-
-/** Motivos do Juiz no run, lidos dos resumos das etapas juiz (só códigos, sem repetir). */
-export function motivosDoJuiz(etapas: RunEtapa[]): string[] {
-  const todos = etapas.filter((e) => e.tipo === "juiz").flatMap((e) => motivosDoResumo(e.resumo))
-  return [...new Set(todos.filter((m) => m !== ""))]
-}
-
 /** Resposta de uma pausa: a função recebe a pergunta que saiu; posição vazia vira pular. */
 export function resolverResposta(
   resposta: NonNullable<CasoConversa["respostas"]>[number] | undefined,
@@ -734,7 +719,7 @@ export async function rodarConversa(
   const juiz = {
     tentativas: run.juiz_tentativas,
     aprovado: run.juiz_aprovado,
-    motivos: motivosDoJuiz(etapas),
+    motivos: motivosDoJuizDasEtapas(etapas),
   }
   const alvo = {
     resposta,

@@ -101,7 +101,12 @@ export const porcentagem = (parte: number, total: number): string =>
 const todosOk = (c: ChecagemDeExpectativa[]): boolean => c.every((x) => x.ok)
 
 const ehInterprete = (c: ResultadoDoCaso): boolean => c.tipo === "interprete"
+const ehJuiz = (c: ResultadoDoCaso): boolean => c.tipo === "juiz"
+// Métricas de resposta: sem o Intérprete e sem o Juiz (o Juiz só entra no Conteúdo e na seção Juiz).
 const respostasDe = (casos: ResultadoDoCaso[]): ResultadoDoCaso[] =>
+  casos.filter((c) => !ehInterprete(c) && !ehJuiz(c))
+// Conteúdo (deve e não pode): tudo menos o Intérprete, Juiz incluso.
+const comConteudo = (casos: ResultadoDoCaso[]): ResultadoDoCaso[] =>
   casos.filter((c) => !ehInterprete(c))
 const interpretesDe = (casos: ResultadoDoCaso[]): ResultadoDoCaso[] => casos.filter(ehInterprete)
 
@@ -121,6 +126,7 @@ export type ResumoDoInterprete = {
 
 export type ResumoDaRodada = {
   casos: number
+  conteudoCasos: number
   conteudoDeve: number
   conteudoNaoPode: number
   trajetoriaCorreta: number
@@ -185,10 +191,12 @@ function resumoDoInterprete(casos: ResultadoDoCaso[]): ResumoDoInterprete {
 export function resumir(casos: ResultadoDoCaso[]): ResumoDaRodada {
   const respostas = respostasDe(casos)
   const latencias = respostas.filter((c) => !c.erro).map((c) => c.latenciaMs)
-  const semErro = respostas.filter((c) => !c.erro)
+  const conteudo = comConteudo(casos)
+  const semErro = conteudo.filter((c) => !c.erro)
   const comExplicacao = respostas.filter((c) => c.explicacao)
   return {
     casos: respostas.length,
+    conteudoCasos: conteudo.length,
     conteudoDeve: semErro.filter((c) => todosOk(c.deve)).length,
     conteudoNaoPode: semErro.filter((c) => todosOk(c.naoPode)).length,
     trajetoriaCorreta: respostas.filter((c) => c.trajetoriaOk).length,
@@ -221,8 +229,8 @@ function tabelaDeMetricas(r: ResumoDaRodada): string[] {
   return [
     "| Métrica | Resultado |",
     "|---|---|",
-    `| Conteúdo: deve incluir | ${r.conteudoDeve}/${r.casos} (${porcentagem(r.conteudoDeve, r.casos)}) |`,
-    `| Conteúdo: não pode incluir | ${r.conteudoNaoPode}/${r.casos} (${porcentagem(r.conteudoNaoPode, r.casos)}) |`,
+    `| Conteúdo: deve incluir | ${r.conteudoDeve}/${r.conteudoCasos} (${porcentagem(r.conteudoDeve, r.conteudoCasos)}) |`,
+    `| Conteúdo: não pode incluir | ${r.conteudoNaoPode}/${r.conteudoCasos} (${porcentagem(r.conteudoNaoPode, r.conteudoCasos)}) |`,
     `| Trajetória correta | ${r.trajetoriaCorreta}/${r.casos} (${porcentagem(r.trajetoriaCorreta, r.casos)}) |`,
     `| Chamadas desnecessárias por run | ${media} (${r.chamadasDesnecessarias} no total) |`,
     `| Válida na 1ª tentativa | ${r.validaNa1a}/${r.casos} (${porcentagem(r.validaNa1a, r.casos)}) |`,

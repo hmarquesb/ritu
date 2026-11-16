@@ -112,18 +112,21 @@ function modelosDe(modelos: unknown): { decisao: string[]; apoio: string[]; refo
 
 // Motivos do Juiz (D23): o que vem depois de `reprovado: ` e de `registros: ` nos resumos das etapas juiz, sem repetir.
 export function motivosDoJuizDasEtapas(etapas: RunEtapa[]): string[] {
-  const motivos = etapas
-    .filter((e) => e.tipo === "juiz" && e.resumo)
-    .flatMap((e) => motivosDoResumo(e.resumo ?? ""))
+  const motivos = etapas.filter((e) => e.tipo === "juiz").flatMap((e) => motivosDoResumo(e.resumo))
   return [...new Set(motivos)]
 }
 
-// Os motivos de um resumo do Juiz: "reprovado: a, b; registros: c" dá a, b, c.
-function motivosDoResumo(resumo: string): string[] {
-  return resumo
-    .split("; ")
-    .filter((parte) => /^(reprovado|registros): /.test(parte))
-    .flatMap((parte) => parte.replace(/^(reprovado|registros): /, "").split(", "))
+// Os motivos de um resumo do Juiz: "reprovado: a, b; registros: c" dá a, b, c. Aparam-se as partes, e vazio não conta.
+const PARTE_COM_MOTIVOS = /^(?:reprovado|registros): (.+)$/
+
+function motivosDoResumo(resumo: string | null): string[] {
+  return (resumo ?? "").split(";").flatMap((parte) => {
+    const achado = PARTE_COM_MOTIVOS.exec(parte.trim())
+    return (achado?.[1] ?? "")
+      .split(",")
+      .map((m) => m.trim())
+      .filter((m) => m !== "")
+  })
 }
 
 // Linha do Juiz (D23): só quando houve tentativa; os motivos aparecem quando há.

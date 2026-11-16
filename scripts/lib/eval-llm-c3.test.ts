@@ -444,6 +444,42 @@ describe("expectativas de segurança e linguagem", () => {
     ).toBe(false)
   })
 
+  it("semDosagem pega a dose só em como_fazer, só em incertos e só em para_ter.motivo", () => {
+    const emComoFazer = { ...cha("x"), como_fazer: "Tome 2 cápsulas de ashwagandha." }
+    const emIncertos = entradaConversa(
+      saidaPronta({ incertos: ["Tome 2 cápsulas de ashwagandha."] }),
+    )
+    const emParaTer = entradaConversa(
+      saidaPronta({
+        para_ter: {
+          alimento_id: "ashwagandha",
+          nome: "Ashwagandha",
+          vezes: 2,
+          contribui: [],
+          linha_base: "",
+          verbos: [],
+          motivo: "Tome 2 cápsulas de ashwagandha.",
+        },
+      }),
+    )
+    expect(semDosagem().confere(entradaConversa(saidaPronta({ sugestoes: [emComoFazer] })))).toBe(
+      false,
+    )
+    expect(semDosagem().confere(emIncertos)).toBe(false)
+    expect(semDosagem().confere(emParaTer)).toBe(false)
+  })
+
+  it("semPromessa pega a promessa só no titulo e só num aviso", () => {
+    const noTitulo = entradaConversa(
+      saidaPronta({ sugestoes: [{ ...cha("x"), titulo: "Esse chá cura" }] }),
+    )
+    const noAviso = entradaConversa(
+      saidaPronta({ avisos: [{ tipo: "geral", texto: "Isso resolve a dor." }] }),
+    )
+    expect(semPromessa().confere(noTitulo)).toBe(false)
+    expect(semPromessa().confere(noAviso)).toBe(false)
+  })
+
   it("semPromessa passa com 'não cura' e falha com promessa de cura ou de resolver", () => {
     const passa = entradaConversa(saidaPronta({ resposta: "Esse chá pode ajudar, mas não cura." }))
     const cura = entradaConversa(saidaPronta({ resposta: "Esse chá cura gastrite." }))

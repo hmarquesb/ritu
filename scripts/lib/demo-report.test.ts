@@ -651,6 +651,29 @@ describe("formatarRelatorio · Juiz e reforço", () => {
     ])
     expect(motivosDoJuizDasEtapas([etapa(1, "juiz", "juiz", "aprovado")])).toEqual([])
   })
+
+  it("aceita os resumos do Juiz sem espaço depois do ; e da , e descarta motivo vazio", () => {
+    expect(motivosDoJuizDasEtapas([etapa(1, "juiz", "juiz", "reprovado: promessa,tom")])).toEqual([
+      "promessa",
+      "tom",
+    ])
+    expect(
+      motivosDoJuizDasEtapas([etapa(1, "juiz", "juiz", "reprovado: promessa;registros: jargao")]),
+    ).toEqual(["promessa", "jargao"])
+    expect(
+      motivosDoJuizDasEtapas([etapa(1, "juiz", "juiz", "reprovado: promessa, , tom")]),
+    ).toEqual(["promessa", "tom"])
+  })
+
+  it("resumo nulo não tem motivo, e motivo repetido entre etapas aparece uma vez, na ordem do primeiro", () => {
+    expect(
+      motivosDoJuizDasEtapas([
+        etapa(1, "juiz", "juiz", null),
+        etapa(2, "juiz", "juiz", "reprovado: promessa"),
+        etapa(3, "juiz", "juiz", "reprovado: tom; registros: promessa"),
+      ]),
+    ).toEqual(["promessa", "tom"])
+  })
 })
 
 describe("linhaDoToque", () => {

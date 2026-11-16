@@ -201,6 +201,30 @@ describe("resumir", () => {
     expect(r.explicacaoCompleta).toBe(2)
   })
 
+  it("caso juiz não entra nas métricas de resposta, só no Conteúdo", () => {
+    const rodada = resumir([
+      caso({ id: "c", tipo: "conversa", trajetoriaOk: false }),
+      caso({ id: "j", tipo: "juiz", familia: "juiz", latenciaMs: 9000 }),
+    ])
+    expect(rodada.trajetoriaCorreta).toBe(0)
+    expect(rodada.casos).toBe(1)
+    expect(rodada.conteudoCasos).toBe(2)
+    expect(rodada.conteudoDeve).toBe(2)
+    expect(rodada.latenciaP95).toBe(1000)
+    const texto = formatarRelatorio({
+      checkpoint: "c3-confiavel",
+      promptVersao: "acompanhante.v6, juiz.v1",
+      totalDeCasos: 2,
+      casos: [
+        caso({ id: "c", tipo: "conversa", trajetoriaOk: false }),
+        caso({ id: "j", tipo: "juiz", familia: "juiz" }),
+      ],
+    })
+    expect(texto).toContain("| Trajetória correta | 0/1 (0%) |")
+    expect(texto).toContain("| Conteúdo: deve incluir | 2/2 (100%) |")
+    expect(texto.split("## Casos")[1] ?? "").not.toContain("| j |")
+  })
+
   it("soma custo por papel, trocas e modelos, com p50 e p95 da latência", () => {
     expect(r.uso.decisao).toEqual({ chamadas: 9, tokens_entrada: 3000, tokens_saida: 600 })
     expect(r.uso.apoio?.chamadas).toBe(3)

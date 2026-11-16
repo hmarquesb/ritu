@@ -99,6 +99,7 @@ import {
   montarCenario,
 } from "../../test/fixtures/cenarios"
 import { MAXIMO_DE_RETOMADAS } from "../../test/fixtures/cenarios/rodar"
+import { motivosDoJuizDasEtapas } from "./demo-report"
 import {
   arquivoDoRelatorio,
   casosDoCheckpoint,
@@ -111,7 +112,6 @@ import {
   formatarListagem,
   idsDeCasos,
   listarCasos,
-  motivosDoJuiz,
   resolverResposta,
   retornosFalsos,
   rodarAcompanhante,
@@ -1759,10 +1759,13 @@ describe("motivos do Juiz no run", () => {
   const etapaDoJuiz = (resumo: string | null): RunEtapa => ({ ...etapa("juiz", "juiz", 1), resumo })
 
   it("lê os graves de reprovado e os registros, sem repetir", () => {
-    expect(motivosDoJuiz([etapaDoJuiz("reprovado: promessa, tom")])).toEqual(["promessa", "tom"])
-    expect(motivosDoJuiz([etapaDoJuiz("aprovado; registros: jargao")])).toEqual(["jargao"])
+    expect(motivosDoJuizDasEtapas([etapaDoJuiz("reprovado: promessa, tom")])).toEqual([
+      "promessa",
+      "tom",
+    ])
+    expect(motivosDoJuizDasEtapas([etapaDoJuiz("aprovado; registros: jargao")])).toEqual(["jargao"])
     expect(
-      motivosDoJuiz([
+      motivosDoJuizDasEtapas([
         etapaDoJuiz("reprovado: promessa; registros: jargao"),
         etapaDoJuiz("reprovado: promessa"),
       ]),
@@ -1770,10 +1773,10 @@ describe("motivos do Juiz no run", () => {
   })
 
   it("aprovado sem registro, indisponível ou sem etapa não tem motivo", () => {
-    expect(motivosDoJuiz([etapaDoJuiz("aprovado")])).toEqual([])
-    expect(motivosDoJuiz([etapaDoJuiz("indisponivel")])).toEqual([])
-    expect(motivosDoJuiz([etapaDoJuiz(null)])).toEqual([])
-    expect(motivosDoJuiz([])).toEqual([])
+    expect(motivosDoJuizDasEtapas([etapaDoJuiz("aprovado")])).toEqual([])
+    expect(motivosDoJuizDasEtapas([etapaDoJuiz("indisponivel")])).toEqual([])
+    expect(motivosDoJuizDasEtapas([etapaDoJuiz(null)])).toEqual([])
+    expect(motivosDoJuizDasEtapas([])).toEqual([])
   })
 })
 

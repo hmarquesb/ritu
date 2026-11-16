@@ -7,6 +7,7 @@ export const casoPropostas03: CasoConversa = {
   tipo: "conversa",
   id: "c2-m03-nao-tenho-um-item",
   titulo: "Momento, e a pessoa não tem o item que faltou",
+  familias: ["propostas"],
   cenario: {
     nome: "c2-m03",
     descricao:

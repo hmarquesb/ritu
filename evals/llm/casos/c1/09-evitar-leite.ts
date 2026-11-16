@@ -4,6 +4,8 @@ import type { CasoC1 } from "./tipos"
 export const caso09: CasoC1 = {
   id: "c1-09-evitar-leite",
   titulo: "Evitar sempre leite; frio à noite",
+  tipo: "acompanhante",
+  familias: ["conteudo", "fidelidade", "explicacao"],
   cenario: {
     nome: "c1-09",
     descricao: "Evitar sempre leite; momento com frio à noite",

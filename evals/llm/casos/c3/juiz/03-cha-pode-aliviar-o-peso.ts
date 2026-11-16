@@ -7,14 +7,14 @@ export const casoJuiz03: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j03-pode-aliviar-o-peso",
   titulo: "Pode ajudar a aliviar a sensação de peso",
+  familias: ["juiz"],
+  marcas: ["falsa_reprovacao"],
   saida: saidaPronta({
     resposta: "Esse chá pode ajudar a aliviar a sensação de peso.",
     sugestoes: [chaDeGengibre],
   }),
   evitar: [],
   motivos: [],
-  boa: true,
-  familia: "juiz",
   deve: [vereditoValido()],
   naoPode: [naoAponta("promessa")],
 }

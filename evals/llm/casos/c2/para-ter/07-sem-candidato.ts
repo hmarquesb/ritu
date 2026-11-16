@@ -7,7 +7,7 @@ export const casoParaTer07: CasoConversa = {
   tipo: "conversa",
   id: "c2-t07-sem-candidato",
   titulo: "Sem falta repetida: nada a indicar para ter em casa",
-  familia: "para_ter",
+  familias: ["para_ter"],
   cenario: {
     nome: "c2-t07",
     descricao: "Momento com frio, sem faltas: sem para_ter e sem frase de compra",

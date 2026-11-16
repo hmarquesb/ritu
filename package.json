@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "eval:det": "vitest run --config vitest.eval.config.ts",
+    "eval:det:resumo": "tsx scripts/eval-det-resumo.ts",
     "test:e2e": "playwright test",
     "test:db": "vitest run --config vitest.db.config.ts",
     "dup": "jscpd",
@@ -30,7 +31,9 @@
     "runtime:real": "node --env-file-if-exists=.env.local --import tsx scripts/runtime-real.ts",
     "loop:demo": "node --env-file-if-exists=.env.local --import tsx scripts/loop-demo.ts",
     "eval:llm": "node --env-file-if-exists=.env.local --import tsx scripts/eval-llm.ts",
-    "demo": "node --env-file-if-exists=.env.local --import tsx scripts/demo.ts"
+    "demo": "node --env-file-if-exists=.env.local --import tsx scripts/demo.ts",
+    "painel:gerar": "tsx scripts/painel.ts",
+    "painel:check": "tsx scripts/painel-check.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
@@ -40,6 +43,7 @@
     "@opentelemetry/exporter-logs-otlp-http": "^0.223.2",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.223.2",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.2",
+    "@opentelemetry/resources": "^2.12.1",
     "@opentelemetry/sdk-logs": "^0.223.2",
     "@opentelemetry/sdk-metrics": "^2.12.1",
     "@opentelemetry/sdk-node": "^0.223.2",

@@ -150,7 +150,7 @@ Spans, métricas e logs levam **ids, tipos, durações, contagens, tokens e nome
 | Sinal | Origem | Vai para |
 |---|---|---|
 | Evals determinísticos | CI, a cada push | Status da CI |
-| Evals com LLM | Nos cinco checkpoints (`QA.md`) | `evals/resultados/<checkpoint>.md`, `evals/COMPARACAO.md` e `evals/resultados/historico.json` |
+| Evals com LLM | Nos cinco checkpoints (`QA.md`) | `evals/resultados/<checkpoint>.md` e `.json`; `evals/resultados/historico.json`, de onde sai `evals/COMPARACAO.md` |
 | 👍/👎 por resposta | Uso real | Métrica + candidato a caso de eval |
 | Retornos (ajudou, não ajudou, não fiz) | Uso real | Métrica + ordenação das próximas sugestões |
 | Trocas de ingrediente e "Não gosto" | Uso real | Métrica + gostos |

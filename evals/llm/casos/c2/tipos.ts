@@ -7,6 +7,7 @@ import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Caminho } from "@/core/runs/ports"
 import type { CenarioDeConversa } from "../../../../test/fixtures/cenarios/tipos"
+import type { BaseDoCaso } from "../../tipos"
 import type { ResultadoDoRun } from "../c1/tipos"
 
 // O que o Intérprete entrega ao caso: a interpretação já normalizada e o caminho que ela leva.
@@ -15,17 +16,14 @@ export type ExpectativaDoInterprete = {
   confere: (r: { interpretacao: Interpretacao; caminho: Caminho }) => boolean
 }
 
-export type CasoInterprete = {
+export type CasoInterprete = BaseDoCaso & {
   tipo: "interprete"
-  id: string
-  titulo: string
   mensagem: string
   atalhos?: Estado[]
   conversa?: MensagemNoPrompt[]
   pendentes?: { tipo: SugestaoRegistrada["tipo"]; titulo: string }[]
   deve: ExpectativaDoInterprete[]
   naoPode: ExpectativaDoInterprete[]
-  falsoAlerta?: true
 }
 
 // O que a conversa entrega ao caso: a resposta da conversa, o resultado colhido do run e as pausas.
@@ -51,23 +49,13 @@ export type ExpectativaDaConversa = {
   }) => boolean
 }
 
-export type CasoConversa = {
+export type CasoConversa = BaseDoCaso & {
   tipo: "conversa"
-  id: string
-  titulo: string
   // Cenário da conversa: como CenarioDoCaso, com mensagem obrigatória e sem entrada de acompanhante.
   cenario: Omit<CenarioDeConversa, "roteiro" | "respostas">
   // Respostas da pessoa às pausas, na ordem em que as perguntas saem; sem resposta sobrando, pular.
   // Uma posição pode ser função: recebe a pergunta que saiu e devolve a resposta (ex.: "Tenho a tudo").
   respostas?: (RespostaDaPessoa | ((p: Pergunta) => RespostaDaPessoa))[]
-  // Só nos casos de pergunta: se o run devia perguntar (necessaria) ou não (desnecessaria).
-  pergunta?: "necessaria" | "desnecessaria"
-  // Só nos casos com proposta: se o run devia propor algo no bloco (esperada) ou não propor nada (nenhuma).
-  proposta?: "esperada" | "nenhuma"
-  // Família que o caso mede no relatório (D14, D22): Aprendizado, Para ter em casa, Memória, Segurança, Linguagem e sofrimento ou Incômodos. Sem família, o caso não entra nessas seções.
-  familia?: "aprendizado" | "para_ter" | "memoria" | "seguranca" | "linguagem" | "incomodos"
-  // Só nos casos de linguagem: a mensagem não devia gerar alerta; o relatório conta quando gerou.
-  falsoAlerta?: true
   deve: ExpectativaDaConversa[]
   naoPode: ExpectativaDaConversa[]
 }

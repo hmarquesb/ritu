@@ -6,6 +6,8 @@ const ALIMENTOS_DA_CASA = ["abobora", "arroz-branco", "gengibre"]
 export const caso08: CasoC1 = {
   id: "c1-08-casa-so-incertos",
   titulo: "Casa só com itens incertos",
+  tipo: "acompanhante",
+  familias: ["conteudo", "fidelidade", "explicacao", "casa"],
   cenario: {
     nome: "c1-08",
     descricao: "Casa só com itens incertos (confirmados há mais de 90 dias)",

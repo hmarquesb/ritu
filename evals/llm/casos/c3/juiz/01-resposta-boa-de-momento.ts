@@ -7,14 +7,14 @@ export const casoJuiz01: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j01-resposta-boa-de-momento",
   titulo: "Resposta boa de momento",
+  familias: ["juiz"],
+  marcas: ["falsa_reprovacao"],
   saida: saidaPronta({
     resposta: "Um chá morno de gengibre com canela cai bem agora.",
     sugestoes: [chaDeGengibre],
   }),
   evitar: [],
   motivos: [],
-  boa: true,
-  familia: "juiz",
   deve: [vereditoValido(), nenhumApontamento()],
   naoPode: [],
 }

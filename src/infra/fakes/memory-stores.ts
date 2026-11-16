@@ -883,10 +883,15 @@ function criarRuns(db: Db, clock: Clock): RunRepository {
       ).length
     },
     async votar(contaId, runId, voto) {
-      if (!runDaConta(contaId, runId)) return
+      if (!runDaConta(contaId, runId)) return null
       const existente = db.estado.votos.find((v) => v.conta_id === contaId && v.run_id === runId)
-      if (existente) existente.voto = voto
-      else db.estado.votos.push({ conta_id: contaId, run_id: runId, voto })
+      if (existente) {
+        const anterior = existente.voto
+        existente.voto = voto
+        return anterior
+      }
+      db.estado.votos.push({ conta_id: contaId, run_id: runId, voto })
+      return null
     },
     async expirarEmEsperaAntesDe(limite) {
       const alvos = db.estado.runs.filter(

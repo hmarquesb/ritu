@@ -39,8 +39,15 @@ function juizCom(respostas: unknown[]) {
 const pedido = { saida: saidaSegura(), evitar: [], tentativa: 1 }
 const ap = (motivo: string) => ({ motivo, trecho: TRECHO })
 
+// Só as contagens de motivo: ritu_juiz_total (um por julgamento) é lido à parte.
 function metricasDoJuiz(telemetry: ReturnType<typeof createMemoryTelemetry>) {
-  return telemetry.metricas.filter((m) => m.nome.startsWith("ritu_juiz_"))
+  return telemetry.metricas.filter(
+    (m) => m.nome.startsWith("ritu_juiz_") && m.nome !== "ritu_juiz_total",
+  )
+}
+
+function vereditoDoJuiz(telemetry: ReturnType<typeof createMemoryTelemetry>) {
+  return telemetry.metricas.filter((m) => m.nome === "ritu_juiz_total").map((m) => m.rotulos)
 }
 
 describe("aprovado é calculado pelo código: um grave reprova", () => {
@@ -75,6 +82,7 @@ describe("motivo desconhecido é descartado", () => {
       apontamentos: [],
     })
     expect(metricasDoJuiz(telemetry)).toEqual([])
+    expect(vereditoDoJuiz(telemetry)).toEqual([{ resultado: "aprovado" }])
   })
 
   it("junto de um grave, não entra e não muda o veredito", async () => {
@@ -92,6 +100,7 @@ describe("jargao: aviso, sem reprovar", () => {
     expect(metricasDoJuiz(telemetry)).toMatchObject([
       { nome: "ritu_juiz_avisos_total", rotulos: { motivo: "jargao" } },
     ])
+    expect(vereditoDoJuiz(telemetry)).toEqual([{ resultado: "aprovado" }])
   })
 
   it("aparece no resumo da etapa juiz do run, sem barrar a entrega", async () => {

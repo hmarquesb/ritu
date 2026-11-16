@@ -161,7 +161,7 @@ export async function detectarPadroes(deps: DepsDoJob): Promise<ResultadoDaDetec
         resultado.propostos += await detectarPadroesDaConta(deps, contaId)
       } catch (e) {
         resultado.falhas += 1
-        telemetry.log("error", "padroes_conta_falhou", {
+        telemetry.log("padroes_conta_falhou", {
           "erro.codigo": e instanceof RituError ? e.code : "desconhecido",
         })
       }

@@ -17,12 +17,6 @@ export const comParaTer = (): ExpectativaDaConversa =>
 export const semParaTer = (): ExpectativaDaConversa =>
   exp("sem para_ter", (r) => r.resultado.saida.para_ter === undefined)
 
-// A frase de para_ter fala das próximas vezes (a palavra "próxima" ou "próximas" no texto).
-export const falaDasProximasVezes = (): ExpectativaDaConversa =>
-  exp("a frase fala das próximas vezes", (r) =>
-    normalizar(r.resultado.saida.resposta).includes("proxim"),
-  )
-
 // Sem marca, loja ou preço: nem comprar, nem mercado, nem R$ no texto da resposta.
 export const semFraseDeCompra = (): ExpectativaDaConversa =>
   exp("sem frase de compra (comprar, loja, mercado, preço, marca, R$)", (r) => {

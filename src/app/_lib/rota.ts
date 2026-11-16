@@ -68,7 +68,7 @@ export function criarRota<B, R>(
       return resposta(200, await fn({ conta, corpo, request, container }))
     } catch (erro) {
       if (erro instanceof RituError) return resposta(400, { erro: erro.code })
-      container.telemetry.log("error", "erro_inesperado")
+      container.telemetry.log("erro_inesperado")
       return resposta(500, { erro: "erro_inesperado" })
     }
   }

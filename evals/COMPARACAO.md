@@ -1,28 +1,50 @@
 # Evolução dos evals com LLM
 
-Uma coluna por checkpoint e uma linha por métrica. O detalhe de cada rodada está em `evals/resultados/<checkpoint>.md`.
+Uma coluna por checkpoint e uma linha por métrica, gerada de `evals/resultados/historico.json`. O detalhe de cada rodada está em `evals/resultados/<checkpoint>.md`.
 
 | Métrica | c1-base | c2-conversa |
 |---|---|---|
 | Data | 2026-11-15 | 2026-11-16 |
-| Prompt | acompanhante.v1 | acompanhante.v5, interprete.v1 |
-| Casos | 12 | 54 (34 com resposta, 20 de intérprete) |
-| Conteúdo: deve incluir | 83% (10/12) | 68% (23/34) |
-| Conteúdo: não pode incluir | 100% (12/12) | 97% (33/34) |
-| Trajetória correta | 67% (8/12) | 88% (30/34) |
-| Chamadas desnecessárias por run | 0,00 | 0,06 |
-| Válida na 1ª tentativa | 17% (2/12) | 15% (5/34) |
-| Corrigiu após violação | 100% (10/10) | 89% (24/27) |
-| Explicação (as três respostas sim) | 73% (8/11; 1 não avaliada) | 50% (6/12; só os casos do c1) |
-| Trocas de modelo | 0 | 0 |
-| Latência por run (p50 / p95) | 3,4 s / 9,2 s | 6,3 s / 38,6 s (rodada completa) |
-| Chamadas `decisao` (total / por run) | 30 / 2,5 | 90 / 2,6 |
-| Tokens `decisao` (entrada / saída) | 154 742 / 7 387 | 697 470 / 23 032 |
-| Intenção (acerto / falsos alertas) | — | 90% (18/20; 2 por tempo esgotado) / 0 de 2 |
-| Perguntas (necessárias / desnecessárias evitadas) | — | 100% (2/2) / 100% (3/3) |
-| Propostas corretas | — | 50% (2/4) |
-| Aprendizado | — | 60% (3/5) |
-| Para ter em casa | — | 67% (2/3) |
-| Chamadas `apoio` (total) | — | 30 |
+| Prompts | acompanhante.v1 | acompanhante.v5, interprete.v1 |
+| Modelos | gemini-3.1-flash-lite, gemini-3.5-flash-lite | gemini-3.1-flash-lite, gemini-3.5-flash-lite |
+| Casos | 12 | 54 |
+| **Intenção**: Acerto | — | 90% (18/20) |
+| **Conteúdo**: Deve incluir | 83% (10/12) ⚠ | 68% (23/34) ⚠ |
+| **Conteúdo**: Não pode incluir | 100% (12/12) | 97% (33/34) ⚠ |
+| **Fidelidade**: Motivos fiéis | — | — |
+| **Fidelidade**: Texto bate com as sugestões | — | — |
+| **Explicação**: Explicação completa | 73% (8/11) ⚠ | 50% (6/12) ⚠ |
+| **Trajetória**: Trajetória correta | 67% (8/12) ⚠ | 88% (30/34) |
+| **Trajetória**: Chamadas desnecessárias por run | 0,00 | 0,06 |
+| **Autocorreção**: Válida na 1ª tentativa | 17% (2/12) ⚠ | 15% (5/34) ⚠ |
+| **Autocorreção**: Corrigiu após violação | 100% (10/10) | 89% (24/27) ⚠ |
+| **Perguntas**: Perguntas necessárias feitas | — | 100% (2/2) |
+| **Perguntas**: Perguntas desnecessárias evitadas | — | 100% (3/3) |
+| **Perguntas**: Perguntas recusadas por run | — | 0,00 |
+| **Casa**: Acerto | — | — |
+| **Propostas**: Propostas corretas | — | 50% (2/4) ⚠ |
+| **Propostas**: Propostas recusadas por run | — | 0,09 |
+| **Para ter em casa**: Acerto | — | 67% (2/3) ⚠ |
+| **Aprendizado**: Acerto | — | 60% (3/5) ⚠ |
+| **Memória**: Acerto | — | — |
+| **Conversa**: Acerto | — | — |
+| **Conversa**: Passos na pergunta simples (maior) | — | — |
+| **Segurança**: Bloqueio | — | — |
+| **Segurança**: Injection bloqueada | — | — |
+| **Linguagem e sofrimento**: Acerto | — | — |
+| **Linguagem e sofrimento**: Alertas perdidos | — | — |
+| **Linguagem e sofrimento**: Falsos alertas | — | 0 |
+| **Incômodos**: Acerto | — | — |
+| **Incômodos**: Promessas bloqueadas | — | — |
+| **Juiz**: Acerto por caso | — | — |
+| **Juiz**: Falsas reprovações | — | — |
+| **Custo**: Chamadas `decisao` por run | 2,50 | 2,65 |
+| **Custo**: Chamadas `apoio` por run | — | — |
+| **Custo**: Chamadas `reforco` por run | — | — |
+| **Custo**: Tokens de entrada por run | 12895,17 | 20513,82 |
+| **Custo**: Tokens de saída por run | 615,58 | 677,41 |
+| **Custo**: Trocas de modelo | 0 | 0 |
+| **Custo**: Latência por run, p50 | 3426 ms | 6253 ms |
+| **Custo**: Latência por run, p95 | 9174 ms | 38588 ms ⚠ |
 
-O `c2-conversa` junta a rodada completa (`c2-conversa.md`) com a repetição dos 22 casos que deram erro de ambiente nela (`c2-conversa-parcial.md`).
+Em `c1-base` e `c2-conversa`, Explicação incluía 'o texto bate com as sugestões', que desde o `c3-confiavel` conta em Fidelidade.

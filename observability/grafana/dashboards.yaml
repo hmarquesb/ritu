@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: ritu
+    orgId: 1
+    folder: Ritu
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /otel-lgtm/ritu-dashboards
+      foldersFromFilesStructure: false

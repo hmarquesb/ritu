@@ -5,6 +5,7 @@ import { base } from "./base"
 import { casa } from "./casa"
 import { clima } from "./clima"
 import { conversa } from "./conversa"
+import { evals } from "./evals"
 import { juiz } from "./juiz"
 import { limites } from "./limites"
 import { llmCotas } from "./llm-cotas"
@@ -16,6 +17,7 @@ import { pausas } from "./pausas"
 import { quiz } from "./quiz"
 import { ranking } from "./ranking"
 import { resposta } from "./resposta"
+import { telemetria } from "./telemetria"
 import { textosEntrada } from "./textos-entrada"
 import { toques } from "./toques"
 import { ui } from "./ui"
@@ -35,6 +37,7 @@ export const config = {
   aprovacao,
   casa,
   conversa,
+  evals,
   juiz,
   limites,
   loop,
@@ -42,6 +45,7 @@ export const config = {
   quiz,
   ranking,
   resposta,
+  telemetria,
   textosEntrada,
   toques,
   ui,

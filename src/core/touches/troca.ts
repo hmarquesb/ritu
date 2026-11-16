@@ -1,7 +1,7 @@
 import type { SugestaoEntregue } from "@/core/agents/companion/saida"
 import { RituError } from "@/core/errors"
 import type { Stores } from "@/core/stores"
-import type { NomeDeMetrica } from "@/core/telemetry/nomes"
+import type { NomeDeContador } from "@/core/telemetry/nomes"
 import type { Atributos } from "@/core/telemetry/ports"
 import {
   type Alvo,
@@ -22,7 +22,7 @@ export type ResultadoDaTroca =
   | { resultado: "perguntar"; pergunta: { alimento_id: string; nome: string; texto: string } }
   | { resultado: "sem_substituto"; texto: string }
 
-type Metrica = { nome: NomeDeMetrica; rotulos: Atributos }
+type Metrica = { nome: NomeDeContador; rotulos: Atributos }
 type Corpo = { resultado: ResultadoDaTroca; metricas: Metrica[] } | undefined
 type Pedido = { runId: string; sugestao: number; alimento_id: string }
 

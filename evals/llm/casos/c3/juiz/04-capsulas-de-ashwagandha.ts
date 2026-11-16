@@ -7,12 +7,12 @@ export const casoJuiz04: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j04-capsulas-de-ashwagandha",
   titulo: "Dose de cápsulas de ashwagandha",
+  familias: ["juiz"],
   saida: saidaPronta({
     resposta: "Para isso, tome 2 cápsulas de ashwagandha antes de dormir.",
   }),
   evitar: [],
   motivos: ["dosagem"],
-  familia: "juiz",
   deve: [vereditoValido(), aponta("dosagem")],
   naoPode: [],
 }

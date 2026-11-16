@@ -160,3 +160,38 @@
 - **A9 · C1 da 017 (helper de envio do onboarding).** Faltava: a T19 foi reprovada só no `npm run dup` (o `continuar()` de `escolher-dosha.tsx` repete o envio de `aviso/aceitar.tsx` e `evitar/escolher-evitar.tsx`), e a correção mexe em arquivos da T18. Decidi: tarefa de correção C1 (tela), com `src/app/(comecar)/_lib/enviar-passo.ts` compartilhado, despachada junto da T19 ao mesmo implementador, com commits separados. Desfazer: reverter o commit da C1 (a T19 volta a ter o clone).
 - **A10 · C2 e C3 da 017 (defeitos revelados pelo E2E da Entrada).** Faltava: a T21 proíbe corrigir telas, e o E2E acusou violação de CSP de estilo inline em toda página e `role-img-alt` deixado pelo anunciador do botão pendente. Decidi: duas tarefas de correção na mesma onda (C2 núcleo, CSP; C3 tela, botão), commitadas antes da T21, que roda de novo com os testes estritos. Desfazer: reverter os commits da C2 e da C3.
 - **A11 · C4 da 017 (defeitos revelados pelo E2E do onboarding).** Faltava: a T22 proíbe corrigir telas e contornou três defeitos (ComboBox, clique interceptado, anúncio órfão demorado). Decidi: tarefa de correção C4 (tela) antes do commit da T22, que roda de novo sem os contornos. Desfazer: reverter o commit da C4.
+
+## 014 · T3 · `familias` obrigatório quebra os literais do teste antigo
+
+- **Faltava:** a T3 torna `familias` obrigatório (`BaseDoCaso`), e 11 literais de caso em `scripts/lib/eval-llm-casos.test.ts` (fora da lista da tarefa) deixaram o typecheck vermelho. A T16 só mexe nesse arquivo depois.
+- **Decidido:** o arquivo entra na T3, só com `familias: [...]` nos 11 literais; nenhuma outra mudança, sem afrouxar o tipo.
+- **Por quê:** manter o typecheck verde a cada commit; a mudança é mínima e o arquivo não está em nenhuma outra tarefa da onda 3.
+- **Desfazer:** tornar `familias` opcional até a T16.
+
+## 014 · T10 · teste antigo do relatório confere expectativa removida
+
+- **Faltava:** a T10 troca a checagem por palavra inteira do `c1-12` por critério do avaliador; o `it` "caso 12 usa a variante por palavra inteira na promessa de tratamento" de `scripts/lib/eval-llm-report.test.ts` (fora da lista) conferia a expectativa removida.
+- **Decidido:** o arquivo entra na T10, só com esse `it` apagado (mesma regra da T10 para os testes de `eval-llm-casos` e `eval-llm-c3`).
+- **Por quê:** o teste confere uma expectativa que deixou de existir; o critério novo é coberto por `casos-indice.test.ts`.
+- **Desfazer:** manter a checagem por palavra no `c1-12` junto com o critério.
+
+## 014 · T17 · `historico.json` gerado não bate com a formatação do Biome
+
+- **Faltava:** `formatarHistorico` (T8) grava JSON com 2 espaços, e o teste da T17 trava o arquivo igual a essa saída; o Biome quer arrays curtos numa linha só, e o lint ficou vermelho.
+- **Decidido:** `evals/resultados/historico.json` sai do Biome (lista de ignorados de `biome.json`), dentro da T17.
+- **Por quê:** o arquivo é gerado e reescrito pelo `eval:llm` a cada rodada; formatar à mão quebraria o teste e voltaria na rodada seguinte.
+- **Desfazer:** tirar o caminho da lista de ignorados e fazer `formatarHistorico` imitar o Biome.
+
+## 014 · T15 · comando do eval:llm
+
+- **Faltava:** combinações de opções que a spec não cobre e o alcance da recusa por dia.
+- **Decidido:** `--listar` com `--retomar`, `--do-zero` ou `--extra` recusa (código 1); `--extra` com `--retomar` recusa; a recusa por dia (D18) olha **qualquer** checkpoint com data de hoje no `historico.json`, não só o pedido; histórico inválido é checado na partida, mesmo com `--extra`; caso que lança erro fora de `SemModeloError` e rate_limit entra em `evals/local/` como "Erro: <código>".
+- **Por quê:** o mais conservador com a cota e com o histórico.
+- **Como desfazer:** em `scripts/lib/evals/comando.ts`, filtrar a recusa por dia pelo checkpoint pedido e soltar as recusas extras; ajustar `eval-llm.test.ts`.
+
+## 014 · T16 · campos antigos dos casos
+
+- **Faltava:** o teste movido de `eval-llm-c3.test.ts` checava `familia: "linguagem"` no caso c3-s18, mas a tabela de famílias da T3 (da spec) marca o s18 como `conversa`; o c3-s21 tinha `falsoAlerta` e a tabela não lhe dá marca.
+- **Decidido:** vale a tabela da T3. Em `expectativas-c3.test.ts`, a entrada 18 passa a esperar `conversa`; o s21 fica sem marca (o `falso_alerta` é do s20). `pergunta` e `proposta` saíram dos casos (ninguém os lia).
+- **Por quê:** a tabela é a classificação da spec; o campo antigo era do runner apagado.
+- **Como desfazer:** dar ao s18 `familias: ["conversa", "linguagem"]` e voltar a entrada 18 para `linguagem`.

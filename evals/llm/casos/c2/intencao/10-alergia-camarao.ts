@@ -5,6 +5,7 @@ export const caso10: CasoInterprete = {
   tipo: "interprete",
   id: "c2-10-alergia-camarao",
   titulo: "Alergia a camarão",
+  familias: ["intencao"],
   mensagem: "sou alérgica a camarão",
   deve: [temIntencao("evitar"), evitaGrupo("frutos_do_mar")],
   naoPode: [semMotivo(["alergi"])],

@@ -1,4 +1,11 @@
-import type { AtributoPermitido, NomeDeMetrica, NomeDeSpan } from "./nomes"
+import type {
+  AtributoPermitido,
+  CodigoDeLog,
+  NomeDeContador,
+  NomeDeHistograma,
+  NomeDeMedidor,
+  NomeDeSpan,
+} from "./nomes"
 
 export type Atributos = Partial<Record<AtributoPermitido, string | number | boolean>>
 
@@ -15,10 +22,11 @@ export interface Telemetry {
     opts?: { traceparent?: string },
   ): Promise<T>
   evento(nome: "pausa", atributos?: Atributos): void
-  contador(nome: NomeDeMetrica, rotulos?: Atributos, valor?: number): void
-  histograma(nome: NomeDeMetrica, valor: number, rotulos?: Atributos): void
-  medidor(nome: NomeDeMetrica, valor: number, rotulos?: Atributos): void
-  log(nivel: "info" | "warn" | "error", codigo: string, campos?: Atributos): void
+  contador(nome: NomeDeContador, rotulos?: Atributos, valor?: number): void
+  histograma(nome: NomeDeHistograma, valor: number, rotulos?: Atributos): void
+  medidor(nome: NomeDeMedidor, valor: number, rotulos?: Atributos): void
+  atribuirAoSpanAtual(a: Atributos): void
+  log(codigo: CodigoDeLog, campos?: Atributos): void
   traceparentAtual(): string | undefined
   encerrar(): Promise<void> // envia o que falta
 }

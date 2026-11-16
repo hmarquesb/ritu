@@ -5,6 +5,7 @@ export const caso07: CasoInterprete = {
   tipo: "interprete",
   id: "c2-07-cha-ajudou",
   titulo: "Tomou o chá e melhorou",
+  familias: ["intencao"],
   mensagem: "tomei o chá e melhorei",
   pendentes: [
     { tipo: "cha", titulo: "Chá de gengibre com canela" },

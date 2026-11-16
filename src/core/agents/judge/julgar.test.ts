@@ -35,7 +35,7 @@ function ap(motivo: string) {
 }
 
 describe("createJudge", () => {
-  it("lista vazia aprova, sem métrica", async () => {
+  it("lista vazia aprova e soma ritu_juiz_total aprovado, sem motivo", async () => {
     const { juiz, telemetry } = setup([{ apontamentos: [] }])
     const v = await juiz.julgar(pedido)
     expect(v).toMatchObject({
@@ -45,14 +45,17 @@ describe("createJudge", () => {
       registros: [],
       apontamentos: [],
     })
-    expect(doJuiz(telemetry)).toEqual([])
+    expect(doJuiz(telemetry)).toEqual([
+      { tipo: "contador", nome: "ritu_juiz_total", valor: 1, rotulos: { resultado: "aprovado" } },
+    ])
   })
 
-  it("promessa reprova e soma a métrica do motivo", async () => {
+  it("promessa reprova e soma ritu_juiz_total reprovado e a métrica do motivo", async () => {
     const { juiz, telemetry } = setup([{ apontamentos: [ap("promessa")] }])
     const v = await juiz.julgar(pedido)
     expect(v).toMatchObject({ ok: true, aprovado: false, graves: ["promessa"] })
     expect(doJuiz(telemetry)).toMatchObject([
+      { nome: "ritu_juiz_total", rotulos: { resultado: "reprovado" } },
       { nome: "ritu_juiz_reprovacoes_total", rotulos: { motivo: "promessa" } },
     ])
   })
@@ -73,11 +76,12 @@ describe("createJudge", () => {
     expect(await juiz.julgar(pedido)).toMatchObject({ ok: true, aprovado: true, apontamentos: [] })
   })
 
-  it("jargao sozinho aprova e vira registro com aviso", async () => {
+  it("jargao sozinho aprova, soma aprovado e vira registro com aviso", async () => {
     const { juiz, telemetry } = setup([{ apontamentos: [ap("jargao")] }])
     const v = await juiz.julgar(pedido)
     expect(v).toMatchObject({ ok: true, aprovado: true, registros: ["jargao"], graves: [] })
     expect(doJuiz(telemetry)).toMatchObject([
+      { nome: "ritu_juiz_total", rotulos: { resultado: "aprovado" } },
       { nome: "ritu_juiz_avisos_total", rotulos: { motivo: "jargao" } },
     ])
   })
@@ -92,6 +96,7 @@ describe("createJudge", () => {
       registros: ["saude_na_proposta"],
     })
     expect(doJuiz(telemetry)).toMatchObject([
+      { nome: "ritu_juiz_total", rotulos: { resultado: "aprovado" } },
       { nome: "ritu_juiz_avisos_total", rotulos: { motivo: "saude_na_proposta" } },
     ])
   })
@@ -100,21 +105,29 @@ describe("createJudge", () => {
     const { juiz, telemetry } = setup([{ apontamentos: [ap("saude_na_proposta")] }])
     const v = await juiz.julgar(pedido)
     expect(v).toMatchObject({ ok: true, saude_na_proposta: false, registros: [], apontamentos: [] })
-    expect(doJuiz(telemetry)).toEqual([])
+    expect(doJuiz(telemetry)).toMatchObject([
+      { nome: "ritu_juiz_total", rotulos: { resultado: "aprovado" } },
+    ])
   })
 
-  it("erro do modelo vira motivo erro e falha o span", async () => {
+  it("erro do modelo vira motivo erro, falha o span e soma ritu_juiz_total sem_juiz", async () => {
     const { juiz, telemetry } = setup([{ erro: "indisponivel" }])
     expect(await juiz.julgar(pedido)).toMatchObject({ ok: false, motivo: "erro" })
     expect(telemetry.spans.find((s) => s.nome === "juiz")?.falha).toBe("erro")
+    expect(doJuiz(telemetry)).toMatchObject([
+      { nome: "ritu_juiz_total", rotulos: { resultado: "sem_juiz" } },
+    ])
   })
 
-  it("apoio esgotado vira sem_modelo", async () => {
+  it("apoio esgotado vira sem_modelo e soma ritu_juiz_total sem_juiz", async () => {
     const zero = { rpm: 0, tpm: 0, rpd: 0 }
     const limites = Object.fromEntries(llmCotas.papeis.apoio.map((m) => [m, zero]))
     const { juiz, telemetry } = setup([], limites)
     expect(await juiz.julgar(pedido)).toMatchObject({ ok: false, motivo: "sem_modelo" })
     expect(telemetry.spans.find((s) => s.nome === "juiz")?.falha).toBe("sem_modelo")
+    expect(doJuiz(telemetry)).toMatchObject([
+      { nome: "ritu_juiz_total", rotulos: { resultado: "sem_juiz" } },
+    ])
   })
 
   it("o pedido leva as instruções da v1 e a entrada montada", async () => {

@@ -9,6 +9,7 @@ import {
   responderTroca,
   trocarIngrediente,
 } from "./troca"
+import { tocarVoto } from "./voto"
 
 export function createTouches(deps: Deps): {
   tocarRetorno(contaId: string, retornoId: string, resultado: Resultado): Promise<Retorno>
@@ -17,6 +18,7 @@ export function createTouches(deps: Deps): {
     item: { tipo: ItemTipo; id: string },
     gosto: "gosta" | "nao_gosta" | null,
   ): Promise<void>
+  tocarVoto(contaId: string, runId: string, voto: "up" | "down"): Promise<void>
   trocarIngrediente(
     contaId: string,
     p: { runId: string; sugestao: number; alimento_id: string; motivo: MotivoDaTroca },
@@ -36,6 +38,7 @@ export function createTouches(deps: Deps): {
     tocarRetorno: (contaId, retornoId, resultado) =>
       tocarRetorno(deps, contaId, retornoId, resultado),
     tocarGosto: (contaId, item, gosto) => tocarGosto(deps, contaId, item, gosto),
+    tocarVoto: (contaId, runId, voto) => tocarVoto(deps, contaId, runId, voto),
     trocarIngrediente: (contaId, p) => trocarIngrediente(deps, contaId, p),
     responderTroca: (contaId, p) => responderTroca(deps, contaId, p),
   }

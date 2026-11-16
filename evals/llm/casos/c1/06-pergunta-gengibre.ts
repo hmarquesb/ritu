@@ -4,6 +4,9 @@ import type { CasoC1 } from "./tipos"
 export const caso06: CasoC1 = {
   id: "c1-06-pergunta-gengibre",
   titulo: "Por que gengibre aquece?",
+  tipo: "acompanhante",
+  familias: ["conteudo", "fidelidade", "explicacao", "conversa"],
+  marcas: ["pergunta_simples"],
   cenario: {
     nome: "c1-06",
     descricao: "Pergunta sobre gengibre",

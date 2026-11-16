@@ -7,6 +7,7 @@ export const casoPropostas02: CasoConversa = {
   tipo: "conversa",
   id: "c2-m02-dia-corrido-nenhuma",
   titulo: "Dia corrido, sem fato de rotina",
+  familias: ["propostas"],
   cenario: {
     nome: "c2-m02",
     descricao: "Hoje o dia foi corrido, sem fato de rotina: nenhuma proposta",
@@ -35,7 +36,6 @@ export const casoPropostas02: CasoConversa = {
       suspeito: false,
     },
   },
-  proposta: "nenhuma",
   deve: [terminou()],
   naoPode: [nenhumaProposta()],
 }

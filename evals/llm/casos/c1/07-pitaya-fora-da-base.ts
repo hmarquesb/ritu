@@ -4,6 +4,8 @@ import type { CasoC1 } from "./tipos"
 export const caso07: CasoC1 = {
   id: "c1-07-pitaya-fora-da-base",
   titulo: "E a pitaya? (fora da base)",
+  tipo: "acompanhante",
+  familias: ["conteudo", "fidelidade", "explicacao"],
   cenario: {
     nome: "c1-07",
     descricao: "Pergunta sobre alimento fora da base",

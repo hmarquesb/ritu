@@ -1,11 +1,6 @@
 import { terminou } from "../perguntas/expectativas"
 import type { CasoConversa } from "../tipos"
-import {
-  chamouResultadoRegistrar,
-  fechouRetorno,
-  naoFechou,
-  reconheceRetorno,
-} from "./expectativas"
+import { chamouResultadoRegistrar, fechouRetorno, naoFechou } from "./expectativas"
 
 const ARROZ = "Arroz bem cozido com abóbora e ghee"
 const CHA = "Chá de gengibre com canela"
@@ -15,7 +10,7 @@ export const casoAprendizado04: CasoConversa = {
   tipo: "conversa",
   id: "c2-a04-retorno-de-ontem-fechado",
   titulo: "Retorno de ontem contado na mensagem",
-  familia: "aprendizado",
+  familias: ["aprendizado"],
   cenario: {
     nome: "c2-a04",
     descricao: "Dois pendentes; o retorno de ontem é o pendente 1 e a pessoa diz que ajudou",
@@ -65,6 +60,13 @@ export const casoAprendizado04: CasoConversa = {
       suspeito: false,
     },
   },
-  deve: [terminou(), chamouResultadoRegistrar(), fechouRetorno(ARROZ), reconheceRetorno()],
+  criterios: [
+    {
+      descricao: "Reconhece o que fez bem",
+      pergunta: "A resposta reconhece, em uma frase, que algo sugerido antes fez bem?",
+      esperado: true,
+    },
+  ],
+  deve: [terminou(), chamouResultadoRegistrar(), fechouRetorno(ARROZ)],
   naoPode: [naoFechou(CHA)],
 }

@@ -148,6 +148,7 @@ type SessaoLlm = {
   falhasNoModelo: number
   iniciada: boolean
   inicio: number
+  inicioDaTentativa: number
 }
 
 type Escolha = NonNullable<Awaited<ReturnType<FornecedorDeModelo["proximo"]>>>
@@ -169,6 +170,7 @@ async function prepararTentativa(amb: Ambiente, span: SpanAtivo, st: SessaoLlm, 
   if (!st.iniciada) iniciarEtapa(amb, "llm", e.modelo)
   st.iniciada = true
   st.tentativas += 1
+  st.inicioDaTentativa = amb.deps.clock.now().getTime()
   span.atribuir({ "gen_ai.request.model": e.modelo, "llm.tentativas": st.tentativas })
 }
 
@@ -180,7 +182,11 @@ async function concluirChamada(
   r: ResultadoDePasso,
 ): Promise<Chamada> {
   aoSucesso(amb, modelo, r)
-  await amb.deps.modelo.usou(modelo, { entrada: r.tokens_entrada, saida: r.tokens_saida })
+  await amb.deps.modelo.usou(
+    modelo,
+    { entrada: r.tokens_entrada, saida: r.tokens_saida },
+    amb.deps.clock.now().getTime() - st.inicioDaTentativa,
+  )
   span.atribuir({
     "gen_ai.usage.input_tokens": r.tokens_entrada,
     "gen_ai.usage.output_tokens": r.tokens_saida,
@@ -207,7 +213,6 @@ async function tratarFalha(
   modelo: string,
   erro: LlmError,
 ): Promise<"trocar" | "repetir" | "encerrar"> {
-  amb.deps.telemetry.contador("ritu_llm_erros_total", { "erro.codigo": erro.code })
   await amb.deps.modelo.falhou(modelo, erro)
   if (erro.code === "rate_limit") {
     st.trocas += 1
@@ -246,6 +251,7 @@ async function sessaoLlm(amb: Ambiente, span: SpanAtivo): Promise<Chamada> {
     falhasNoModelo: 0,
     iniciada: false,
     inicio: amb.deps.clock.now().getTime(),
+    inicioDaTentativa: 0,
   }
   let escolha = await amb.deps.modelo.proximo()
   while (escolha) {

@@ -129,7 +129,7 @@ describe("createModelRouter", () => {
     const { router, telemetry } = setup()
     const f = router.paraPapel("decisao")
     const r = await f.proximo()
-    await f.usou(decisao0, { entrada: 10, saida: 5 })
+    await f.usou(decisao0, { entrada: 10, saida: 5 }, 120)
     await f.falhou(decisao0, new LlmError("timeout", "t"))
     const m = telemetry.metricas
     expect(r?.modelo).toBe(decisao0)
@@ -150,5 +150,56 @@ describe("createModelRouter", () => {
     const cota = m.filter((x) => x.nome === "ritu_llm_cota_usada")
     expect(cota.map((c) => c.rotulos.janela)).toEqual(["minuto", "dia"])
     expect(cota[0]?.valor).toBeCloseTo(1 / llmCotas.modelos[decisao0].rpm)
+  })
+
+  it("usou grava a duração da chamada com modelo e papel", async () => {
+    const { router, telemetry } = setup()
+    const f = router.paraPapel("decisao")
+    await f.proximo()
+    await f.usou(decisao0, { entrada: 1, saida: 1 }, 345)
+    const h = telemetry.metricas.filter((x) => x.nome === "ritu_llm_duracao_ms")
+    expect(h).toEqual([
+      {
+        tipo: "histograma",
+        nome: "ritu_llm_duracao_ms",
+        valor: 345,
+        rotulos: { modelo: decisao0, papel: "decisao" },
+      },
+    ])
+  })
+
+  it("troca de modelo gera o log com papel, de, para e motivo", async () => {
+    const { router, ledger, telemetry } = setup()
+    await encher(ledger, decisao0, llmCotas.modelos[decisao0].rpm)
+    const f = router.paraPapel("decisao")
+    await f.proximo()
+    expect(telemetry.logs.filter((l) => l.codigo === "troca_de_modelo")).toEqual([
+      {
+        nivel: "warn",
+        codigo: "troca_de_modelo",
+        campos: { papel: "decisao", de: decisao0, para: decisao1, motivo: "cota" },
+      },
+    ])
+  })
+
+  it("papel sem vaga gera sem_modelo uma vez por null", async () => {
+    const { router, ledger, telemetry } = setup()
+    for (const m of llmCotas.papeis.apoio) await encher(ledger, m, llmCotas.modelos[m].rpm)
+    const f = router.paraPapel("apoio")
+    expect(await f.proximo()).toBeNull()
+    expect(telemetry.logs.filter((l) => l.codigo === "sem_modelo")).toEqual([
+      { nivel: "warn", codigo: "sem_modelo", campos: { papel: "apoio" } },
+    ])
+  })
+
+  it("falhou gera llm_erro e soma a métrica uma vez", async () => {
+    const { router, telemetry } = setup()
+    const f = router.paraPapel("decisao")
+    await f.falhou(decisao0, new LlmError("timeout", "t"))
+    const campos = { modelo: decisao0, papel: "decisao", codigo: "timeout" }
+    expect(telemetry.logs.filter((l) => l.codigo === "llm_erro")).toEqual([
+      { nivel: "warn", codigo: "llm_erro", campos },
+    ])
+    expect(telemetry.metricas.filter((x) => x.nome === "ritu_llm_erros_total")).toHaveLength(1)
   })
 })

@@ -123,15 +123,21 @@ export function criarFimDoRun(deps: DepsDoFim) {
     return run.status
   }
 
+  // Só a saída segura loga resposta_segura; a montada por código (sem_modelo) não é segura.
+  function segura(dados: DadosDoPreparo, motivo: string): Desfecho["saida"] {
+    telemetry.log("resposta_segura", { motivo })
+    return saidaSegura(dados)
+  }
+
   function desfecho(fim: FimDoTrecho, dados: DadosDoPreparo, perfil: Perfil): Desfecho {
     if (fim.tipo === "entregue") {
       const saida = saidaDoAgente(fim.saida)
       if (saida) return { saida, alvo: "done" }
-      return { saida: saidaSegura(dados), alvo: "failed", erro: "saida_invalida" }
+      return { saida: segura(dados, "saida_invalida"), alvo: "failed", erro: "saida_invalida" }
     }
     if (fim.tipo === "limite") {
       return {
-        saida: saidaSegura(dados),
+        saida: segura(dados, `limite:${fim.motivo}`),
         alvo: "done",
         erro: `limite:${fim.motivo}`,
         motivo: fim.motivo,
@@ -141,7 +147,7 @@ export function criarFimDoRun(deps: DepsDoFim) {
       return { saida: saidaSemModeloDe(kb, dados, perfil), alvo: "done" }
     }
     const codigo = fim.tipo === "erro" ? fim.codigo : "pausa_inesperada"
-    return { saida: saidaSegura(dados), alvo: "failed", erro: codigo, motivo: codigo }
+    return { saida: segura(dados, codigo), alvo: "failed", erro: codigo, motivo: codigo }
   }
 
   // Grava retornos, "já sugerido" e faltas. Se falhar, o run segue com a saída como veio e a etapa de erro.
@@ -180,7 +186,7 @@ export function criarFimDoRun(deps: DepsDoFim) {
     if (!lido.success) {
       await stores.runs.mudarStatusSe(contaId, run.id, "waiting_for_input", "running")
       await registrarErro(contaId, run.id, "pausa_invalida")
-      const saida = saidaSegura(dados)
+      const saida = segura(dados, "pausa_invalida")
       await runs.encerrar(contaId, run.id, "failed", campos(dados, { ...extra, saida }))
       return { run_id: run.id, status: "failed", saida, fim: "erro", motivo: "pausa_invalida" }
     }

@@ -5,6 +5,7 @@ export const caso19: CasoInterprete = {
   tipo: "interprete",
   id: "c2-19-vegetariana",
   titulo: "Vegetariana pergunta o que comer",
+  familias: ["intencao"],
   mensagem: "sou vegetariana, o que eu como agora?",
   deve: [
     temIntencao("evitar"),

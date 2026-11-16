@@ -1,5 +1,6 @@
 import { llmCotas, type Papel } from "@config/llm-cotas"
 import type { z } from "zod"
+import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import type { SpanAtivo, Telemetry } from "@/core/telemetry/ports"
 import type { LlmClient } from "./client"
@@ -31,11 +32,13 @@ type Fornecedor = ReturnType<ModelRouter["paraPapel"]>
 /** Uma chamada ao modelo: devolve o resultado, ou o LlmError que permite nova volta. */
 async function tentar<T>(
   client: LlmClient,
+  clock: Clock,
   fornecedor: Fornecedor,
   modelo: string,
   p: Pedido<T>,
 ): Promise<{ ok: { dado: T; tokens: Tokens } } | { erro: LlmError }> {
   try {
+    const inicio = clock.now().getTime()
     const { dado, tokens } = await client.gerar({
       modelo,
       instrucoes: p.instrucoes,
@@ -43,7 +46,7 @@ async function tentar<T>(
       schema: p.schema,
       timeoutMs: llmCotas.timeoutMs,
     })
-    await fornecedor.usou(modelo, tokens)
+    await fornecedor.usou(modelo, tokens, clock.now().getTime() - inicio)
     return { ok: { dado, tokens } }
   } catch (e) {
     if (!(e instanceof LlmError)) throw e
@@ -56,10 +59,10 @@ function deveRepetir(erro: LlmError, invalidas: number): boolean {
   return erro.code === "rate_limit" || (erro.code === "resposta_invalida" && invalidas < 2)
 }
 
-type Deps = { router: ModelRouter; client: LlmClient; telemetry: Telemetry }
+type Deps = { router: ModelRouter; client: LlmClient; telemetry: Telemetry; clock: Clock }
 
 async function executar<T>(deps: Deps, p: Pedido<T>, span: SpanAtivo): Promise<Resultado<T>> {
-  const { router, client } = deps
+  const { router, client, clock } = deps
   const fornecedor = router.paraPapel(p.papel, { preferir: p.preferir, aoTrocar: p.aoTrocar })
   const maxVoltas = llmCotas.papeis[p.papel].length + 2
   let trocas = 0
@@ -71,7 +74,7 @@ async function executar<T>(deps: Deps, p: Pedido<T>, span: SpanAtivo): Promise<R
     if (!escolha) break
     if (escolha.troca) trocas++
     tentativas++
-    const r = await tentar(client, fornecedor, escolha.modelo, p)
+    const r = await tentar(client, clock, fornecedor, escolha.modelo, p)
     span.atribuir({
       "gen_ai.request.model": escolha.modelo,
       "llm.tentativas": tentativas,

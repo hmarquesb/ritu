@@ -7,6 +7,7 @@ export const casoPropostas05: CasoConversa = {
   tipo: "conversa",
   id: "c2-m05-vegetariana-sem-barrado",
   titulo: "Diz que é vegetariana e pergunta o que come",
+  familias: ["propostas"],
   cenario: {
     nome: "c2-m05",
     descricao: "Vegetariana: linha da restrição no bloco e nenhuma sugestão com o que ela barra",
@@ -35,7 +36,6 @@ export const casoPropostas05: CasoConversa = {
       suspeito: false,
     },
   },
-  proposta: "esperada",
   deve: [terminou(), blocoComRestricao("vegetariana")],
   naoPode: [semAlimentoBarrado("vegetariana")],
 }

@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 em construção: 008 a 013 implementadas, 014 e 015 aprovadas. Entrega 3 (016 a 020) aprovada; 016 implementada (trilha adiantada, juntada na `main`).
+> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 em construção: 008 a 014 implementadas, 015 aprovada. Entrega 3 (016 a 020) aprovada; 016 implementada (trilha adiantada, juntada na `main`).
 
 ## O que é o projeto
 
@@ -58,6 +58,7 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest, sem rede, banco nem chave; inclui o teste de arquitetura (R1 a R10) |
 | `npm run eval:det` | Evals determinísticos em `evals/det/**/*.eval.ts` |
+| `npm run eval:det:resumo` | Roda os evals determinísticos e imprime o resultado por grupo de `QA.md`, pelo mapa `evals/det/mapa.ts` |
 | `npm run dup` | Duplicação em `src/` (jscpd); no fechamento de spec e na CI |
 | `npm run build` | `next build` |
 | `npm run test:e2e` | Playwright (celular e desktop); precisa do build |
@@ -71,8 +72,12 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run cotas` | Imprime, por modelo, pedidos e tokens do minuto e do dia, o limite e a porcentagem usada. Precisa do Postgres no ar |
 | `npm run demo` | Sem argumento, lista os cenários. `-- --cenario <nome>` roda o acompanhante num cenário com o runtime roteirizado, sem rede, e imprime etapas (com o pensamento), resposta, sugestões, avisos e o resumo do run. Cenários com mensagem passam por `conversar`, com o Intérprete roteirizado, e o relatório mostra "Entendi". Cenários com pausa imprimem a pergunta com as opções numeradas e a resposta usada; os com aprovação imprimem o bloco com as linhas numeradas, a decisão e o que foi gravado. `-- --interativo` lê a resposta do terminal: na pergunta de casa, `t`, `n`, `g` ou Enter por item; nas outras, o número da opção ou Enter; no bloco, Enter anota tudo, números separados por vírgula desligam linhas e `n` é "Agora não". `-- --esgotar decisao` esgota o modelo principal do papel antes, para mostrar a troca. Os cenários de aprendizado também imprimem "Como ficou?", "Gravado" e "Toques" (retorno, gosto, troca e "Não tenho" tocados depois da entrega). Os cenários de memória imprimem "Rotina" (o resumo de rotina usado) e "Padrões" (os padrões da conta, com o status). Os sete cenários de guardrail e Juiz (`alerta-por-codigo`, `sumir-por-codigo`, `injection-por-codigo`, `juiz-corrige`, `juiz-barra`, `juiz-fora-do-ar`, `nota-com-saude`) mostram a etapa `guardrail` com o resumo `codigo`, ou, no Resumo, a linha "juiz" (tentativas, `aprovado`, `reprovado` ou `indisponivel`, e os motivos) e, quando houve nova tentativa, a linha "reforço" (os modelos do papel `reforco`) |
 | ⚠️ `npm run demo -- --cenario <nome> --llm` | O mesmo cenário com o runtime da Mastra e LLM real; o Intérprete também chama o modelo real; combina com `--interativo`; registro de uso em memória |
-| `npm run eval:llm -- --checkpoint <nome> --listar` | Lista os casos do checkpoint (pasta, id, tipo, título), sem modelo, sem rede e sem chave |
-| ⚠️ `npm run eval:llm -- --checkpoint <nome>` | Roda os casos do checkpoint (`evals/llm/checkpoints.ts`: `c1-base`, `c2-conversa`, `c3-confiavel`), um por vez, com LLM real, e grava `evals/resultados/<nome>.md`. O `c2-conversa` mede intenção, perguntas, propostas, aprendizado e "Para ter em casa"; o `c3-confiavel` roda as pastas `c1`, `c2` e `c3` e mede também as famílias Memória, Juiz, Segurança, Linguagem e sofrimento e Incômodos. `-- --casos <id>,<id>` roda só esses casos e grava `evals/resultados/<nome>-parcial.md`. Só nos checkpoints |
+| `npm run eval:llm -- --checkpoint <nome> --listar` | Lista os casos do checkpoint por família, a contagem por tipo e a estimativa de chamadas, sem modelo, sem rede e sem chave |
+| ⚠️ `npm run eval:llm -- --checkpoint <nome>` | Rodada nova do checkpoint (`evals/llm/checkpoints.ts`: `c1-base`, `c2-conversa`, `c3-confiavel`), um caso por vez, com LLM real e o avaliador `avaliador.v1` nas perguntas fechadas. Grava `evals/resultados/<nome>.md` e `.json`, `historico.json` e `evals/COMPARACAO.md` (gerado), com as metas de `config/evals.ts`; o detalhe das falhas vai para `evals/local/` (fora do git). Recusa se há andamento do checkpoint ou rodada com a data de hoje. Interrompida (cota ou erros seguidos), sai com 2 e diz como retomar. Só nos checkpoints |
+| ⚠️ `npm run eval:llm -- --checkpoint <nome> --retomar` | Continua a rodada do andamento em `evals/local/`; recusa se os casos, os prompts ou os modelos mudaram |
+| ⚠️ `npm run eval:llm -- --checkpoint <nome> --do-zero` | Apaga o andamento e começa a rodada de novo |
+| ⚠️ `npm run eval:llm -- --checkpoint <nome> --extra` | Permite uma segunda rodada completa no mesmo dia. Só a pedido da dona |
+| ⚠️ `npm run eval:llm -- --checkpoint <nome> --caso <id>` | Roda um caso e imprime checagens, etapas e custo, sem gravar nada. É a fumaça do fechamento de spec |
 | ⚠️ `npm run modelos:check` | Uma chamada mínima por modelo de `config/llm-cotas.ts`, passando pelo registro de uso; diz `ok` ou o código do erro. Só à mão |
 | ⚠️ `npm run runtime:real -- <modelo>` | Uma chamada real pelo adaptador Mastra, com uma tool de exemplo; imprime a chamada pedida e os tokens |
 | `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |

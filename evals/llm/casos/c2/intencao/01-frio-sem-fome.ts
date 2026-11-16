@@ -5,6 +5,7 @@ export const caso01: CasoInterprete = {
   tipo: "interprete",
   id: "c2-01-frio-sem-fome",
   titulo: "Acordou com frio e sem fome",
+  familias: ["intencao"],
   mensagem: "acordei com frio e sem fome",
   deve: [temIntencao("momento"), temEstado("com_frio")],
   naoPode: [semAlerta(), campoVazio("incomodo")],

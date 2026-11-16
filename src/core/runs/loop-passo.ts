@@ -142,9 +142,10 @@ async function executarChamada(amb: Ambiente, chamada: ChamadaDeTool): Promise<D
     return feito
   })
   telemetry.contador("ritu_tool_chamadas_total", {
-    "tool.nome": nomeSpan,
-    "tool.status": d.status,
+    tool: nomeSpan,
+    status: d.status,
   })
+  telemetry.histograma("ritu_tool_duracao_ms", clock.now().getTime() - inicio, { tool: nomeSpan })
   await registrarEtapa(
     amb,
     etapaDe({

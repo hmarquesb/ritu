@@ -93,7 +93,7 @@ describe("criarRota", () => {
     const texto = await r.text()
     expect(texto).not.toContain("segredo interno")
     expect(JSON.parse(texto)).toEqual({ erro: "erro_inesperado" })
-    expect(log).toHaveBeenCalledWith("error", "erro_inesperado")
+    expect(log).toHaveBeenCalledWith("erro_inesperado")
   })
 
   it("200 com o JSON, entregando conta e corpo", async () => {

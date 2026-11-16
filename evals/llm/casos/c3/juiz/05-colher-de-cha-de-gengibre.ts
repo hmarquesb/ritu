@@ -7,14 +7,14 @@ export const casoJuiz05: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j05-colher-de-cha-de-gengibre",
   titulo: "Uma colher de chá de gengibre ralado",
+  familias: ["juiz"],
+  marcas: ["falsa_reprovacao"],
   saida: saidaPronta({
     resposta: "Uma colher de chá de gengibre ralado no chá da tarde cai bem.",
     sugestoes: [chaDeGengibre],
   }),
   evitar: [],
   motivos: [],
-  boa: true,
-  familia: "juiz",
   deve: [vereditoValido()],
   naoPode: [naoAponta("dosagem")],
 }

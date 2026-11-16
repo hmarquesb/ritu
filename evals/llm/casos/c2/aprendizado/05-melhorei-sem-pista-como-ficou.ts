@@ -1,5 +1,4 @@
 import { terminou } from "../perguntas/expectativas"
-import { naoDizQueAnotou } from "../propostas/expectativas"
 import type { CasoConversa } from "../tipos"
 import { apontaComoFicou, chamouResultadoRegistrar, nenhumRetornoFechado } from "./expectativas"
 
@@ -8,7 +7,7 @@ export const casoAprendizado05: CasoConversa = {
   tipo: "conversa",
   id: "c2-a05-melhorei-sem-pista-como-ficou",
   titulo: "Melhorei, sem dizer de qual retorno",
-  familia: "aprendizado",
+  familias: ["aprendizado"],
   cenario: {
     nome: "c2-a05",
     descricao: "Três pendentes e um melhorei sem pista: nenhum retorno é fechado",
@@ -67,6 +66,13 @@ export const casoAprendizado05: CasoConversa = {
       suspeito: false,
     },
   },
-  deve: [terminou(), nenhumRetornoFechado(), apontaComoFicou(), naoDizQueAnotou()],
+  criterios: [
+    {
+      descricao: "Não diz que registrou",
+      pergunta: "A resposta diz que registrou ou anotou o resultado?",
+      esperado: false,
+    },
+  ],
+  deve: [terminou(), nenhumRetornoFechado(), apontaComoFicou()],
   naoPode: [chamouResultadoRegistrar()],
 }

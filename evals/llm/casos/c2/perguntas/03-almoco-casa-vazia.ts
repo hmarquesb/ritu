@@ -6,6 +6,8 @@ export const casoPergunta03: CasoConversa = {
   tipo: "conversa",
   id: "c2-p03-almoco-casa-vazia",
   titulo: "Momento com Minha casa vazia",
+  familias: ["perguntas", "casa"],
+  marcas: ["pergunta_necessaria"],
   cenario: {
     nome: "c2-p03",
     descricao: "Frio, casa vazia: pergunta de casa com até 5 itens, a pessoa tem a tudo",
@@ -29,7 +31,6 @@ export const casoPergunta03: CasoConversa = {
     },
   },
   respostas: [tenhoATudo],
-  pergunta: "necessaria",
   deve: [perguntouCasa(), itensNaPergunta(5)],
   naoPode: [],
 }

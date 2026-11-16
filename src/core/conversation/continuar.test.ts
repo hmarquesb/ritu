@@ -400,6 +400,24 @@ describe("continuar: recusas", () => {
     expect((await estado(m, p.run_id)).status).toBe("waiting_for_input")
   })
 
+  it("erro na retomada: saída segura, run failed e resposta_segura com motivo erro_na_retomada", async () => {
+    const m = await montar({ roteiro: [askCasa] })
+    const p = await pausar(m)
+    const companion = {
+      ...m.deps.companion,
+      continuar: async () => {
+        throw new Error("falha simulada")
+      },
+    } as unknown as typeof m.deps.companion
+    const conversation = createConversation({ ...m.deps, companion })
+    const r = await conversation.continuar(m.conta.id, p.run_id, tenhoNaoTenho)
+    expect(r).toMatchObject({ status: "failed" })
+    expect(r.saida?.origem).toBe("segura")
+    const logs = m.telemetry.logs.filter((l) => l.codigo === "resposta_segura")
+    expect(logs.map((l) => l.campos.motivo)).toEqual(["erro_na_retomada"])
+    expect(logs[0]?.nivel).toBe("warn")
+  })
+
   it("mensagem nova cancela o run com pergunta aberta e mantém o respondido antes", async () => {
     const m = await montar({ roteiro: [askCasa, fim(), askCasa, fim()] })
     const p = await pausar(m)

@@ -4,6 +4,8 @@ import type { CasoC1 } from "./tipos"
 export const caso10: CasoC1 = {
   id: "c1-10-calor-e-pesada",
   titulo: "Com calor e pesada (conflito)",
+  tipo: "acompanhante",
+  familias: ["conteudo", "fidelidade", "explicacao"],
   cenario: {
     nome: "c1-10",
     descricao: "Com calor e pesada, estados em conflito",

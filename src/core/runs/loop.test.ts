@@ -359,12 +359,8 @@ describe("executarTrecho", () => {
       "llm.troca_de_modelo": true,
       "llm.tentativas": 2,
     })
-    expect(m.telemetry.metricas).toContainEqual(
-      expect.objectContaining({
-        nome: "ritu_llm_erros_total",
-        rotulos: { "erro.codigo": "rate_limit" },
-      }),
-    )
+    // o erro é contado pelo roteador, em `falhou`; o loop não soma de novo
+    expect(m.telemetry.metricas.some((x) => x.nome === "ritu_llm_erros_total")).toBe(false)
   })
 
   it("rate_limit sem próximo modelo termina em sem_modelo", async () => {
@@ -533,5 +529,20 @@ describe("executarTrecho", () => {
     await executarTrecho(agente, e, ctx, m.deps)
     expect(e.mensagens).toHaveLength(1)
     expect(e.chamadas_de_modelo).toBe(0)
+  })
+
+  it("grava a duração da tool e passa a duração do modelo a usou", async () => {
+    const m = montar([{ chamadas: [{ nome: "a", argumentos: { x: 1 } }] }, { chamadas: [fin] }])
+    await executarTrecho(agente, inicio(), ctx, m.deps)
+    const h = m.telemetry.metricas.filter((x) => x.nome === "ritu_tool_duracao_ms")
+    expect(h.map((x) => x.rotulos)).toEqual([{ tool: "a" }, { tool: "finalizar" }])
+    expect(m.modelo.usos.every((u) => typeof u.duracaoMs === "number")).toBe(true)
+  })
+
+  it("um LlmError no passo não soma ritu_llm_erros_total no loop", async () => {
+    const m = montar([{ erro: "timeout" }, { erro: "timeout" }])
+    await executarTrecho(agente, inicio(), ctx, m.deps)
+    expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_llm_erros_total")).toHaveLength(0)
+    expect(m.modelo.falhas).toHaveLength(2)
   })
 })

@@ -234,3 +234,63 @@ describe("criarFimDoRun.tratar · registro da entrega", () => {
     expect(m.telemetry.metricas.filter((x) => x.nome === "ritu_faltas_total")).toHaveLength(0)
   })
 })
+
+describe("criarFimDoRun.tratar · resposta_segura", () => {
+  const motivos = (telemetry: ReturnType<typeof createMemoryTelemetry>) =>
+    telemetry.logs.filter((l) => l.codigo === "resposta_segura").map((l) => l.campos.motivo)
+
+  it("entregue inválido loga saida_invalida, warn", async () => {
+    const m = await montar()
+    await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "entregue", saida: { lixo: true } } },
+      m.dados,
+      m.perfil,
+      {},
+    )
+    expect(motivos(m.telemetry)).toEqual(["saida_invalida"])
+    expect(m.telemetry.logs[0]?.nivel).toBe("warn")
+  })
+
+  it("limite loga limite com o motivo do fim", async () => {
+    const m = await montar()
+    await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "limite", motivo: "chamadas" } },
+      m.dados,
+      m.perfil,
+      {},
+    )
+    expect(motivos(m.telemetry)).toEqual(["limite:chamadas"])
+  })
+
+  it("erro do loop loga o código do erro", async () => {
+    const m = await montar()
+    await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "erro", codigo: "indisponivel" } },
+      m.dados,
+      m.perfil,
+      {},
+    )
+    expect(motivos(m.telemetry)).toEqual(["indisponivel"])
+  })
+
+  it("pausa com conteúdo inválido loga pausa_invalida", async () => {
+    const m = await montar()
+    await m.fim.tratar(m.conta.id, m.pausa({ origem: "desconhecida" }), m.dados, m.perfil, {})
+    expect(motivos(m.telemetry)).toEqual(["pausa_invalida"])
+  })
+
+  it("sem_modelo não loga resposta_segura: a saída é a montada por código", async () => {
+    const m = await montar()
+    await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "sem_modelo" } },
+      m.dados,
+      m.perfil,
+      {},
+    )
+    expect(motivos(m.telemetry)).toEqual([])
+  })
+})

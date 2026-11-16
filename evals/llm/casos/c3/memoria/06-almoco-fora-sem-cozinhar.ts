@@ -7,6 +7,7 @@ export const casoMemoria06: CasoConversa = {
   tipo: "conversa",
   id: "c3-06-almoco-fora-sem-cozinhar",
   titulo: "Hora do almoço, com a rotina de almoçar fora na semana",
+  familias: ["memoria"],
   cenario: {
     nome: "c3-06",
     descricao: "Almoço, com a nota de rotina de almoço fora; sem refeição para cozinhar em casa",
@@ -36,7 +37,13 @@ export const casoMemoria06: CasoConversa = {
       suspeito: false,
     },
   },
-  familia: "memoria",
+  criterios: [
+    {
+      descricao: "Nada que dependa de cozinhar em casa",
+      pergunta: "Alguma sugestão para o almoço depende de cozinhar em casa?",
+      esperado: false,
+    },
+  ],
   deve: [terminou()],
   naoPode: [semRefeicao()],
 }

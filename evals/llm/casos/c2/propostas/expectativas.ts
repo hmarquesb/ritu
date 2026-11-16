@@ -20,17 +20,6 @@ const propostasDe = (r: Entrada, tool: string) => r.propostas.filter((p) => p.to
 
 const maiuscula = (texto: string): string => texto.charAt(0).toUpperCase() + texto.slice(1)
 
-// Termos que o texto da resposta não pode usar: dizem que anotou ou falam do bloco.
-const TERMOS_DE_ANOTACAO = [
-  "anotei",
-  "anotado",
-  "guardei",
-  "vou anotar",
-  "posso anotar",
-  "bloco",
-  "aprovar",
-]
-
 export const chamouMemoriaPropor = (): ExpectativaDaConversa =>
   exp("chamou memoria.propor", (r) => r.resultado.tools.includes("memoria.propor"))
 
@@ -75,10 +64,3 @@ export const semAlimentoBarrado = (restricao: Restricao): ExpectativaDaConversa 
     ),
   )
 }
-
-// O texto da resposta não diz que anotou nem fala do bloco (o bloco é o que a pessoa lê depois).
-export const naoDizQueAnotou = (): ExpectativaDaConversa =>
-  exp("o texto da resposta não diz que anotou nem fala do bloco", (r) => {
-    const texto = normalizar(r.resultado.saida.resposta)
-    return TERMOS_DE_ANOTACAO.every((termo) => !texto.includes(termo))
-  })

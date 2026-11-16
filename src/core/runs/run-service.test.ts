@@ -312,8 +312,10 @@ describe("createRunService", () => {
   it("corpo que lança devolve o resultado sem estado", async () => {
     const m = await montar([{ chamadas: [fin] }])
     const run = await m.iniciar()
-    m.telemetry.histograma = () => {
-      throw new Error("boom")
+    const original = m.telemetry.histograma.bind(m.telemetry)
+    m.telemetry.histograma = (nome, ...resto) => {
+      if (nome === "ritu_run_duracao_ms") throw new Error("boom")
+      original(nome, ...resto)
     }
     const r = await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
     expect(r.estado).toBeUndefined()
@@ -322,8 +324,10 @@ describe("createRunService", () => {
   it("exceção inesperada leva o run a failed", async () => {
     const m = await montar([{ chamadas: [fin] }])
     const run = await m.iniciar()
-    m.telemetry.histograma = () => {
-      throw new Error("boom")
+    const original = m.telemetry.histograma.bind(m.telemetry)
+    m.telemetry.histograma = (nome, ...resto) => {
+      if (nome === "ritu_run_duracao_ms") throw new Error("boom")
+      original(nome, ...resto)
     }
     const r = await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
     expect(r.run.status).toBe("failed")
@@ -381,6 +385,105 @@ describe("createRunService", () => {
     const r = await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
     expect(r.fim).toEqual({ tipo: "limite", motivo: "chamadas" })
     expect(r.run).toMatchObject({ passos: 6, latencia_ms: 6000, tokens_entrada: 600 })
+  })
+
+  describe("medição e encerramento", () => {
+    const duracoes = (m: Awaited<ReturnType<typeof montar>>) =>
+      m.telemetry.metricas.filter((x) => x.nome === "ritu_run_duracao_ms")
+
+    it("comSpanDoRun sem agente grava uma duração com o status do fim", async () => {
+      const m = await montar([])
+      const run = await m.iniciar()
+      await m.svc.comSpanDoRun(m.conta.id, run.id, async () => {
+        m.clock.advance(250)
+        await m.svc.pausarSemAgente(m.conta.id, run.id, { tipo: "pergunta", conteudo: {} })
+      })
+      expect(duracoes(m)).toEqual([
+        {
+          tipo: "histograma",
+          nome: "ritu_run_duracao_ms",
+          valor: 250,
+          rotulos: { caminho: "acompanhante", status: "waiting_for_input" },
+        },
+      ])
+    })
+
+    it("executarRun direto grava uma duração", async () => {
+      const m = await montar([{ chamadas: [fin], demoraMs: 400 }])
+      const run = await m.iniciar()
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      expect(duracoes(m)).toHaveLength(1)
+      expect(duracoes(m)[0]?.rotulos).toEqual({ caminho: "acompanhante", status: "running" })
+    })
+
+    it("continuarRun dentro de comSpanDoRun grava uma só", async () => {
+      const m = await montar([{ chamadas: [perg] }, { chamadas: [fin] }])
+      const run = await m.iniciar()
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      expect(duracoes(m)).toHaveLength(1)
+      await m.svc.comSpanDoRun(m.conta.id, run.id, () =>
+        m.svc.continuarRun(m.conta.id, run.id, { ...m.exec, resposta: "sim" }),
+      )
+      expect(duracoes(m)).toHaveLength(2)
+    })
+
+    it("encerrar done grava passos uma vez e run_fim com os campos", async () => {
+      const m = await montar([{ chamadas: [fin] }])
+      const run = await m.iniciar()
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      await m.svc.encerrar(m.conta.id, run.id, "done")
+      const passos = m.telemetry.metricas.filter((x) => x.nome === "ritu_run_passos")
+      expect(passos).toHaveLength(1)
+      expect(passos[0]).toMatchObject({
+        valor: 1,
+        rotulos: { caminho: "acompanhante", status: "done" },
+      })
+      expect(m.telemetry.logs.find((l) => l.codigo === "run_fim")?.campos).toMatchObject({
+        "run.id": run.id,
+        "run.status": "done",
+        "run.caminho": "acompanhante",
+        "run.passos": 1,
+      })
+    })
+
+    it("falha inesperada loga run_falhou com o código", async () => {
+      const m = await montar([{ chamadas: [fin] }])
+      const run = await m.iniciar()
+      const original = m.telemetry.histograma.bind(m.telemetry)
+      m.telemetry.histograma = (nome, ...resto) => {
+        if (nome === "ritu_run_duracao_ms") throw new Error("boom")
+        original(nome, ...resto)
+      }
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      expect(m.telemetry.logs.find((l) => l.codigo === "run_falhou")?.campos).toEqual({
+        "run.id": run.id,
+        "erro.codigo": "inesperado",
+      })
+    })
+
+    it("continuar loga run_retomado com pausa.tipo", async () => {
+      const m = await montar([{ chamadas: [perg] }, { chamadas: [fin] }])
+      const run = await m.iniciar()
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      await m.svc.continuarRun(m.conta.id, run.id, { ...m.exec, resposta: "sim" })
+      const logs = m.telemetry.logs.map((l) => l.codigo)
+      expect(logs).toEqual(["run_inicio", "run_retomado"])
+      expect(m.telemetry.logs[1]?.campos).toMatchObject({ "pausa.tipo": "pergunta" })
+    })
+
+    it("span run aberto por dentroDoSpan tem caminho e intencoes no fim", async () => {
+      const m = await montar([{ chamadas: [fin] }])
+      const run = await m.svc.iniciarRun(m.conta.id, {
+        caminho: "acompanhante",
+        intencoes: ["momento", "casa"],
+      })
+      await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+      expect(m.telemetry.spans.find((s) => s.nome === "run")?.atributos).toMatchObject({
+        "run.caminho": "acompanhante",
+        "run.intencoes": "momento,casa",
+        "run.passos": 1,
+      })
+    })
   })
 
   describe("comSpanDoRun", () => {

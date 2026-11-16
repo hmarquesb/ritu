@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { createCachedWeatherSource } from "@/core/weather/cache"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 
 const RIO = { lat: -22.91, lon: -43.17 }
 const SAO_PAULO = { lat: -23.55, lon: -46.63 }
@@ -9,7 +10,7 @@ const SAO_PAULO = { lat: -23.55, lon: -46.63 }
 function criar() {
   const fake = createFakeWeather()
   const clock = createFixedClock("2026-01-15T12:00:00-03:00")
-  const cache = createCachedWeatherSource(fake, clock)
+  const cache = createCachedWeatherSource(fake, clock, createMemoryTelemetry())
   return { fake, clock, cache }
 }
 

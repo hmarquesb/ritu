@@ -8,12 +8,12 @@ describe("createFixedModel", () => {
 
     expect(await fornecedor.proximo()).toEqual({ modelo: "modelo-a" })
 
-    await fornecedor.usou("modelo-a", { entrada: 100, saida: 20 })
-    await fornecedor.usou("modelo-a", { entrada: 5, saida: 1 })
+    await fornecedor.usou("modelo-a", { entrada: 100, saida: 20 }, 30)
+    await fornecedor.usou("modelo-a", { entrada: 5, saida: 1 }, 7)
 
     expect(fornecedor.usos).toEqual([
-      { modelo: "modelo-a", tokens: { entrada: 100, saida: 20 } },
-      { modelo: "modelo-a", tokens: { entrada: 5, saida: 1 } },
+      { modelo: "modelo-a", tokens: { entrada: 100, saida: 20 }, duracaoMs: 30 },
+      { modelo: "modelo-a", tokens: { entrada: 5, saida: 1 }, duracaoMs: 7 },
     ])
   })
 

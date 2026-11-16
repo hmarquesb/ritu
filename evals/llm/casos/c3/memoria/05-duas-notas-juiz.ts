@@ -6,12 +6,18 @@ export const casoMemoria05: CasoMemoria = {
   tipo: "memoria",
   id: "c3-05-duas-notas-juiz",
   titulo: "Duas notas comuns: nada além delas no resumo",
+  familias: ["memoria"],
   notas: [
     { texto: "Gosta de caminhar no fim da tarde.", diasAtras: 4 },
     { texto: "Costuma tomar café da manhã sentada, sem pressa.", diasAtras: 2 },
   ],
-  juiz: true,
-  familia: "memoria",
+  criterios: [
+    {
+      descricao: "Nada fora das notas",
+      pergunta: "O resumo traz algum fato, motivo ou conselho que não está nas notas?",
+      esperado: false,
+    },
+  ],
   deve: [resumoNaoVazio()],
   naoPode: [],
 }

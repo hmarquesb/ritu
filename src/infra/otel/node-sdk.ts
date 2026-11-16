@@ -1,19 +1,17 @@
-import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http"
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http"
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
-import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs"
-import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
+import { telemetria } from "@config/telemetria"
 import { NodeSDK } from "@opentelemetry/sdk-node"
 import { optionalEnv } from "@/infra/env"
+import { opcoesDoOtel } from "./opcoes"
 
 // SDK de OTel para scripts: só liga com OTEL_EXPORTER_OTLP_ENDPOINT. O container não importa este módulo.
 export function iniciarOtelNode(): { encerrar(): Promise<void> } | undefined {
   if (optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined) return undefined
+  const o = opcoesDoOtel({ intervaloMs: telemetria.exportacaoNosScriptsMs })
   const sdk = new NodeSDK({
-    serviceName: optionalEnv("OTEL_SERVICE_NAME") ?? "ritu",
-    traceExporter: new OTLPTraceExporter(),
-    metricReaders: [new PeriodicExportingMetricReader({ exporter: new OTLPMetricExporter() })],
-    logRecordProcessors: [new BatchLogRecordProcessor({ exporter: new OTLPLogExporter() })],
+    resource: o.resource,
+    traceExporter: o.traceExporter,
+    metricReaders: [o.metricReader],
+    logRecordProcessors: [o.logRecordProcessor],
   })
   sdk.start()
   return { encerrar: () => sdk.shutdown() }

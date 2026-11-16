@@ -130,12 +130,14 @@ function aprovada(
 }
 
 function entregaSegura(
+  telemetry: Telemetry,
   resultado: ResultadoDoRun,
   dados: DadosDoPreparo,
   campos: CamposDoJuiz,
   aprovado: boolean | null,
 ): EntregaJulgada {
   campos.juiz_aprovado = aprovado
+  telemetry.log("resposta_segura", { motivo: "juiz" })
   return { resultado: entregue(resultado, saidaSegura(dados)), campos }
 }
 
@@ -144,7 +146,7 @@ function entregue(resultado: ResultadoDoRun, saida: SaidaDoAcompanhante): Result
 }
 
 export function criarJuizDoRun(deps: Deps) {
-  const { judge, runs, router, kb, clock } = deps
+  const { judge, runs, router, kb, clock, telemetry } = deps
 
   // Uma leitura do Juiz: chama, grava a etapa `juiz` e avisa quem acompanha.
   async function ler(
@@ -241,7 +243,7 @@ export function criarJuizDoRun(deps: Deps) {
     const campos = camposVazios()
     const marcadas = new Set<string>()
     const segura = (r: ResultadoDoRun, aprovado: boolean | null) =>
-      entregaSegura(r, p.dados, campos, aprovado)
+      entregaSegura(telemetry, r, p.dados, campos, aprovado)
     let atual = resultado
     let saida = primeira
     let preferir: string | undefined

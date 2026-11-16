@@ -6,6 +6,8 @@ export const casoPergunta01: CasoConversa = {
   tipo: "conversa",
   id: "c2-p01-frio-so-incertos",
   titulo: "Frio, e os melhores candidatos só têm itens incertos",
+  familias: ["perguntas", "casa"],
+  marcas: ["pergunta_necessaria"],
   cenario: {
     nome: "c2-p01",
     descricao:
@@ -34,7 +36,6 @@ export const casoPergunta01: CasoConversa = {
     },
   },
   respostas: [tenhoATudo],
-  pergunta: "necessaria",
   deve: [perguntouCasa(), itensNaPergunta(5)],
   naoPode: [],
 }

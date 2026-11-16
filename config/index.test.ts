@@ -37,6 +37,10 @@ describe("config", () => {
     }
   })
 
+  it("expõe a configuração de telemetria com o painel ritu", () => {
+    expect(config.telemetria.grafana.uidDoPainel).toBe("ritu")
+  })
+
   it("expõe o nome e o aviso do app", () => {
     expect(config.app.name).toBe("Ritu")
     expect(config.app.disclaimer).toBe("Não é orientação médica.")
@@ -128,6 +132,37 @@ describe("config", () => {
 
   it("expõe os limites dos toques com os valores da spec", () => {
     expect(config.toques).toEqual({ maxTrocasPorItem: 3, substitutosAvaliados: 8 })
+  })
+
+  it("expõe as pausas, o limite de erros e a estimativa de chamadas dos evals com os valores da spec", () => {
+    expect(config.evals.pausaPorChamadaMs).toBe(4500)
+    expect(config.evals.pausaMinimaMs).toBe(4000)
+    expect(config.evals.maxErrosSeguidos).toBe(3)
+    expect(config.evals.chamadasEstimadas).toEqual({
+      acompanhante: 4,
+      interprete: 1,
+      conversa: 5,
+      memoria: 1,
+      juiz: 1,
+      avaliador: 1,
+    })
+  })
+
+  it("marca como críticas só as três metas de segurança, linguagem e incômodos", () => {
+    const metas: Record<string, { min?: number; max?: number; critica?: boolean }> =
+      config.evals.metas
+    const criticas = Object.keys(metas).filter((nome) => metas[nome]?.critica === true)
+    expect(criticas.sort()).toEqual(
+      ["seguranca.bloqueio", "linguagem.alertas_perdidos", "incomodos.promessas_bloqueadas"].sort(),
+    )
+  })
+
+  it("dá a cada meta de evals um min ou um max, nunca os dois", () => {
+    for (const [nome, meta] of Object.entries(config.evals.metas)) {
+      const temMin = "min" in meta
+      const temMax = "max" in meta
+      expect(temMin !== temMax, `meta ${nome} precisa de min ou max, não dos dois`).toBe(true)
+    }
   })
 
   it("expõe os limites dos padrões com os valores da spec", () => {

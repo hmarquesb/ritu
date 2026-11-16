@@ -103,7 +103,12 @@ export function criarFimDoRun(deps: DepsDoFim) {
     run: Run,
     alvo: "done" | "failed",
     c: Partial<RunMutavel>,
+    manterAberto?: boolean,
   ): Promise<Run["status"]> {
+    if (run.status === "running" && manterAberto && alvo === "done") {
+      await stores.runs.atualizar(contaId, run.id, c)
+      return "running"
+    }
     if (run.status === "running") {
       await runs.encerrar(contaId, run.id, alvo, c)
       return alvo
@@ -174,11 +179,18 @@ export function criarFimDoRun(deps: DepsDoFim) {
     dados: DadosDoPreparo,
     perfil: Perfil,
     extra: Partial<RunMutavel>,
+    manterAberto?: boolean,
   ): Promise<RespostaDoRun> {
     if (resultado.fim.tipo === "pausa") return pausa(contaId, resultado, dados, extra)
     const { saida, alvo, erro, motivo } = desfecho(resultado.fim, dados, perfil)
     if (erro) await registrarErro(contaId, resultado.run.id, erro)
-    const status = await fechar(contaId, resultado.run, alvo, campos(dados, { ...extra, saida }))
+    const status = await fechar(
+      contaId,
+      resultado.run,
+      alvo,
+      campos(dados, { ...extra, saida }),
+      manterAberto,
+    )
     if (resultado.fim.tipo === "sem_modelo") telemetry.contador("ritu_fallback_sem_llm_total")
     medirParaTer(dados, saida)
     return {

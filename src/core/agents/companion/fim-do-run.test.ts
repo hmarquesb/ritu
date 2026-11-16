@@ -60,7 +60,7 @@ async function montar() {
     },
   })
 
-  return { stores, conta, fim, dados, perfil, pausa }
+  return { stores, conta, fim, dados, perfil, pausa, run }
 }
 
 describe("criarFimDoRun.tratar · pausa", () => {
@@ -103,5 +103,25 @@ describe("criarFimDoRun.tratar · pausa", () => {
 
     const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
     expect(run?.status).toBe("waiting_for_input")
+  })
+})
+
+describe("criarFimDoRun.tratar · manterAberto", () => {
+  it("desfecho done com o run em running só grava os campos e devolve running", async () => {
+    const m = await montar()
+    await m.stores.runs.mudarStatusSe(m.conta.id, m.run.id, "waiting_for_input", "running")
+    const aberto = { ...m.run, status: "running" as const }
+    const r = await m.fim.tratar(
+      m.conta.id,
+      { run: aberto, fim: { tipo: "sem_modelo" } },
+      m.dados,
+      m.perfil,
+      {},
+      true,
+    )
+    expect(r).toMatchObject({ status: "running", fim: "sem_modelo" })
+    const salvo = await m.stores.runs.buscar(m.conta.id, m.run.id)
+    expect(salvo?.status).toBe("running")
+    expect(salvo?.saida).toMatchObject({ origem: "sem_modelo" })
   })
 })

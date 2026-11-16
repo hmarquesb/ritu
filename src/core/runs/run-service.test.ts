@@ -188,6 +188,48 @@ describe("createRunService", () => {
       await m.svc.encerrar(m.conta.id, run.id, "done")
       await expect(m.svc.pausarSemAgente(m.conta.id, run.id, pendencia)).rejects.toThrow()
     })
+
+    it("aprovacao leva a waiting_for_approval, mantém o checkpoint e grava os campos", async () => {
+      const m = await montar([])
+      const run = await m.iniciar()
+      const checkpoint = { versao: 1, marca: "x" }
+      await m.stores.runs.atualizar(m.conta.id, run.id, { checkpoint })
+      const r = await m.svc.pausarSemAgente(
+        m.conta.id,
+        run.id,
+        { tipo: "aprovacao", conteudo: { ids: [1] } },
+        { saida: { qualquer: true } },
+      )
+      expect(r).toMatchObject({ status: "waiting_for_approval", checkpoint })
+      expect(r.pendencia).toEqual({
+        tipo: "aprovacao",
+        conteudo: { ids: [1] },
+        criada_em: "2026-01-01T12:00:00.000Z",
+      })
+      expect(r.saida).toEqual({ qualquer: true })
+      expect(m.telemetry.eventos).toHaveLength(1)
+      expect(m.telemetry.eventos[0]).toMatchObject({ nome: "pausa" })
+      expect(m.telemetry.eventos[0]?.atributos).toMatchObject({ "pausa.tipo": "aprovacao" })
+      const pausas = m.telemetry.metricas.filter((x) => x.nome === "ritu_pausas_total")
+      expect(pausas).toHaveLength(1)
+      expect(pausas[0]?.rotulos).toMatchObject({ tipo: "aprovacao" })
+    })
+
+    it("pergunta grava também os campos", async () => {
+      const m = await montar([])
+      const run = await m.iniciar()
+      const r = await m.svc.pausarSemAgente(m.conta.id, run.id, pendencia, { saida: { a: 1 } })
+      expect(r).toMatchObject({ status: "waiting_for_input", checkpoint: null, saida: { a: 1 } })
+    })
+
+    it("aprovacao em run done lança", async () => {
+      const m = await montar([])
+      const run = await m.iniciar()
+      await m.svc.encerrar(m.conta.id, run.id, "done")
+      await expect(
+        m.svc.pausarSemAgente(m.conta.id, run.id, { tipo: "aprovacao", conteudo: {} }),
+      ).rejects.toThrow()
+    })
   })
 
   it("checkpoint corrompido vira failed, sem exceção", async () => {

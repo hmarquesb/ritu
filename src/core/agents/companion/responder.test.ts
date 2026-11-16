@@ -548,3 +548,68 @@ describe("pausa e continuar", () => {
     expect(run?.trocas_de_modelo).toBe(2)
   })
 })
+
+describe("manterAberto", () => {
+  it("entrega com manterAberto deixa o run em running com saída, momento e modelos", async () => {
+    const m = await montar([finalizar(entregaOk)])
+    const r = await m.companion().responder(m.conta.id, entrada(), { manterAberto: true })
+    expect(r).toMatchObject({ status: "running", fim: "entregue" })
+    expect(r.saida?.origem).toBe("agente")
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(run?.status).toBe("running")
+    expect(run?.saida).toMatchObject({ origem: "agente" })
+    expect(run?.momento).toBeTruthy()
+    expect(run?.modelos).toEqual({ decisao: ["gemini-3.5-flash-lite"] })
+  })
+
+  it("sem a opção, a entrega termina em done como antes", async () => {
+    const m = await montar([finalizar(entregaOk)])
+    const r = await m.companion().responder(m.conta.id, entrada())
+    expect(r.status).toBe("done")
+  })
+
+  it("com manterAberto, o erro do loop continua failed", async () => {
+    const m = await montar([{ erro: "indisponivel" }, { erro: "indisponivel" }])
+    const r = await m.companion().responder(m.conta.id, entrada(), { manterAberto: true })
+    expect(r).toMatchObject({ status: "failed", fim: "erro" })
+    expect((await m.stores.runs.buscar(m.conta.id, r.run_id))?.status).toBe("failed")
+  })
+
+  it("com manterAberto e sem modelo (run dado), o run fica running com a saída sem modelo", async () => {
+    const m = await montar([])
+    const run = await m.runs.iniciarRun(m.conta.id, {
+      caminho: "acompanhante",
+      intencoes: ["pergunta"],
+    })
+    const r = await m
+      .companion()
+      .responder(m.conta.id, entrada(), { run, semModelo: true, manterAberto: true })
+    expect(r).toMatchObject({ run_id: run.id, status: "running", fim: "sem_modelo" })
+    expect(r.saida?.origem).toBe("sem_modelo")
+    const salvo = await m.stores.runs.buscar(m.conta.id, run.id)
+    expect(salvo).toMatchObject({ status: "running", caminho: "sem_modelo" })
+    expect(salvo?.saida).toMatchObject({ origem: "sem_modelo" })
+  })
+
+  it("continuar com manterAberto depois de uma pausa termina em running", async () => {
+    const { m, r } = await comPausa([
+      { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+      pedirCasa(),
+      finalizar(entregaComLegume("abobora")),
+    ])
+    await m.stores.runs.mudarStatusSe(m.conta.id, r.run_id, "waiting_for_input", "running")
+    const run = (await m.stores.runs.buscar(m.conta.id, r.run_id)) as Run
+    const resposta = await m
+      .companion()
+      .continuar(
+        m.conta.id,
+        run,
+        { pergunta: r.pergunta as Pergunta, resposta: tenhoENao },
+        { manterAberto: true },
+      )
+    expect(resposta).toMatchObject({ status: "running", fim: "entregue" })
+    const salvo = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(salvo?.status).toBe("running")
+    expect(salvo?.saida).toMatchObject({ origem: "agente" })
+  })
+})

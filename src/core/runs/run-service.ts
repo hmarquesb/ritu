@@ -336,12 +336,19 @@ export function createRunService(deps: DepsDoServico) {
     contaId: string,
     runId: string,
     pendencia: Omit<Pendencia, "criada_em" | "chamada_id">,
+    campos: Partial<RunMutavel> = {},
   ): Promise<Run> {
     const run = await buscarOuFalhar(contaId, runId)
-    await mudarStatus(stores, contaId, run, "waiting_for_input", {
-      pendencia: { ...pendencia, criada_em: clock.now().toISOString() },
-      checkpoint: null,
-    })
+    const criada = { pendencia: { ...pendencia, criada_em: clock.now().toISOString() } }
+    if (pendencia.tipo === "aprovacao") {
+      await mudarStatus(stores, contaId, run, "waiting_for_approval", { ...campos, ...criada })
+    } else {
+      await mudarStatus(stores, contaId, run, "waiting_for_input", {
+        ...campos,
+        ...criada,
+        checkpoint: null,
+      })
+    }
     telemetry.evento("pausa", { "pausa.tipo": pendencia.tipo })
     telemetry.contador("ritu_pausas_total", { tipo: pendencia.tipo })
     return buscarOuFalhar(contaId, runId)

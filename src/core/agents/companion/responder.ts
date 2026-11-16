@@ -44,6 +44,7 @@ type OpcoesDoResponder = {
   run?: Run
   semModelo?: boolean
   perguntasFeitas?: number
+  manterAberto?: true
 }
 type ClimaUsado = Record<string, unknown>
 
@@ -117,6 +118,7 @@ export function createCompanion(deps: Deps) {
     perfil: Perfil,
     fuso: string | undefined,
     dado?: Run,
+    manterAberto?: true,
   ): Promise<RespostaDoRun> {
     const run =
       dado ??
@@ -127,17 +129,17 @@ export function createCompanion(deps: Deps) {
       }))
     const saida = saidaSemModeloDe(kb, dados, perfil)
     telemetry.contador("ritu_fallback_sem_llm_total")
-    await runs.encerrar(
-      contaId,
-      run.id,
-      "done",
-      campos(dados, {
-        saida,
-        modelos: { ...modelosDoRun(dado), decisao: [] },
-        trocas_de_modelo: dado?.trocas_de_modelo ?? 0,
-        ...(dado ? { caminho: "sem_modelo" as const } : {}),
-      }),
-    )
+    const gravar = campos(dados, {
+      saida,
+      modelos: { ...modelosDoRun(dado), decisao: [] },
+      trocas_de_modelo: dado?.trocas_de_modelo ?? 0,
+      ...(dado ? { caminho: "sem_modelo" as const } : {}),
+    })
+    if (dado && manterAberto) {
+      await stores.runs.atualizar(contaId, run.id, gravar)
+      return { run_id: run.id, status: "running", saida, fim: "sem_modelo" }
+    }
+    await runs.encerrar(contaId, run.id, "done", gravar)
     return { run_id: run.id, status: "done", saida, fim: "sem_modelo" }
   }
 
@@ -212,12 +214,19 @@ export function createCompanion(deps: Deps) {
         if (e.tipo === "llm" && e.modelo && !modelos.includes(e.modelo)) modelos.push(e.modelo)
       },
     })
-    return fimDoRun.tratar(contaId, resultado, dados, perfil, {
-      clima_usado: climaUsado ?? null,
-      prompt_versao: agente.prompt_versao,
-      modelos: { decisao: modelos },
-      trocas_de_modelo: trocas,
-    })
+    return fimDoRun.tratar(
+      contaId,
+      resultado,
+      dados,
+      perfil,
+      {
+        clima_usado: climaUsado ?? null,
+        prompt_versao: agente.prompt_versao,
+        modelos: { decisao: modelos },
+        trocas_de_modelo: trocas,
+      },
+      opts?.manterAberto,
+    )
   }
 
   async function responder(
@@ -243,6 +252,7 @@ export function createCompanion(deps: Deps) {
         perfil,
         perfil.cidade_fuso ?? undefined,
         opts?.run,
+        opts?.manterAberto,
       )
     }
     return comModelo(contaId, entrada, dados, perfil, opts)
@@ -252,7 +262,7 @@ export function createCompanion(deps: Deps) {
     contaId: string,
     run: Run,
     r: { pergunta: Pergunta; resposta: RespostaDaPessoa },
-    opts?: { aoVivo?: (e: EventoAoVivo) => void },
+    opts?: { aoVivo?: (e: EventoAoVivo) => void; manterAberto?: true },
   ): Promise<RespostaDoRun> {
     if (run.status !== "running") throw new RunNaoContinuavelError()
     const cp = lerCheckpoint(run.checkpoint)
@@ -269,6 +279,7 @@ export function createCompanion(deps: Deps) {
         perfil,
         undefined,
         run,
+        opts?.manterAberto,
       )
     }
     const ctx = await montarCtx(contaId, { tem: novos.casa.confirmados, acabou: [] }, novos, perfil)
@@ -295,12 +306,19 @@ export function createCompanion(deps: Deps) {
     })
     const anteriores = modelosDoRun(run)
     const decisao = [...new Set([...(anteriores.decisao ?? []), ...modelos])]
-    return fimDoRun.tratar(contaId, resultado, novos, perfil, {
-      clima_usado: climaUsado ?? run.clima_usado ?? null,
-      prompt_versao: agente.prompt_versao,
-      modelos: { ...anteriores, decisao },
-      trocas_de_modelo: run.trocas_de_modelo + trocas,
-    })
+    return fimDoRun.tratar(
+      contaId,
+      resultado,
+      novos,
+      perfil,
+      {
+        clima_usado: climaUsado ?? run.clima_usado ?? null,
+        prompt_versao: agente.prompt_versao,
+        modelos: { ...anteriores, decisao },
+        trocas_de_modelo: run.trocas_de_modelo + trocas,
+      },
+      opts?.manterAberto,
+    )
   }
 
   return { responder, continuar }

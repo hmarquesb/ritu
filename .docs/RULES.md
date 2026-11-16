@@ -82,7 +82,9 @@ Nesses casos registra em `.plans/BLOQUEIOS.md`, pula o que depende do bloqueio e
 - Testes e evals determinísticos não chamam LLM. São eles que conferem cada tarefa e cada spec.
 - ⚠️ `npm run eval:llm` roda **só nos cinco checkpoints** de `QA.md` (fim da entrega 1, depois da spec 011, fim das entregas 2, 3 e 4), e só pelo orquestrador. Nunca a cada mudança.
 - ⚠️ `npm run demo` com LLM real: só o orquestrador, uma vez ao fim das specs 007, 009 e 010, para conferir que o caminho real funciona, e no fechamento de cada entrega.
-- Toda chamada passa pelo `ModelRouter`, com a chave de desenvolvimento. Não rodar duas rodadas completas de eval no mesmo dia.
+- Toda chamada passa pelo `ModelRouter`, com a chave de desenvolvimento. Não rodar duas rodadas completas de eval no mesmo dia: `--extra` só a pedido da dona.
+- ⚠️ `npm run eval:llm -- --checkpoint <nome> --caso <id>` roda um caso só, sem gravar nada: é a fumaça do orquestrador no fechamento de uma spec que mexe no runner ou nos casos. `--listar` não chama modelo.
+- Quem muda a lista de evals determinísticos de `QA.md` atualiza `evals/det/mapa.ts`.
 - Erro 429 persistente: a rodada para, guarda o que fez e é retomada no dia seguinte. O relatório da entrega anota.
 - Cada rodada de checkpoint entra em `evals/COMPARACAO.md`: é o registro da evolução.
 

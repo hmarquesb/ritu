@@ -220,12 +220,18 @@ src/
     theme/                   # cookie ritu_theme e seletor de tema
     base/                    # componentes base sobre React Aria
     brand/                   # Logo e DoshaBlot
-config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts
+config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas)
 public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
-scripts/                     # demo.ts (terminal), eval.ts, cleanup.ts, padroes.ts, smoke.ts
+scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts
+  lib/evals/                 # runner do eval com LLM: casos, rodadores, avaliador, rodada, métricas, metas, relatório, histórico e comparação
 data/                        # base ayurvédica em YAML
 seed/                        # perfil de demonstração
-evals/                       # casos, runner, resultados por checkpoint e COMPARACAO.md
+evals/
+  det/                       # evals determinísticos; mapa.ts liga cada linha de QA.md aos arquivos
+  llm/                       # tipos.ts (famílias e marcas), avaliador.v1.ts, checkpoints.ts, casos/{c1,c2,c3} e casos/index.ts
+  resultados/                # <checkpoint>.md e .json, historico.json
+  local/                     # andamento e falhas da rodada; fora do git
+  COMPARACAO.md              # gerado de resultados/historico.json
 observability/               # painel e alertas gerados, provisionamento do Grafana
 mcp/                         # servidor MCP
 test/fixtures/

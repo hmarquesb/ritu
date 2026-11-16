@@ -143,3 +143,38 @@
 - **Decidido:** a opção mais conservadora em cada uma, listadas como D1–D21 em `.plans/014-evals-plan.md` e D1–D15 em `.plans/015-observabilidade-completa-plan.md` (seção "Decisões do planejamento").
 - **Para o relatório:** 014 D4 (`--casos` sai), 015 D1 (log `padroes_conta_falhou` mantido), 015 D4 (latências 0 nos cenários).
 - **Desfazer:** cada D diz o que muda; reverter a tarefa correspondente.
+
+## 014 · T3 · `familias` obrigatório quebra os literais do teste antigo
+
+- **Faltava:** a T3 torna `familias` obrigatório (`BaseDoCaso`), e 11 literais de caso em `scripts/lib/eval-llm-casos.test.ts` (fora da lista da tarefa) deixaram o typecheck vermelho. A T16 só mexe nesse arquivo depois.
+- **Decidido:** o arquivo entra na T3, só com `familias: [...]` nos 11 literais; nenhuma outra mudança, sem afrouxar o tipo.
+- **Por quê:** manter o typecheck verde a cada commit; a mudança é mínima e o arquivo não está em nenhuma outra tarefa da onda 3.
+- **Desfazer:** tornar `familias` opcional até a T16.
+
+## 014 · T10 · teste antigo do relatório confere expectativa removida
+
+- **Faltava:** a T10 troca a checagem por palavra inteira do `c1-12` por critério do avaliador; o `it` "caso 12 usa a variante por palavra inteira na promessa de tratamento" de `scripts/lib/eval-llm-report.test.ts` (fora da lista) conferia a expectativa removida.
+- **Decidido:** o arquivo entra na T10, só com esse `it` apagado (mesma regra da T10 para os testes de `eval-llm-casos` e `eval-llm-c3`).
+- **Por quê:** o teste confere uma expectativa que deixou de existir; o critério novo é coberto por `casos-indice.test.ts`.
+- **Desfazer:** manter a checagem por palavra no `c1-12` junto com o critério.
+
+## 014 · T17 · `historico.json` gerado não bate com a formatação do Biome
+
+- **Faltava:** `formatarHistorico` (T8) grava JSON com 2 espaços, e o teste da T17 trava o arquivo igual a essa saída; o Biome quer arrays curtos numa linha só, e o lint ficou vermelho.
+- **Decidido:** `evals/resultados/historico.json` sai do Biome (lista de ignorados de `biome.json`), dentro da T17.
+- **Por quê:** o arquivo é gerado e reescrito pelo `eval:llm` a cada rodada; formatar à mão quebraria o teste e voltaria na rodada seguinte.
+- **Desfazer:** tirar o caminho da lista de ignorados e fazer `formatarHistorico` imitar o Biome.
+
+## 014 · T15 · comando do eval:llm
+
+- **Faltava:** combinações de opções que a spec não cobre e o alcance da recusa por dia.
+- **Decidido:** `--listar` com `--retomar`, `--do-zero` ou `--extra` recusa (código 1); `--extra` com `--retomar` recusa; a recusa por dia (D18) olha **qualquer** checkpoint com data de hoje no `historico.json`, não só o pedido; histórico inválido é checado na partida, mesmo com `--extra`; caso que lança erro fora de `SemModeloError` e rate_limit entra em `evals/local/` como "Erro: <código>".
+- **Por quê:** o mais conservador com a cota e com o histórico.
+- **Como desfazer:** em `scripts/lib/evals/comando.ts`, filtrar a recusa por dia pelo checkpoint pedido e soltar as recusas extras; ajustar `eval-llm.test.ts`.
+
+## 014 · T16 · campos antigos dos casos
+
+- **Faltava:** o teste movido de `eval-llm-c3.test.ts` checava `familia: "linguagem"` no caso c3-s18, mas a tabela de famílias da T3 (da spec) marca o s18 como `conversa`; o c3-s21 tinha `falsoAlerta` e a tabela não lhe dá marca.
+- **Decidido:** vale a tabela da T3. Em `expectativas-c3.test.ts`, a entrada 18 passa a esperar `conversa`; o s21 fica sem marca (o `falso_alerta` é do s20). `pergunta` e `proposta` saíram dos casos (ninguém os lia).
+- **Por quê:** a tabela é a classificação da spec; o campo antigo era do runner apagado.
+- **Como desfazer:** dar ao s18 `familias: ["conversa", "linguagem"]` e voltar a entrada 18 para `linguagem`.

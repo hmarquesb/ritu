@@ -182,26 +182,26 @@
 | 013 | T18 · Add the 22 judge and safety cases of c3 | mecanica | concluida | 7f0a5bf |
 | 013 | C1 · Remove the clone between interpretar.ts and julgar.ts (npm run dup) | mecanica | concluida | cd1196f |
 | 013 | C2 · Raise the eval timeout, share the judge reasons reader and keep judge cases out of the response metrics | mecanica | concluida | d2d75cc |
-| 014 | T1 · Add the evals config | mecanica | pendente | |
-| 014 | T2 · Add the case families, marks and criteria types | mecanica | pendente | |
-| 014 | T3 · Mark the 84 cases with type, families and marks | mecanica | pendente | |
-| 014 | T4 · Add the case result types | mecanica | pendente | |
-| 014 | T5 · Add the metrics and the targets | mecanica | pendente | |
-| 014 | T6 · Add the round loop and the saved progress | mecanica | pendente | |
-| 014 | T7 · Add the eval grader | mecanica | pendente | |
-| 014 | T8 · Add the history and the generated comparison | mecanica | pendente | |
-| 014 | T9 · Add the round report and the local failures file | mecanica | pendente | |
-| 014 | T10 · Replace word checks by grader criteria in 15 cases | mecanica | pendente | |
-| 014 | T11 · Add the shared run collectors | mecanica | pendente | |
-| 014 | T12 · Add the run case runners (companion and conversation) | mecanica | pendente | |
-| 014 | T13 · Add the support case runners (interpreter, memory, judge) | mecanica | pendente | |
-| 014 | T14 · Add the case listing, the call estimate and the dispatcher with the grader | mecanica | pendente | |
-| 014 | T15 · Rewrite the eval:llm command on the new runner | mecanica | pendente | |
-| 014 | T16 · Remove the old runner and the old case fields | mecanica | pendente | |
-| 014 | T17 · Transcribe c1-base and c2-conversa to the history and generate the comparison | mecanica | pendente | |
-| 014 | T18 · Add the deterministic eval map | mecanica | pendente | |
-| 014 | T19 · Add the LLM case registry eval | mecanica | pendente | |
-| 014 | T20 · Add the evals CI job with the per-group summary | mecanica | pendente | |
+| 014 | T1 · Add the evals config | mecanica | concluida | 3fcbaa7 |
+| 014 | T2 · Add the case families, marks and criteria types | mecanica | concluida | b5a4850 |
+| 014 | T3 · Mark the 84 cases with type, families and marks | mecanica | concluida | a26c9b1 |
+| 014 | T4 · Add the case result types | mecanica | concluida | e2c1665 |
+| 014 | T5 · Add the metrics and the targets | mecanica | concluida | 3e4cb4e |
+| 014 | T6 · Add the round loop and the saved progress | mecanica | concluida | c1ec755 |
+| 014 | T7 · Add the eval grader | mecanica | concluida | efcd035 |
+| 014 | T8 · Add the history and the generated comparison | mecanica | concluida | 160e0ea |
+| 014 | T9 · Add the round report and the local failures file | mecanica | concluida | e41a9bb |
+| 014 | T10 · Replace word checks by grader criteria in 15 cases | mecanica | concluida | b967459 |
+| 014 | T11 · Add the shared run collectors | mecanica | concluida | 88e7122 |
+| 014 | T12 · Add the run case runners (companion and conversation) | mecanica | concluida | 46c8e3c |
+| 014 | T13 · Add the support case runners (interpreter, memory, judge) | mecanica | concluida | 70dae54 |
+| 014 | T14 · Add the case listing, the call estimate and the dispatcher with the grader | mecanica | concluida | 17197b3 |
+| 014 | T15 · Rewrite the eval:llm command on the new runner | mecanica | concluida | d74f046 |
+| 014 | T16 · Remove the old runner and the old case fields | mecanica | concluida | 30c2ac6 |
+| 014 | T17 · Transcribe c1-base and c2-conversa to the history and generate the comparison | mecanica | concluida | 6fd0b64 |
+| 014 | T18 · Add the deterministic eval map | mecanica | concluida | 7d21d0a |
+| 014 | T19 · Add the LLM case registry eval | mecanica | concluida | 5948486 |
+| 014 | T20 · Add the evals CI job with the per-group summary | mecanica | concluida | e6730e7 |
 | 015 | T1 · Rewrite the telemetry names as typed registries and add the telemetry config | mecanica | pendente | |
 | 015 | T2 · Return the previous vote from votar | mecanica | pendente | |
 | 015 | T3 · Type the telemetry port by metric kind, propagate run.id to logs and enforce declared labels | nucleo | pendente | |
@@ -222,3 +222,29 @@
 | 015 | T18 · Test privacy through the real OTel adapter and the Mastra runtime | nucleo | pendente | |
 | 015 | T19 · Add the telemetry coverage eval | mecanica | pendente | |
 | 015 | T20 · Replace the companion privacy eval by the full one and map the new evals | mecanica | pendente | |
+
+## Notas para o relatório (vindas da passagem de 2026-11-16)
+
+- 014 T14: caso com saída `segura`/`sem_modelo` conta como errado (checagem `deve` "O Acompanhante respondeu pelo agente" `false`), mas `fidelidade.motivos_fieis` não o conta (motivos `[]`); o verificador aceitou.
+- 014 T12: `rodarConversa` usa só `cenario.mensagem?.texto` (sem o `?? entrada?.texto`); sem efeito hoje.
+- `npm run dup` só cobre `src/`; não pega clone em `scripts/lib/evals/`.
+- Não há push: o remoto não estava acessível na sessão de 2026-11-16.
+- 014 T16: em `expectativas-c3.test.ts`, além da entrada 18 (`conversa`), três asserções foram traduzidas pela saída dos campos: `c.familia`/`caso?.familia` → `familias.includes`/`toContain` e `c.boa === true` → `c.marcas?.includes("falsa_reprovacao")`; mesmas listas esperadas.
+
+## Fumaça ⚠️ da 014 (2026-11-16, `--caso`, checkpoint `c3-confiavel`)
+
+| Caso | Tipo | Resultado | Chamadas |
+|---|---|---|---|
+| `c1-05-pergunta-manga` | acompanhante | acertou | decisao 2, avaliador 1 |
+| `c2-01-frio-sem-fome` | interprete | acertou | apoio 1 |
+| `c2-p02-frio-casa-confirmada` | conversa | acertou | decisao 4 (+ apoio) |
+| `c3-02-acorda-cedo-palavras-diferentes` | memoria | acertou | apoio 1 |
+| `c3-j01-resposta-boa-de-momento` | juiz | acertou | apoio 1 |
+
+Nenhum erro inesperado.
+
+## Fechamento da 014 (2026-11-16)
+
+- Gates 1 a 6 e `dup` verdes no repositório inteiro: lint, typecheck, test (2594), eval:det (1080), build, e2e (47 passaram, 9 pulados), dup 0 clones. `--listar`: 12, 54, 84.
+- ADR 0041. Docs: `QA.md`, `RULES.md` §6, `OBSERVABILITY.md` §4, `ARCHITECTURE.md` §7, `AGENTS.md`.
+- Notas para o relatório: decisões D1 a D21 do plano (em especial D4, `--casos` saiu; D13, `c2` transcrito com os números juntos; D21, ordem dos casos por id); evals de lacuna da T18; a fumaça acima; decisões autônomas da T15 e da T16.

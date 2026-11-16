@@ -700,6 +700,7 @@ Lacunas e contradições entre a spec e o código, com a opção mais conservado
 - testes primeiro: rode `npm test` antes de apagar e anote o número de testes de expectativa; depois da mudança, os mesmos `it` de expectativa passam nos arquivos novos.
 - comandos: `npm run typecheck`, `npm test`, `rtk bypass npm run lint`, `npm run eval:llm -- --checkpoint c3-confiavel --listar`
 - pronto quando: nenhum `scripts/lib/eval-llm-*` existe; typecheck e `npm test` verdes; a listagem mostra 84.
+- acrescentado (verificador da T10): apague os exports sem uso em `evals/llm/casos/*/expectativas.ts` (`naoDizQueAnotou`, `reconheceRetorno`, `falaDasProximasVezes`, `dizQueCostumaAjudar`, `semDosagem`, `semPromessa`; confira com grep antes; `semFraseDeCompra` e `semTexto` seguem em uso) e ajuste o comentário de `evals/llm/casos/c2/propostas/06-almoco-fora-nao-diz-que-anotou.ts` ("nem fala do bloco" → o critério só cobre "anotou"). Esses arquivos entram na lista.
 - fora: o comportamento dos casos.
 
 ### T17 · Transcribe c1-base and c2-conversa to the history and generate the comparison
@@ -759,6 +760,7 @@ Lacunas e contradições entre a spec e o código, com a opção mais conservado
   - todo caso com a marca `promessa` tem o critério "A resposta promete curar, tratar ou resolver um problema de saúde?" com `esperado: false`;
   - `formatarListagem("c3-confiavel")` (de `scripts/lib/evals/casos.ts`) roda com `GEMINI_API_KEY` apagada de `process.env` (guarde e restaure o valor) e não lança.
   - `mapa.ts`: no grupo `Evals`, a linha "O registro dos casos com LLM tem ids únicos, famílias e marcas" com `["evals/det/evals-llm/registro.eval.ts"]`, `desde: 2`.
+  - acrescentado (verificador da T18): em `mapa.ts`, ponha `evals/det/aprendizado/nao-tenho.eval.ts` na linha "Toques (retorno, gosto, casa, troca)…", para "casa" ter dono explícito.
 - testes primeiro: o próprio eval; mude à mão uma família de um caso para uma inválida (sem salvar) e veja-o falhar.
 - comandos: `npm run typecheck`, `npm run eval:det`, `rtk bypass npm run lint`
 - pronto quando: `npm run eval:det` verde.

@@ -20,7 +20,7 @@ Junto do gate 4, ao fim de cada spec e na CI, roda `npm run dup` (duplicação d
 
 ## Evals determinísticos (sem LLM)
 
-Usam o `AgentRuntime` roteirizado e os fakes das portas.
+Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seção aponta para os arquivos que a conferem em `evals/det/mapa.ts`, e `evals/det/mapa.eval.ts` acusa linha sem arquivo e arquivo sem linha. Quem muda uma linha desta seção atualiza `evals/det/mapa.ts`. `npm run eval:det:resumo` imprime o resultado por grupo.
 
 **Base e tools**
 - A base passa na validação (schema, ids, referências, cobertura mínima).
@@ -146,6 +146,10 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - POST com `Origin` de outro site → `403`; toda resposta tem a CSP e os headers de `ARCHITECTURE.md` §4.
 - Rotas de toque respeitam o limite próprio; a 31ª demonstração do dia é recusada.
 
+**Evals**
+- O mapa liga cada linha de evals determinísticos a um arquivo.
+- O registro dos casos com LLM tem ids únicos, famílias e marcas.
+
 **Telas (E2E)**
 - Caminho da demonstração: da Entrada à primeira resposta só com cliques.
 - Mensagem livre → pergunta do agente → resposta em texto com sugestões.
@@ -163,7 +167,9 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
 
-84 casos (12 no `c1`, 42 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
+84 casos (12 no `c1`, 42 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior, além do tipo (`acompanhante`, `interprete`, `conversa`, `memoria`, `juiz`), das famílias que mede e das marcas (`pergunta_necessaria`, `alerta_devido`, `falso_alerta`, `injection`, `promessa`, `falsa_reprovacao` e outras) que dizem em qual métrica ele conta.
+
+O que é conferível por código (tool chamada, item da base, campo da saída) é conferido por código. O que depende de ler o texto é conferido pelo **avaliador** (`evals/llm/avaliador.v1.ts`), no papel `apoio`, só com perguntas fechadas de sim ou não, cada uma com o valor esperado. O avaliador recebe o texto da resposta como dado e nunca dá nota livre.
 
 | Família | O que mede | Métrica |
 |---|---|---|
@@ -202,15 +208,17 @@ Regras da rodada:
 
 - Usa a chave do projeto de **desenvolvimento** e passa pelo `ModelRouter`, que respeita as cotas por minuto e por dia. O runner espaça os casos sozinho.
 - A rodada do `c3-confiavel` gasta cerca de 300 chamadas e leva uns 25 minutos. Não rodar duas rodadas completas no mesmo dia; o runner recusa a segunda sem `--extra`.
-- Um caso roda uma vez. `--caso <id>` roda um caso só, sem gravar nada.
-- Erro 429 persistente, ou três erros inesperados seguidos: a rodada para, guarda o que fez e continua no dia seguinte (`--retomar`). Se os casos, os prompts ou os modelos mudaram no meio, começa de novo (`--do-zero`).
+- Um caso roda uma vez. `--caso <id>` roda um caso só e imprime as checagens, as etapas e o custo, sem gravar nada: é a fumaça do fechamento de spec. `--listar` mostra os casos por família, a contagem por tipo e a estimativa de chamadas, sem modelo e sem chave.
+- O andamento fica em `evals/local/andamento-<checkpoint>.json`, com uma assinatura dos casos, dos prompts e dos modelos. Erro 429 persistente, ou três erros inesperados seguidos: a rodada para, guarda o que fez e continua no dia seguinte (`--retomar`). Se a assinatura mudou, o runner recusa a retomada e a rodada começa de novo (`--do-zero`).
+- Uma rodada nova é recusada se já há andamento do checkpoint ou se o histórico já tem rodada com a data de hoje; `--extra` libera a segunda rodada do dia, só a pedido da dona.
 - Mudança de prompt ou de base entre dois checkpoints é conferida pelos evals determinísticos. O efeito no LLM aparece no checkpoint seguinte.
 - A dona pode pedir uma rodada extra; o orquestrador não decide isso sozinho.
 
 ### Registro da evolução
 
-- Cada rodada gera `evals/resultados/<checkpoint>.md`, com as métricas por família, a versão dos prompts, os modelos usados e os casos que falharam.
-- `evals/COMPARACAO.md` tem uma tabela com uma coluna por checkpoint e uma linha por métrica. É gerado a partir de `historico.json`.
+- Cada rodada gera `evals/resultados/<checkpoint>.md`, com as métricas por família, a meta de cada uma, a variação contra o checkpoint anterior, a versão dos prompts, os modelos usados e os casos que falharam, e `evals/resultados/<checkpoint>.json`, com os resultados de cada caso.
+- Os detalhes dos casos que falharam (etapas, saída e checagens) vão para `evals/local/<checkpoint>-falhas.md`, fora do git; nada que vem da conversa entra em `evals/resultados/`.
+- `evals/COMPARACAO.md` tem uma tabela com uma coluna por checkpoint e uma linha por métrica. É gerado a partir de `historico.json` e não se edita à mão.
 - `evals/resultados/historico.json` guarda os mesmos números para a página Bastidores desenhar a evolução.
 
 Resumo de uma rodada, em uma linha: *"trajetória correta: A% · motivos fiéis: B% · corrigiu após violação: C% · injection bloqueada: D% · chamadas por run: E"*.

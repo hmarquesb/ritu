@@ -26,9 +26,15 @@ import { casoPergunta05 } from "./perguntas/05-frio-nao-tenho-a-tudo"
 import { casoPergunta06 } from "./perguntas/06-frio-nao-gosto-a-um"
 import { casoPergunta07 } from "./perguntas/07-frio-evitar-sempre"
 import { casoPergunta08 } from "./perguntas/08-dor-de-cabeca-latejante"
+import { casoPropostas01 } from "./propostas/01-almoco-fora-propoe"
+import { casoPropostas02 } from "./propostas/02-dia-corrido-nenhuma"
+import { casoPropostas03 } from "./propostas/03-nao-tenho-um-item"
+import { casoPropostas04 } from "./propostas/04-item-ausente-sem-pergunta"
+import { casoPropostas05 } from "./propostas/05-vegetariana-sem-barrado"
+import { casoPropostas06 } from "./propostas/06-almoco-fora-nao-diz-que-anotou"
 import type { CasoC2 } from "./tipos"
 
-// Casos da pasta c2 (Intérprete e conversa). A família Intenção tem 20 casos do Intérprete; a família Perguntas, 8 casos de conversa.
+// Casos da pasta c2 (Intérprete e conversa). A família Intenção tem 20 casos do Intérprete; as famílias Perguntas (8) e Propostas (6), casos de conversa.
 export const casosC2: CasoC2[] = [
   caso01,
   caso02,
@@ -58,6 +64,12 @@ export const casosC2: CasoC2[] = [
   casoPergunta06,
   casoPergunta07,
   casoPergunta08,
+  casoPropostas01,
+  casoPropostas02,
+  casoPropostas03,
+  casoPropostas04,
+  casoPropostas05,
+  casoPropostas06,
 ]
 
 export type {

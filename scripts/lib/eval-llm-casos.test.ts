@@ -48,10 +48,22 @@ import {
   tenhoATudo,
   terminou,
 } from "../../evals/llm/casos/c2/perguntas/expectativas"
+import {
+  blocoComRestricao,
+  blocoComRotina,
+  chamouMemoriaPropor,
+  listaNoMaximoUma,
+  listaSoDe,
+  naoDizQueAnotou,
+  nenhumaListaAceita,
+  nenhumaProposta,
+  semAlimentoBarrado,
+} from "../../evals/llm/casos/c2/propostas/expectativas"
 import type { ExpectativaDaConversa, ExpectativaDoInterprete } from "../../evals/llm/casos/c2/tipos"
 import type { SaidaDoAcompanhante, SugestaoEntregue } from "../../src/core/agents/companion/saida"
 import type { Interpretacao } from "../../src/core/agents/interpreter/interpretacao"
 import type { PedidoDePergunta } from "../../src/core/agents/tools/ask-user"
+import type { PropostaNaSaida } from "../../src/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "../../src/core/runs/pergunta"
 import type { Caminho, RunEtapa } from "../../src/core/runs/ports"
 import { createContainer } from "../../src/infra/container"
@@ -138,26 +150,32 @@ describe("listagem por checkpoint", () => {
     expect(linhas.every((l) => l.pasta === "c1" && l.tipo === "acompanhante")).toBe(true)
   })
 
-  it("c2-conversa lista os 12 do c1 e os 28 do c2", () => {
+  it("c2-conversa lista os 12 do c1 e os 34 do c2", () => {
     const linhas = listarCasos("c2-conversa")
-    expect(linhas).toHaveLength(40)
+    expect(linhas).toHaveLength(46)
     expect(linhas.slice(0, 12).every((l) => l.pasta === "c1")).toBe(true)
     expect(linhas.slice(12).every((l) => l.pasta === "c2")).toBe(true)
     expect(linhas.slice(12).filter((l) => l.tipo === "interprete")).toHaveLength(20)
-    expect(linhas.slice(12).filter((l) => l.tipo === "conversa")).toHaveLength(8)
+    expect(linhas.slice(12).filter((l) => l.tipo === "conversa")).toHaveLength(14)
   })
 
-  it("c2 tem 20 casos do Intérprete e 8 de Perguntas, com ids únicos", () => {
-    expect(casosC2).toHaveLength(28)
+  it("c2 tem 20 casos do Intérprete, 8 de Perguntas e 6 de Propostas, com ids únicos", () => {
+    expect(casosC2).toHaveLength(34)
     expect(casosC2.filter((c) => c.tipo === "interprete")).toHaveLength(20)
-    expect(casosC2.filter((c) => c.tipo === "conversa")).toHaveLength(8)
-    expect(new Set(casosC2.map((c) => c.id)).size).toBe(28)
+    expect(casosC2.filter((c) => c.tipo === "conversa")).toHaveLength(14)
+    expect(new Set(casosC2.map((c) => c.id)).size).toBe(34)
   })
 
   it("os 8 casos de Perguntas são de conversa e têm mensagem", () => {
     const perguntas = casosC2.filter((c) => c.id.startsWith("c2-p"))
     expect(perguntas).toHaveLength(8)
     expect(perguntas.every((c) => c.tipo === "conversa" && !!c.cenario.mensagem.texto)).toBe(true)
+  })
+
+  it("os 6 casos de Propostas são de conversa e têm mensagem", () => {
+    const propostas = casosC2.filter((c) => c.id.startsWith("c2-m"))
+    expect(propostas).toHaveLength(6)
+    expect(propostas.every((c) => c.tipo === "conversa" && !!c.cenario.mensagem.texto)).toBe(true)
   })
 
   it("formata cada caso com pasta, id, tipo e título", () => {
@@ -1012,5 +1030,168 @@ describe("expectativas da conversa de Perguntas", () => {
       ],
     })
     expect(tenhoATudo(variante.pergunta)).toEqual({ tipo: "pular" })
+  })
+})
+
+describe("expectativas da conversa de Propostas", () => {
+  type Entrada = Parameters<ExpectativaDaConversa["confere"]>[0]
+
+  const saidaPronta = (p: Partial<SaidaDoAcompanhante> = {}): SaidaDoAcompanhante => ({
+    origem: "agente",
+    resposta: "Um prato morno, sem tela.",
+    geral: false,
+    avisos: [],
+    explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
+    sugestoes: [],
+    evitar: [],
+    incertos: [],
+    citados: [],
+    anotacoes: [],
+    propostas: [],
+    ...p,
+  })
+
+  const sugestaoCom = (ids: string[]): SugestaoEntregue => ({
+    tipo: "refeicao",
+    titulo: "Prato morno",
+    como_fazer: "Cozinhe e sirva quente.",
+    motivo: "Esquenta.",
+    linhas_base: [],
+    novidade: false,
+    verbos: [],
+    itens: ids.map((id) => ({
+      alimento_id: id,
+      nome: id,
+      contribui: [],
+      verbos: [],
+      linha_base: `alimentos:${id}`,
+      casa: "confirmado",
+    })),
+  })
+
+  const resultadoCom = (saida: SaidaDoAcompanhante, tools: string[] = []): ResultadoDoRun => ({
+    saida,
+    status: "waiting_for_approval",
+    tools,
+    chamadasDeModelo: 1,
+    validacoes: ["ok"],
+  })
+
+  const proposta = (tool: PropostaNaSaida["tool"], texto: string): PropostaNaSaida => ({
+    id: `${tool}-${texto}`,
+    tool,
+    texto,
+  })
+
+  const entrada = (p: Partial<Entrada> = {}): Entrada => ({
+    resposta: { run_id: "run-eval", status: "waiting_for_approval", caminho: "acompanhante" },
+    resultado: resultadoCom(saidaPronta()),
+    perguntas: [],
+    recusadas: 0,
+    llmAntesDaPrimeiraPausa: 0,
+    propostas: [],
+    propostasRecusadas: 0,
+    ...p,
+  })
+
+  const passa = (e: ExpectativaDaConversa, r: Partial<Entrada>): boolean => e.confere(entrada(r))
+
+  it("chamouMemoriaPropor confere se memoria.propor foi chamada", () => {
+    expect(
+      passa(chamouMemoriaPropor(), { resultado: resultadoCom(saidaPronta(), ["memoria.propor"]) }),
+    ).toBe(true)
+    expect(
+      passa(chamouMemoriaPropor(), { resultado: resultadoCom(saidaPronta(), ["lista.propor"]) }),
+    ).toBe(false)
+  })
+
+  it("blocoComRotina exige memoria.propor com o fato e a primeira letra maiúscula", () => {
+    const fato = "vou almoçar fora todo dia"
+    expect(
+      passa(blocoComRotina(fato), {
+        propostas: [proposta("memoria.propor", "Vou almoçar fora todo dia")],
+      }),
+    ).toBe(true)
+    expect(
+      passa(blocoComRotina(fato), {
+        propostas: [proposta("memoria.propor", "Almoço fora")],
+      }),
+    ).toBe(false)
+    expect(
+      passa(blocoComRotina(fato), {
+        propostas: [proposta("lista.propor", 'Gengibre na lista "Para ter em casa"')],
+      }),
+    ).toBe(false)
+  })
+
+  it("nenhumaProposta passa sem proposta no bloco e recusa qualquer uma", () => {
+    expect(passa(nenhumaProposta(), {})).toBe(true)
+    expect(
+      passa(nenhumaProposta(), { propostas: [proposta("memoria.propor", "Vou almoçar fora")] }),
+    ).toBe(false)
+  })
+
+  it("listaNoMaximoUma aceita até uma lista.propor", () => {
+    const lista = proposta("lista.propor", 'Gengibre na lista "Para ter em casa"')
+    expect(passa(listaNoMaximoUma(), { propostas: [lista] })).toBe(true)
+    expect(passa(listaNoMaximoUma(), { propostas: [lista, { ...lista, id: "outra" }] })).toBe(false)
+  })
+
+  it("listaSoDe exige que toda lista.propor cite o alimento pelo nome", () => {
+    const gengibre = proposta(
+      "lista.propor",
+      'Gengibre na lista "Para ter em casa" (faltou para o chá)',
+    )
+    const abobora = proposta(
+      "lista.propor",
+      'Abóbora na lista "Para ter em casa" (faltou para o chá)',
+    )
+    expect(passa(listaSoDe("gengibre"), { propostas: [gengibre] })).toBe(true)
+    expect(passa(listaSoDe("gengibre"), { propostas: [gengibre, abobora] })).toBe(false)
+    expect(passa(listaSoDe("gengibre"), {})).toBe(true)
+  })
+
+  it("nenhumaListaAceita recusa qualquer lista.propor no bloco e aceita só as outras", () => {
+    const rotina = proposta("memoria.propor", "Vou almoçar fora")
+    const lista = proposta("lista.propor", 'Gengibre na lista "Para ter em casa"')
+    expect(passa(nenhumaListaAceita(), { propostas: [rotina] })).toBe(true)
+    expect(passa(nenhumaListaAceita(), { propostas: [rotina, lista] })).toBe(false)
+  })
+
+  it("blocoComRestricao procura a linha da restrição pelo rótulo", () => {
+    const linha = proposta("memoria.propor", "Sua alimentação é vegetariana")
+    expect(passa(blocoComRestricao("vegetariana"), { propostas: [linha] })).toBe(true)
+    expect(passa(blocoComRestricao("vegana"), { propostas: [linha] })).toBe(false)
+    expect(passa(blocoComRestricao("vegetariana"), {})).toBe(false)
+  })
+
+  it("semAlimentoBarrado recusa sugestão com alimento que a restrição barra", () => {
+    // Leite é marcado como vegana e sem lactose na base; abóbora não é barrada por nenhuma delas.
+    expect(
+      passa(semAlimentoBarrado("vegana"), {
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestaoCom(["abobora"])] })),
+      }),
+    ).toBe(true)
+    expect(
+      passa(semAlimentoBarrado("vegana"), {
+        resultado: resultadoCom(saidaPronta({ sugestoes: [sugestaoCom(["leite"])] })),
+      }),
+    ).toBe(false)
+  })
+
+  it("naoDizQueAnotou recusa anotei, guardei, bloco e aprovar no texto da resposta", () => {
+    expect(passa(naoDizQueAnotou(), { resultado: resultadoCom(saidaPronta()) })).toBe(true)
+    for (const texto of [
+      "Anotei isso.",
+      "Guardei a rotina.",
+      "Vou anotar agora.",
+      "Posso anotar isto.",
+      "Veja o bloco abaixo.",
+      "Pode aprovar.",
+    ]) {
+      expect(
+        passa(naoDizQueAnotou(), { resultado: resultadoCom(saidaPronta({ resposta: texto })) }),
+      ).toBe(false)
+    }
   })
 })

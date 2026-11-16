@@ -129,6 +129,22 @@ describe("fecharComPropostas", () => {
     expect(await m.stores.proposals.doRun(m.conta.id, m.run.id)).toHaveLength(6)
   })
 
+  it("a etapa de um padrão confirmado tem resumo padrao, sem a frase", async () => {
+    const m = await montar()
+    const padrao = {
+      tool: "padrao.confirmar" as const,
+      padrao_id: "padrao-1",
+      frase: `Quando você está pesada, ${SEGREDO} costuma estar também sem energia.`,
+    }
+    const saida = { ...saidaDeCodigo("Oi.", []), propostas_do_agente: [padrao] }
+    await fecharComPropostas(m.deps, pedido(m, { saida, anotacoes: [] }))
+    const etapas = await m.stores.runs.etapas(m.conta.id, m.run.id)
+    expect(etapas.map((e) => [e.tipo, e.nome, e.resumo])).toEqual([
+      ["proposta", "padrao.confirmar", "padrao"],
+    ])
+    expect(JSON.stringify(etapas)).not.toContain(SEGREDO)
+  })
+
   it("com para_ter, a linha da lista entra no bloco e o run vai a waiting_for_approval", async () => {
     const m = await montar()
     const saida = {

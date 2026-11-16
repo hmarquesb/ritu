@@ -21,6 +21,7 @@ const SEM_PROPOSTA: readonly Caminho[] = ["alerta", "fora", "ofensa", "ajuda"]
 
 function resumoDaProposta(c: ConteudoDaProposta): string {
   if (c.tool === "lista.propor") return "lista"
+  if (c.tool === "padrao.confirmar") return "padrao"
   if (c.tool === "memoria.propor" && c.tipo === "rotina") return "rotina"
   const chave = c.tool === "casa.propor" ? "casa" : c.tipo
   const n = c.itens.length

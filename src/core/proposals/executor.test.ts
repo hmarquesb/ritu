@@ -219,4 +219,122 @@ describe("executarProposta", () => {
     expect((await stores.profiles.ler(b)).restricoes).toEqual([])
     expect(await stores.pantry.listar(b)).toEqual([])
   })
+
+  describe("padrao.confirmar", () => {
+    async function comPadrao() {
+      const amb = await ambiente()
+      const padrao = await amb.stores.patterns.propor(amb.a, {
+        tipo: "estados_juntos",
+        chave: "com_frio+agitada",
+        frase: "Quando você está com frio e agitada, costuma ser assim.",
+        ocorrencias: 3,
+      })
+      if (!padrao) throw new Error("padrão não criado")
+      return { ...amb, padrao }
+    }
+    const conteudo = (padrao_id: string, frase: string) => ({ padrao_id, frase })
+
+    it("confirma um candidato da conta", async () => {
+      const { stores, a, padrao } = await comPadrao()
+      const ok = await executarProposta(
+        stores,
+        a,
+        "padrao.confirmar",
+        conteudo(padrao.id, padrao.frase),
+        kb,
+      )
+      expect(ok).toBe(true)
+      expect((await stores.patterns.listar(a, "confirmado")).map((p) => p.id)).toEqual([padrao.id])
+    })
+
+    it("recusa o já confirmado", async () => {
+      const { stores, a, padrao } = await comPadrao()
+      await stores.patterns.decidir(a, padrao.id, "confirmado")
+      expect(
+        await executarProposta(
+          stores,
+          a,
+          "padrao.confirmar",
+          conteudo(padrao.id, padrao.frase),
+          kb,
+        ),
+      ).toBe(false)
+    })
+
+    it("recusa o recusado", async () => {
+      const { stores, a, padrao } = await comPadrao()
+      await stores.patterns.decidir(a, padrao.id, "recusado")
+      expect(
+        await executarProposta(
+          stores,
+          a,
+          "padrao.confirmar",
+          conteudo(padrao.id, padrao.frase),
+          kb,
+        ),
+      ).toBe(false)
+      expect(await stores.patterns.listar(a, "confirmado")).toEqual([])
+    })
+
+    it("recusa o padrão de outra conta, sem mexer nele", async () => {
+      const { stores, a, b, padrao } = await comPadrao()
+      expect(
+        await executarProposta(
+          stores,
+          b,
+          "padrao.confirmar",
+          conteudo(padrao.id, padrao.frase),
+          kb,
+        ),
+      ).toBe(false)
+      expect((await stores.patterns.listar(a, "candidato")).map((p) => p.id)).toEqual([padrao.id])
+    })
+
+    it("recusa id que não existe", async () => {
+      const { stores, a, padrao } = await comPadrao()
+      expect(
+        await executarProposta(
+          stores,
+          a,
+          "padrao.confirmar",
+          conteudo("nao-existe", padrao.frase),
+          kb,
+        ),
+      ).toBe(false)
+    })
+  })
+
+  describe("teto de notas de rotina", () => {
+    async function comNotas(n: number) {
+      const amb = await ambiente()
+      for (let i = 0; i < n; i++) await amb.stores.routine.anotar(amb.a, `nota ${i}`)
+      return amb
+    }
+
+    it("com 30 notas ativas, a rotina nova não é aceita e nada é gravado", async () => {
+      const { stores, a } = await comNotas(30)
+      const ok = await executarProposta(
+        stores,
+        a,
+        "memoria.propor",
+        { tipo: "rotina", texto: "almoço fora" },
+        kb,
+      )
+      expect(ok).toBe(false)
+      expect(await stores.routine.notasAtivas(a)).toHaveLength(30)
+    })
+
+    it("com 29 notas ativas, a rotina nova é gravada", async () => {
+      const { stores, a } = await comNotas(29)
+      const ok = await executarProposta(
+        stores,
+        a,
+        "memoria.propor",
+        { tipo: "rotina", texto: "almoço fora" },
+        kb,
+      )
+      expect(ok).toBe(true)
+      expect(await stores.routine.notasAtivas(a)).toHaveLength(30)
+    })
+  })
 })

@@ -1,3 +1,4 @@
+import { config } from "@config/index"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { ReferenciaDeItem } from "@/core/pantry/ports"
 import { type ConteudoDaProposta, lerConteudo } from "@/core/proposals/conteudo"
@@ -13,6 +14,7 @@ function idsDaProposta(c: ConteudoDaProposta): string[] {
   if (c.tool === "lista.propor") return [c.alimento_id]
   if (c.tool === "casa.propor")
     return c.itens.flatMap((i) => (i.alimento_id ? [i.alimento_id] : []))
+  if (c.tool === "padrao.confirmar") return []
   if (c.tipo === "nao_come") return c.itens.flatMap((i) => (i.alimento_id ? [i.alimento_id] : []))
   if (c.tipo === "gosta") return c.itens.map((i) => i.alimento_id)
   return []
@@ -75,24 +77,44 @@ async function gravarMemoria(
   }
 }
 
-async function gravar(stores: Stores, contaId: string, c: ConteudoDaProposta): Promise<void> {
+// Confirma um padrão que ainda é candidato da conta. Padrão de outra conta, decidido ou inexistente: não aceita.
+async function confirmarPadrao(
+  stores: Stores,
+  contaId: string,
+  padraoId: string,
+): Promise<boolean> {
+  const candidatos = await stores.patterns.listar(contaId, "candidato")
+  if (!candidatos.some((p) => p.id === padraoId)) return false
+  await stores.patterns.decidir(contaId, padraoId, "confirmado")
+  return true
+}
+
+async function gravar(stores: Stores, contaId: string, c: ConteudoDaProposta): Promise<boolean> {
   switch (c.tool) {
     case "casa.propor":
       if (c.acao === "tem")
         await stores.pantry.registrar(contaId, c.itens.map(referencia), "conversa")
       else await stores.pantry.marcarAcabou(contaId, c.itens.map(referencia))
-      return
+      return true
     case "memoria.propor":
       await gravarMemoria(stores, contaId, c)
-      return
+      return true
     case "lista.propor":
       await stores.shortages.porNaLista(contaId, {
         alimento_id: c.alimento_id,
         motivo: c.motivo,
         detalhe: c.detalhe,
       })
-      return
+      return true
+    case "padrao.confirmar":
+      return confirmarPadrao(stores, contaId, c.padrao_id)
   }
+}
+
+// Com o teto de notas ativas cheio, uma rotina nova não entra.
+async function rotinaCheia(stores: Stores, contaId: string): Promise<boolean> {
+  const ativas = await stores.routine.notasAtivas(contaId)
+  return ativas.length >= config.memoria.rotinaNotasAtivas
 }
 
 /** Grava uma proposta aprovada; só acrescenta. `false`: não aceita, nada gravado. */
@@ -105,6 +127,7 @@ export async function executarProposta(
 ): Promise<boolean> {
   const c = lerConteudo(tool, conteudo)
   if (!c || foraDaBase(c, kb)) return false
-  await gravar(stores, contaId, c)
-  return true
+  if (c.tool === "memoria.propor" && c.tipo === "rotina" && (await rotinaCheia(stores, contaId)))
+    return false
+  return gravar(stores, contaId, c)
 }

@@ -51,7 +51,7 @@ export function propostaDoParaTer(saida: {
   ]
 }
 
-// Ordem do bloco: evitar sempre, restrição, não como, gosta, casa tem, casa acabou, lista, rotina.
+// Ordem do bloco: evitar sempre, restrição, não como, gosta, casa tem, casa acabou, lista, rotina, padrão.
 const ORDEM = [
   "evitar_sempre",
   "restricao",
@@ -61,6 +61,7 @@ const ORDEM = [
   "casa_acabou",
   "lista",
   "rotina",
+  "padrao",
 ] as const
 
 type Chave = (typeof ORDEM)[number]
@@ -68,6 +69,7 @@ type Chave = (typeof ORDEM)[number]
 function chaveDaProposta(proposta: ConteudoDaProposta): Chave {
   if (proposta.tool === "casa.propor") return proposta.acao === "tem" ? "casa_tem" : "casa_acabou"
   if (proposta.tool === "lista.propor") return "lista"
+  if (proposta.tool === "padrao.confirmar") return "padrao"
   return proposta.tipo
 }
 

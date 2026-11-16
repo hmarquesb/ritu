@@ -208,4 +208,26 @@ describe("montarPropostas", () => {
       }),
     ).toEqual([{ tool: "casa.propor", acao: "tem", itens: [{ nome: "arroz" }] }])
   })
+
+  describe("padrão confirmado por proposta", () => {
+    const padrao: ConteudoDaProposta = {
+      tool: "padrao.confirmar",
+      padrao_id: "padrao-1",
+      frase: "Quando você está pesada, costuma estar também sem energia.",
+    }
+
+    it("com seis linhas comuns, o padrão sai", () => {
+      const anotacoes = ["a", "b", "c", "d", "e", "f"].map((nome) => casaTem(nome))
+      const propostas = montarPropostas({ anotacoes, doAgente: [], extras: [padrao] })
+      expect(propostas).toHaveLength(6)
+      expect(propostas).not.toContainEqual(padrao)
+    })
+
+    it("com cinco linhas comuns, o padrão é a última", () => {
+      const anotacoes = ["a", "b", "c", "d", "e"].map((nome) => casaTem(nome))
+      const propostas = montarPropostas({ anotacoes, doAgente: [], extras: [padrao] })
+      expect(propostas).toHaveLength(6)
+      expect(propostas.at(-1)).toEqual(padrao)
+    })
+  })
 })

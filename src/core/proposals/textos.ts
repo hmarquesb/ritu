@@ -14,6 +14,7 @@ export const textosDasPropostas = {
   gosta: "Você gosta de {itens}",
   listaFaltouHoje: '{Item} na lista "Para ter em casa" (faltou para {detalhe})',
   listaFezFalta: '{Item} na lista "Para ter em casa" (já fez falta {detalhe} vezes)',
+  padrao: "Notei isto. Está certo? {frase}",
   cabecalho: "Posso anotar isto?",
   agoraNao: "Agora não",
   anotar: "Anotar",
@@ -35,6 +36,7 @@ function minuscula(texto: string): string {
 type DaCasa = Extract<ConteudoDaProposta, { tool: "casa.propor" }>
 type DaMemoria = Extract<ConteudoDaProposta, { tool: "memoria.propor" }>
 type DaLista = Extract<ConteudoDaProposta, { tool: "lista.propor" }>
+type DaPadrao = Extract<ConteudoDaProposta, { tool: "padrao.confirmar" }>
 
 function textoDaCasa(c: DaCasa, kb: KnowledgeBase): string {
   const modelo = c.acao === "tem" ? textosDasPropostas.casaTem : textosDasPropostas.casaAcabou
@@ -80,6 +82,10 @@ function textoDaLista(c: DaLista, kb: KnowledgeBase): string {
   return modelo.replace(/\{Item\}|\{detalhe\}/g, (marca) => (marca === "{Item}" ? item : detalhe))
 }
 
+function textoDoPadrao(c: DaPadrao): string {
+  return textosDasPropostas.padrao.replace("{frase}", () => c.frase)
+}
+
 // Uma linha do bloco, como o texto que a pessoa lê.
 export function textoDaProposta(c: ConteudoDaProposta, kb: KnowledgeBase): string {
   switch (c.tool) {
@@ -89,5 +95,7 @@ export function textoDaProposta(c: ConteudoDaProposta, kb: KnowledgeBase): strin
       return textoDaMemoria(c, kb)
     case "lista.propor":
       return textoDaLista(c, kb)
+    case "padrao.confirmar":
+      return textoDoPadrao(c)
   }
 }

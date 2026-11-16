@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import { type Restricao, restricaoSchema } from "@/core/knowledge/vocab"
 
-export type TipoDeProposta = "casa.propor" | "memoria.propor" | "lista.propor"
+export type TipoDeProposta = "casa.propor" | "memoria.propor" | "lista.propor" | "padrao.confirmar"
 
 export type ConteudoDaProposta =
   | { tool: "casa.propor"; acao: "tem" | "acabou"; itens: { alimento_id?: string; nome: string }[] }
@@ -17,6 +17,7 @@ export type ConteudoDaProposta =
       motivo: "faltou_hoje" | "fez_falta"
       detalhe: string
     }
+  | { tool: "padrao.confirmar"; padrao_id: string; frase: string } // frase até 200
 
 export type PropostaNaSaida = { id: string; tool: TipoDeProposta; texto: string }
 
@@ -59,6 +60,11 @@ const rotinaSchema = z.strictObject({
   tipo: z.literal("rotina"),
   texto: z.string().min(1).max(200),
 })
+const padraoSchema = z.strictObject({
+  tool: z.literal("padrao.confirmar"),
+  padrao_id: naoVazio,
+  frase: z.string().min(1).max(200),
+})
 const listaSchema = z.strictObject({
   tool: z.literal("lista.propor"),
   alimento_id: naoVazio,
@@ -74,11 +80,12 @@ export const conteudoDaPropostaSchema: z.ZodType<ConteudoDaProposta> = z.union([
   gostaPropostaSchema,
   rotinaSchema,
   listaSchema,
+  padraoSchema,
 ])
 
 export const propostaNaSaidaSchema = z.object({
   id: z.string(),
-  tool: z.enum(["casa.propor", "memoria.propor", "lista.propor"]),
+  tool: z.enum(["casa.propor", "memoria.propor", "lista.propor", "padrao.confirmar"]),
   texto: z.string(),
 })
 

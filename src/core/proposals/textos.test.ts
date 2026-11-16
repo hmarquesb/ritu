@@ -19,6 +19,7 @@ describe("textosDasPropostas", () => {
       cabecalho: "Posso anotar isto?",
       agoraNao: "Agora não",
       anotar: "Anotar",
+      padrao: "Notei isto. Está certo? {frase}",
     })
   })
 })
@@ -140,5 +141,27 @@ describe("textoDaProposta: troca segura", () => {
       itens: [{ nome: "Pão $& {detalhe}" }],
     }
     expect(textoDaProposta(c, kb)).toBe("Você não come pão $& {detalhe}")
+  })
+})
+
+describe("textoDaProposta: padrão", () => {
+  it("a linha é a pergunta com a frase do padrão", () => {
+    const c: ConteudoDaProposta = {
+      tool: "padrao.confirmar",
+      padrao_id: "padrao-1",
+      frase: "Quando você está pesada, costuma estar também sem energia.",
+    }
+    expect(textoDaProposta(c, kb)).toBe(
+      "Notei isto. Está certo? Quando você está pesada, costuma estar também sem energia.",
+    )
+  })
+
+  it("uma frase com $& e marcas de troca sai como texto", () => {
+    const c: ConteudoDaProposta = {
+      tool: "padrao.confirmar",
+      padrao_id: "padrao-1",
+      frase: "Use $& e {frase} aqui.",
+    }
+    expect(textoDaProposta(c, kb)).toBe("Notei isto. Está certo? Use $& e {frase} aqui.")
   })
 })

@@ -134,3 +134,38 @@ describe("propostaNaSaidaSchema", () => {
     ).toBe(true)
   })
 })
+
+describe("padrao.confirmar", () => {
+  const padrao: ConteudoDaProposta = {
+    tool: "padrao.confirmar",
+    padrao_id: "padrao-1",
+    frase: "Quando você está pesada, costuma estar também sem energia.",
+  }
+
+  it("passa no schema e volta igual por semTool e lerConteudo", () => {
+    expect(conteudoDaPropostaSchema.safeParse(padrao).success).toBe(true)
+    const { tool, conteudo } = semTool(padrao)
+    expect(tool).toBe("padrao.confirmar")
+    expect(lerConteudo(tool, conteudo)).toEqual(padrao)
+  })
+
+  it("recusa frase de 201 caracteres e aceita a de 200", () => {
+    expect(conteudoDaPropostaSchema.safeParse({ ...padrao, frase: "a".repeat(201) }).success).toBe(
+      false,
+    )
+    expect(conteudoDaPropostaSchema.safeParse({ ...padrao, frase: "a".repeat(200) }).success).toBe(
+      true,
+    )
+  })
+
+  it("recusa padrao_id vazio e campo a mais", () => {
+    expect(conteudoDaPropostaSchema.safeParse({ ...padrao, padrao_id: "" }).success).toBe(false)
+    expect(conteudoDaPropostaSchema.safeParse({ ...padrao, extra: 1 }).success).toBe(false)
+  })
+
+  it("propostaNaSaidaSchema aceita a tool padrao.confirmar", () => {
+    expect(
+      propostaNaSaidaSchema.safeParse({ id: "x", tool: "padrao.confirmar", texto: "t" }).success,
+    ).toBe(true)
+  })
+})

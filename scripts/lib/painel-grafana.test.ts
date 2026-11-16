@@ -25,7 +25,7 @@ type PainelGrafana = {
       thresholds?: { steps: { color: string; value: number | null }[] }
     }
   }
-  targets?: { expr?: string; query?: string; limit?: number; refId: string }[]
+  targets?: { expr?: string; query?: string; limit?: number; tableType?: string; refId: string }[]
   panels?: PainelGrafana[]
   collapsed?: boolean
   transformations?: unknown[]
@@ -125,10 +125,26 @@ describe("gerarPainel", () => {
     ])
   })
 
-  it("leva a consulta do rastro como TraceQL em tabela, com limite de 20", () => {
+  it("leva a consulta do rastro como TraceQL em tabela de spans, com limite de 20", () => {
     const rastro = porTitulo("Runs recentes")
     expect(rastro.type).toBe("table")
-    expect(rastro.targets?.[0]).toMatchObject({ query: '{ name = "run" }', limit: 20 })
+    expect(rastro.targets?.[0]).toMatchObject({
+      query: '{ name = "run" } | select(span.run.caminho, span.run.status, span.run.passos)',
+      tableType: "spans",
+      limit: 20,
+    })
+  })
+
+  it("ordena as colunas do rastro: caminho, status, passos e duração", () => {
+    const rastro = porTitulo("Runs recentes")
+    expect(rastro.transformations).toEqual([
+      expect.objectContaining({
+        id: "organize",
+        options: expect.objectContaining({
+          indexByName: { "run.caminho": 0, "run.status": 1, "run.passos": 2, duration: 3 },
+        }),
+      }),
+    ])
   })
 
   it("leva a consulta do log ao painel de logs", () => {

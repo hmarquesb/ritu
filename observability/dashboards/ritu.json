@@ -1477,8 +1477,8 @@
             "uid": "${ds_traces}"
           },
           "queryType": "traceql",
-          "tableType": "traces",
-          "query": "{ name = \"run\" }",
+          "tableType": "spans",
+          "query": "{ name = \"run\" } | select(span.run.caminho, span.run.status, span.run.passos)",
           "limit": 20
         }
       ],

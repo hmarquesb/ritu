@@ -69,7 +69,7 @@ function alvosDoPainel(painel: Painel, datasource: ReturnType<typeof fonteDeDado
         refId,
         datasource,
         queryType: "traceql",
-        tableType: "traces",
+        tableType: "spans",
         query: consulta.expr,
         limit: LIMITE_DE_TABELA,
       }

@@ -15,6 +15,7 @@ import { padroes } from "./padroes"
 import { pausas } from "./pausas"
 import { ranking } from "./ranking"
 import { resposta } from "./resposta"
+import { telemetria } from "./telemetria"
 import { toques } from "./toques"
 import { ui } from "./ui"
 
@@ -39,6 +40,7 @@ export const config = {
   llmCotas,
   ranking,
   resposta,
+  telemetria,
   toques,
   ui,
 } as const

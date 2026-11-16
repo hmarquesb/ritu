@@ -17,7 +17,6 @@ import {
   naoFechou,
   nenhumRetornoFechado,
   primeiroDoTipoNao,
-  reconheceRetorno,
 } from "../../evals/llm/casos/c2/aprendizado/expectativas"
 import {
   caminho,
@@ -42,12 +41,7 @@ import {
   temRestricao,
   temUmaDe,
 } from "../../evals/llm/casos/c2/intencao/expectativas"
-import {
-  comParaTer,
-  falaDasProximasVezes,
-  semFraseDeCompra,
-  semParaTer,
-} from "../../evals/llm/casos/c2/para-ter/expectativas"
+import { comParaTer, semParaTer } from "../../evals/llm/casos/c2/para-ter/expectativas"
 import {
   itensNaPergunta,
   naoGostaDoPrimeiroTenhoOsOutros,
@@ -71,7 +65,6 @@ import {
   chamouMemoriaPropor,
   listaNoMaximoUma,
   listaSoDe,
-  naoDizQueAnotou,
   nenhumaListaAceita,
   nenhumaProposta,
   semAlimentoBarrado,
@@ -1338,22 +1331,6 @@ describe("expectativas da conversa de Propostas", () => {
       }),
     ).toBe(false)
   })
-
-  it("naoDizQueAnotou recusa anotei, guardei, bloco e aprovar no texto da resposta", () => {
-    expect(passa(naoDizQueAnotou(), { resultado: resultadoCom(saidaPronta()) })).toBe(true)
-    for (const texto of [
-      "Anotei isso.",
-      "Guardei a rotina.",
-      "Vou anotar agora.",
-      "Posso anotar isto.",
-      "Veja o bloco abaixo.",
-      "Pode aprovar.",
-    ]) {
-      expect(
-        passa(naoDizQueAnotou(), { resultado: resultadoCom(saidaPronta({ resposta: texto })) }),
-      ).toBe(false)
-    }
-  })
 })
 
 describe("runner da conversa com retornos fechados", () => {
@@ -1551,24 +1528,6 @@ describe("expectativas de Aprendizado e Para ter em casa", () => {
     expect(passa(exp, { retornosFechados: ["Arroz"] })).toBe(false)
   })
 
-  it("reconheceRetorno exige o retorno na primeira frase", () => {
-    const exp = reconheceRetorno()
-    expect(
-      passa(exp, {
-        resultado: resultadoCom(
-          saidaPronta({ resposta: "Que bom que o arroz ajudou ontem. Agora, um chá." }),
-        ),
-      }),
-    ).toBe(true)
-    expect(
-      passa(exp, {
-        resultado: resultadoCom(
-          saidaPronta({ resposta: "Para agora, um chá quente de gengibre. Ok." }),
-        ),
-      }),
-    ).toBe(false)
-  })
-
   it("apontaComoFicou exige o texto com Como ficou", () => {
     const exp = apontaComoFicou()
     expect(
@@ -1591,39 +1550,6 @@ describe("expectativas de Aprendizado e Para ter em casa", () => {
     const exp = semParaTer()
     expect(passa(exp, { resultado: resultadoCom(saidaPronta()) })).toBe(true)
     expect(passa(exp, { resultado: resultadoCom(saidaPronta({ para_ter: paraTer })) })).toBe(false)
-  })
-
-  it("falaDasProximasVezes exige a palavra próxima no texto", () => {
-    const exp = falaDasProximasVezes()
-    expect(
-      passa(exp, {
-        resultado: resultadoCom(saidaPronta({ resposta: "Vale ter para as próximas vezes." })),
-      }),
-    ).toBe(true)
-    expect(
-      passa(exp, { resultado: resultadoCom(saidaPronta({ resposta: "Vale ter em casa." })) }),
-    ).toBe(false)
-  })
-
-  it("semFraseDeCompra reprova comprar, loja, mercado, preço, marca e R$", () => {
-    const exp = semFraseDeCompra()
-    expect(
-      passa(exp, {
-        resultado: resultadoCom(
-          saidaPronta({ resposta: "Um chá quente, para as próximas vezes." }),
-        ),
-      }),
-    ).toBe(true)
-    for (const texto of [
-      "Vale comprar cardamomo.",
-      "Vá à loja.",
-      "Compre no mercado.",
-      "Qual o preço?",
-      "Uma marca boa.",
-      "Custa R$ 10.",
-    ]) {
-      expect(passa(exp, { resultado: resultadoCom(saidaPronta({ resposta: texto })) })).toBe(false)
-    }
   })
 })
 

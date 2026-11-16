@@ -1,6 +1,5 @@
 import { terminou } from "../perguntas/expectativas"
 import type { CasoConversa } from "../tipos"
-import { naoDizQueAnotou } from "./expectativas"
 
 // Mesma mensagem do caso 1: a resposta não diz que anotou nem fala do bloco; quem anota é a pessoa, no bloco.
 export const casoPropostas06: CasoConversa = {
@@ -38,6 +37,13 @@ export const casoPropostas06: CasoConversa = {
       suspeito: false,
     },
   },
+  criterios: [
+    {
+      descricao: "Não diz que anotou",
+      pergunta: "A resposta diz que anotou, guardou ou vai lembrar de alguma coisa?",
+      esperado: false,
+    },
+  ],
   deve: [terminou()],
-  naoPode: [naoDizQueAnotou()],
+  naoPode: [],
 }

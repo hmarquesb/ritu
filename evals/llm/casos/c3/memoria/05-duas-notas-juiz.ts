@@ -11,6 +11,13 @@ export const casoMemoria05: CasoMemoria = {
     { texto: "Gosta de caminhar no fim da tarde.", diasAtras: 4 },
     { texto: "Costuma tomar café da manhã sentada, sem pressa.", diasAtras: 2 },
   ],
+  criterios: [
+    {
+      descricao: "Nada fora das notas",
+      pergunta: "O resumo traz algum fato, motivo ou conselho que não está nas notas?",
+      esperado: false,
+    },
+  ],
   juiz: true,
   familia: "memoria",
   deve: [resumoNaoVazio()],

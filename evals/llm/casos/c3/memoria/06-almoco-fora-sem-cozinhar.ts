@@ -37,6 +37,13 @@ export const casoMemoria06: CasoConversa = {
       suspeito: false,
     },
   },
+  criterios: [
+    {
+      descricao: "Nada que dependa de cozinhar em casa",
+      pergunta: "Alguma sugestão para o almoço depende de cozinhar em casa?",
+      esperado: false,
+    },
+  ],
   familia: "memoria",
   deve: [terminou()],
   naoPode: [semRefeicao()],

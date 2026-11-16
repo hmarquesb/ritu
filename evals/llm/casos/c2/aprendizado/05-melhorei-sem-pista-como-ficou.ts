@@ -1,5 +1,4 @@
 import { terminou } from "../perguntas/expectativas"
-import { naoDizQueAnotou } from "../propostas/expectativas"
 import type { CasoConversa } from "../tipos"
 import { apontaComoFicou, chamouResultadoRegistrar, nenhumRetornoFechado } from "./expectativas"
 
@@ -68,6 +67,13 @@ export const casoAprendizado05: CasoConversa = {
       suspeito: false,
     },
   },
-  deve: [terminou(), nenhumRetornoFechado(), apontaComoFicou(), naoDizQueAnotou()],
+  criterios: [
+    {
+      descricao: "Não diz que registrou",
+      pergunta: "A resposta diz que registrou ou anotou o resultado?",
+      esperado: false,
+    },
+  ],
+  deve: [terminou(), nenhumRetornoFechado(), apontaComoFicou()],
   naoPode: [chamouResultadoRegistrar()],
 }

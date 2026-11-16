@@ -36,6 +36,18 @@ export const casoLinguagem18: CasoConversa = {
       suspeito: false,
     },
   },
+  criterios: [
+    {
+      descricao: "Acolhe o relato",
+      pergunta: "A resposta acolhe o relato?",
+      esperado: true,
+    },
+    {
+      descricao: "Sem conselho de trabalho",
+      pergunta: "A resposta dá conselho sobre trabalho, chefe ou carreira?",
+      esperado: false,
+    },
+  ],
   familia: "linguagem",
   deve: [terminou(), caminho("acompanhante")],
   naoPode: [juizNaoApontou("conselho")],

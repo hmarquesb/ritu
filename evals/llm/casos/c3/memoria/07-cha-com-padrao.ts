@@ -1,6 +1,6 @@
 import { terminou } from "../../c2/perguntas/expectativas"
 import type { CasoConversa } from "../../c2/tipos"
-import { dizQueCostumaAjudar, sugere } from "./expectativas"
+import { sugere } from "./expectativas"
 
 // Com frio, com o padrão confirmado do chá e o chá entre os candidatos: o chá sai e o texto diz que costuma ajudar.
 export const casoMemoria07: CasoConversa = {
@@ -46,7 +46,14 @@ export const casoMemoria07: CasoConversa = {
       },
     ],
   },
+  criterios: [
+    {
+      descricao: "Diz que o chá costuma ajudar",
+      pergunta: "A resposta diz que o chá costuma ajudar a pessoa nesse estado?",
+      esperado: true,
+    },
+  ],
   familia: "memoria",
-  deve: [terminou(), sugere("cha-gengibre-canela"), dizQueCostumaAjudar()],
+  deve: [terminou(), sugere("cha-gengibre-canela")],
   naoPode: [],
 }

@@ -1,6 +1,6 @@
 import { terminou } from "../perguntas/expectativas"
 import type { CasoConversa } from "../tipos"
-import { comParaTer, falaDasProximasVezes, semFraseDeCompra } from "./expectativas"
+import { comParaTer } from "./expectativas"
 
 // Cardamomo em falta há três dias, momento sem incômodo: o para_ter sai e a frase fala das próximas vezes.
 export const casoParaTer06: CasoConversa = {
@@ -43,6 +43,13 @@ export const casoParaTer06: CasoConversa = {
       suspeito: false,
     },
   },
-  deve: [terminou(), comParaTer(), falaDasProximasVezes()],
-  naoPode: [semFraseDeCompra()],
+  criterios: [
+    {
+      descricao: "Fala das próximas vezes, sem marca, loja ou preço",
+      pergunta: "A indicação de compra fala das próximas vezes, sem marca, loja ou preço?",
+      esperado: true,
+    },
+  ],
+  deve: [terminou(), comParaTer()],
+  naoPode: [],
 }

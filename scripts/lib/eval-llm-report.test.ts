@@ -97,14 +97,6 @@ describe("semPalavrasInteiras", () => {
       false,
     )
   })
-
-  it("caso 12 usa a variante por palavra inteira na promessa de tratamento", () => {
-    const naoPode = casoPorId("c1-12-estomago-pesado").naoPode
-    const ok = runDe({ resposta: "Um chá morno ajuda a procurar conforto." })
-    const ruim = runDe({ resposta: "Este chá trata o estômago." })
-    expect(naoPode.every((e) => e.confere(ok))).toBe(true)
-    expect(naoPode.every((e) => e.confere(ruim))).toBe(false)
-  })
 })
 
 describe("caso 03, nada doce na parte estruturada", () => {

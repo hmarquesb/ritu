@@ -1,0 +1,356 @@
+{
+  "versao": 1,
+  "checkpoints": [
+    {
+      "checkpoint": "c1-base",
+      "data": "2026-11-15",
+      "prompts": {
+        "acompanhante": "acompanhante.v1"
+      },
+      "modelos": [
+        "gemini-3.1-flash-lite",
+        "gemini-3.5-flash-lite"
+      ],
+      "casos": 12,
+      "casos_com_erro": 0,
+      "metricas": {
+        "intencao.acerto": {
+          "valor": null
+        },
+        "conteudo.deve": {
+          "valor": 0.8333333333333334,
+          "parte": 10,
+          "total": 12
+        },
+        "conteudo.nao_pode": {
+          "valor": 1,
+          "parte": 12,
+          "total": 12
+        },
+        "fidelidade.motivos_fieis": {
+          "valor": null
+        },
+        "fidelidade.texto_bate": {
+          "valor": null
+        },
+        "explicacao.completa": {
+          "valor": 0.7272727272727273,
+          "parte": 8,
+          "total": 11
+        },
+        "trajetoria.correta": {
+          "valor": 0.6666666666666666,
+          "parte": 8,
+          "total": 12
+        },
+        "trajetoria.desnecessarias_por_run": {
+          "valor": 0,
+          "parte": 0,
+          "total": 12
+        },
+        "autocorrecao.valida_na_1a": {
+          "valor": 0.16666666666666666,
+          "parte": 2,
+          "total": 12
+        },
+        "autocorrecao.corrigiu": {
+          "valor": 1,
+          "parte": 10,
+          "total": 10
+        },
+        "perguntas.necessarias": {
+          "valor": null
+        },
+        "perguntas.desnecessarias_evitadas": {
+          "valor": null
+        },
+        "perguntas.recusadas_por_run": {
+          "valor": null
+        },
+        "casa.acerto": {
+          "valor": null
+        },
+        "propostas.corretas": {
+          "valor": null
+        },
+        "propostas.recusadas_por_run": {
+          "valor": null
+        },
+        "para_ter.acerto": {
+          "valor": null
+        },
+        "aprendizado.acerto": {
+          "valor": null
+        },
+        "memoria.acerto": {
+          "valor": null
+        },
+        "conversa.acerto": {
+          "valor": null
+        },
+        "conversa.passos_pergunta_simples": {
+          "valor": null
+        },
+        "seguranca.bloqueio": {
+          "valor": null
+        },
+        "seguranca.injection_bloqueada": {
+          "valor": null
+        },
+        "linguagem.acerto": {
+          "valor": null
+        },
+        "linguagem.alertas_perdidos": {
+          "valor": null
+        },
+        "linguagem.falsos_alertas": {
+          "valor": null
+        },
+        "incomodos.acerto": {
+          "valor": null
+        },
+        "incomodos.promessas_bloqueadas": {
+          "valor": null
+        },
+        "juiz.acerto": {
+          "valor": null
+        },
+        "juiz.falsas_reprovacoes": {
+          "valor": null
+        },
+        "custo.chamadas_decisao_por_run": {
+          "valor": 2.5,
+          "parte": 30,
+          "total": 12
+        },
+        "custo.chamadas_apoio_por_run": {
+          "valor": null
+        },
+        "custo.chamadas_reforco_por_run": {
+          "valor": null
+        },
+        "custo.tokens_entrada_por_run": {
+          "valor": 12895.166666666666,
+          "parte": 154742,
+          "total": 12
+        },
+        "custo.tokens_saida_por_run": {
+          "valor": 615.5833333333334,
+          "parte": 7387,
+          "total": 12
+        },
+        "custo.trocas": {
+          "valor": 0,
+          "parte": 0,
+          "total": 12
+        },
+        "custo.latencia_p50_ms": {
+          "valor": 3426
+        },
+        "custo.latencia_p95_ms": {
+          "valor": 9174
+        }
+      },
+      "violacoes_da_1a": {},
+      "abaixo_da_meta": [
+        "conteudo.deve",
+        "explicacao.completa",
+        "trajetoria.correta",
+        "autocorrecao.valida_na_1a"
+      ],
+      "criticas": []
+    },
+    {
+      "checkpoint": "c2-conversa",
+      "data": "2026-11-16",
+      "prompts": {
+        "acompanhante": "acompanhante.v5",
+        "interprete": "interprete.v1"
+      },
+      "modelos": [
+        "gemini-3.1-flash-lite",
+        "gemini-3.5-flash-lite"
+      ],
+      "casos": 54,
+      "casos_com_erro": 2,
+      "metricas": {
+        "intencao.acerto": {
+          "valor": 0.9,
+          "parte": 18,
+          "total": 20
+        },
+        "conteudo.deve": {
+          "valor": 0.6764705882352942,
+          "parte": 23,
+          "total": 34
+        },
+        "conteudo.nao_pode": {
+          "valor": 0.9705882352941176,
+          "parte": 33,
+          "total": 34
+        },
+        "fidelidade.motivos_fieis": {
+          "valor": null
+        },
+        "fidelidade.texto_bate": {
+          "valor": null
+        },
+        "explicacao.completa": {
+          "valor": 0.5,
+          "parte": 6,
+          "total": 12
+        },
+        "trajetoria.correta": {
+          "valor": 0.8823529411764706,
+          "parte": 30,
+          "total": 34
+        },
+        "trajetoria.desnecessarias_por_run": {
+          "valor": 0.058823529411764705,
+          "parte": 2,
+          "total": 34
+        },
+        "autocorrecao.valida_na_1a": {
+          "valor": 0.14705882352941177,
+          "parte": 5,
+          "total": 34
+        },
+        "autocorrecao.corrigiu": {
+          "valor": 0.8888888888888888,
+          "parte": 24,
+          "total": 27
+        },
+        "perguntas.necessarias": {
+          "valor": 1,
+          "parte": 2,
+          "total": 2
+        },
+        "perguntas.desnecessarias_evitadas": {
+          "valor": 1,
+          "parte": 3,
+          "total": 3
+        },
+        "perguntas.recusadas_por_run": {
+          "valor": 0,
+          "parte": 0,
+          "total": 22
+        },
+        "casa.acerto": {
+          "valor": null
+        },
+        "propostas.corretas": {
+          "valor": 0.5,
+          "parte": 2,
+          "total": 4
+        },
+        "propostas.recusadas_por_run": {
+          "valor": 0.09090909090909091,
+          "parte": 2,
+          "total": 22
+        },
+        "para_ter.acerto": {
+          "valor": 0.6666666666666666,
+          "parte": 2,
+          "total": 3
+        },
+        "aprendizado.acerto": {
+          "valor": 0.6,
+          "parte": 3,
+          "total": 5
+        },
+        "memoria.acerto": {
+          "valor": null
+        },
+        "conversa.acerto": {
+          "valor": null
+        },
+        "conversa.passos_pergunta_simples": {
+          "valor": null
+        },
+        "seguranca.bloqueio": {
+          "valor": null
+        },
+        "seguranca.injection_bloqueada": {
+          "valor": null
+        },
+        "linguagem.acerto": {
+          "valor": null
+        },
+        "linguagem.alertas_perdidos": {
+          "valor": null
+        },
+        "linguagem.falsos_alertas": {
+          "valor": 0,
+          "parte": 0,
+          "total": 2
+        },
+        "incomodos.acerto": {
+          "valor": null
+        },
+        "incomodos.promessas_bloqueadas": {
+          "valor": null
+        },
+        "juiz.acerto": {
+          "valor": null
+        },
+        "juiz.falsas_reprovacoes": {
+          "valor": null
+        },
+        "custo.chamadas_decisao_por_run": {
+          "valor": 2.6470588235294117,
+          "parte": 90,
+          "total": 34
+        },
+        "custo.chamadas_apoio_por_run": {
+          "valor": null
+        },
+        "custo.chamadas_reforco_por_run": {
+          "valor": null
+        },
+        "custo.tokens_entrada_por_run": {
+          "valor": 20513.823529411766,
+          "parte": 697470,
+          "total": 34
+        },
+        "custo.tokens_saida_por_run": {
+          "valor": 677.4117647058823,
+          "parte": 23032,
+          "total": 34
+        },
+        "custo.trocas": {
+          "valor": 0,
+          "parte": 0,
+          "total": 54
+        },
+        "custo.latencia_p50_ms": {
+          "valor": 6253
+        },
+        "custo.latencia_p95_ms": {
+          "valor": 38588
+        }
+      },
+      "violacoes_da_1a": {
+        "qualidades": 22,
+        "estrutura": 12,
+        "novidade": 9,
+        "fora_da_base": 10,
+        "linha_base": 4,
+        "texto_sem_estrutura": 5,
+        "fora_de_casa": 3,
+        "tamanho": 1
+      },
+      "abaixo_da_meta": [
+        "conteudo.deve",
+        "conteudo.nao_pode",
+        "explicacao.completa",
+        "autocorrecao.valida_na_1a",
+        "autocorrecao.corrigiu",
+        "propostas.corretas",
+        "para_ter.acerto",
+        "aprendizado.acerto",
+        "custo.latencia_p95_ms"
+      ],
+      "criticas": []
+    }
+  ]
+}

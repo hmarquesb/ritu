@@ -24,7 +24,8 @@
       "!!design",
       "!**/next-env.d.ts",
       "!**/package-lock.json",
-      "!**/*.md"
+      "!**/*.md",
+      "!evals/resultados/historico.json"
     ]
   },
   "formatter": {

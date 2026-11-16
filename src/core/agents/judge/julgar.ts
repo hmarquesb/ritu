@@ -100,8 +100,12 @@ export function createJudge(deps: Deps): Judge {
           schema: saidaDoJuizSchema,
           preferir: p.preferir,
         })
-        if (!r.ok) return { ok: false, motivo: r.motivo, duracao_ms: duracao() }
+        if (!r.ok) {
+          telemetry.contador("ritu_juiz_total", { resultado: "sem_juiz" })
+          return { ok: false, motivo: r.motivo, duracao_ms: duracao() }
+        }
         const { apontamentos, graves, registros, aprovado } = avaliar(r.dado, p.nota_de_rotina)
+        telemetry.contador("ritu_juiz_total", { resultado: aprovado ? "aprovado" : "reprovado" })
         contar(telemetry, graves, registros)
         span.atribuir({ "juiz.aprovado": aprovado })
         return {

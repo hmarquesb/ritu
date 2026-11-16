@@ -322,6 +322,7 @@ export function createConversation(deps: Deps) {
   ): Promise<Resultado> {
     const { contaId, run } = x
     const { caminho, intencoes } = escolherCaminho(i)
+    telemetry.atribuirAoSpanAtual({ "run.caminho": caminho, "run.intencoes": intencoes.join(",") })
     await stores.runs.atualizar(contaId, run.id, { caminho, intencoes })
     for (const intencao of intencoes) telemetry.contador("ritu_run_intencao_total", { intencao })
     const ctx: ContextoDoCaminho = {
@@ -399,6 +400,7 @@ export function createConversation(deps: Deps) {
   }
 
   async function respostaSegura(x: Execucao): Promise<RespostaDaConversa> {
+    telemetry.log("resposta_segura", { motivo: "erro_na_conversa" })
     const saida = saidaSegura()
     await fecharComoFalho(x, saida)
     await stores.messages.gravar(x.contaId, {

@@ -348,6 +348,25 @@ describe("criarJuizDoRun.julgarEntrega", () => {
     expect((await doJuiz(m))[0]).toMatchObject({ resumo: "indisponivel", status: "falhou" })
   })
 
+  it("cada entrega segura do Juiz loga resposta_segura com motivo juiz, warn", async () => {
+    const m = await montar(
+      [finalizar(), finalizar(OUTRA)],
+      [reprovado(["promessa", "tom"]), reprovado(["tom"])],
+    )
+    await m.julgar()
+    const logs = m.telemetry.logs.filter((l) => l.codigo === "resposta_segura")
+    expect(logs.map((l) => l.campos.motivo)).toEqual(["juiz"])
+    expect(logs[0]?.nivel).toBe("warn")
+  })
+
+  it("Juiz sem modelo também entrega a saída segura e loga juiz", async () => {
+    const m = await montar([finalizar()], [{ ok: false, motivo: "sem_modelo", duracao_ms: 1 }])
+    await m.julgar()
+    expect(
+      m.telemetry.logs.filter((l) => l.codigo === "resposta_segura").map((l) => l.campos.motivo),
+    ).toEqual(["juiz"])
+  })
+
   it("saude_na_proposta tira a proposta de rotina e deixa as outras", async () => {
     const m = await montar([proporRotina, finalizar()], [ok({ saude_na_proposta: true })])
     const antes = saidaDe(m.primeiro)

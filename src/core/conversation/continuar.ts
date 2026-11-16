@@ -186,6 +186,7 @@ export function criarContinuar(deps: Deps) {
 
   async function falhar(x: Retomada): Promise<Parte> {
     const { contaId, run } = x
+    telemetry.log("resposta_segura", { motivo: "erro_na_retomada" })
     const saida = saidaSegura()
     const atual = await stores.runs.buscar(contaId, run.id)
     if (atual?.status === "running") await runs.encerrar(contaId, run.id, "failed", { saida })

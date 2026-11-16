@@ -205,6 +205,14 @@ describe("conversar: caminhos sem agente", () => {
   }
 })
 
+it("caminho sem agente: o span run recebe run.caminho e run.intencoes antes do fim", async () => {
+  const m = await montar({ llm: [saida({ intencoes: ["ajuda"] })] })
+  const r = await dizer(m, "mensagem")
+  expect(r.caminho).toBe("ajuda")
+  const span = m.telemetry.spans.find((s) => s.nome === "run")
+  expect(span?.atributos).toMatchObject({ "run.caminho": "ajuda", "run.intencoes": "ajuda" })
+})
+
 describe("conversar: atalhos e acompanhante", () => {
   it("só atalhos não chama o LlmClient e vai ao Acompanhante com momento", async () => {
     const m = await montar({ roteiro: [finalizar(entregaDoMomento)] })
@@ -565,6 +573,9 @@ describe("conversar: mensagens", () => {
     const r = await dizer(m, "oi")
     expect(r).toMatchObject({ status: "failed", caminho: "acompanhante" })
     expect(r.saida?.origem).toBe("segura")
+    expect(
+      m.telemetry.logs.filter((l) => l.codigo === "resposta_segura").map((l) => l.campos.motivo),
+    ).toEqual(["erro_na_conversa"])
     const run = await runDe(m, r.run_id)
     expect(run.status).toBe("failed")
     const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)

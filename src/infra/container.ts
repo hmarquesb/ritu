@@ -176,6 +176,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
         router: container.router,
         runs: container.runs,
         telemetry: container.telemetry,
+        judge: container.judge,
       })
       return companion
     },

@@ -1,3 +1,4 @@
+import type { Judge } from "@/core/agents/judge/julgar"
 import type { Clock } from "@/core/clock"
 import { sinaisDe } from "@/core/filtro-da-pessoa"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
@@ -8,7 +9,7 @@ import { lerCheckpoint } from "@/core/runs/checkpoint"
 import { RunNaoContinuavelError } from "@/core/runs/errors"
 import { type EventoAoVivo, novoCheckpoint } from "@/core/runs/loop"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
-import type { Run, RunEtapa } from "@/core/runs/ports"
+import type { Run, RunEtapa, RunMutavel } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
@@ -25,6 +26,7 @@ import {
   type RespostaDoRun,
   saidaSemModeloDe,
 } from "./fim-do-run"
+import { criarJuizDoRun, type EntregaJulgada } from "./juiz-do-run"
 import { aplicarResposta, candidatosRetirados } from "./pergunta-do-run"
 import { type DadosDoPreparo, dadosDoPreparoSchema, preparar } from "./preparo"
 
@@ -39,6 +41,7 @@ type Deps = {
   router: ModelRouter
   runs: ReturnType<typeof createRunService>
   telemetry: Telemetry
+  judge: Judge
 }
 
 type OpcoesDoResponder = {
@@ -102,9 +105,40 @@ function acompanharClima(
   }
 }
 
+function juntar(...listas: (string[] | undefined)[]): string[] {
+  return [...new Set(listas.flatMap((l) => l ?? []))]
+}
+
+// Campos do Juiz que entram no run; sem Juiz (saída que não é do agente), nada muda.
+function extraDoJuiz(
+  julgada: EntregaJulgada,
+  anteriores: Record<string, string[]>,
+  decisao: string[],
+  trocas: number,
+): Partial<RunMutavel> {
+  const { campos: c, resultado } = julgada
+  if (c.juiz_tentativas === 0) {
+    return { modelos: { ...anteriores, decisao }, trocas_de_modelo: trocas }
+  }
+  return {
+    juiz_tentativas: c.juiz_tentativas,
+    juiz_aprovado: c.juiz_aprovado,
+    modelos: {
+      ...anteriores,
+      decisao,
+      reforco: juntar(anteriores.reforco, c.reforco),
+      apoio: juntar(anteriores.apoio, c.apoio),
+    },
+    trocas_de_modelo: trocas + c.trocas_reforco,
+    tokens_entrada: resultado.run.tokens_entrada + c.tokens.entrada,
+    tokens_saida: resultado.run.tokens_saida + c.tokens.saida,
+  }
+}
+
 export function createCompanion(deps: Deps) {
   const { stores, tx, kb, clock, telemetry, runs, router } = deps
   const fimDoRun = criarFimDoRun({ stores, tx, kb, runs, telemetry })
+  const juizDoRun = criarJuizDoRun({ judge: deps.judge, runs, router, kb, telemetry, clock })
 
   async function semModelo(
     contaId: string,
@@ -215,16 +249,21 @@ export function createCompanion(deps: Deps) {
         if (e.tipo === "llm" && e.modelo && !modelos.includes(e.modelo)) modelos.push(e.modelo)
       },
     })
+    const julgada = await juizDoRun.julgarEntrega(contaId, resultado, {
+      dados,
+      agente,
+      ctx,
+      aoVivo: opts?.aoVivo,
+    })
     return fimDoRun.tratar(
       contaId,
-      resultado,
+      julgada.resultado,
       dados,
       perfil,
       {
         clima_usado: climaUsado ?? null,
         prompt_versao: agente.prompt_versao,
-        modelos: { decisao: modelos },
-        trocas_de_modelo: trocas,
+        ...extraDoJuiz(julgada, {}, modelos, trocas),
       },
       opts?.manterAberto,
     )
@@ -306,17 +345,22 @@ export function createCompanion(deps: Deps) {
       reservado: true,
     })
     const anteriores = modelosDoRun(run)
-    const decisao = [...new Set([...(anteriores.decisao ?? []), ...modelos])]
+    const decisao = juntar(anteriores.decisao, modelos)
+    const julgada = await juizDoRun.julgarEntrega(contaId, resultado, {
+      dados: novos,
+      agente,
+      ctx,
+      aoVivo: opts?.aoVivo,
+    })
     return fimDoRun.tratar(
       contaId,
-      resultado,
+      julgada.resultado,
       novos,
       perfil,
       {
         clima_usado: climaUsado ?? run.clima_usado ?? null,
         prompt_versao: agente.prompt_versao,
-        modelos: { ...anteriores, decisao },
-        trocas_de_modelo: run.trocas_de_modelo + trocas,
+        ...extraDoJuiz(julgada, anteriores, decisao, run.trocas_de_modelo + trocas),
       },
       opts?.manterAberto,
     )

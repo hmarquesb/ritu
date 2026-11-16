@@ -1,11 +1,13 @@
 import { llmCotas } from "@config/index"
 import { describe, expect, it } from "vitest"
+import type { Judge, Veredito } from "@/core/agents/judge/julgar"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
 import { RunNaoContinuavelError } from "@/core/runs/errors"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Run, RunEtapa } from "@/core/runs/ports"
 import { createRunService } from "@/core/runs/run-service"
 import type { ToolContext } from "@/core/tools/tool"
+import { createApprovingJudge, createScriptedJudge } from "@/infra/fakes/fake-judge"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
@@ -51,7 +53,10 @@ const semVaga = {
   papeis: { ...llmCotas.papeis, decisao: ["gemini-3.5-flash-lite"] },
 } as unknown as typeof llmCotas
 
-async function montar(roteiro: PassoRoteirizado[], opts: { semModelo?: boolean } = {}) {
+async function montar(
+  roteiro: PassoRoteirizado[],
+  opts: { semModelo?: boolean; judge?: Judge } = {},
+) {
   const clock = createFixedClock("2026-11-15T18:00:00.000Z")
   const stores = createMemoryStores(clock)
   const telemetry = createMemoryTelemetry()
@@ -66,7 +71,17 @@ async function montar(roteiro: PassoRoteirizado[], opts: { semModelo?: boolean }
   const runs = createRunService({ stores, tx: stores, runtime, clock, telemetry })
   const conta = await stores.accounts.criar({ tipo: "demo" })
   const companion = (r: ModelRouter = router) =>
-    createCompanion({ stores, tx: stores, kb, clock, weather, router: r, runs, telemetry })
+    createCompanion({
+      stores,
+      tx: stores,
+      kb,
+      clock,
+      weather,
+      router: r,
+      runs,
+      telemetry,
+      judge: opts.judge ?? createApprovingJudge(),
+    })
   return { clock, stores, telemetry, weather, router, conta, companion, runtime, runs }
 }
 
@@ -188,7 +203,11 @@ describe("createCompanion.responder", () => {
     expect(run?.clima_usado).toMatchObject({ status: "ok" })
     expect(JSON.stringify(run?.clima_usado)).not.toContain("Cidade Secreta")
     expect(run?.prompt_versao).toEqual(expect.any(String))
-    expect(run?.modelos).toEqual({ decisao: ["gemini-3.5-flash-lite"] })
+    expect(run?.modelos).toEqual({
+      decisao: ["gemini-3.5-flash-lite"],
+      reforco: [],
+      apoio: ["juiz-fake"],
+    })
     expect(run?.trocas_de_modelo).toBe(0)
     const intencoes = m.telemetry.metricas.filter((x) => x.nome === "ritu_run_intencao_total")
     expect(intencoes.map((x) => x.rotulos)).toEqual([{ intencao: "momento" }])
@@ -293,6 +312,7 @@ describe("createCompanion.responder", () => {
         weather: m.weather,
         router: m.router,
         runs,
+        judge: createApprovingJudge(),
         telemetry: m.telemetry,
       })
       await c.responder(m.conta.id, entrada({ casa_da_mensagem: casa }), { run })
@@ -339,8 +359,8 @@ const entregaComLegume = (legume: string, extra: Record<string, unknown> = {}) =
 // 19h em São Paulo: momento "jantar", em que a mini-base tem refeições.
 const JANTAR = "2026-11-15T22:00:00.000Z"
 
-async function comPausa(roteiro: PassoRoteirizado[]) {
-  const m = await montar(roteiro)
+async function comPausa(roteiro: PassoRoteirizado[], judge?: Judge) {
+  const m = await montar(roteiro, { judge })
   m.clock.set("2026-09-16T22:00:00.000Z")
   await m.stores.pantry.registrar(
     m.conta.id,
@@ -555,7 +575,8 @@ describe("pausa e continuar", () => {
     const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
     expect(run?.modelos).toEqual({
       decisao: ["gemini-3.5-flash-lite"],
-      apoio: ["modelo-de-apoio"],
+      reforco: [],
+      apoio: ["modelo-de-apoio", "juiz-fake"],
     })
     expect(run?.trocas_de_modelo).toBe(2)
   })
@@ -571,7 +592,11 @@ describe("manterAberto", () => {
     expect(run?.status).toBe("running")
     expect(run?.saida).toMatchObject({ origem: "agente" })
     expect(run?.momento).toBeTruthy()
-    expect(run?.modelos).toEqual({ decisao: ["gemini-3.5-flash-lite"] })
+    expect(run?.modelos).toEqual({
+      decisao: ["gemini-3.5-flash-lite"],
+      reforco: [],
+      apoio: ["juiz-fake"],
+    })
   })
 
   it("sem a opção, a entrega termina em done como antes", async () => {
@@ -623,5 +648,86 @@ describe("manterAberto", () => {
     const salvo = await m.stores.runs.buscar(m.conta.id, r.run_id)
     expect(salvo?.status).toBe("running")
     expect(salvo?.saida).toMatchObject({ origem: "agente" })
+  })
+})
+
+function veredito(mudar: Partial<Extract<Veredito, { ok: true }>> = {}): Veredito {
+  return {
+    ok: true,
+    aprovado: true,
+    graves: [],
+    registros: [],
+    saude_na_proposta: false,
+    apontamentos: [],
+    modelo: "modelo-do-juiz",
+    tokens: { entrada: 7, saida: 3 },
+    trocas: 0,
+    duracao_ms: 5,
+    ...mudar,
+  }
+}
+const reprovado = (): Veredito =>
+  veredito({
+    aprovado: false,
+    graves: ["promessa"],
+    apontamentos: [{ motivo: "promessa", trecho: "trecho" }],
+  })
+
+describe("o Juiz no Acompanhante", () => {
+  it("aprovado: grava juiz_aprovado, o modelo do Juiz em apoio e os tokens dele", async () => {
+    const judge = createScriptedJudge([veredito()])
+    const m = await montar([finalizar(entregaOk)], { judge })
+    const r = await m.companion().responder(m.conta.id, entrada())
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(r.saida?.origem).toBe("agente")
+    expect(run).toMatchObject({ juiz_tentativas: 1, juiz_aprovado: true })
+    expect(run?.modelos).toMatchObject({ apoio: ["modelo-do-juiz"], reforco: [] })
+    expect(run?.tokens_entrada).toBeGreaterThanOrEqual(7)
+  })
+
+  it("reprovado duas vezes: a resposta segura sai e o run termina done", async () => {
+    const judge = createScriptedJudge([reprovado(), reprovado()])
+    const m = await montar([finalizar(entregaOk), finalizar(entregaOk)], { judge })
+    const r = await m.companion().responder(m.conta.id, entrada())
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(r).toMatchObject({ status: "done", fim: "entregue" })
+    expect(r.saida?.origem).toBe("segura")
+    expect(run).toMatchObject({ juiz_tentativas: 2, juiz_aprovado: false })
+    expect(run?.saida).toMatchObject({ origem: "segura" })
+    expect(run?.modelos).toMatchObject({ reforco: [expect.any(String)] })
+  })
+
+  it("Juiz indisponível: run done, juiz_aprovado null e resposta segura", async () => {
+    const judge = createScriptedJudge([{ ok: false, motivo: "sem_modelo", duracao_ms: 1 }])
+    const m = await montar([finalizar(entregaOk)], { judge })
+    const r = await m.companion().responder(m.conta.id, entrada())
+    const run = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(r.status).toBe("done")
+    expect(r.saida?.origem).toBe("segura")
+    expect(run).toMatchObject({ juiz_tentativas: 1, juiz_aprovado: null })
+  })
+
+  it("sem modelo de decisão não chama o Juiz", async () => {
+    const judge = createScriptedJudge([])
+    const m = await montar([], { semModelo: true, judge })
+    const r = await m.companion().responder(m.conta.id, entrada())
+    expect(r.fim).toBe("sem_modelo")
+    expect(judge.pedidos).toHaveLength(0)
+  })
+
+  it("depois de uma pausa, o Juiz roda com tentativa 1 e o resultado fica no run", async () => {
+    const judge = createScriptedJudge([veredito()])
+    const { m, r } = await comPausa(
+      [
+        { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+        pedirCasa(),
+        finalizar(entregaComLegume("abobora")),
+      ],
+      judge,
+    )
+    await retomar(m, r, tenhoENao)
+    const salvo = await m.stores.runs.buscar(m.conta.id, r.run_id)
+    expect(judge.pedidos.map((p) => p.tentativa)).toEqual([1])
+    expect(salvo).toMatchObject({ juiz_tentativas: 1, juiz_aprovado: true })
   })
 })

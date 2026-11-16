@@ -25,12 +25,13 @@ const ESPERADAS: Record<string, Trajetoria> = {
       "tool:ayurveda.checar_combinacao:ok",
       "llm",
       "validacao:finalizar:ok",
+      "juiz:juiz:ok",
     ],
   },
   "pergunta-manga": {
     status: "done",
     origem: "agente",
-    etapas: ["llm", "tool:ayurveda.alimento:ok", "llm", "validacao:finalizar:ok"],
+    etapas: ["llm", "tool:ayurveda.alimento:ok", "llm", "validacao:finalizar:ok", "juiz:juiz:ok"],
   },
   autocorrecao: {
     status: "done",
@@ -42,12 +43,13 @@ const ESPERADAS: Record<string, Trajetoria> = {
       "validacao:finalizar:recusado",
       "llm",
       "validacao:finalizar:ok",
+      "juiz:juiz:ok",
     ],
   },
   "estomago-pesado": {
     status: "done",
     origem: "agente",
-    etapas: ["llm", "tool:clima.agora:ok", "llm", "validacao:finalizar:ok"],
+    etapas: ["llm", "tool:clima.agora:ok", "llm", "validacao:finalizar:ok", "juiz:juiz:ok"],
   },
   "sem-modelo": {
     status: "done",

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
 import { createModelRouter } from "@/core/llm/router"
 import { createRunService } from "@/core/runs/run-service"
+import { createApprovingJudge } from "@/infra/fakes/fake-judge"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
@@ -76,6 +77,7 @@ describe("resultado.registrar e finalizar no mesmo passo", () => {
       router,
       runs,
       telemetry,
+      judge: createApprovingJudge(),
     })
 
     const r = await companion.responder(conta.id, {

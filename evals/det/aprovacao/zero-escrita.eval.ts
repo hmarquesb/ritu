@@ -54,7 +54,8 @@ async function fotografar(deps: DepsDoCenario, contaId: string) {
 async function abrirBloco(nome: string) {
   const base = cenarioDeAprovacao(nome)
   const c: CenarioDeConversa = { ...base, aprovacao: undefined, depois: undefined }
-  const sinais = [c.interpretacao, OFENSA].filter((i): i is SaidaDoInterprete => i !== undefined)
+  // A aprovação do Juiz (mesmo cliente) vem logo depois da primeira interpretação.
+  const sinais = [c.interpretacao, { apontamentos: [] }, OFENSA].filter((i) => i !== undefined)
   const { contaId, deps } = await montarCenario(c, { llm: createFakeLlm(sinais) })
   const antes = await fotografar(deps, contaId)
   const rodada = await rodarCenario(deps, contaId, c)

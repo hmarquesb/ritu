@@ -144,3 +144,10 @@
 - **A3 · Rótulos de `ritu_entrada_total`.** Faltava: nomes de atributo. Decidi: `conta.tipo` (existente) e `entrada.resultado` (novo). Desfazer: renomear em `nomes.ts`.
 - **A4 · Handlers das rotas.** Faltava: onde ficam os handlers que os evals chamam com stores em memória. Decidi: `src/app/_rotas/` (funções que recebem `DepsDaRota`); os `route.ts` só ligam às dependências reais (`src/app/_lib/deps.ts`). Desfazer: mover os handlers para dentro dos `route.ts`.
 - **A5 · Conta nova no E2E.** A spec cita o header `x-ritu-e2e-conta: nova`; decidi passar isso a `criarDemonstracao` como `semSeed` (só no modo e2e), para o core não ler header. Desfazer: tirar o parâmetro e tratar no provedor.
+
+## 014 e 015 · Planos (2026-11-16)
+
+- **Faltava:** decisões que as specs 014 e 015 não fixam (destino do runner, `--casos`, nome do log de padrões, espelho de telemetria nos cenários, relógio em `chamarComPapel`, entre outras).
+- **Decidido:** a opção mais conservadora em cada uma, listadas como D1–D21 em `.plans/014-evals-plan.md` e D1–D15 em `.plans/015-observabilidade-completa-plan.md` (seção "Decisões do planejamento").
+- **Para o relatório:** 014 D4 (`--casos` sai), 015 D1 (log `padroes_conta_falhou` mantido), 015 D4 (latências 0 nos cenários).
+- **Desfazer:** cada D diz o que muda; reverter a tarefa correspondente.

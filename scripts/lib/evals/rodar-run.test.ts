@@ -11,6 +11,7 @@ import { tenhoATudo } from "../../../evals/llm/casos/c2/perguntas/expectativas"
 import type { Pergunta, RespostaDaPessoa } from "../../../src/core/runs/pergunta"
 import type { RunEtapa } from "../../../src/core/runs/ports"
 import { createFakeLlm } from "../../../src/infra/fakes/fake-llm"
+import { createMemoryTelemetry } from "../../../src/infra/fakes/memory-telemetry"
 import {
   createScriptedRuntime,
   type PassoRoteirizado,
@@ -62,6 +63,18 @@ describe("runner da conversa com LLM falso", () => {
     expect(resultado.run?.caminho).toBeDefined()
     expect(resultado.familias).toEqual(["conversa"])
     expect(resultado.marcas).toEqual([])
+  })
+
+  it("com telemetria, o span run da conversa chega a ela além da memória do caso", async () => {
+    const telemetria = createMemoryTelemetry()
+
+    await rodarConversa(casoConversa, {
+      runtime: createScriptedRuntime(soAtalhos.roteiro),
+      llm: createFakeLlm([{ apontamentos: [] }]),
+      telemetria,
+    })
+
+    expect(telemetria.spans.map((s) => s.nome)).toContain("run")
   })
 
   it("manda a mensagem pela conversa, confere as checagens e colhe o texto e as etapas", async () => {

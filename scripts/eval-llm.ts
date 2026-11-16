@@ -35,19 +35,29 @@ function containerDoEval(): Container {
   return container
 }
 
+// OTel só numa rodada: o --listar não chega aqui. Com OTEL_EXPORTER_OTLP_ENDPOINT, liga o SDK uma vez.
+let telemetriaIniciada: Promise<void> | undefined
+function iniciarTelemetriaDoEval(): Promise<void> {
+  telemetriaIniciada ??= containerDoEval().iniciarTelemetria()
+  return telemetriaIniciada
+}
+
 function rodadoresDo(c: Container): Rodadores {
-  const deps = { client: c.llm, kb: c.knowledge, clock: c.clock }
+  const deps = { client: c.llm, kb: c.knowledge, clock: c.clock, telemetria: c.telemetry }
   return {
-    acompanhante: (caso) => rodarAcompanhante(caso, { runtime: c.runtime }),
+    acompanhante: (caso) =>
+      rodarAcompanhante(caso, { runtime: c.runtime, telemetria: c.telemetry }),
     interprete: (caso) => rodarInterprete(caso, deps),
-    conversa: (caso) => rodarConversa(caso, { runtime: c.runtime, llm: c.llm }),
+    conversa: (caso) =>
+      rodarConversa(caso, { runtime: c.runtime, llm: c.llm, telemetria: c.telemetry }),
     memoria: (caso) => rodarMemoria(caso, deps),
     juiz: (caso) => rodarJuiz(caso, deps),
   }
 }
 
 let rodarCasoDoEval: ((caso: CasoDeEval) => Promise<CasoRodado>) | undefined
-function rodarCaso(caso: CasoDeEval): Promise<CasoRodado> {
+async function rodarCaso(caso: CasoDeEval): Promise<CasoRodado> {
+  await iniciarTelemetriaDoEval()
   if (rodarCasoDoEval === undefined) {
     const c = containerDoEval()
     rodarCasoDoEval = criarRodarCaso({

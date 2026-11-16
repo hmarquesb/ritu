@@ -4,6 +4,7 @@ import type { CasoJuiz, CasoMemoria } from "../../../evals/llm/casos/c3"
 import type { SaidaDoAcompanhante } from "../../../src/core/agents/companion/saida"
 import { createFakeLlm } from "../../../src/infra/fakes/fake-llm"
 import { createFixedClock } from "../../../src/infra/fakes/fixed-clock"
+import { createMemoryTelemetry } from "../../../src/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "../../../src/infra/fakes/mini-knowledge"
 import { rodarInterprete, rodarJuiz, rodarMemoria } from "./rodar-apoio"
 
@@ -123,6 +124,19 @@ describe("runner do Intérprete com LLM falso", () => {
     expect(resultado.marcas).toEqual([])
     expect(colhido.mensagem).toBe("Estou com frio")
     expect(colhido.texto).toBe("")
+  })
+
+  it("com telemetria, o span do Intérprete chega a ela além da memória do caso", async () => {
+    const telemetria = createMemoryTelemetry()
+
+    await rodarInterprete(casoInterprete, {
+      client: createFakeLlm([saidaDoInterprete]),
+      kb,
+      clock: createFixedClock(AGORA),
+      telemetria,
+    })
+
+    expect(telemetria.spans.map((s) => s.nome)).toContain("interprete")
   })
 
   it("Intérprete sem o registro de uso do container: roda só com client, kb e clock", async () => {

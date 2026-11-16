@@ -10,6 +10,7 @@ import { SemModeloError } from "../../../src/core/llm/chamar"
 import type { LlmClient } from "../../../src/core/llm/client"
 import type { AgentRuntime } from "../../../src/core/runs/agent-runtime"
 import type { Run, RunEtapa } from "../../../src/core/runs/ports"
+import type { Telemetry } from "../../../src/core/telemetry/ports"
 import { type DepsDoCenario, montarCenario, rodarCenario } from "../../../test/fixtures/cenarios"
 import { MAXIMO_DE_RETOMADAS } from "../../../test/fixtures/cenarios/rodar"
 import { motivosDoJuizDasEtapas } from "../demo-report"
@@ -111,7 +112,7 @@ function colhidoSemSaida(mensagem: string | undefined, etapas: RunEtapa[]): Colh
 /** Um caso de acompanhante. A pessoa do eval pula cada pergunta e o run segue até o fim. Pausa acima do teto falha o caso. */
 export async function rodarAcompanhante(
   caso: CasoC1,
-  opts: { runtime: AgentRuntime },
+  opts: { runtime: AgentRuntime; telemetria?: Telemetry },
 ): Promise<CasoRodado> {
   const cenario = { ...cenarioDoRunner(caso.cenario), roteiro: [] }
   const { contaId, deps } = await montarCenario(cenario, opts)
@@ -155,7 +156,7 @@ export async function rodarAcompanhante(
 /** Uma mensagem pela conversa, respondendo às pausas com as respostas do caso. Sem juiz: a explicação fica fora desta conta. */
 export async function rodarConversa(
   caso: CasoConversa,
-  opts: { runtime: AgentRuntime; llm: LlmClient },
+  opts: { runtime: AgentRuntime; llm: LlmClient; telemetria?: Telemetry },
 ): Promise<CasoRodado> {
   const cenario = { ...cenarioDoRunner(caso.cenario), roteiro: [] }
   const { contaId, deps } = await montarCenario(cenario, opts)

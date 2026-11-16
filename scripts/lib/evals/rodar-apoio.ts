@@ -11,13 +11,24 @@ import type { KnowledgeBase } from "../../../src/core/knowledge/knowledge-base"
 import type { LlmClient } from "../../../src/core/llm/client"
 import { createModelRouter } from "../../../src/core/llm/router"
 import { escolherCaminho } from "../../../src/core/runs/caminhos"
+import type { Telemetry } from "../../../src/core/telemetry/ports"
 import { createMemoryLedger } from "../../../src/infra/fakes/memory-stores"
-import { createMemoryTelemetry } from "../../../src/infra/fakes/memory-telemetry"
+import {
+  createMemoryTelemetry,
+  type MemoryTelemetry,
+} from "../../../src/infra/fakes/memory-telemetry"
+import { createTeeTelemetry } from "../../../src/infra/fakes/tee-telemetry"
 import { conferir, retornosFalsos } from "./colher"
 import { type Checagem, type Colhido, calcularAcertou, type ResultadoDoCaso } from "./resultado"
 import type { CasoRodado } from "./rodar-run"
 
-export type DepsDeApoio = { client: LlmClient; kb: KnowledgeBase; clock: Clock }
+export type DepsDeApoio = {
+  client: LlmClient
+  kb: KnowledgeBase
+  clock: Clock
+  // Espelho (D3): os spans e métricas da chamada também vão para ela, quando vier.
+  telemetria?: Telemetry
+}
 
 const DIA_EM_MS = 24 * 60 * 60 * 1000
 
@@ -30,8 +41,13 @@ function montar(base: Omit<ResultadoDoCaso, "acertou" | "erro">, erro?: string):
   return erro === undefined ? { ...base, acertou } : { ...base, acertou, erro }
 }
 
+function telemetriaDoApoio(deps: DepsDeApoio): MemoryTelemetry {
+  const memoria = createMemoryTelemetry()
+  return deps.telemetria ? createTeeTelemetry(memoria, deps.telemetria) : memoria
+}
+
 function roteadorDeApoio(deps: DepsDeApoio) {
-  const telemetry = createMemoryTelemetry()
+  const telemetry = telemetriaDoApoio(deps)
   const router = createModelRouter({
     ledger: createMemoryLedger(deps.clock),
     clock: deps.clock,

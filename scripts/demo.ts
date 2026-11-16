@@ -350,6 +350,7 @@ async function rodarDemo(
   const opcoes: OpcoesDoCenario = {
     ...(llm ? { runtime: container.runtime, llm: container.llm } : {}),
     ...(esgotar ? { esgotar } : {}),
+    telemetria: container.telemetry,
   }
   const { contaId, deps } = await montarCenario(cenario, opcoes)
   const rotinaAntes = await deps.stores.routine.resumo(contaId)
@@ -380,26 +381,33 @@ async function rodarDemo(
   }
 }
 
+// Com OTEL_EXPORTER_OTLP_ENDPOINT, o SDK liga antes do run e desliga (descarregando tudo) no fim, em erro ou na lista.
 async function main(args: string[]): Promise<number> {
-  const { values } = parseArgs({
-    args,
-    options: {
-      cenario: { type: "string" },
-      esgotar: { type: "string" },
-      llm: { type: "boolean", default: false },
-      interativo: { type: "boolean", default: false },
-    },
-    strict: true,
-  })
-  if (values.cenario === undefined) {
-    listarCenarios()
-    return 0
+  const container = getContainer()
+  await container.iniciarTelemetria()
+  try {
+    const { values } = parseArgs({
+      args,
+      options: {
+        cenario: { type: "string" },
+        esgotar: { type: "string" },
+        llm: { type: "boolean", default: false },
+        interativo: { type: "boolean", default: false },
+      },
+      strict: true,
+    })
+    if (values.cenario === undefined) {
+      listarCenarios()
+      return 0
+    }
+    if (values.esgotar !== undefined && !papelValido(values.esgotar)) {
+      console.error(`Papel desconhecido em --esgotar: ${values.esgotar}`)
+      return 1
+    }
+    return await rodarDemo(values.cenario, values.esgotar, values.llm, values.interativo)
+  } finally {
+    await container.encerrar()
   }
-  if (values.esgotar !== undefined && !papelValido(values.esgotar)) {
-    console.error(`Papel desconhecido em --esgotar: ${values.esgotar}`)
-    return 1
-  }
-  return rodarDemo(values.cenario, values.esgotar, values.llm, values.interativo)
 }
 
 main(process.argv.slice(2))

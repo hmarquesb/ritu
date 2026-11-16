@@ -8,6 +8,7 @@ import {
   interpretacaoDosAtalhos,
 } from "@/core/agents/interpreter/interpretacao"
 import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
+import type { MemoryAgent } from "@/core/agents/memory/memoria"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
@@ -47,6 +48,7 @@ export type RespostaDaConversa = {
 }
 
 export type Deps = {
+  memory: MemoryAgent
   stores: Stores
   tx: Transactor
   kb: KnowledgeBase

@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest"
+import { preparar } from "@/core/agents/companion/preparo"
+import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memoria"
 import { RituError } from "@/core/errors"
+import { createModelRouter } from "@/core/llm/router"
 import { type ConteudoDaProposta, semTool } from "@/core/proposals/conteudo"
 import { RunNaoContinuavelError } from "@/core/runs/errors"
 import { createRunService } from "@/core/runs/run-service"
 import type { Stores } from "@/core/stores"
+import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
-import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { createScriptedRuntime } from "@/infra/fakes/scripted-runtime"
@@ -37,7 +41,12 @@ const lista = (motivo: "faltou_hoje" | "fez_falta"): ConteudoDaProposta => ({
   detalhe: motivo === "fez_falta" ? "3" : "o chá",
 })
 
-type Opcoes = { falharNaRotina?: boolean }
+type Opcoes = {
+  falharNaRotina?: boolean
+  memoria?: unknown[]
+  memory?: MemoryAgent
+  falharNoResumo?: boolean
+}
 
 async function montar(o: Opcoes = {}) {
   const clock = createFixedClock("2026-11-15T18:00:00.000Z")
@@ -66,9 +75,23 @@ async function montar(o: Opcoes = {}) {
           ),
       }
     : stores
-  const aprovar = criarAprovar({ stores, tx, kb, clock, telemetry, runs })
+  const router = createModelRouter({ ledger: createMemoryLedger(clock), clock, telemetry })
+  const client = createFakeLlm(o.memoria ?? [])
+  const memory = o.memory ?? createMemoryAgent({ router, client, kb, telemetry, clock })
+  const storesDoResumo = o.falharNoResumo
+    ? {
+        ...stores,
+        routine: {
+          ...stores.routine,
+          gravarResumo: async () => {
+            throw new Error("falha simulada")
+          },
+        },
+      }
+    : stores
+  const aprovar = criarAprovar({ stores: storesDoResumo, tx, kb, clock, telemetry, runs, memory })
   const conta = await stores.accounts.criar({ tipo: "demo" })
-  return { clock, stores, telemetry, runs, aprovar, conta }
+  return { clock, stores, telemetry, runs, aprovar, conta, client }
 }
 
 type M = Awaited<ReturnType<typeof montar>>
@@ -283,5 +306,186 @@ describe("aprovar", () => {
     expect(tudo).not.toContain(SEGREDO)
     expect(tudo).not.toContain("gengibre")
     expect(tudo).not.toContain("canela")
+  })
+})
+
+const notaA: ConteudoDaProposta = { tool: "memoria.propor", tipo: "rotina", texto: "almoço fora" }
+const notaB: ConteudoDaProposta = {
+  tool: "memoria.propor",
+  tipo: "rotina",
+  texto: "trabalho em casa",
+}
+
+async function semearPadrao(m: M) {
+  const p = await m.stores.patterns.propor(m.conta.id, {
+    tipo: "ajuda_em_estado",
+    chave: "com_frio+agitada|pratica:cha-gengibre-canela",
+    frase: "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar.",
+    ocorrencias: 3,
+  })
+  const padrao = p as NonNullable<typeof p>
+  const linha: ConteudoDaProposta = {
+    tool: "padrao.confirmar",
+    padrao_id: padrao.id,
+    frase: padrao.frase,
+  }
+  return { padrao, linha }
+}
+
+const statusDoPadrao = async (m: M, id: string) =>
+  (await m.stores.patterns.listar(m.conta.id)).find((p) => p.id === id)?.status
+
+const metricasDoPadrao = (m: M) =>
+  m.telemetry.metricas.filter((x) => x.nome === "ritu_padroes_total").map((x) => x.rotulos)
+
+describe("aprovar: padrões", () => {
+  it("sim na linha do padrão: confirmado e métrica confirmado", async () => {
+    const m = await montar()
+    const { padrao, linha } = await semearPadrao(m)
+    const { run, ids } = await abrirBloco(m, [linha])
+    await m.aprovar(m.conta.id, run.id, [ids[0] as string])
+    expect(await statusDoPadrao(m, padrao.id)).toBe("confirmado")
+    expect(metricasDoPadrao(m)).toEqual([{ tipo: "ajuda_em_estado", etapa: "confirmado" }])
+  })
+
+  it("Anotar com a linha do padrão desligada e outra ligada: recusado e métrica recusado", async () => {
+    const m = await montar()
+    const { padrao, linha } = await semearPadrao(m)
+    const { run, ids } = await abrirBloco(m, [restricao, linha])
+    await m.aprovar(m.conta.id, run.id, [ids[0] as string])
+    expect(await statusDoPadrao(m, padrao.id)).toBe("recusado")
+    expect(await decisoes(m, run.id)).toEqual(["aprovada", "recusada"])
+    expect(metricasDoPadrao(m)).toEqual([{ tipo: "ajuda_em_estado", etapa: "recusado" }])
+  })
+
+  it("Agora não: o padrão continua candidato e a proposta fica recusada", async () => {
+    const m = await montar()
+    const { padrao, linha } = await semearPadrao(m)
+    const { run } = await abrirBloco(m, [restricao, linha])
+    await m.aprovar(m.conta.id, run.id, [])
+    expect(await statusDoPadrao(m, padrao.id)).toBe("candidato")
+    expect(await decisoes(m, run.id)).toEqual(["recusada", "recusada"])
+    expect(metricasDoPadrao(m)).toEqual([])
+  })
+
+  it("bloco só com a linha do padrão, desligada: igual a Agora não", async () => {
+    const m = await montar()
+    const { padrao, linha } = await semearPadrao(m)
+    const { run } = await abrirBloco(m, [linha])
+    await m.aprovar(m.conta.id, run.id, [])
+    expect(await statusDoPadrao(m, padrao.id)).toBe("candidato")
+    expect(await decisoes(m, run.id)).toEqual(["recusada"])
+  })
+
+  it("padrão decidido pela tela entre o bloco e o Anotar: proposta_invalida e o padrão fica como a tela deixou", async () => {
+    const m = await montar()
+    const { padrao, linha } = await semearPadrao(m)
+    const { run, ids } = await abrirBloco(m, [linha])
+    await m.stores.patterns.decidir(m.conta.id, padrao.id, "recusado")
+    await m.aprovar(m.conta.id, run.id, [ids[0] as string])
+    expect(await statusDoPadrao(m, padrao.id)).toBe("recusado")
+    const etapas = await m.stores.runs.etapas(m.conta.id, run.id)
+    expect(etapas.some((e) => e.nome === "proposta_invalida")).toBe(true)
+    expect(metricasDoPadrao(m)).toEqual([])
+  })
+})
+
+describe("aprovar: resumo de rotina", () => {
+  it("duas notas: grava, resumo novo, etapa memoria com modelo e tokens", async () => {
+    const m = await montar({ memoria: [{ resumo: "Você almoça fora e trabalha em casa." }] })
+    const { run, ids } = await abrirBloco(m, [notaA, notaB])
+    const r = await m.aprovar(m.conta.id, run.id, ids)
+    expect(r.status).toBe("done")
+    expect(await m.stores.routine.notasAtivas(m.conta.id)).toHaveLength(2)
+    const resumo = await m.stores.routine.resumo(m.conta.id)
+    expect(resumo).toMatchObject({ versao: 1, texto: "Você almoça fora e trabalha em casa." })
+    expect(m.client.pedidos).toHaveLength(1)
+    const etapa = (await m.stores.runs.etapas(m.conta.id, run.id)).find((e) => e.tipo === "memoria")
+    expect(etapa).toMatchObject({
+      nome: "resumo_de_rotina",
+      status: "ok",
+      resumo: "modelo",
+      tokens_entrada: 10,
+      tokens_saida: 5,
+    })
+    expect(etapa?.modelo).toBeTruthy()
+  })
+
+  it("versão anterior + 1 quando já havia resumo", async () => {
+    const m = await montar({ memoria: [{ resumo: "Você almoça fora e trabalha em casa." }] })
+    await m.stores.routine.anotar(m.conta.id, "acordo cedo")
+    await m.stores.routine.gravarResumo(m.conta.id, "Você acorda cedo.")
+    const { run, ids } = await abrirBloco(m, [notaA])
+    await m.aprovar(m.conta.id, run.id, ids)
+    expect((await m.stores.routine.resumo(m.conta.id))?.versao).toBe(2)
+  })
+
+  it("sem modelo: etapa memoria com codigo e run done", async () => {
+    const m = await montar()
+    const { run, ids } = await abrirBloco(m, [notaA, notaB])
+    const r = await m.aprovar(m.conta.id, run.id, ids)
+    expect(r.status).toBe("done")
+    const etapa = (await m.stores.runs.etapas(m.conta.id, run.id)).find((e) => e.tipo === "memoria")
+    expect(etapa).toMatchObject({ status: "ok", resumo: "codigo" })
+    expect(await m.stores.routine.resumo(m.conta.id)).toBeDefined()
+  })
+
+  it("atualizarResumo que lança: etapa erro, nota gravada e resultado devolvido", async () => {
+    const m = await montar({ falharNoResumo: true })
+    const { run, ids } = await abrirBloco(m, [notaA])
+    const r = await m.aprovar(m.conta.id, run.id, ids)
+    expect(r.gravadas).toHaveLength(1)
+    expect(await m.stores.routine.notasAtivas(m.conta.id)).toHaveLength(1)
+    const etapa = (await m.stores.runs.etapas(m.conta.id, run.id)).find(
+      (e) => e.nome === "resumo_de_rotina",
+    )
+    expect(etapa).toMatchObject({ tipo: "erro", status: "falhou", resumo: null, modelo: null })
+    expect((await m.stores.runs.buscar(m.conta.id, run.id))?.status).toBe("done")
+  })
+
+  it("só a linha da casa não chama a Memória nem grava etapa memoria", async () => {
+    const memory: MemoryAgent = {
+      resumir: async () => {
+        throw new Error("não devia chamar")
+      },
+    }
+    const m = await montar({ memory })
+    const { run, ids } = await abrirBloco(m, [casaTem])
+    await m.aprovar(m.conta.id, run.id, ids)
+    const etapas = await m.stores.runs.etapas(m.conta.id, run.id)
+    expect(etapas.some((e) => e.tipo === "memoria" || e.nome === "resumo_de_rotina")).toBe(false)
+  })
+
+  it("a etapa memoria não leva texto da pessoa", async () => {
+    const m = await montar({ memoria: [{ resumo: "Você almoça fora e trabalha em casa." }] })
+    const { run, ids } = await abrirBloco(m, [notaA, notaB])
+    await m.aprovar(m.conta.id, run.id, ids)
+    const etapa = (await m.stores.runs.etapas(m.conta.id, run.id)).find((e) => e.tipo === "memoria")
+    expect(JSON.stringify(etapa)).not.toContain("almoço")
+  })
+
+  it("o preparar seguinte traz o resumo novo e, com o padrão confirmado, a frase", async () => {
+    const m = await montar({ memoria: [{ resumo: "Você almoça fora e trabalha em casa." }] })
+    const p = await m.stores.patterns.propor(m.conta.id, {
+      tipo: "estados_juntos",
+      chave: "agitada>com_frio",
+      frase: "Quando você está agitada, costuma estar com frio.",
+      ocorrencias: 3,
+    })
+    const padrao = p as NonNullable<typeof p>
+    const linha: ConteudoDaProposta = {
+      tool: "padrao.confirmar",
+      padrao_id: padrao.id,
+      frase: padrao.frase,
+    }
+    const { run, ids } = await abrirBloco(m, [notaA, notaB, linha])
+    await m.aprovar(m.conta.id, run.id, ids)
+    const dados = await preparar(
+      { stores: m.stores, kb, clock: m.clock, telemetry: m.telemetry },
+      m.conta.id,
+      { intencoes: ["momento"], estados: ["com_frio"], evitar_da_mensagem: [] },
+    )
+    expect(dados.resumo_de_rotina).toBe("Você almoça fora e trabalha em casa.")
+    expect(dados.padroes).toEqual(["Quando você está agitada, costuma estar com frio."])
   })
 })

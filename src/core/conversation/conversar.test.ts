@@ -2,6 +2,7 @@ import { llmCotas } from "@config/index"
 import { describe, expect, it, vi } from "vitest"
 import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
+import { createMemoryAgent } from "@/core/agents/memory/memoria"
 import { executarLimpeza } from "@/core/cleanup"
 import { RituError } from "@/core/errors"
 import { resolverEvitar } from "@/core/knowledge/identificar"
@@ -101,6 +102,7 @@ async function montar(o: Opcoes = {}) {
       telemetry,
     })
   const conversation = createConversation({
+    memory: createMemoryAgent({ router, client: createFakeLlm([]), kb, telemetry, clock }),
     stores,
     tx: stores,
     kb,

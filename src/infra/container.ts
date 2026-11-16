@@ -192,6 +192,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     get conversation() {
       conversation ??= createConversation({
+        memory: container.memory,
         stores: container.stores,
         tx: container.tx,
         kb: container.knowledge,

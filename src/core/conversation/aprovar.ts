@@ -1,6 +1,7 @@
 import { config } from "@config/index"
 import { z } from "zod"
 import { RituError } from "@/core/errors"
+import type { TipoPadrao } from "@/core/patterns/ports"
 import {
   type ConteudoDaProposta,
   lerConteudo,
@@ -9,6 +10,7 @@ import {
 import { executarProposta } from "@/core/proposals/executor"
 import type { Proposta } from "@/core/proposals/ports"
 import { textoDaProposta } from "@/core/proposals/textos"
+import { atualizarResumo } from "@/core/routine/resumo"
 import { pendenciaSchema } from "@/core/runs/checkpoint"
 import { RunNaoContinuavelError } from "@/core/runs/errors"
 import type { Stores } from "@/core/stores"
@@ -21,7 +23,10 @@ export type ResultadoDaAprovacao = {
   recusadas: string[]
 }
 
-type DepsDaAprovacao = Pick<Deps, "stores" | "tx" | "kb" | "clock" | "telemetry" | "runs">
+type DepsDaAprovacao = Pick<
+  Deps,
+  "stores" | "tx" | "kb" | "clock" | "telemetry" | "runs" | "memory"
+>
 
 const conteudoDoBlocoSchema = z.object({ propostas: z.array(z.string()) })
 
@@ -38,7 +43,24 @@ const ETAPA_INVALIDA = {
   tokens_saida: 0,
 } as const
 
-type Decidida = { proposta: Proposta; gravada: boolean }
+type DoPadrao = { tipo: TipoPadrao; etapa: "confirmado" | "recusado" }
+type Decidida = { proposta: Proposta; gravada: boolean; padrao?: DoPadrao }
+
+const ETAPA_SEM_RESUMO = {
+  tipo: "erro",
+  nome: "resumo_de_rotina",
+  status: "falhou",
+  resumo: null,
+  duracao_ms: 0,
+  modelo: null,
+  tokens_entrada: 0,
+  tokens_saida: 0,
+} as const
+
+function ehRotina(p: Proposta): boolean {
+  const c = lerConteudo(p.tool, p.conteudo)
+  return c?.tool === "memoria.propor" && c.tipo === "rotina"
+}
 
 function ehFezFalta(p: Proposta): boolean {
   const c = lerConteudo(p.tool, p.conteudo)
@@ -51,7 +73,7 @@ function itensDeGosto(p: Proposta): number {
 }
 
 export function criarAprovar(deps: DepsDaAprovacao) {
-  const { stores, tx, kb, clock, telemetry, runs } = deps
+  const { stores, tx, kb, clock, telemetry, runs, memory } = deps
 
   async function lerBloco(contaId: string, runId: string) {
     const run = await stores.runs.buscar(contaId, runId)
@@ -81,17 +103,32 @@ export function criarAprovar(deps: DepsDaAprovacao) {
     })
   }
 
+  async function candidatoDaProposta(s: Stores, contaId: string, p: Proposta) {
+    const c = lerConteudo(p.tool, p.conteudo)
+    if (c?.tool !== "padrao.confirmar") return undefined
+    const candidatos = await s.patterns.listar(contaId, "candidato")
+    return candidatos.find((x) => x.id === c.padrao_id)
+  }
+
+  // Padrão não aprovado num "Anotar" com outras linhas ligadas: recusado (a pessoa viu e desligou).
   async function decidirUma(
     s: Stores,
     contaId: string,
     runId: string,
     p: Proposta,
-    escolhida: boolean,
-  ): Promise<boolean> {
+    escolhidas: Set<string>,
+  ): Promise<Decidida> {
+    const escolhida = escolhidas.has(p.id)
+    const candidato = await candidatoDaProposta(s, contaId, p)
     const gravada = escolhida && (await executarProposta(s, contaId, p.tool, p.conteudo, kb))
     await s.proposals.decidir(contaId, p.id, gravada ? "aprovada" : "recusada")
     if (escolhida && !gravada) await s.runs.acrescentarEtapa(contaId, runId, ETAPA_INVALIDA)
-    return gravada
+    if (!candidato) return { proposta: p, gravada }
+    if (gravada)
+      return { proposta: p, gravada, padrao: { tipo: candidato.tipo, etapa: "confirmado" } }
+    if (escolhidas.size === 0) return { proposta: p, gravada }
+    await s.patterns.decidir(contaId, candidato.id, "recusado")
+    return { proposta: p, gravada, padrao: { tipo: candidato.tipo, etapa: "recusado" } }
   }
 
   // Uma transação só, que começa pela troca de status: perde quem chegar depois (D10).
@@ -107,8 +144,7 @@ export function criarAprovar(deps: DepsDaAprovacao) {
       }
       const decididas: Decidida[] = []
       for (const p of pendentes) {
-        const gravada = await decidirUma(s, contaId, runId, p, aprovadas.has(p.id))
-        decididas.push({ proposta: p, gravada })
+        decididas.push(await decidirUma(s, contaId, runId, p, aprovadas))
       }
       const n = decididas.filter((d) => d.gravada).length
       await s.runs.acrescentarEtapa(contaId, runId, {
@@ -126,14 +162,36 @@ export function criarAprovar(deps: DepsDaAprovacao) {
   }
 
   function somarMetricas(decididas: Decidida[]) {
-    for (const { proposta: p, gravada } of decididas) {
+    for (const { proposta: p, gravada, padrao } of decididas) {
       const decisao = gravada ? "aprovada" : "recusada"
+      if (padrao) telemetry.contador("ritu_padroes_total", { ...padrao })
       telemetry.contador("ritu_propostas_total", { tool: p.tool, decisao })
       if (ehFezFalta(p)) telemetry.contador("ritu_para_ter_total", { etapa: decisao })
-      if (gravada) {
-        const gostos = itensDeGosto(p)
-        if (gostos > 0) telemetry.contador("ritu_gosto_total", { gosto: "gosta" }, gostos)
-      }
+      if (gravada) somarGostos(p)
+    }
+  }
+
+  function somarGostos(p: Proposta) {
+    const gostos = itensDeGosto(p)
+    if (gostos > 0) telemetry.contador("ritu_gosto_total", { gosto: "gosta" }, gostos)
+  }
+
+  // Falha do resumo não derruba a aprovação: as notas já estão gravadas (D10).
+  async function atualizarEAnotar(contaId: string, runId: string) {
+    try {
+      const r = await atualizarResumo({ stores, memory, telemetry }, contaId)
+      await runs.gravarEtapa(contaId, runId, {
+        tipo: "memoria",
+        nome: "resumo_de_rotina",
+        status: "ok",
+        resumo: r.origem,
+        duracao_ms: r.duracao_ms,
+        modelo: r.modelo ?? null,
+        tokens_entrada: r.tokens.entrada,
+        tokens_saida: r.tokens.saida,
+      })
+    } catch {
+      await runs.gravarEtapa(contaId, runId, ETAPA_SEM_RESUMO).catch(() => undefined)
     }
   }
 
@@ -157,18 +215,22 @@ export function criarAprovar(deps: DepsDaAprovacao) {
     if ([...escolhidas].some((id) => !pendentes.some((p) => p.id === id))) {
       throw new RituError("aprovacao_invalida", "Aprovação inválida")
     }
-    const decididas = await runs.comSpanDoRun(contaId, runId, () =>
-      telemetry.span("aprovacao.execucao", {}, async (span) => {
-        const r = await gravarDecisoes(contaId, runId, pendentes, escolhidas)
-        if (!r) return undefined
+    const decididas = await runs.comSpanDoRun(contaId, runId, async () => {
+      const r = await telemetry.span("aprovacao.execucao", {}, async (span) => {
+        const feitas = await gravarDecisoes(contaId, runId, pendentes, escolhidas)
+        if (!feitas) return undefined
         span.atribuir({
-          "propostas.total": r.length,
-          "propostas.aprovadas": r.filter((d) => d.gravada).length,
+          "propostas.total": feitas.length,
+          "propostas.aprovadas": feitas.filter((d) => d.gravada).length,
         })
-        somarMetricas(r)
-        return r
-      }),
-    )
+        somarMetricas(feitas)
+        return feitas
+      })
+      if (r?.some((d) => d.gravada && ehRotina(d.proposta))) {
+        await atualizarEAnotar(contaId, runId)
+      }
+      return r
+    })
     if (!decididas) throw naoContinuavel()
     return {
       run_id: runId,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
+import { createMemoryAgent } from "@/core/agents/memory/memoria"
 import { RituError } from "@/core/errors"
 import { createModelRouter } from "@/core/llm/router"
 import { RunNaoContinuavelError } from "@/core/runs/errors"
@@ -86,7 +87,8 @@ async function montar(o: { llm?: unknown[]; roteiro: PassoRoteirizado[] }) {
     runs,
     telemetry,
   })
-  const deps = { stores, tx: stores, kb, clock, telemetry, runs, interpreter, companion }
+  const memory = createMemoryAgent({ router, client: createFakeLlm([]), kb, telemetry, clock })
+  const deps = { memory, stores, tx: stores, kb, clock, telemetry, runs, interpreter, companion }
   const conversation = createConversation(deps)
   return { clock, stores, telemetry, runtime, conta, outra, conversation, deps, decisao }
 }

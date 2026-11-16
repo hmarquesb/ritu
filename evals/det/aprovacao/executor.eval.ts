@@ -26,7 +26,19 @@ async function montar() {
     clock,
     telemetry,
   })
-  const aprovar = criarAprovar({ stores, tx: stores, kb, clock, telemetry, runs })
+  const aprovar = criarAprovar({
+    stores,
+    tx: stores,
+    kb,
+    clock,
+    telemetry,
+    runs,
+    memory: {
+      resumir: async () => {
+        throw new Error("sem resumo no eval")
+      },
+    },
+  })
   return { clock, stores, telemetry, conta, runs, aprovar }
 }
 

@@ -151,3 +151,5 @@
 - **Decidido:** a opção mais conservadora em cada uma, listadas como D1–D21 em `.plans/014-evals-plan.md` e D1–D15 em `.plans/015-observabilidade-completa-plan.md` (seção "Decisões do planejamento").
 - **Para o relatório:** 014 D4 (`--casos` sai), 015 D1 (log `padroes_conta_falhou` mantido), 015 D4 (latências 0 nos cenários).
 - **Desfazer:** cada D diz o que muda; reverter a tarefa correspondente.
+
+- **A6 · Lugar do schema do seed (017 T7).** Faltava: `src/core/accounts/demo-seed.ts` importa `saidaDoAcompanhanteSchema` de `agents`, e `agents` já importa `accounts`, o que fecha o ciclo `accounts → agents → accounts` (R9). Decidi: o schema, o validador e o teste viram arquivos soltos em `src/core/` (`demo-seed.ts`, `demo-seed.test.ts`), como `memory-schemas.ts`; a R9 não olha arquivos soltos. Desfazer: tirar de `accounts` o que `agents` usa e devolver o arquivo à pasta `accounts/`.

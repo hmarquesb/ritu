@@ -207,7 +207,7 @@ export function origemValida(p: { metodo: string; origin: string | null; host: s
 ### T7 · Add the demo seed schema, its validator and the YAML reader
 - nivel: mecanica
 - objetivo: schema zod e `validarSeed` do perfil semeado, leitor do `seed/demo.yaml` e `base:check` imprimindo o resultado do seed.
-- arquivos: `src/core/accounts/demo-seed.ts`, `src/core/accounts/demo-seed.test.ts`, `src/infra/knowledge/yaml-seed.ts`, `src/infra/knowledge/yaml-seed.test.ts`, `scripts/base-check.ts`, `src/infra/container.ts` (só uma função exportada `readDemoSeed(dir?)` ao lado de `readKnowledgeData`, para o script; nada no tipo `Container`)
+- arquivos: `src/core/demo-seed.ts`, `src/core/demo-seed.test.ts`, `src/infra/knowledge/yaml-seed.ts`, `src/infra/knowledge/yaml-seed.test.ts`, `scripts/base-check.ts`, `src/infra/container.ts` (só uma função exportada `readDemoSeed(dir?)` ao lado de `readKnowledgeData`, para o script; nada no tipo `Container`)
 - depende de: nenhuma
 - leitura: nenhuma
 - skills: nenhuma
@@ -259,7 +259,7 @@ export function validarSeed(seed: DemoSeed, kb: KnowledgeBase, agora: Date): str
 - objetivo: escrever `seed/demo.yaml`, o perfil semeado da demonstração, válido no schema e no `validarSeed`.
 - arquivos: `seed/demo.yaml`
 - depende de: T7
-- leitura: `.docs/BUSINESS.md` §6 (caminho da demonstração); o schema em `src/core/accounts/demo-seed.ts` e `saidaDoAcompanhanteSchema` em `src/core/agents/companion/saida.ts`
+- leitura: `.docs/BUSINESS.md` §6 (caminho da demonstração); o schema em `src/core/demo-seed.ts` e `saidaDoAcompanhanteSchema` em `src/core/agents/companion/saida.ts`
 - skills: nenhuma
 - referencia: nenhuma
 - contratos: os fatos são estes (o redator escreve as frases):

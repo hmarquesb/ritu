@@ -42,10 +42,10 @@
 |---|---|---|
 | T1 · Install next-auth, add RITU_MODO and trace the seed folder | concluida | ed2de1b |
 | T3 · Add the UsageLimiter port, the limites table, the Postgres adapter and the memory fake | concluida | 64186b3 |
-| T2 · Add the limits, quiz and entry text configs | pendente | |
-| T4 · Add PantryStore.semear with an explicit confirmation date | pendente | |
-| T6 · Add the CSP, security headers, Origin check and the proxy | pendente | |
-| T7 · Add the demo seed schema, its validator and the YAML reader | pendente | |
+| T2 · Add the limits, quiz and entry text configs | concluida | ae2191f |
+| T4 · Add PantryStore.semear with an explicit confirmation date | concluida | 65b9e17 |
+| T6 · Add the CSP, security headers, Origin check and the proxy | concluida | c6ab80b |
+| T7 · Add the demo seed schema, its validator and the YAML reader | concluida | ae432e9 |
 | T5 · Add the onboarding step, quiz, dosha name and entry state functions | pendente | |
 | T8 · Write the demo profile seed | pendente | |
 | T9 · Wire the limiter, the demo seed and the E2E mode into the container | pendente | |

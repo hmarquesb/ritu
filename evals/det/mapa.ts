@@ -113,6 +113,7 @@ export const mapa: LinhaDoMapa[] = [
     linha: "Toques (retorno, gosto, casa, troca) gravam o esperado sem c",
     arquivos: [
       "evals/det/aprendizado/troca.eval.ts",
+      "evals/det/aprendizado/nao-tenho.eval.ts",
       "evals/det/aprendizado/toques-sem-modelo.eval.ts",
     ],
     desde: 2,
@@ -765,6 +766,12 @@ export const mapa: LinhaDoMapa[] = [
     grupo: "Evals",
     linha: "O mapa liga cada linha de evals determinísticos a um arquivo",
     arquivos: ["evals/det/mapa.eval.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Evals",
+    linha: "O registro dos casos com LLM tem ids únicos, famílias e marcas",
+    arquivos: ["evals/det/evals-llm/registro.eval.ts"],
     desde: 2,
   },
 ]

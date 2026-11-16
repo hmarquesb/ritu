@@ -6,7 +6,7 @@ Gates de qualidade. Os scripts nascem na spec 001.
 
 | # | Gate | Comando | Quem roda |
 |---|---|---|---|
-| 1 | Lint e formatação | `npm run lint` | Implementador e verificador, a cada tarefa |
+| 1 | Lint e formatação | `npm run lint` | Implementador e verificador, a cada tarefa; em onda, o implementador nos arquivos dele e o verificador uma vez por onda (`RULES.md` §3) |
 | 2 | Tipos | `npm run typecheck` | Idem |
 | 3 | Testes (sem rede) | `npm test` | Idem |
 | 4 | Evals determinísticos | `npm run eval:det` | Verificador, ao fim de cada spec |

@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 em construção: 008 e 009 implementadas, 010 a 015 aprovadas.
+> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 em construção: 008 a 012 implementadas, 013 a 015 aprovadas; da entrega 3 (016 a 020) também.
 
 ## O que é o projeto
 
@@ -82,7 +82,7 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 
 | Skill | Para quê |
 |---|---|
-| `construir-entrega` | Constrói uma entrega inteira: planeja, despacha, verifica, commita, relata |
+| `construir-entrega` | Constrói uma entrega inteira: planeja, despacha em ondas, verifica, commita, relata. Com `adiantada`, constrói num worktree as specs da entrega seguinte que já podem começar |
 | `feature-concept`, `create-spec`, `refine-spec`, `breakdown-specs` | Escrever as specs, com a dona, **antes** da construção |
 | `frontend-design`, `web-design-guidelines` | Obrigatórias em toda mudança de tela |
 | `mastra` | Obrigatória em toda tarefa que toque `src/infra/mastra/`: a documentação que vale é a da versão instalada |
@@ -102,8 +102,8 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 8. **Os testes padrão rodam sem rede, sem banco e sem chave de LLM.** O que chama serviço real é opt-in e marcado com ⚠️. Evals com LLM só nos checkpoints.
 9. **Agentes não inventam fonte** na base ayurvédica (`KNOWLEDGE.md` §8).
 10. **Decisão de arquitetura nova = ADR nova.**
-11. **Commit só depois do veredito do verificador**, com caminhos explícitos, direto na `main`. Sem `--force`.
-12. **Nada fora desta pasta é alterado.**
+11. **Commit só depois do veredito do verificador**, com caminhos explícitos, direto na `main` (a trilha adiantada, na branch `entrega-N` dela: `RULES.md` §3). Sem `--force`.
+12. **Nada fora desta pasta é alterado**, a não ser o worktree da trilha adiantada em `../ritu-worktrees/`.
 13. **Documentação viva:** mudou o comportamento, muda o `.docs/` no fechamento da spec.
 14. **Toda chamada de modelo passa pelo `ModelRouter`.** Nenhum código escolhe modelo nem chama o SDK direto.
 15. **A resposta à pessoa é sempre um texto do agente.** Blocos visuais apoiam o texto; nunca o substituem.

@@ -23,6 +23,16 @@ Você implementa **uma tarefa de tela** do Ritu. A tarefa chega pronta no prompt
 6. Escreva primeiro os testes pedidos (unitários e, quando a tarefa pedir, E2E em `e2e/` com `@playwright/test` e rotas simuladas). A skill `playwright` (CLI) serve só para abrir a tela e tirar screenshot, nunca para escrever os testes do gate.
 7. Rode `npm run lint`, `npm run typecheck` e `npm test`. Corrija até ficarem verdes.
 
+## Em onda
+
+Se o prompt trouxer a linha `em onda`, outros implementadores estão mexendo em **outros** arquivos desta mesma pasta, ao mesmo tempo. Nesse caso, no lugar dos gates completos:
+
+- Lint só nos seus arquivos: `./node_modules/.bin/biome check --write <seus arquivos>`. Nunca `npm run format`.
+- Testes só os seus: `npx vitest run <seus arquivos de teste> --reporter=dot` (para um eval, com `--config vitest.eval.config.ts`).
+- `npm run typecheck`: olhe só os erros nos seus arquivos. Erro em arquivo que não é seu é de outra tarefa em andamento: não corrija; cite no relato.
+- Arquivo fora da sua lista mudou enquanto você trabalhava: é de outra tarefa. Não edite nem reverta.
+- No relato, escreva `em onda` na linha dos gates.
+
 ## Limites
 
 - Toque **só** nos arquivos listados na tarefa. Precisou de outro: pare e diga qual e por quê.
@@ -39,4 +49,5 @@ No máximo 15 linhas, sem colar código nem saída inteira de comando:
 - Status: `pronto` ou `travado`.
 - Arquivos criados e alterados.
 - Resultado de cada gate (passou ou falhou; se falhou, só a linha do erro).
+- Skills carregadas com a tool Skill (nome de cada uma).
 - Dúvidas que você resolveu por conta própria e como.

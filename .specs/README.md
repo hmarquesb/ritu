@@ -9,7 +9,11 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 - Marque na spec o **nível** de cada parte: `mecanica` (Haiku), `nucleo` (Sonnet), `tela` (Sonnet) ou `conteudo` (Opus). Regras em `RULES.md` §1.
 - Liste em "Leitura para a construção" só as seções de `.docs/` que a construção precisa abrir.
 - As specs de uma entrega são todas aprovadas antes de ela começar. As das entregas seguintes podem ser escritas durante a construção, a partir do código já commitado.
-- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 e 009 implementadas; 010 a 015 aprovadas (entrega 2 toda especificada); 016 a 024 a escrever. Antes da 008: correção C13 da 002 (alimentos aceitos por vaga).
+- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 a 012 implementadas; 013 a 015 aprovadas (entrega 2 toda especificada); 016 a 020 aprovadas (entrega 3 toda especificada); 021 a 024 aprovadas (entrega 4 toda especificada). Antes da 008: correção C13 da 002 (alimentos aceitos por vaga).
+
+## Pendências da dona
+
+- **Revisão das 156 linhas `a_confirmar` da base** (106 em `alimentos.yaml`, 37 em `praticas.yaml`, 10 em `preparos.yaml`, 3 em `incomodos.yaml`), em conversa com o Claude, **antes de a 022 ir para código**. O deploy da 022 roda `base:check -- --producao`, que falha enquanto houver alguma. Agentes não mexem em `data/` para passar esse gate.
 
 ## Backlog
 
@@ -54,5 +58,5 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 |---|---|---|---|---|
 | 021 | `limites-e-degradacao` | Limite por conta e por IP, limite das rotas de toque, testers, telas de cota esgotada, práticas gerais montadas por código | 018 | Mecânica; tela nos avisos |
 | 022 | `producao` | Vercel, banco de produção, projeto e chave de produção do Gemini, Google com a URL final, Grafana Cloud, cron (limpeza e padrões), smoke, Dependabot e `npm audit` na CI, `DEPLOY.md` | 021 | Parte núcleo (precisa das contas da dona) |
-| 023 | `bastidores-e-mcp` | Página `/bastidores` com agregados e a evolução dos evals; servidor MCP público só com as tools de leitura da base e do clima, sem dado de conta e com limite por IP | 015, 022 | Mecânica; tela em Bastidores |
-| 024 | `landing-e-readme` | Entrada pública, tela Sobre com a política de privacidade, README em português e inglês com números, prints e ADRs | Todas | **Tela** |
+| 023 | `bastidores-e-mcp` | Página `/bastidores` com os agregados de 7 dias (piso de 20 conversas, sinais por dia), a evolução dos evals em cinco gráficos com a tabela completa e a seção do MCP; servidor MCP público (`/api/mcp`) com seis tools de leitura da base e do clima, sem dado de conta, com limite por IP e global | 015, 022 | Mecânica; tela em Bastidores; núcleo na rota do MCP e no `Origin` |
+| 024 | `landing-e-readme` | Seções da Entrada abaixo do cartão, rodapé público, tela Sobre com a política de privacidade (`CONTATO_PRIVACIDADE`), metadados, robots e sitemap; README em português e `README.en.md` com blocos gerados (`npm run readme`) e prints por script (`npm run prints`) | 016–023 | **Tela**; **conteúdo** no README |

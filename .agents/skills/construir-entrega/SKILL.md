@@ -1,9 +1,9 @@
 ---
 name: construir-entrega
-description: Constrói uma ENTREGA inteira do Ritu sem interrupção humana. Recebe o número da entrega (1 a 4), lê as specs aprovadas dela, quebra cada spec em tarefas mastigadas, despacha cada tarefa para o subagente do nível dela (implementador em Haiku, implementador-nucleo e implementador-tela em Sonnet, redator-base em Opus), manda o verificador (Sonnet) rodar os gates e conferir o diff, faz um commit por tarefa aprovada direto na main e, ao fim, escreve o relatório do portão humano e para. Use quando a pessoa disser "construir entrega 1", "/construir-entrega 2", "roda a entrega 3", "continua a entrega", "retoma a construção" ou pedir para implementar várias specs de uma vez sem PR.
+description: Constrói uma ENTREGA inteira do Ritu sem interrupção humana. Recebe o número da entrega (1 a 4), lê as specs aprovadas dela, quebra cada spec em tarefas mastigadas e em ondas de tarefas que rodam em paralelo, despacha cada tarefa para o subagente do nível dela (implementador em Haiku, implementador-nucleo e implementador-tela em Sonnet, redator-base em Opus), manda o verificador (Sonnet) rodar os gates e conferir o diff, faz um commit por tarefa aprovada direto na main e, ao fim, escreve o relatório do portão humano e para. Use quando a pessoa disser "construir entrega 1", "/construir-entrega 2", "roda a entrega 3", "continua a entrega", "retoma a construção", "/construir-entrega 3 adiantada" (trilha adiantada num worktree) ou pedir para implementar várias specs de uma vez sem PR.
 metadata:
   author: ritu
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Construir entrega
@@ -18,13 +18,14 @@ As regras do fluxo estão em `.docs/RULES.md`. Esta skill é o passo a passo.
 
 1. `AGENTS.md` já está no contexto (vem pelo `CLAUDE.md`); não releia. Leia `.docs/RULES.md` e `.docs/DEVELOPMENT.md`. **Não leia os outros `.docs/` agora.**
 2. Descubra as specs da entrega em `.specs/README.md`. De cada uma, leia **só o cabeçalho** (`status`), para a pré-condição. O corpo de cada spec você lê quando chegar a vez dela (§1).
-3. **Existe `.local/PASSAGEM.md` ou `.plans/entrega-N-estado.md`?** Então isto é uma retomada: leia a passagem (se houver) e o estado, confira com `git log --oneline -10` e `git status --short`, e continue da primeira tarefa não concluída. Não refaça o que já tem commit. Arquivo alterado ou novo fora de `.plans/` e sem commit é resto de uma tarefa interrompida: reverta (`git checkout -- <arquivos>`, `git clean -f -- <novos>`) e refaça a tarefa. Não releia specs já `implemented`.
+3. **Existe `.local/PASSAGEM.md` ou `.plans/entrega-N-estado.md`?** Então isto é uma retomada: leia a passagem (se houver) e o estado, confira com `git log --oneline -10` e `git status --short`, e continue da primeira onda com tarefa não concluída (toda tarefa `em andamento` sem commit é resto: vale o que vem a seguir). Não refaça o que já tem commit. Arquivo alterado ou novo fora de `.plans/` e sem commit é resto de uma tarefa interrompida: reverta (`git checkout -- <arquivos>`, `git clean -f -- <novos>`) e refaça a tarefa. Não releia specs já `implemented`.
 4. Confira as pré-condições. Se alguma falhar, **pare e diga qual**:
    - todas as specs da entrega estão com `status: approved` (ou `implemented`);
-   - a entrega anterior tem a tag `entrega-(N-1)` e o relatório dela foi aprovado pela dona (a partir da entrega 2);
+   - a entrega anterior tem a tag `entrega-(N-1)` e o relatório dela foi aprovado pela dona (a partir da entrega 2; na trilha adiantada valem as pré-condições do §7);
    - `git status` limpo fora de `.plans/`, na `main`;
    - `npm run env:check -- --entrega N` passa (a partir da spec 001; nunca leia `.env.local`).
 5. Leia `.local/uso.json` (§6). Acima do limite, nem comece.
+6. **Existe a branch `entrega-N`** (`git branch --list entrega-N`) e isto não é a trilha adiantada? Então parte da entrega já foi construída lá. Com as pré-condições conferidas: `git merge --no-ff entrega-N`, mande o `verificador` rodar os gates 1 a 6, e siga pelo estado que veio da branch. Conflito: resolva mantendo os dois lados. Remover o worktree fica com a dona.
 
 ## 1. Planejar uma spec
 
@@ -38,6 +39,7 @@ Para cada spec, na ordem das dependências:
 - nivel: mecanica | nucleo | tela | conteudo
 - objetivo: uma frase
 - arquivos: caminhos a criar ou alterar (e só esses)
+- depende de: ids das tarefas que precisam ter commit antes desta, ou "nenhuma"
 - leitura: seções de .docs/ que o subagente precisa abrir (ex.: AI.md §5), ou "nenhuma". Nunca um documento inteiro por garantia
 - skills: skills a carregar (ex.: mastra), ou "nenhuma"
 - referencia: seção e linha de .local/REFERENCIAS.md a ler antes, quando houver (nunca o nome ou o caminho da pasta)
@@ -53,25 +55,35 @@ Para cada spec, na ordem das dependências:
    - O nível vem da seção "Nível das partes" da spec. `nucleo`: loop do agente, checkpoint, pausa e retomada, aprovação, adaptador da Mastra, roteador de modelos, telemetria, autenticação. `tela`: qualquer componente, página ou estilo. `conteudo`: linhas da base ayurvédica e textos semeados lidos pela pessoa. O resto é `mecanica`.
    - Separe conteúdo de código: o schema e o validador de um YAML são uma tarefa (`mecanica`); as linhas do YAML são outra (`conteudo`), em lotes que caibam numa resposta (por exemplo, 20 alimentos por tarefa).
    - A tarefa é **autossuficiente**: quem a recebe não abre a spec. Se um contrato não coube na tarefa, a tarefa está grande demais.
-4. Acrescente as tarefas em `.plans/entrega-N-estado.md` com status `pendente`.
+   - **Quebre pensando em paralelo:** prefira tarefas que criam arquivos novos a tarefas que mexem no mesmo arquivo. O que todo mundo toca (`index.ts` de exportação, teste que trava uma contagem, `container.ts`) fica numa tarefa só, no fim da cadeia, em vez de espalhado por várias.
+   - `depende de` lista toda tarefa cujo código, tipo ou teste esta usa. Na dúvida, depende.
+4. Escreva no plano a seção `## Ondas`: uma tabela `Onda | Tarefas | Por quê`. Entram na mesma onda tarefas com as dependências em ondas anteriores e **sem arquivo em comum** (um padrão como `evals/det/**` conta como todos os arquivos que ele cobre). No máximo **5** por onda. Roda **sozinha** a tarefa que instala biblioteca, mexe em `package.json`, em configuração (`tsconfig`, Biome, Vitest, Next) ou em migração, ou que muda uma assinatura usada fora dos arquivos dela.
+5. Acrescente as tarefas em `.plans/entrega-N-estado.md` com status `pendente`.
 
-## 2. Executar uma tarefa
+## 2. Executar uma onda
 
-1. Marque a tarefa como `em andamento` no estado.
-2. Despache para o subagente do nível: `mecanica` → `implementador`; `nucleo` → `implementador-nucleo`; `tela` → `implementador-tela`; `conteudo` → `redator-base`. O prompt é **só o bloco da tarefa**, mais o caminho da spec (para o caso de o campo `leitura` apontar para ela). Não cole trechos de docs nem contexto desta conversa: o subagente não vê esta conversa e não precisa dela.
-3. Quando ele voltar, despache o `verificador` com: o bloco da tarefa, o caminho da spec e a lista de arquivos que o implementador disse ter tocado. **Você não lê o diff nem os arquivos**: isso é trabalho do verificador.
-4. Veredito:
-   - **APROVADO** → passo 5.
-   - **REPROVADO** → devolva ao mesmo implementador a lista de problemas do verificador, sem resumir. Segunda reprovação: se era `mecanica`, mande para `implementador-nucleo`; se era `nucleo`, `tela` ou `conteudo`, resolva você mesmo e passe de novo pelo verificador.
-   - Depois disso, se ainda falhar: registre em `.plans/BLOQUEIOS.md`, reverta os arquivos da tarefa (`git checkout -- <arquivos>` e `git clean -f -- <arquivos novos>`), marque `bloqueada`, pule as tarefas que dependem dela e siga.
-5. Commit, feito por você:
+Uma **onda** são as tarefas que a seção "Ondas" do plano põe para rodar ao mesmo tempo. Onda de uma tarefa só é comum no miolo de núcleo.
+
+1. Confira a onda: toda tarefa dela tem as de `depende de` com commit, e não há arquivo em comum entre elas. Se uma tarefa anterior foi bloqueada ou acabou tocando outro arquivo, refaça no plano as ondas que faltam.
+2. Marque as tarefas da onda como `em andamento` no estado.
+3. Despache **todas na mesma mensagem**, cada uma para o subagente do nível dela: `mecanica` → `implementador`; `nucleo` → `implementador-nucleo`; `tela` → `implementador-tela`; `conteudo` → `redator-base`. O prompt é **só o bloco da tarefa**, mais o caminho da spec (para o caso de o campo `leitura` apontar para ela) e, quando a onda tem mais de uma tarefa, a linha `em onda`. Não cole trechos de docs nem contexto desta conversa: o subagente não vê esta conversa e não precisa dela.
+4. Quando **todos** voltarem, despache os verificadores, também na mesma mensagem:
+   - um `verificador` por tarefa, com: o bloco da tarefa, o caminho da spec, a lista de arquivos que o implementador disse ter tocado, em tarefa de tela as skills que ele disse ter carregado, e a linha `tarefa em onda`;
+   - mais um `verificador` com a linha `gates da onda` e, para cada tarefa, o id e a lista de arquivos.
+
+   Onda de uma tarefa: um `verificador` só, sem linha extra (ele roda os gates e lê o diff). **Você não lê o diff nem os arquivos**: isso é trabalho do verificador.
+5. Veredito, tarefa por tarefa. Está **APROVADA** a que o verificador dela aprovou e que os gates da onda não acusam em nenhum arquivo dela.
+   - **APROVADA** → passo 6, sem esperar as outras.
+   - **REPROVADA** → devolva ao mesmo implementador a lista de problemas (do verificador dela e dos gates da onda), sem resumir. As reprovadas da onda voltam juntas, na mesma mensagem, e passam de novo pelos verificadores do passo 4. Segunda reprovação: se era `mecanica`, mande para `implementador-nucleo`; se era `nucleo`, `tela` ou `conteudo`, resolva você mesmo e passe de novo pelo verificador.
+   - Depois disso, se ainda falhar: registre em `.plans/BLOQUEIOS.md`, reverta **só** os arquivos da tarefa (`git checkout -- <arquivos>` e `git clean -f -- <arquivos novos>`), marque `bloqueada` e tire das ondas seguintes as tarefas que dependem dela.
+   - **Gate vermelho sem dono** (a falha não está em arquivo de nenhuma tarefa da onda): ninguém da onda é commitado. Abra uma tarefa de correção `nucleo`, sozinha, e repita o passo 4 para a onda inteira.
+6. Commit, feito por você, **um por tarefa**, na ordem do plano:
    - `git add <caminhos explícitos da tarefa>`; nunca `-A`;
    - mensagem em Conventional Commits, em inglês, com `Spec: NNN` e `Task: T3` no corpo;
    - marque `concluida` no estado, com o hash.
+7. A onda seguinte só começa com a atual resolvida: cada tarefa com commit, revertida ou bloqueada. Antes de despachá-la, confira o uso (§6).
 
-**Uma tarefa por vez.** Não despache subagentes em paralelo.
-
-6. Antes de despachar a próxima tarefa, confira o uso (§6).
+**Paralelo só dentro da onda.** Nunca despache ao mesmo tempo duas tarefas com arquivo em comum, nem uma tarefa junto com outra de que ela depende.
 
 ## 3. Fechar uma spec
 
@@ -110,31 +122,47 @@ Pare antes do portão só nos três casos de `RULES.md` §4.
 
 A barra de status grava em `.local/uso.json` quanto da janela de 5 horas e da semana já foi usado (`cinco_horas.usado_pct`, `semana.usado_pct`, `contexto_pct`). O arquivo é atualizado a cada resposta sua.
 
-**Antes de despachar cada tarefa** (e antes de fechar spec ou entrega), leia `.local/uso.json`:
+**Antes de despachar cada onda** (e antes de fechar spec ou entrega), leia `.local/uso.json`. Uma onda de 5 gasta a janela bem mais depressa que uma tarefa; com `cinco_horas.usado_pct >= 70`, despache no máximo 2 por vez.
 
-- `cinco_horas.usado_pct >= 85` **ou** `semana.usado_pct >= 95` → **não comece tarefa nova.** Faça a passagem e pare.
+- `cinco_horas.usado_pct >= 85` **ou** `semana.usado_pct >= 95` → **não comece onda nova.** Faça a passagem e pare.
 - `contexto_pct >= 70` → faça a passagem e peça à dona para abrir uma sessão nova (o estado está nos arquivos; sessão nova custa menos que contexto cheio).
 - Arquivo ausente, valores `null` ou `atualizado_em` com mais de 30 minutos → siga normalmente.
 
 **Passagem**, nesta ordem:
 
-1. Não deixe tarefa pela metade: ou ela termina (veredito e commit), ou é revertida. O estado no git e em `.plans/entrega-N-estado.md` tem que bater.
+1. Não deixe tarefa pela metade: cada tarefa da onda em curso ou termina (veredito e commit), ou é revertida. O estado no git e em `.plans/entrega-N-estado.md` tem que bater.
 2. Escreva `.local/PASSAGEM.md` (fora do git, sobrescreve a anterior), com no máximo 40 linhas:
    - entrega, spec e tarefa em que parou, e o hash do último commit;
-   - a próxima tarefa a despachar, pelo id do plano;
+   - a próxima onda a despachar, pelos ids do plano;
    - o que você sabe e ainda **não está em arquivo nenhum**: uma reprovação em curso e o que o verificador apontou, uma decisão autônoma ainda não registrada, um erro de ambiente, algo que estranhou;
    - o que falta para fechar a spec atual;
    - o uso lido (`5h`, `7d`) e quando a janela renova;
-   - o comando para retomar: `claude --model opus` e `/construir-entrega N`.
+   - o comando para retomar: `claude --model opus` e `/construir-entrega N` (na trilha adiantada, dentro do worktree, `/construir-entrega N adiantada`).
 3. Diga à dona, em três linhas: onde parou, que a passagem está em `.local/PASSAGEM.md`, e a hora em que a janela renova.
 
 Ao retomar (§0.3), leia a passagem, registre nos arquivos certos o que ela trazia de pendente e apague o conteúdo dela (deixe só uma linha "retomada em <data>").
+
+## 7. Trilha adiantada (`/construir-entrega N adiantada`)
+
+Uma segunda sessão constrói specs da entrega N enquanto a sessão principal fecha a entrega N-1. Ela roda **dentro do worktree** `../ritu-worktrees/entrega-N`, na branch `entrega-N`. Quem cria o worktree é a dona (`git worktree add ../ritu-worktrees/entrega-N -b entrega-N`, `npm ci`, e a cópia de `.env.local` e de `.local/REFERENCIAS.md`; a `PASSAGEM.md` da outra trilha não vem junto).
+
+Vale tudo desta skill, com estas diferenças:
+
+1. **Pré-condições** (no lugar das do §0.4): `git rev-parse --abbrev-ref HEAD` responde `entrega-N`; `git status` limpo fora de `.plans/`; `npm run env:check -- --entrega N` passa. Não exige a tag `entrega-(N-1)`. Se não estiver num worktree nessa branch, **pare e diga**.
+2. **O que pode ser construído:** só spec `approved` da entrega N cujas specs de "Depende de" (`.specs/README.md`) estão todas `implemented` na `main`. Confira o cabeçalho de cada uma com `git show main:.specs/<arquivo> | head -6`. Não há mais spec que possa começar: faça a passagem e pare.
+3. **Antes de planejar cada spec e ao fechar cada uma:** `git merge main` (nunca `rebase`). Conflito: resolva mantendo os dois lados, mande o `verificador` rodar os gates 1 a 5 e só então conclua o merge.
+4. **Estado e commits:** `.plans/entrega-N-estado.md`, commits na branch `entrega-N`, com as mesmas ondas e os mesmos verificadores.
+5. **Fechamento de spec** (§3): não toque nas linhas de status de `AGENTS.md` (topo), `.docs/ROADMAP.md` §0 e `.specs/README.md` (Andamento); elas ficam com a sessão principal, depois da junção. O push é da branch (`git push -u origin entrega-N`).
+6. **Nada com ⚠️:** nem `eval:llm`, nem `demo` com LLM. A cota é da trilha principal.
+7. **E2E:** rode `CI=1 npm run test:e2e`. Com `CI`, o Playwright não reaproveita um servidor de outra pasta na porta 3000; porta ocupada, espere e repita.
+8. **Não fecha a entrega:** sem relatório, sem tag, sem checkpoint. A junção na `main` é o passo §0.6 do `/construir-entrega N` normal, depois do portão N-1.
 
 ## Verificação obrigatória
 
 - Nenhum documento de `.docs/` foi lido inteiro "por garantia"; nenhum prompt de subagente levou mais do que o bloco da tarefa.
 
-- Nenhuma tarefa foi commitada sem veredito APROVADO do verificador.
+- Nenhuma tarefa foi commitada sem veredito APROVADO do verificador dela e sem os gates da onda verdes nos arquivos dela.
+- Nenhuma onda teve duas tarefas com arquivo em comum, nem mais de 5 tarefas.
 - Um commit por tarefa, caminhos explícitos, nada de `-A`, nada de `--force`.
 - `.plans/entrega-N-estado.md` bate com o `git log`.
 - Nenhum arquivo fora de `ritu/` foi alterado.

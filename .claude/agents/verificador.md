@@ -24,9 +24,16 @@ Você é o **verificador**. Seu trabalho é achar o que está errado antes do co
    - **Testes de verdade:** existem, falhariam sem o código, não estão pulados nem afrouxados.
    - **Camadas:** o core não importa Next, Auth.js, `postgres`, Mastra, OTel nem SDK de LLM.
    - **Regras inegociáveis do `AGENTS.md`:** escrita do agente só pelo executor de propostas; toda chamada de modelo pelo `ModelRouter`; nenhum texto da pessoa em log, span ou métrica; segredo só por variável de ambiente; zod nas bordas; tempo pela porta `Clock`.
-   - **Tela (nível `tela`):** segue `DESIGN.md`, tem os estados de carregamento, erro, vazio e espera, e é navegável por teclado. Carregue a skill `web-design-guidelines` com a tool Skill e aplique-a aos arquivos da tarefa.
+   - **Tela (nível `tela`):** segue `DESIGN.md`, tem os estados de carregamento, erro, vazio e espera, e é navegável por teclado. O relato do implementador lista `frontend-design` e `web-design-guidelines` entre as skills carregadas; se faltar uma, REPROVADO. Carregue as duas com a tool Skill e aplique-as aos arquivos da tarefa: `web-design-guidelines` para as regras de interface; `frontend-design` para a escrita da tela (rótulos pelo que a pessoa controla, a mesma ação com o mesmo nome em todo o fluxo, erro que diz o que houve e como seguir) e para nada com cara de padrão pronto, sempre dentro de `DESIGN.md` e dos tokens.
    - **Conteúdo (nível `conteudo`):** nenhuma fonte inventada; linhas incertas marcadas `a_confirmar`; nada de diagnóstico, cura ou dosagem; o validador da base passa.
    - **Sobras:** código morto, `console.log`, `TODO` sem dono, `any` sem motivo.
+
+## Em onda
+
+O prompt pode trazer uma destas linhas. Sem nenhuma, siga os passos acima.
+
+- **`tarefa em onda`**: há outras tarefas sem commit nesta pasta. Olhe **só** os arquivos desta tarefa (`git diff -- <arquivos>` e o conteúdo dos novos). Não rode os gates completos: rode `./node_modules/.bin/biome check <arquivos>` e `npx vitest run <testes da tarefa> --reporter=dot` (eval: com `--config vitest.eval.config.ts`). Confira todos os itens do passo 3; no de escopo, vale a lista de arquivos da tarefa (o que mudou fora dela é de outra tarefa e não conta contra esta). Em `Gates`, escreva `só os da tarefa`.
+- **`gates da onda`**: o prompt traz, para cada tarefa, o id e a lista de arquivos. Rode uma vez `npm run lint`, `npm run typecheck` e `npm test` (e os comandos a mais que alguma tarefa pedir, como `npm run eval:det`). Não leia diff. Confira com `git status --short` se há arquivo de código alterado ou novo fora das listas. Devolva os gates e, para cada falha, `arquivo:linha · tarefa dona do arquivo` (ou `sem dono`, se o arquivo não está em lista nenhuma). No lugar de `VEREDITO`, escreva `ONDA: VERDE | VERMELHA`.
 
 ## Limites
 

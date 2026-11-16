@@ -21,6 +21,16 @@ Você implementa **uma tarefa** do Ritu. A tarefa chega pronta no prompt: objeti
 4. Escreva primeiro os testes pedidos e veja-os falhar. Depois o código, até passarem.
 5. Rode `npm run lint`, `npm run typecheck` e `npm test`. Corrija até ficarem verdes.
 
+## Em onda
+
+Se o prompt trouxer a linha `em onda`, outros implementadores estão mexendo em **outros** arquivos desta mesma pasta, ao mesmo tempo. Nesse caso, no lugar dos gates completos:
+
+- Lint só nos seus arquivos: `./node_modules/.bin/biome check --write <seus arquivos>`. Nunca `npm run format`.
+- Testes só os seus: `npx vitest run <seus arquivos de teste> --reporter=dot` (para um eval, com `--config vitest.eval.config.ts`).
+- `npm run typecheck`: olhe só os erros nos seus arquivos. Erro em arquivo que não é seu é de outra tarefa em andamento: não corrija; cite no relato.
+- Arquivo fora da sua lista mudou enquanto você trabalhava: é de outra tarefa. Não edite nem reverta.
+- No relato, escreva `em onda` na linha dos gates.
+
 ## Limites
 
 - Toque **só** nos arquivos listados na tarefa. Precisou de outro: pare e diga qual e por quê.

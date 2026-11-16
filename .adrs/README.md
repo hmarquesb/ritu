@@ -45,6 +45,7 @@
 | [0035](0035-temporario-do-dia-com-restricao-e-nao-como.md) | Restrição e "não como" ditos na conversa valem no dia, sem esperar aprovação | Aceito |
 | [0036](0036-aprendizado-gravado-e-toques-sem-agente.md) | Aprendizado gravado pelo Acompanhante numa transação e toques sem agente | Aceito |
 | [0037](0037-frase-do-padrao-por-codigo-e-memoria-so-para-o-resumo.md) | Frase do padrão por código e agente de Memória só para o resumo | Aceito |
+| [0038](0038-tarefas-em-ondas-e-trilha-adiantada.md) | Tarefas em ondas e trilha adiantada em worktree (substitui em parte a 0021) | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

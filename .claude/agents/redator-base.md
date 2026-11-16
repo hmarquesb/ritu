@@ -21,6 +21,10 @@ Você redige **uma parte do conteúdo** do Ritu. A tarefa chega pronta no prompt
 5. Coerência interna: um alimento usado num preparo existe em `alimentos.yaml`; uma qualidade citada existe no vocabulário; ids únicos.
 6. Rode o validador da base indicado na tarefa (e `npm run lint` se a tarefa pedir). Corrija até passar.
 
+## Em onda
+
+Se o prompt trouxer a linha `em onda`, outros agentes estão mexendo em **outros** arquivos desta pasta, ao mesmo tempo. Arquivo fora da sua lista que mudar não é seu: não edite nem reverte. Se o validador da base acusar erro em arquivo que não é seu, não corrija; cite no relato.
+
 ## Limites
 
 - Toque **só** nos arquivos listados na tarefa.

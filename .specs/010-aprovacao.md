@@ -1,6 +1,7 @@
 ---
 title: Aprovação
-status: approved
+status: implemented
+implemented: 6ad518f
 entrega: 2
 created: 2026-11-14
 ---
@@ -42,26 +43,26 @@ Depois desta spec, toda resposta que tem algo a guardar termina com o bloco "Pos
 
 ## Critérios de aceite
 
-- [ ] **Zero escrita sem aprovação:** rodar cada cenário que gera propostas e não aprovar deixa `perfis`, `casa`, `rotina_notas` e `lista_ter_em_casa` iguais ao estado anterior (comparação tabela a tabela nos stores em memória).
-- [ ] **Bloco:** run com anotações ou propostas do agente termina em `waiting_for_approval`, com `saida.propostas` (id, tipo e texto de cada linha), uma linha em `propostas` por proposta, com `decisao: "pendente"`, pendência de tipo `aprovacao`, uma etapa `proposta` por linha e o evento `pausa` com `pausa.tipo: "aprovacao"`. Run sem nada a propor termina em `done`.
-- [ ] **A resposta vem antes:** nesses runs, `saida.resposta` e as sugestões já estão gravadas e devolvidas antes de qualquer aprovação.
-- [ ] **Uma linha por assunto:** "comprei abóbora, couve e arroz" gera uma proposta só, com os três itens; os textos das linhas são os de "Contratos".
-- [ ] **Aprovação parcial:** `aprovar` com uma de três linhas grava só essa; as outras ficam `recusada`; o run vai a `done`; a etapa `aprovacao` tem `resumo` `1 de 3`; o span `aprovacao.execucao` leva `propostas.total` e `propostas.aprovadas`; `ritu_propostas_total{tool, decisao}` soma por linha.
-- [ ] **Agora não:** `aprovar` com lista vazia marca todas como `recusada`, não grava nada e encerra o run em `done`.
-- [ ] **Executor:** cada tipo de proposta grava exatamente o da tabela de "Contratos" (casa tem, casa acabou, evitar sempre, restrição, "não como", rotina, lista), numa transação só. Conteúdo fora do schema, ou com qualquer operação que não seja acrescentar, não é executado: a linha fica `recusada` e o run ganha uma etapa `erro` de nome `proposta_invalida`.
-- [ ] **Expiração:** `aprovar` mais de 30 minutos depois de o bloco ser criado marca o run como `expired` e as propostas como `expirada`, lança `aprovacao_expirada` e não grava nada. Mensagem nova com bloco aberto leva o run a `done` e as propostas a `expirada` (005).
-- [ ] **Expirada não é recusa:** proposta de lista expirada não entra em `proposals.recusadas`; recusada, entra.
-- [ ] `aprovar` com id que não é do run, ou em run de outra conta, lança erro (`aprovacao_invalida` ou `RunNaoContinuavelError`) e não muda nada. `aprovar` duas vezes, em seguida ou ao mesmo tempo: só uma grava; a outra lança `RunNaoContinuavelError` e nada é gravado de novo (teste no fake e em `test:db`, com duas chamadas simultâneas).
-- [ ] **`memoria.propor`:** com `fato_de_rotina` nos dados, devolve `{ proposto: true }` e a nota entra no bloco com o texto do fato; cada código de recusa de "Contratos" tem um teste.
-- [ ] **`lista.propor`:** só é aceita para alimento respondido com "Não tenho" neste run; cada código de recusa tem um teste; a linha traz o nome da sugestão a que ele faltou.
-- [ ] **Proposta e `finalizar` no mesmo passo:** chamadas nessa ordem, a proposta entra no bloco.
-- [ ] **Restrição no mesmo run:** com `restricoes_da_mensagem: ["vegetariana"]`, o preparo não devolve candidato com alimento que a restrição barra; o item fica no temporário do dia e continua filtrando numa segunda mensagem do mesmo dia sem aprovação; no dia seguinte, depois da limpeza, deixa de filtrar. O mesmo para `nao_come_da_mensagem`. Aprovadas, vão para `perfis.restricoes` e `perfis.nao_come`.
-- [ ] **Teto de linhas:** com mais de 6 propostas, ficam as 6 primeiras pela ordem de "Contratos"; as outras não são criadas.
-- [ ] **Nada duplicado:** item que já está no perfil, alimento que já está na lista e fato igual a uma nota ativa não geram linha.
-- [ ] **Incômodo fora das propostas:** run com incômodo não aceita `memoria.propor` nem `lista.propor`; fato de rotina que contém palavra de `incomodos.yaml` é recusado.
-- [ ] **Rastro e privacidade:** `resumo` das etapas `proposta` e `aprovacao` só tem tipo e contagem; nenhum span, métrica ou log leva nome de alimento, texto de nota ou texto da pessoa.
-- [ ] `npm run demo -- --cenario <nome>` roda os quatro cenários novos sem rede, imprime o bloco, a decisão da fixture e o que foi gravado; com `--interativo`, lê do terminal as linhas a desligar.
-- [ ] ⚠️ `npm run demo -- --cenario aprovacao-parcial --llm --interativo` rodado uma vez pelo orquestrador (conferência anotada no relatório).
+- [x] **Zero escrita sem aprovação:** rodar cada cenário que gera propostas e não aprovar deixa `perfis`, `casa`, `rotina_notas` e `lista_ter_em_casa` iguais ao estado anterior (comparação tabela a tabela nos stores em memória).
+- [x] **Bloco:** run com anotações ou propostas do agente termina em `waiting_for_approval`, com `saida.propostas` (id, tipo e texto de cada linha), uma linha em `propostas` por proposta, com `decisao: "pendente"`, pendência de tipo `aprovacao`, uma etapa `proposta` por linha e o evento `pausa` com `pausa.tipo: "aprovacao"`. Run sem nada a propor termina em `done`.
+- [x] **A resposta vem antes:** nesses runs, `saida.resposta` e as sugestões já estão gravadas e devolvidas antes de qualquer aprovação.
+- [x] **Uma linha por assunto:** "comprei abóbora, couve e arroz" gera uma proposta só, com os três itens; os textos das linhas são os de "Contratos".
+- [x] **Aprovação parcial:** `aprovar` com uma de três linhas grava só essa; as outras ficam `recusada`; o run vai a `done`; a etapa `aprovacao` tem `resumo` `1 de 3`; o span `aprovacao.execucao` leva `propostas.total` e `propostas.aprovadas`; `ritu_propostas_total{tool, decisao}` soma por linha.
+- [x] **Agora não:** `aprovar` com lista vazia marca todas como `recusada`, não grava nada e encerra o run em `done`.
+- [x] **Executor:** cada tipo de proposta grava exatamente o da tabela de "Contratos" (casa tem, casa acabou, evitar sempre, restrição, "não como", rotina, lista), numa transação só. Conteúdo fora do schema, ou com qualquer operação que não seja acrescentar, não é executado: a linha fica `recusada` e o run ganha uma etapa `erro` de nome `proposta_invalida`.
+- [x] **Expiração:** `aprovar` mais de 30 minutos depois de o bloco ser criado marca o run como `expired` e as propostas como `expirada`, lança `aprovacao_expirada` e não grava nada. Mensagem nova com bloco aberto leva o run a `done` e as propostas a `expirada` (005).
+- [x] **Expirada não é recusa:** proposta de lista expirada não entra em `proposals.recusadas`; recusada, entra.
+- [x] `aprovar` com id que não é do run, ou em run de outra conta, lança erro (`aprovacao_invalida` ou `RunNaoContinuavelError`) e não muda nada. `aprovar` duas vezes, em seguida ou ao mesmo tempo: só uma grava; a outra lança `RunNaoContinuavelError` e nada é gravado de novo (teste no fake e em `test:db`, com duas chamadas simultâneas).
+- [x] **`memoria.propor`:** com `fato_de_rotina` nos dados, devolve `{ proposto: true }` e a nota entra no bloco com o texto do fato; cada código de recusa de "Contratos" tem um teste.
+- [x] **`lista.propor`:** só é aceita para alimento respondido com "Não tenho" neste run; cada código de recusa tem um teste; a linha traz o nome da sugestão a que ele faltou.
+- [x] **Proposta e `finalizar` no mesmo passo:** chamadas nessa ordem, a proposta entra no bloco.
+- [x] **Restrição no mesmo run:** com `restricoes_da_mensagem: ["vegetariana"]`, o preparo não devolve candidato com alimento que a restrição barra; o item fica no temporário do dia e continua filtrando numa segunda mensagem do mesmo dia sem aprovação; no dia seguinte, depois da limpeza, deixa de filtrar. O mesmo para `nao_come_da_mensagem`. Aprovadas, vão para `perfis.restricoes` e `perfis.nao_come`.
+- [x] **Teto de linhas:** com mais de 6 propostas, ficam as 6 primeiras pela ordem de "Contratos"; as outras não são criadas.
+- [x] **Nada duplicado:** item que já está no perfil, alimento que já está na lista e fato igual a uma nota ativa não geram linha.
+- [x] **Incômodo fora das propostas:** run com incômodo não aceita `memoria.propor` nem `lista.propor`; fato de rotina que contém palavra de `incomodos.yaml` é recusado.
+- [x] **Rastro e privacidade:** `resumo` das etapas `proposta` e `aprovacao` só tem tipo e contagem; nenhum span, métrica ou log leva nome de alimento, texto de nota ou texto da pessoa.
+- [x] `npm run demo -- --cenario <nome>` roda os quatro cenários novos sem rede, imprime o bloco, a decisão da fixture e o que foi gravado; com `--interativo`, lê do terminal as linhas a desligar.
+- [x] ⚠️ `npm run demo -- --cenario aprovacao-parcial --llm --interativo` rodado uma vez pelo orquestrador (conferência anotada no relatório).
 
 ## O que fazer
 

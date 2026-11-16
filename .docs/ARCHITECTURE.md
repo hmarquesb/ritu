@@ -70,7 +70,7 @@ Os padrões de fundação seguem as referências locais (`.local/REFERENCIAS.md`
 6. O código escolhe o caminho pela intenção. Casa, retorno ou "evitar sempre" sozinhos, ajuda, ofensa, alerta e fora do assunto são resolvidos aqui, sem o agente. O que a mensagem traz (itens de casa, "evitar sempre", "não como", restrição) vale no mesmo run sem gravar a casa nem o perfil (ADR 0028).
 7. Preparo em código: qualidades, filtros, ordenação, faltas e contexto. O Acompanhante roda, **transmitindo as etapas** (streaming): "vendo o clima…", "olhando sua casa…", "conferindo a resposta…". O código anexa à saída as anotações a propor, e a resposta do agente é gravada em `mensagens`.
 8. `finalizar` → validador → correções, se houver → Juiz.
-9. A tela mostra o texto do agente e as sugestões. Cada sugestão vira um registro em `retornos` (aguardando). As faltas do run são gravadas em `faltas`. Se houver propostas, a tela mostra o bloco de aprovação e o run fica em `waiting_for_approval`.
+9. A tela mostra o texto do agente e as sugestões. Cada sugestão vira um registro em `retornos` (aguardando). As faltas do run são gravadas em `faltas`. Se houver propostas, a tela mostra o bloco de aprovação e o run fica em `waiting_for_approval`. Quem fecha o run é `conversar` (ou `continuar`): o Acompanhante o deixa em `running`, e a conversa o leva a `done`, ou à pausa com as propostas montadas por código (`AI.md` §5).
 10. Etapas, tokens, modelo usado e latência ficam no banco; spans e métricas saem por OTel.
 
 ### Estados do run
@@ -83,6 +83,7 @@ running → waiting_for_input → running → … → done
 
 - `waiting_for_input` e `waiting_for_approval` guardam o checkpoint. O run **não fica vivo** esperando: a resposta chega em outro pedido e retoma.
 - A resposta a uma pergunta entra por `continuar`, que confere conta, estado e prazo, troca `waiting_for_input` por `running` numa operação condicional, grava a resposta na hora e retoma o run (`AI.md` §7). Uma retomada pode pausar de novo.
+- A decisão do bloco entra por `aprovar(conta, run, aprovadas)`, da conversa, sem LLM: confere conta, estado e prazo e, numa transação, troca `waiting_for_approval` por `done` (condicional, a primeira operação), grava só as linhas aprovadas pelo executor e registra as etapas. Quem chega depois da primeira decisão recebe `RunNaoContinuavelError`. Passados 30 min, `aprovar` expira o run e as propostas. A rota que expõe `aprovar` é da camada de tela.
 - Um run aberto por conta. Espera de mais de 30 min → `expired`.
 
 ### Rotas de toque (sem LLM)

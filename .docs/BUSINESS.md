@@ -173,11 +173,20 @@ Não é orientação médica.              [👍] [👎]   [Como pensei]
 
 ```
 Posso anotar isto?
-[x] Você tem couve e abóbora em casa (você acabou de me contar)
+[x] Você tem couve e abóbora em casa
 [x] Cardamomo na lista "Para ter em casa" (já fez falta 4 vezes)
 [x] Durante a semana você almoça fora
                                    [Agora não] [Anotar]
 ```
+
+O texto de cada linha é montado pelo Ritu, e o que a pessoa lê é o que é gravado. Os modelos são: *Você tem {itens} em casa*, *Acabou: {itens}*, *Não sugerir mais {itens} (Evitar sempre)*, *Sua alimentação é {itens}*, *Você não come {itens}*, *Você gosta de {itens}*, *{Item} na lista "Para ter em casa" (faltou para {detalhe})* e *{Item} na lista "Para ter em casa" (já fez falta {detalhe} vezes)*. A nota de rotina é a frase da pessoa, com a primeira letra maiúscula.
+
+Regras do bloco:
+
+- Uma linha por assunto, no máximo 6, nesta ordem: "evitar sempre", restrição, "não como", gosto, casa (tem), casa (acabou), lista e rotina. Cada linha liga e desliga; **Anotar** grava as ligadas e **Agora não** não grava nenhuma.
+- A resposta do agente vem antes do bloco e não fala dele. A pessoa não precisa decidir para receber a resposta.
+- Sem resposta em 30 minutos, ou ao escrever outra mensagem, o bloco expira e nada é gravado.
+- Com incômodo de saúde na mensagem, não há bloco: nada é proposto.
 
 8. As sugestões da resposta entram na área **"Como ficou?"**.
 
@@ -276,7 +285,7 @@ Fica na aba Minha casa. É um lembrete para a pessoa. Cada item mostra por que e
 | Faltou para uma sugestão de hoje, e a pessoa respondeu "Não tenho" quando o Ritu perguntou | "Faltou para o chá de gengibre com canela" |
 | Fez falta várias vezes (indicação de "vale ter em casa") | "Fez falta 4 vezes nos últimos 30 dias" |
 
-Os dois caminhos passam pela aprovação da pessoa. Recusada a proposta, o Ritu não propõe nem indica esse alimento de novo; ela pode pôr na lista por conta própria. Ela pode tirar um item da lista quando quiser. Quando registra o alimento em casa, ele sai da lista.
+Os dois caminhos passam pela aprovação da pessoa. Recusada a proposta (linha desligada ou "Agora não"), o Ritu não propõe nem indica esse alimento de novo, **para sempre**; ela pode pôr na lista por conta própria. Proposta que expira sem resposta não conta como recusa, e o alimento pode voltar. Ela pode tirar um item da lista quando quiser. Quando registra o alimento em casa, ele sai da lista.
 
 ## 10. Como ficou?
 
@@ -308,6 +317,7 @@ Regras da memória:
 - **Toques diretos** (Não gosto, Não tenho, Ajudou) são gravados na hora: o toque é o consentimento.
 - **Faltas** são anotadas por código, sem pergunta: guardam só o alimento e o dia. Pôr o alimento na lista "Para ter em casa" pede aprovação.
 - **Incômodos de saúde nunca entram na memória.** O agente usa na resposta daquela mensagem e não anota. A mensagem em que o incômodo aparece e a resposta do agente ficam na conversa do dia e são apagadas no dia seguinte.
+- **Restrição e "não como" ditos na conversa valem no dia**, na resposta daquela mensagem e nas seguintes, mesmo sem aprovação. Para ficar guardados, entram no bloco "Posso anotar isto?". Com "Agora não" ou sem resposta, deixam de valer no dia seguinte. O mesmo vale para o "Não como" respondido a uma pergunta do agente. Um nome que o Ritu não conhece é guardado como texto: aparece no perfil, mas não filtra sugestões.
 - Quando dois registros se contradizem, vale o mais recente. **Exceção: "evitar sempre"** (abaixo).
 
 ### Evitar sempre

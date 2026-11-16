@@ -40,6 +40,9 @@
 | [0030](0030-formato-do-checkpoint-e-da-pendencia.md) | Formato do checkpoint e da pendência de pergunta | Aceito |
 | [0031](0031-perguntas-fechadas-montadas-por-codigo.md) | Perguntas fechadas, com texto montado por código, e variante perguntada antes do agente | Aceito |
 | [0032](0032-resposta-gravada-antes-de-retomar.md) | Resposta à pergunta gravada na hora, antes de retomar, com troca de status condicional | Aceito |
+| [0033](0033-aprovacao-com-bloco-e-executor-fechado.md) | Aprovação com bloco montado por código e executor fechado | Aceito |
+| [0034](0034-fim-do-run-e-aprovacao-numa-transacao.md) | Fim do run da conversa e aprovação numa transação, com troca de status condicional | Aceito |
+| [0035](0035-temporario-do-dia-com-restricao-e-nao-como.md) | Restrição e "não como" ditos na conversa valem no dia, sem esperar aprovação | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

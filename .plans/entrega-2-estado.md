@@ -6,7 +6,13 @@
 > `test:db` pendente: sem docker neste ambiente; `mudarStatusSe` no Postgres (009 T3) só conferido por leitura. Rodar onde houver Postgres antes do portão.
 > Para o relatório (dona decide): "Não tenho" de alimento nunca registrado em Minha casa vira só falta `nao_tenho` (`marcarAcabou` não faz upsert, como a spec 009 manda); não aparece como `acabou` em Minha casa.
 > Demo LLM da 009 (2026-11-15, `casa-incerta --llm --interativo`, respostas por pipe): o agente perguntou "Ainda tem abóbora e couve?" (casa, 2 itens); resposta Tenho abóbora · Não tenho couve; 1ª entrega recusada pelo validador, 2ª passou; status done, origem agente, 4 passos, 35.525 tokens (34.573 entrada, 952 saída), decisão gemini-3.5-flash-lite, apoio gemini-3.1-flash-lite, 0 trocas.
+> Para o relatório (dona decide): as regras comuns dos planos proíbem abrir pastas fora do repositório, mas `.local/REFERENCIAS.md` §2 aponta para uma pasta fora dele; os implementadores não a abrem.
+> Para o relatório: a métrica "chamadas antes da 1ª pausa" é só expectativa de caso do `eval:llm`, não linha do relatório; `QA.md` ainda cita 42 casos no `c2` (hoje 28) — acertar no fechamento da 014.
+> Helpers do orquestrador ficam no scratchpad da sessão (somem entre sessões): recriar `commit_task.sh` e `stage_mine.py` quando precisar.
 > Flake visto: `eval:det` falhou 1 de 498 sob carga (não identificado).
+> Demo LLM da 010 (2026-11-16, `aprovacao-parcial --llm --interativo`, `printf '2\n'`), duas rodadas: (1) o agente chamou `memoria.propor` (proposto) e o passo seguinte do modelo falhou com `indisponivel` (sem troca de modelo); run `failed`, origem segura, 10.563 tokens; (2) repetida com log temporário do erro (revertido): sem erro; `memoria.propor` proposto, mas `finalizar` não foi aceito até o limite, origem `segura`, então só a linha de casa chegou ao bloco ("Você tem abóbora em casa"), decisão Anotar 1 de 1, gravado abóbora em Minha casa; status done, 6 passos, 33.976 tokens (33.140 entrada, 836 saída). A proposta do agente se perde quando a saída é a segura (`finalizar` é quem recolhe). Para o checkpoint c2 (011): qualidade do `finalizar` com o prompt v4.
+> Para o relatório: a base não tem item barrado por "vegetariana" (só "vegana" e "sem_gluten" em `restricoes`/`nunca_sugerir_se`); o cenário `vegetariana` (010 T15) prova só que a restrição do dia chega ao filtro. Os evals da 010 T18 usam "vegana".
+> Para o relatório (dona decide): "não como" de nome livre aprovado vai para `perfis.nao_come` como `texto`, mas não filtra nada no dia seguinte (`montarFiltro` só usa os de alimento; a spec 010 só manda gravar).
 
 | Spec | Tarefa | Nível | Status | Commit |
 |---|---|---|---|---|
@@ -55,3 +61,24 @@
 | 009 | T17 · Let eval:llm conversation cases answer pauses and measure questions | mecanica | concluida | 89e47a4 |
 | 009 | T18 · Add the 8 question cases of c2 | mecanica | concluida | 2a8fecf |
 | 009 | L1 · Test the invalid pause branch of the run end | mecanica | concluida | 94aa69b |
+| 010 | T1 · Add the approval config | mecanica | concluida | 72b1631 |
+| 010 | T2 · Add the proposal content types and move the notes type to proposals | mecanica | concluida | ab3dbca |
+| 010 | T3 · Add the proposal line texts | mecanica | concluida | f2c92a6 |
+| 010 | T4 · Add propostasDoAgente and montarPropostas | mecanica | concluida | d164f6c |
+| 010 | T5 · Let the day's temporary list hold free-text won't-eat items and record "Não como" answers | mecanica | concluida | 40055e0 |
+| 010 | T6 · Add the run data the proposal tools read | mecanica | concluida | 0e302de |
+| 010 | T7 · Add the proposal tools | mecanica | concluida | 5619492 |
+| 010 | T8 · Add propostas to the companion output | mecanica | concluida | 0ab99c3 |
+| 010 | T9 · Let finalizar collect the agent's proposals | nucleo | concluida | 541d01f |
+| 010 | T10 · Add the companion prompt v4 and give the proposal tools to the companion | mecanica | concluida | 66bf21e |
+| 010 | T11 · Let the companion keep the run open and let the run service pause for approval | nucleo | concluida | 4b9e988 |
+| 010 | T12 · Add the proposal executor | nucleo | concluida | b1d48d9 |
+| 010 | T13 · End conversation runs with the approval block | nucleo | concluida | 9dff186 |
+| 010 | T14 · Add the aprovar service | nucleo | concluida | 21b9dcf |
+| 010 | T15 · Add the approval scenarios | mecanica | concluida | 17257c2 |
+| 010 | T16 · Show the approval block in the demo | mecanica | concluida | c3f38a7 |
+| 010 | T17 · Add the approval deterministic evals, part 1 | mecanica | concluida | a55920b |
+| 010 | T18 · Add the approval deterministic evals, part 2 | mecanica | concluida | 4a36fe7 |
+| 010 | T19 · Add the approval deterministic evals, part 3 | mecanica | concluida | fc519aa |
+| 010 | T20 · Let eval:llm conversation cases measure proposals | mecanica | concluida | 098c7ca |
+| 010 | T21 · Add the 6 proposal cases of c2 | mecanica | concluida | 6ad518f |

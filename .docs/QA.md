@@ -87,6 +87,17 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - **Zero escrita sem aprovação:** rodar um run com propostas e não aprovar deixa o banco igual.
 - Aprovação parcial grava só os itens aprovados.
 
+**Aprovação** (`evals/det/aprovacao/`: `bloco`, `parcial`, `executor`, `expiracao`, `autorizacao`, `zero-escrita`, `tools-de-proposta`, `restricao-no-run`, `privacidade`)
+- `bloco`: as linhas que a resposta cria, o texto de cada uma, a ordem fixa, o teto de 6 e o que não se repete (o que já está no perfil, na lista ou nas notas); run sem nada a propor termina em `done`; a pergunta antes do bloco; a resposta fica no run e volta antes de aprovar.
+- `parcial`: aprovar uma de três linhas grava só ela, e as outras ficam `recusadas`.
+- `executor`: cada tipo de proposta aprovada grava o que deve, só acrescenta, e o que a base não conhece não grava e deixa a etapa `proposta_invalida`.
+- `expiracao`: 30 minutos exatos valem, 31 expiram com `aprovacao_expirada` e nada gravado; a limpeza expira o run em espera; lista recusada bloqueia o alimento para sempre, e a expirada não bloqueia.
+- `autorizacao`: só a conta dona do run aprova e lê as linhas; aprovar duas vezes, em seguida ou ao mesmo tempo, grava uma só.
+- `zero-escrita`: "Agora não", expiração e mensagem nova deixam perfil, casa, rotina e lista como estavam quando o bloco abriu.
+- `tools-de-proposta`: cada código de recusa de `memoria.propor` e de `lista.propor`, o caso aceito de cada uma, e o que chega ao bloco.
+- `restricao-no-run`: restrição, "não como" e nome livre ditos no run filtram no dia, somem no dia seguinte e vão ao perfil quando aprovados.
+- `privacidade`: texto da pessoa, nome de alimento e texto das linhas não vão para span, métrica, log nem resumo de etapa.
+
 **Retorno e memória**
 - Toda sugestão entregue cria um retorno aguardando.
 - Retorno contado na conversa é ligado à sugestão certa e fecha o retorno.
@@ -120,7 +131,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
 
-84 casos (12 no `c1`, 42 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
+76 casos (12 no `c1`, 34 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
 
 | Família | O que mede | Métrica |
 |---|---|---|
@@ -132,7 +143,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 | **Autocorreção** | Válida na 1ª tentativa; corrigiu depois de violação | Duas taxas |
 | **Perguntas** | Perguntou quando faltava; não perguntou quando sabia; a variante sai antes de qualquer chamada de modelo; o código recusa pedidos que não cabem | Necessárias feitas; desnecessárias evitadas; recusas de `ask_user` por run |
 | **Casa** | Usa o que está confirmado; pergunta ou oferece troca para o incerto; não usa o que acabou | Acerto |
-| **Propostas** | Propôs o que fazia sentido (casa, rotina, lista) e nada além | Propostas corretas |
+| **Propostas** | Propôs o que fazia sentido (casa, rotina, lista) e nada além; não propôs nada com o que a restrição barra; o texto da resposta não diz que anotou nem fala do bloco; o run termina no bloco, sem aprovar | Propostas corretas; média de propostas recusadas pelo código por run |
 | **Para ter em casa** | Indica o candidato quando ele cabe na resposta; não indica sem candidato; fala como algo para as próximas vezes, sem marca, loja ou preço | Acerto |
 | **Aprendizado** | Dois "não ajudou" seguidos tiram a prioridade; "não gosto de X" tira X; o que a pessoa gosta aparece primeiro | Acerto |
 | **Memória** | O resumo de rotina junta repetidas, fica com a nota mais recente na contradição, respeita o teto e não inventa; a resposta usa o resumo e o padrão confirmado, sem sair dos candidatos | Acerto |
@@ -150,7 +161,7 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 | Checkpoint | Quando | O que já dá para medir |
 |---|---|---|
 | `c1-base` | Fim da entrega 1 | Conteúdo, fidelidade, explicação, trajetória, autocorreção, custo |
-| `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 28 do `c2` (20 de intenção e 8 de perguntas), 40 no total. Mede Intenção (acerto e falsos alertas), Perguntas (necessárias feitas, desnecessárias evitadas e recusas de `ask_user` por run), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1`. Nos casos de pergunta, o runner responde às pausas (até 3 por run) |
+| `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 34 do `c2` (20 de intérprete e 14 de conversa: 8 de perguntas e 6 de propostas), 46 no total. Mede Intenção (acerto e falsos alertas), Perguntas (necessárias feitas, desnecessárias evitadas e recusas de `ask_user` por run), Propostas (acerto da proposta e média de recusas do código por run), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1`. Nos casos de pergunta, o runner responde às pausas (até 3 por run) |
 | `c3-confiavel` | Fim da entrega 2 | Todas as famílias |
 | `c4-site` | Fim da entrega 3 | Todas, pelas rotas reais do site |
 | `c5-publico` | Fim da entrega 4 | Todas, com os prompts e a configuração de produção |

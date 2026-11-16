@@ -76,6 +76,7 @@ O que roda em toda mensagem não é decisão, então não é tool:
 4. Calcula as **faltas** do run e escolhe o candidato a "vale ter em casa", se houver (§6, "Faltas").
    `entregaveis` separa o que pode ir ao modelo: refeição com vaga obrigatória sem opção em casa nem perguntável sai do contexto e do validador. A que só fica por causa de uma opção que ainda dá para perguntar vai com `depende_de_pergunta`, e só as 2 primeiras refeições assim (`maxRefeicoesAPerguntar`). Sem perguntas restantes no run, ninguém depende de pergunta. Chá, óleo e prática passam.
 5. Monta o contexto do Acompanhante: fixos, resumo de rotina, padrões confirmados, últimas mensagens do dia, sinais (§6), os candidatos já ordenados e o candidato a "vale ter em casa". Para o contexto, o preparo guarda por tipo só os primeiros (4 chás, 3 refeições, 2 óleos, 4 práticas) e, em cada vaga de uma refeição, até 3 opções de alimento.
+6. Guarda, fora do contexto do modelo, os **dados do run** que as tools de proposta conferem (`ctx.run`): se há incômodo, o `fato_de_rotina`, o que a pessoa respondeu que não tem, os candidatos do preparo (com os alimentos de cada um), se há candidato a "vale ter em casa", a lista "Para ter em casa", os alimentos com indicação recusada e as notas de rotina ativas. O agente não os vê; as tools só validam contra eles (§4).
 
 Sinal de alerta encerra o run aqui, com a resposta de encaminhamento.
 
@@ -98,10 +99,10 @@ incertos[]    até 3, de até 120 caracteres: o que a base não cobre
 citados[]     até 5: linhas da base de alimentos e práticas citados só no texto
 para_ter      opcional, no máximo um: { alimento_id, nome, vezes, contribui[], verbos[],
                                         linha_base, motivo }
-propostas[]   escritas a aprovar (§5)
+propostas[]   linhas do bloco de aprovação (§5): { id, tool, texto }
 ```
 
-O modelo entrega `resposta`, `explicacao`, as sugestões (tipo, id, itens com `alimento_id`, `funcao`, `contribui`, `linha_base` e `se_faltar`, motivo, `linhas_base`, `novidade`), `evitar` (só as linhas da base), `incertos`, `citados` e `para_ter` (`alimento_id`, `vezes`, `contribui`, `linha_base`). O código completa o resto a partir da base: `origem`, `geral`, `avisos` (resposta geral e incômodo, textos fixos), o título e o modo de fazer de cada sugestão (de um preparo: o modelo `titulo` e os passos, preenchidos com os ingredientes; de uma prática: nome, preparo e `aviso` da base), nomes, verbos, `casa` de cada item, a frase da troca em `se_faltar` (`{ alimento_id, nome, frase }`), o `texto` de cada `evitar` e o `nome`, os verbos e o motivo do `para_ter`. Ingrediente incerto em casa só entra com `se_faltar`: um substituto confirmado em casa, já pronto.
+O modelo entrega `resposta`, `explicacao`, as sugestões (tipo, id, itens com `alimento_id`, `funcao`, `contribui`, `linha_base` e `se_faltar`, motivo, `linhas_base`, `novidade`), `evitar` (só as linhas da base), `incertos`, `citados` e `para_ter` (`alimento_id`, `vezes`, `contribui`, `linha_base`). O código completa o resto a partir da base: `origem`, `geral`, `avisos` (resposta geral e incômodo, textos fixos), o título e o modo de fazer de cada sugestão (de um preparo: o modelo `titulo` e os passos, preenchidos com os ingredientes; de uma prática: nome, preparo e `aviso` da base), nomes, verbos, `casa` de cada item, a frase da troca em `se_faltar` (`{ alimento_id, nome, frase }`), o `texto` de cada `evitar` e o `nome`, os verbos e o motivo do `para_ter`. As `propostas` também são do código: o agente só aceita ou não propor pelas tools (§4), e o texto de cada linha é montado na hora de ler. Ingrediente incerto em casa só entra com `se_faltar`: um substituto confirmado em casa, já pronto.
 
 `origem` é `agente` quando a resposta passou pelo validador em `finalizar`. A `segura` (texto fixo, sem sugestões nem avisos) sai quando o run termina por limite, erro ou saída fora do contrato; o run de saída fora do contrato fica `failed`. A `sem_modelo` é a resposta montada por código quando nenhum modelo de `decisao` está disponível: práticas da base e o texto de `BUSINESS.md` §14.
 
@@ -175,7 +176,11 @@ O validador recebe o clima só se `clima.agora` devolveu `ok` no run.
 | `memoria.propor` | Anotar o fato de rotina que o Intérprete apontou. O agente decide se propõe; o texto é a frase do Intérprete |
 | `lista.propor` | Pôr na lista "Para ter em casa" um alimento que a pessoa respondeu que não tem e que faltou para uma sugestão. No máximo um por resposta, e nunca quando há candidato a "vale ter em casa" |
 
-As tools de proposta nunca gravam: validam o pedido e devolvem a proposta, que `finalizar` recolhe.
+As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3) e devolvem `proposto: true` com a proposta ou `proposto: false` com um código de recusa, que não pausa o run e conta no teto de recusas do loop. `finalizar` recolhe as aceitas. O prompt `acompanhante.v4` diz quando propor e manda não falar do bloco no texto.
+
+- `memoria.propor` (só `tipo: rotina`) recusa com `com_incomodo`, `sem_fato` (o Intérprete não apontou fato de rotina), `fato_com_incomodo` (o fato traz palavra de incômodo da base) e `ja_anotado` (já é uma nota ativa).
+- `lista.propor` recusa com `com_incomodo`, `fora_da_base`, `sem_nao_tenho` (a pessoa não respondeu que não tem), `com_para_ter` (já há candidato a "vale ter em casa"), `fora_do_candidato` (o alimento não está no candidato indicado), `ja_na_lista`, `ja_recusado` e `filtrado` (o filtro da pessoa barra o alimento).
+- No fim do run, repetidas viram uma só: uma nota de rotina por texto e no máximo uma proposta de lista.
 
 **Propostas montadas por código**, sem o agente: o que a mensagem diz sobre a casa (tem, acabou), "evitar sempre", restrição, "não como" e "gosto" apontados pelo Intérprete, e a lista do `para_ter`. Todas entram no mesmo bloco.
 
@@ -183,14 +188,19 @@ As tools de proposta nunca gravam: validam o pedido e devolvem a proposta, que `
 
 ## 5. Aprovação (plano → aprovação → ação)
 
-- As propostas saem juntas, no fim do run, num **bloco de aprovação**: "Posso anotar isto?", com uma linha por assunto (até 6), cada uma com liga/desliga, e os botões Anotar e Agora não.
-- O run fica em `waiting_for_approval`. A resposta chega em `POST /api/runs/:id/approve`, e um **executor em código** grava só o que foi aprovado. O LLM não participa da gravação.
-- A resposta do agente aparece **antes** da aprovação: a pessoa não precisa aprovar nada para receber valor.
-- Proposta sem resposta em 30 min expira e nada é gravado.
+- As propostas saem juntas, no fim do run, num **bloco de aprovação**: "Posso anotar isto?", com uma linha por assunto (até 6, `config/aprovacao.ts`), cada uma com liga/desliga, e os botões Anotar e Agora não. O código as monta de duas fontes, as anotações que ele tirou da mensagem e as que o agente propôs, e **ordena**: "evitar sempre", restrição, "não como", gosto, casa (tem), casa (acabou), lista e, por último, rotina. As que passam do teto não são criadas.
+- O texto de cada linha é montado por código, a partir do conteúdo guardado e dos nomes da base, na hora de ler. O que a pessoa lê é o que é gravado.
+- Run com incômodo não cria proposta nenhuma, nem as do código, e termina em `done`. Os caminhos `alerta`, `fora`, `ofensa` e `ajuda` também não têm bloco.
+- A resposta do agente é gravada **antes** de criar as propostas, e aparece antes do bloco: a pessoa não precisa aprovar nada para receber valor. Se criar as propostas falhar, o run vai a `failed` e a resposta sai igual, sem bloco.
+- O run fica em `waiting_for_approval`. A decisão chega a `aprovar(conta, run, aprovadas)` na conversa (a rota é da tela), com os ids das linhas ligadas. Um **executor em código** grava só o que foi aprovado. O LLM não participa da gravação.
+- **Aprovação parcial:** linha ligada é gravada e fica `aprovada`; linha desligada fica `recusada` e nada dela é gravado. **"Agora não"** é aprovar com nenhuma linha: todas ficam `recusadas`. Em qualquer caso o run termina em `done`.
+- A decisão roda numa transação que começa pela troca de status `waiting_for_approval → done`, condicional. Toque duplo ou duas abas gravam uma vez só: quem chega depois recebe `RunNaoContinuavelError`. Id que não é de uma linha pendente do run é `aprovacao_invalida`. Se uma gravação falha, nada da decisão fica pela metade.
+- Proposta sem resposta em 30 min expira (30 exatos ainda valem): `aprovar` passa o run e as propostas a `expired` e devolve `aprovacao_expirada`, sem gravar. Uma mensagem nova com o bloco aberto também fecha o run anterior e expira as propostas dele. Expirada não conta como decisão.
+- O que a mensagem diz sobre restrição e "não como" vale no dia sem esperar o bloco; "Agora não" não grava nada no perfil, mas o filtro do dia continua (§6).
 - Padrões detectados (§6) entram no mesmo bloco, por último e no máximo um por resposta: *"Notei isto. Está certo?"* Linha aprovada confirma o padrão. Linha desligada, com outra ligada, recusa para sempre. "Agora não" e a expiração deixam o padrão para depois: ele volta no máximo uma vez por dia e até 3 vezes; depois disso, só dá para confirmar em "O que sei sobre você".
 - A indicação de "vale ter em casa" (§6) entra no mesmo bloco, como proposta de lista. Proposta de lista recusada (linha desligada ou "Agora não"), por qualquer dos dois motivos, vale para sempre: o alimento não volta a ser proposto nem indicado. Proposta que expira sem resposta não conta como recusa.
-- O executor só acrescenta. Nenhuma proposta remove ou troca o que já está guardado.
-- Cada proposta, aprovação e recusa vira etapa do rastro.
+- O executor é uma **tabela fechada** de tipo de proposta para gravação, sem caso genérico, e só acrescenta. Nenhuma proposta remove ou troca o que já está guardado. Antes de gravar, confere o conteúdo pelo schema estrito e a base: `alimento_id` fora da base, ou "evitar sempre" de alimento ou grupo que a base não conhece, deixa a linha `recusada` e o run ganha a etapa `proposta_invalida`. Casa e "não como" de nome livre são válidos. Por proposta, o executor grava: casa tem (registra em casa), casa acabou (marca que acabou), "evitar sempre", restrição e "não como" (acrescentam ao perfil), gosto, nota de rotina e item da lista.
+- Cada proposta, aprovação e recusa vira etapa do rastro (`OBSERVABILITY.md` §3).
 
 ## 6. Memória
 
@@ -230,6 +240,8 @@ Depois dos filtros, cada candidato recebe uma nota e é ordenado dentro do seu t
 - Remover é só pela rota do Perfil, com confirmação. Nenhuma tool do agente remove item de "evitar sempre"; o executor recusa.
 - O motivo não é gravado: o Intérprete devolve só o alimento.
 - **Restrição e "não como"** ditos na conversa ("sou vegetariana", "não como coentro") seguem a mesma regra: o Intérprete aponta, valem no mesmo run e até o fim do dia, e o código gera a proposta de fixo. A diferença é que saem do perfil sem confirmação especial.
+- O temporário do dia (`evitar_temporario`) guarda itens com tipo: alimento, grupo, restrição, "não como" de alimento da base ou `nao_come_texto`, para o nome que a base não conhece. Esse último não filtra candidato: vai ao prompt como texto (`evitar_textos`) e, aprovado, fica no perfil como texto. A resposta "Não como" a uma pergunta (§4) também vai para o temporário. Restrição sem item marcado na base (hoje, "vegetariana") passa pelo filtro sem barrar nada. O temporário é limpo na virada do dia.
+- Com incômodo no run, nada disso vira proposta.
 
 ### Faltas e "vale ter em casa" (código)
 

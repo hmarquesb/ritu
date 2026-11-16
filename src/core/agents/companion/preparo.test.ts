@@ -331,6 +331,48 @@ describe("preparar: casa, mensagem e perguntas", () => {
 // 19h em São Paulo: momento "jantar", em que a base mini tem refeições.
 const JANTAR = "2026-11-15T22:00:00.000Z"
 
+describe("preparar: gosto da mensagem", () => {
+  const NOITE = "2026-11-15T02:00:00.000Z"
+  const frio = { estados: ["com_frio" as const] }
+  const temperos = (d: Awaited<ReturnType<ReturnType<typeof montar>["run"]>>) =>
+    d.candidatos
+      .find((c) => c.id === "leite-morno-com-especiaria")
+      ?.opcoes?.tempero?.map((o) => o.alimento_id)
+
+  it("o alimento citado sobe na ordenação das opções da vaga neste run", async () => {
+    const sem = await montar(NOITE).run(frio)
+    const com = await montar(NOITE).run({ ...frio, gosta_da_mensagem: ["gengibre"] })
+    expect(temperos(sem)?.[0]).not.toBe("gengibre")
+    expect(temperos(com)?.[0]).toBe("gengibre")
+    expect(com.gosta_da_mensagem).toEqual(["Gengibre"])
+    expect(sem.gosta_da_mensagem).toBeUndefined()
+    expect(dadosDoPreparoSchema.safeParse(com).success).toBe(true)
+  })
+
+  it("não gosta gravado e citado como gosto volta aos candidatos neste run, sem gravar", async () => {
+    const { run, stores } = montar(NOITE)
+    await stores.preferences.definirGosto(CONTA, { tipo: "alimento", id: "gengibre" }, "nao_gosta")
+    const antes = await run(frio)
+    expect(antes.filtro.nao_gosta).toContain("gengibre")
+    expect(temperos(antes)).not.toContain("gengibre")
+    const dados = await run({ ...frio, gosta_da_mensagem: ["gengibre"] })
+    expect(dados.filtro.nao_gosta).not.toContain("gengibre")
+    expect(temperos(dados)?.[0]).toBe("gengibre")
+    const prefs = await stores.preferences.ler(CONTA)
+    expect(prefs.find((p) => p.item_id === "gengibre")?.gosto).toBe("nao_gosta")
+  })
+
+  it("não grava preferência nenhuma e ignora id fora da base", async () => {
+    const { run, stores } = montar(NOITE)
+    const dados = await run({ ...frio, gosta_da_mensagem: ["gengibre", "inexistente"] })
+    expect(dados.gosta_da_mensagem).toEqual(["Gengibre"])
+    expect(await stores.preferences.ler(CONTA)).toEqual([])
+    const so = await run({ ...frio, gosta_da_mensagem: ["inexistente"] })
+    expect(so.gosta_da_mensagem).toBeUndefined()
+    expect(temperos(so)).toEqual(temperos(await run(frio)))
+  })
+})
+
 describe("preparar: perguntas do run", () => {
   it("item só em casa_da_mensagem.acabou não segura refeição perguntável no mesmo turno", async () => {
     const { run } = montar(JANTAR)

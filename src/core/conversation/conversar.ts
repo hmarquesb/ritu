@@ -119,6 +119,7 @@ function entradaDoAcompanhante(
     ...(i.nao_come.length > 0 ? { nao_come_da_mensagem: i.nao_come } : {}),
     ...(i.restricoes.length > 0 ? { restricoes_da_mensagem: i.restricoes } : {}),
     ...(casa ? { casa_da_mensagem: casa } : {}),
+    ...(i.gosta.length > 0 ? { gosta_da_mensagem: i.gosta.map((g) => g.alimento_id) } : {}),
     ...(retorno
       ? {
           retorno: {

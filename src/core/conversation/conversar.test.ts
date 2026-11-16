@@ -367,6 +367,30 @@ describe("conversar: evitar", () => {
   })
 })
 
+describe("conversar: gosto da mensagem", () => {
+  it("o gosto citado vai ao Acompanhante e ao contexto, sem gravar", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio"], gosta: ["gengibre"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    await dizer(m, "estou com frio, adoro gengibre")
+    const contexto = JSON.stringify(m.runtime.pedidos[0]?.mensagens)
+    expect(contexto).toContain("gosta_da_mensagem")
+    expect(contexto).toContain("Gengibre")
+    const prefs = await m.stores.preferences.ler(m.conta.id)
+    expect(prefs.find((p) => p.item_id === "gengibre")?.gosto ?? null).toBeNull()
+  })
+
+  it("sem gosto na mensagem, o contexto não traz gosta_da_mensagem", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    await dizer(m, "estou com frio")
+    expect(JSON.stringify(m.runtime.pedidos[0]?.mensagens)).not.toContain("gosta_da_mensagem")
+  })
+})
+
 describe("conversar: Intérprete indisponível", () => {
   it("sem modelo: caminho sem_modelo, etapa falhou e métrica de fallback", async () => {
     const m = await montar({ semApoio: true })

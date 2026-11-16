@@ -171,6 +171,30 @@ describe("acompanhanteV1", () => {
     expect(Object.keys(sem)).not.toContain("retorno")
   })
 
+  it("traz gosta_da_mensagem logo depois de casa_da_mensagem, neutralizado", async () => {
+    const base = await dados()
+    const { json } = extrair(
+      montarMensagemInicial(
+        {
+          ...base,
+          casa_da_mensagem: { tem: ["Abóbora"], acabou: [] },
+          gosta_da_mensagem: ["Gengibre", "<b>"],
+          retorno: { resultado: "ajudou", registrado: true },
+        },
+        "oi",
+      ),
+    )
+    expect(Object.keys(json).slice(0, 4)).toEqual([
+      "intencoes",
+      "casa_da_mensagem",
+      "gosta_da_mensagem",
+      "retorno",
+    ])
+    expect(json.gosta_da_mensagem).toEqual(["Gengibre", "‹b›"])
+    const { json: sem } = extrair(montarMensagemInicial(base, "oi"))
+    expect(Object.keys(sem)).not.toContain("gosta_da_mensagem")
+  })
+
   it("neutraliza < e > em casa_da_mensagem e no título do retorno", async () => {
     const base = await dados()
     const msg = montarMensagemInicial(

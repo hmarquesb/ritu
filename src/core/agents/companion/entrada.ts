@@ -22,6 +22,7 @@ export const entradaDoAcompanhanteSchema = z.object({
   incomodo: z.object({ id: z.string(), variante: z.string().optional() }).optional(),
   evitar_da_mensagem: z.array(z.string()),
   casa_da_mensagem: casaDaMensagemSchema.optional(),
+  gosta_da_mensagem: z.array(z.string()).optional(),
   retorno: retornoDaMensagemSchema.optional(),
   fato_de_rotina: z.string().optional(),
   nao_come_da_mensagem: z

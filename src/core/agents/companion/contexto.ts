@@ -68,6 +68,10 @@ function casaDaMensagem(dados: DadosDoPreparo): Record<string, unknown> | undefi
   return { tem: c.tem.map(neutralizar), acabou: c.acabou.map(neutralizar) }
 }
 
+function gostaDaMensagem(dados: DadosDoPreparo): string[] | undefined {
+  return dados.gosta_da_mensagem?.map(neutralizar)
+}
+
 function retornoDaMensagem(dados: DadosDoPreparo): Record<string, unknown> | undefined {
   const r = dados.retorno
   if (!r) return undefined
@@ -91,6 +95,7 @@ export function montarMensagemInicial(dados: DadosDoPreparo, texto?: string): st
   const contexto = compacto({
     intencoes: dados.intencoes,
     casa_da_mensagem: casaDaMensagem(dados),
+    gosta_da_mensagem: gostaDaMensagem(dados),
     retorno: retornoDaMensagem(dados),
     fato_de_rotina: dados.fato_de_rotina ? neutralizar(dados.fato_de_rotina) : undefined,
     momento: momento(dados),

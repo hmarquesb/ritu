@@ -146,6 +146,7 @@ export const dadosDoPreparoSchema = z.object({
   padroes: z.array(z.string()),
   mensagens_do_dia: z.array(z.object({ autor: z.enum(["pessoa", "agente"]), texto: z.string() })),
   casa_da_mensagem: casaDaMensagemSchema.optional(),
+  gosta_da_mensagem: z.array(z.string()).optional(),
   retorno: retornoDaMensagemSchema.optional(),
   fato_de_rotina: z.string().optional(),
   perguntas: z
@@ -185,6 +186,38 @@ function naoComeERestricaoDaMensagem(entrada: EntradaDoAcompanhante): ItemTempor
     valor,
   }))
   return [...naoCome, ...restricoes]
+}
+
+// O gosto citado na mensagem vale neste run: uma cópia das preferências, sem gravar nada.
+function comGostoDaMensagem(
+  preferencias: Preferencia[],
+  contaId: string,
+  entrada: EntradaDoAcompanhante,
+  kb: KnowledgeBase,
+): Preferencia[] {
+  const ids = (entrada.gosta_da_mensagem ?? []).filter((id) => kb.alimento(id))
+  if (ids.length === 0) return preferencias
+  const citados = new Set(ids)
+  const jaTem = new Set(
+    preferencias.filter((p) => p.item_tipo === "alimento").map((p) => p.item_id),
+  )
+  const zeradas: Preferencia[] = [...citados]
+    .filter((id) => !jaTem.has(id))
+    .map((id) => ({
+      conta_id: contaId,
+      item_tipo: "alimento",
+      item_id: id,
+      gosto: "gosta",
+      ajudou: 0,
+      nao_ajudou: 0,
+      nao_fez: 0,
+      ultimos_resultados: [],
+      ultima_sugestao_em: null,
+    }))
+  const marcadas = preferencias.map((p) =>
+    p.item_tipo === "alimento" && citados.has(p.item_id) ? { ...p, gosto: "gosta" as const } : p,
+  )
+  return [...marcadas, ...zeradas]
 }
 
 async function gravarDaMensagem(
@@ -443,10 +476,11 @@ async function lerContexto(
   const fuso = perfil.cidade_fuso ?? undefined
   const agora = clock.now()
   const dia = diaLocal(agora, fuso)
-  const [evitarDoDia, preferencias] = await Promise.all([
+  const [evitarDoDia, lidas] = await Promise.all([
     stores.profiles.evitarTemporario(contaId, dia),
     stores.preferences.ler(contaId),
   ])
+  const preferencias = comGostoDaMensagem(lidas, contaId, entrada, kb)
   const daMensagem = await gravarDaMensagem(deps, contaId, dia, entrada)
   const { filtro, evitar_textos } = montarFiltro({
     perfil,
@@ -600,6 +634,7 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
     ...(entrada.casa_da_mensagem
       ? { casa_da_mensagem: nomesDaCasaDaMensagem(entrada.casa_da_mensagem, kb) }
       : {}),
+    ...gostoDaMensagem(entrada, kb),
     ...(entrada.retorno ? { retorno: entrada.retorno } : {}),
     ...(entrada.fato_de_rotina ? { fato_de_rotina: entrada.fato_de_rotina } : {}),
   }
@@ -611,4 +646,15 @@ function nomesDaCasaDaMensagem(
 ): { tem: string[]; acabou: string[] } {
   const nomes = (ids: string[]) => ids.map((id) => kb.alimento(id)?.nome ?? id)
   return { tem: nomes(casa.tem), acabou: nomes(casa.acabou) }
+}
+
+function gostoDaMensagem(
+  entrada: EntradaDoAcompanhante,
+  kb: KnowledgeBase,
+): Pick<DadosDoPreparo, "gosta_da_mensagem"> {
+  const nomes = (entrada.gosta_da_mensagem ?? []).flatMap((id) => {
+    const nome = kb.alimento(id)?.nome
+    return nome ? [nome] : []
+  })
+  return nomes.length > 0 ? { gosta_da_mensagem: nomes } : {}
 }

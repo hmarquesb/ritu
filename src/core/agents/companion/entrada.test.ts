@@ -47,4 +47,14 @@ describe("entradaDoAcompanhanteSchema", () => {
       entradaDoAcompanhanteSchema.safeParse({ ...minima, restricoes_da_mensagem: ["xis"] }).success,
     ).toBe(false)
   })
+
+  it("aceita gosta_da_mensagem como lista de ids e recusa outro formato", () => {
+    const ok = entradaDoAcompanhanteSchema.safeParse({ ...minima, gosta_da_mensagem: ["gengibre"] })
+    expect(ok.success).toBe(true)
+    expect(ok.success && ok.data.gosta_da_mensagem).toEqual(["gengibre"])
+    expect(
+      entradaDoAcompanhanteSchema.safeParse({ ...minima, gosta_da_mensagem: [{ id: "x" }] })
+        .success,
+    ).toBe(false)
+  })
 })

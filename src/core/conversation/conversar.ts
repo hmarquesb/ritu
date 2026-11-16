@@ -32,7 +32,7 @@ import {
   resolverCaminhoDeCodigo,
 } from "./caminhos-de-codigo"
 import { criarContinuar } from "./continuar"
-import { fecharOuFalhar } from "./fim-com-propostas"
+import { fecharOuFalhar, filtroDoRun } from "./fim-com-propostas"
 import { anotarPendencia, ETAPA_DA_VARIANTE, perguntaDaVariantePendente } from "./pausa-de-codigo"
 
 export { type MensagemRecebida, mensagemRecebidaSchema } from "@/core/messages/texto"
@@ -320,7 +320,7 @@ export function createConversation(deps: Deps) {
     const atual = await stores.runs.buscar(x.contaId, x.run.id)
     if (atual?.status !== "running") return saida
     return fecharOuFalhar(
-      { stores, kb, runs, telemetry },
+      { stores, kb, runs, telemetry, clock },
       {
         contaId: x.contaId,
         runId: x.run.id,
@@ -328,6 +328,7 @@ export function createConversation(deps: Deps) {
         comIncomodo: incomodo || atual.com_incomodo,
         saida,
         anotacoes: saida.anotacoes,
+        filtro: filtroDoRun(atual),
         aoVivo: x.aoVivo,
       },
     )

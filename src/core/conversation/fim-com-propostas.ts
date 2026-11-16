@@ -1,12 +1,17 @@
+import { dadosDoPreparoSchema } from "@/core/agents/companion/preparo"
 import type { Anotacao, SaidaDoAcompanhante } from "@/core/agents/companion/saida"
+import { montarFiltro } from "@/core/filtro-da-pessoa"
+import type { FiltroPessoa } from "@/core/knowledge/filtros"
+import { padraoParaOBloco } from "@/core/patterns/bloco"
 import { type ConteudoDaProposta, semTool } from "@/core/proposals/conteudo"
 import { montarPropostas, propostaDoParaTer } from "@/core/proposals/montar"
 import { textoDaProposta } from "@/core/proposals/textos"
 import type { EventoAoVivo } from "@/core/runs/loop"
-import type { Caminho, NovaEtapa } from "@/core/runs/ports"
+import type { Caminho, NovaEtapa, Run } from "@/core/runs/ports"
+import { diaLocal } from "@/core/time/dia-local"
 import type { Deps } from "./conversar"
 
-type DepsDoFim = Pick<Deps, "stores" | "kb" | "runs" | "telemetry">
+type DepsDoFim = Pick<Deps, "stores" | "kb" | "runs" | "telemetry" | "clock">
 type Pedido = {
   contaId: string
   runId: string
@@ -14,6 +19,7 @@ type Pedido = {
   comIncomodo: boolean
   saida: SaidaDoAcompanhante
   anotacoes: Anotacao[]
+  filtro?: FiltroPessoa
   aoVivo?: (e: EventoAoVivo) => void
 }
 
@@ -46,19 +52,44 @@ function semInternos(saida: SaidaDoAcompanhante): SaidaDoAcompanhante {
   return resto
 }
 
-function propostasDoFim(p: Pedido): ConteudoDaProposta[] {
+/** O filtro da pessoa guardado no checkpoint do run; sem filtro válido, undefined. */
+export function filtroDoRun(run: Run): FiltroPessoa | undefined {
+  const dados = (run.checkpoint as { dados?: { filtro?: unknown } } | null)?.dados
+  const lido = dadosDoPreparoSchema.shape.filtro.safeParse(dados?.filtro)
+  return lido.success ? lido.data : undefined
+}
+
+// Um padrão candidato entra no fim dos runs do acompanhante respondidos pelo agente, sem incômodo (D9).
+async function padraoDoFim(deps: DepsDoFim, p: Pedido): Promise<ConteudoDaProposta[]> {
+  if (p.caminho !== "acompanhante" || p.saida.origem !== "agente") return []
+  const { stores, clock } = deps
+  const perfil = await stores.profiles.ler(p.contaId)
+  const fuso = perfil.cidade_fuso ?? undefined
+  // Run que não pausou não tem checkpoint: o filtro do dia sai do perfil, da lista temporária e dos gostos (D17).
+  const filtro =
+    p.filtro ??
+    montarFiltro({
+      perfil,
+      evitarDoDia: await stores.profiles.evitarTemporario(p.contaId, diaLocal(clock.now(), fuso)),
+      evitarDaMensagem: [],
+      preferencias: await stores.preferences.ler(p.contaId),
+    }).filtro
+  return padraoParaOBloco(deps, p.contaId, { filtro, fuso })
+}
+
+async function propostasDoFim(deps: DepsDoFim, p: Pedido): Promise<ConteudoDaProposta[]> {
   if (p.comIncomodo || SEM_PROPOSTA.includes(p.caminho)) return []
   return montarPropostas({
     anotacoes: p.anotacoes,
     doAgente: p.saida.propostas_do_agente ?? [],
-    extras: propostaDoParaTer(p.saida),
+    extras: [...propostaDoParaTer(p.saida), ...(await padraoDoFim(deps, p))],
   })
 }
 
 /** Fecha um run em running: sem propostas vai a done; com propostas, cria as linhas e pausa para aprovação. */
 export async function fecharComPropostas(deps: DepsDoFim, p: Pedido): Promise<SaidaDoAcompanhante> {
   const { stores, kb, runs } = deps
-  const propostas = propostasDoFim(p)
+  const propostas = await propostasDoFim(deps, p)
   const base = { ...semInternos(p.saida), anotacoes: p.anotacoes }
   if (propostas.length === 0) {
     const final = { ...base, propostas: [] }

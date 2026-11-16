@@ -20,7 +20,7 @@ import {
 } from "@/core/runs/pergunta"
 import type { Run } from "@/core/runs/ports"
 import type { Deps, RespostaDaConversa } from "./conversar"
-import { fecharOuFalhar } from "./fim-com-propostas"
+import { fecharOuFalhar, filtroDoRun } from "./fim-com-propostas"
 import { anotarPendencia } from "./pausa-de-codigo"
 
 type AoVivo = (e: EventoAoVivo) => void
@@ -155,7 +155,7 @@ export function criarContinuar(deps: Deps) {
     if (atual?.com_incomodo) await stores.messages.marcarIncomodoDoRun(contaId, run.id)
     if (atual?.status !== "running") return { saida: final }
     const fechada = await fecharOuFalhar(
-      { stores, kb, runs, telemetry },
+      { stores, kb, runs, telemetry, clock },
       {
         contaId,
         runId: run.id,
@@ -163,6 +163,7 @@ export function criarContinuar(deps: Deps) {
         comIncomodo: atual.com_incomodo,
         saida: final,
         anotacoes,
+        filtro: filtroDoRun(atual),
         aoVivo: x.aoVivo,
       },
     )

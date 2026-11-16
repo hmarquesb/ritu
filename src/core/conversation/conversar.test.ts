@@ -776,3 +776,38 @@ describe("conversar: fim do run com o bloco de aprovação", () => {
     expect(mensagens.at(-1)).toMatchObject({ autor: "agente", texto: r.saida?.resposta })
   })
 })
+
+describe("conversar: padrão candidato no fim do run", () => {
+  async function semearCandidato(m: Montagem) {
+    const p = await m.stores.patterns.propor(m.conta.id, {
+      tipo: "ajuda_em_estado",
+      chave: "com_frio+agitada|pratica:cha-gengibre",
+      frase: "Quando você está com frio e agitada, chá de gengibre costuma te ajudar.",
+      ocorrencias: 3,
+    })
+    if (!p) throw new Error("padrão não criado")
+    return p
+  }
+
+  it("run que entrega sem pausa leva o padrão como a linha do bloco (D17)", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const p = await semearCandidato(m)
+    const r = await dizer(m, "estou com frio")
+    expect(r.saida?.origem).toBe("agente")
+    expect(r.status).toBe("waiting_for_approval")
+    const linhas = await m.stores.proposals.doRun(m.conta.id, r.run_id)
+    expect(linhas.map((l) => l.tool)).toEqual(["padrao.confirmar"])
+    expect(linhas[0]?.conteudo).toMatchObject({ padrao_id: p.id })
+  })
+
+  it("caminho de código não leva o padrão", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["fora"] })] })
+    await semearCandidato(m)
+    const r = await dizer(m, "qual a capital da França?")
+    expect(r.status).toBe("done")
+    expect(await m.stores.proposals.doRun(m.conta.id, r.run_id)).toEqual([])
+  })
+})

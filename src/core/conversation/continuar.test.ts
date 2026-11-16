@@ -402,3 +402,21 @@ describe("continuar: limite de perguntas", () => {
     expect(recusadas.length).toBeGreaterThan(0)
   })
 })
+
+describe("continuar: padrão candidato no fim do run", () => {
+  it("depois da pergunta, o run termina com o padrão como linha do bloco", async () => {
+    const m = await montar({ roteiro: [askCasa, fim()] })
+    const p = await m.stores.patterns.propor(m.conta.id, {
+      tipo: "ajuda_em_estado",
+      chave: "com_frio+agitada|pratica:cha-gengibre",
+      frase: "Quando você está com frio e agitada, chá de gengibre costuma te ajudar.",
+      ocorrencias: 3,
+    })
+    const pausado = await pausar(m)
+    const r = await continuar(m, pausado.run_id, tenhoNaoTenho)
+    expect(r.status).toBe("waiting_for_approval")
+    const linhas = await m.stores.proposals.doRun(m.conta.id, pausado.run_id)
+    expect(linhas.map((l) => l.tool)).toContain("padrao.confirmar")
+    expect(linhas.at(-1)?.conteudo).toMatchObject({ padrao_id: p?.id })
+  })
+})

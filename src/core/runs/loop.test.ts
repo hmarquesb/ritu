@@ -5,6 +5,7 @@ import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createFixedModel } from "@/infra/fakes/fixed-model"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createScriptedRuntime, type PassoRoteirizado } from "@/infra/fakes/scripted-runtime"
+import type { MensagemDoLoop } from "./agent-runtime"
 import type { DefinicaoDoAgente, ToolDeControle } from "./agente"
 import {
   type DepsDoLoop,
@@ -127,6 +128,36 @@ const inicio = () => novoCheckpoint(agente, "mensagem", { d: 1 })
 const fin = { nome: "finalizar", argumentos: {} }
 
 describe("executarTrecho", () => {
+  it("o resultado de uma tool já está nas mensagens quando a seguinte do passo roda", async () => {
+    const vistas: MensagemDoLoop[][] = []
+    const espia: ToolDeControle<unknown> = {
+      name: "espia",
+      description: "registra as mensagens",
+      input: z.object({}),
+      async tratar(_entrada, _ctx, estado) {
+        vistas.push([...estado.mensagens])
+        return { tipo: "recusar", resultado: { ok: true } }
+      },
+    }
+    const comEspia: DefinicaoDoAgente = { ...agente, controle: [...agente.controle, espia] }
+    const m = montar([
+      {
+        chamadas: [
+          { nome: "a", argumentos: { x: 1 } },
+          { nome: "espia", argumentos: {} },
+        ],
+      },
+      { chamadas: [fin] },
+    ])
+
+    await executarTrecho(comEspia, novoCheckpoint(comEspia, "mensagem", { d: 1 }), ctx, m.deps)
+
+    expect(vistas).toHaveLength(1)
+    expect(
+      vistas[0]?.filter((x) => x.papel === "tool").map((x) => (x as { nome: string }).nome),
+    ).toEqual(["a"])
+  })
+
   it("A, B, entregar: 3 chamadas, etapas na ordem", async () => {
     const m = montar([
       { chamadas: [{ nome: "a", argumentos: { x: 1 } }] },

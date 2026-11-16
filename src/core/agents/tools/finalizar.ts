@@ -7,6 +7,7 @@ import {
 } from "@/core/agents/companion/saida"
 import { validarEntrega } from "@/core/agents/companion/validador"
 import { gunaSchema } from "@/core/knowledge/vocab"
+import { propostasDoAgente } from "@/core/proposals/montar"
 import type { ToolDeControle } from "@/core/runs/agente"
 import type { Checkpoint } from "@/core/runs/checkpoint"
 
@@ -51,6 +52,11 @@ export const finalizar: ToolDeControle<EntregaDoModelo> = {
       }
       return { tipo: "recusar", resultado: { entregue: false, violacoes } }
     }
-    return { tipo: "entregar", saida: completarSaida(entrada, dados, ctx.kb) }
+    const propostas = propostasDoAgente(estado.mensagens)
+    const saida = completarSaida(entrada, dados, ctx.kb)
+    return {
+      tipo: "entregar",
+      saida: propostas.length > 0 ? { ...saida, propostas_do_agente: propostas } : saida,
+    }
   },
 }

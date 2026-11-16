@@ -3,14 +3,19 @@ import type { DadosDoPreparo } from "@/core/agents/companion/preparo"
 import type { EntregaDoModelo } from "@/core/agents/companion/saida"
 import { filtroVazio } from "@/core/knowledge/filtros"
 import type { MensagemDoLoop } from "@/core/runs/agent-runtime"
+import type { DefinicaoDoAgente } from "@/core/runs/agente"
 import type { Checkpoint } from "@/core/runs/checkpoint"
-import type { ToolContext } from "@/core/tools/tool"
+import { executarTrecho, novoCheckpoint } from "@/core/runs/loop"
+import type { ContextoDoRun, Tool, ToolContext } from "@/core/tools/tool"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createFixedModel } from "@/infra/fakes/fixed-model"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
+import { createScriptedRuntime, type PassoRoteirizado } from "@/infra/fakes/scripted-runtime"
 import { finalizar } from "./finalizar"
+import { listaPropor, memoriaPropor } from "./propostas"
 
 const kb = createMiniKnowledge()
 const CONFIRMADOS = ["gengibre", "canela", "cardamomo", "leite", "mel", "arroz-branco", "ghee"]
@@ -214,5 +219,104 @@ describe("finalizar", () => {
 
     const texto = JSON.stringify(telemetry.spans)
     expect(texto).not.toContain("Um chá morno")
+  })
+})
+
+describe("finalizar com as propostas do agente", () => {
+  const NOTA = "Almoço fora às terças"
+  const run: ContextoDoRun = {
+    fato_de_rotina: NOTA,
+    com_incomodo: false,
+    tem_para_ter: false,
+    nao_tem: ["gengibre"],
+    candidatos: [
+      { tipo: "cha", id: "cha-gengibre", nome: "Chá de gengibre", alimentos: ["gengibre"] },
+    ],
+    na_lista: [],
+    lista_recusada: [],
+    notas_ativas: [],
+  }
+  const agente: DefinicaoDoAgente = {
+    nome: "teste",
+    instrucoes: "instr",
+    prompt_versao: "v1",
+    tools: [memoriaPropor, listaPropor] as unknown as Tool<unknown, unknown>[],
+    controle: [finalizar as never],
+    lembreteDeEntrega: "entregue por finalizar",
+  }
+  const memoria = { nome: "memoria.propor", argumentos: { tipo: "rotina" } }
+  const lista = {
+    nome: "lista.propor",
+    argumentos: { alimento_id: "gengibre", pratica_id: "cha-gengibre" },
+  }
+  const fin = (mudar: Partial<EntregaDoModelo> = {}) => ({
+    nome: "finalizar",
+    argumentos: entrega(mudar),
+  })
+
+  async function rodar(roteiro: PassoRoteirizado[], fatoDeRotina: string | undefined = NOTA) {
+    const { c, telemetry } = ctx()
+    const clock = createFixedClock("2026-11-15T12:00:00Z")
+    const contexto: ToolContext = {
+      ...c,
+      run: { ...run, ...(fatoDeRotina ? { fato_de_rotina: fatoDeRotina } : {}) },
+    }
+    const { fim } = await executarTrecho(
+      agente,
+      novoCheckpoint(agente, "mensagem", dados()),
+      contexto,
+      {
+        runtime: createScriptedRuntime(roteiro, clock),
+        modelo: createFixedModel(),
+        clock,
+        telemetry,
+        gravarEtapa: async () => undefined,
+      },
+    )
+    if (fim.tipo !== "entregue") throw new Error(`fim inesperado: ${fim.tipo}`)
+    return fim.saida as { propostas_do_agente?: unknown[] }
+  }
+
+  const rotina = { tool: "memoria.propor", tipo: "rotina", texto: NOTA }
+
+  it("memoria.propor e finalizar no mesmo passo entregam com a nota", async () => {
+    const saida = await rodar([{ chamadas: [memoria, fin()] }])
+
+    expect(saida.propostas_do_agente).toEqual([rotina])
+  })
+
+  it("finalizar num passo seguinte também leva a proposta", async () => {
+    const saida = await rodar([{ chamadas: [memoria] }, { chamadas: [fin()] }])
+
+    expect(saida.propostas_do_agente).toEqual([rotina])
+  })
+
+  it("memoria.propor recusada não entra e o campo some", async () => {
+    const saida = await rodar([{ chamadas: [memoria, fin()] }], "Estou com dor de cabeça")
+
+    expect(saida).not.toHaveProperty("propostas_do_agente")
+  })
+
+  it("finalizar recusado e depois aceito traz a proposta aceita antes", async () => {
+    const saida = await rodar([
+      { chamadas: [memoria] },
+      { chamadas: [fin({ resposta: "" })] },
+      { chamadas: [fin()] },
+    ])
+
+    expect(saida.propostas_do_agente).toEqual([rotina])
+  })
+
+  it("lista.propor aceita duas vezes fica só com a primeira", async () => {
+    const saida = await rodar([{ chamadas: [lista, lista, fin()] }])
+
+    expect(saida.propostas_do_agente).toEqual([
+      {
+        tool: "lista.propor",
+        alimento_id: "gengibre",
+        motivo: "faltou_hoje",
+        detalhe: "Chá de gengibre",
+      },
+    ])
   })
 })

@@ -1,6 +1,7 @@
 import { type AppConfig, config } from "@config/index"
 import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
+import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memoria"
 import type { Clock } from "@/core/clock"
 import { createConversation } from "@/core/conversation/conversar"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
@@ -46,6 +47,7 @@ export type Container = {
   runs: ReturnType<typeof createRunService>
   companion: ReturnType<typeof createCompanion>
   interpreter: ReturnType<typeof createInterpreter>
+  memory: MemoryAgent
   conversation: ReturnType<typeof createConversation>
   touches: ReturnType<typeof createTouches>
   iniciarTelemetria(): Promise<void>
@@ -80,6 +82,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let runs: ReturnType<typeof createRunService> | undefined
   let companion: ReturnType<typeof createCompanion> | undefined
   let interpreter: ReturnType<typeof createInterpreter> | undefined
+  let memory: MemoryAgent | undefined
   let conversation: ReturnType<typeof createConversation> | undefined
   let touches: ReturnType<typeof createTouches> | undefined
   let sdk: { encerrar(): Promise<void> } | undefined
@@ -176,6 +179,16 @@ export function createContainer(overrides?: Partial<Container>): Container {
         clock,
       })
       return interpreter
+    },
+    get memory() {
+      memory ??= createMemoryAgent({
+        router: container.router,
+        client: container.llm,
+        kb: container.knowledge,
+        telemetry: container.telemetry,
+        clock,
+      })
+      return memory
     },
     get conversation() {
       conversation ??= createConversation({

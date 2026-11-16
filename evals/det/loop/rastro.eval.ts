@@ -112,13 +112,8 @@ describe("rastro do loop com pausa", () => {
         rotulos: { tipo: "pergunta" },
       }),
     )
-    expect(telemetry.metricas).toContainEqual(
-      expect.objectContaining({
-        nome: "ritu_llm_erros_total",
-        valor: 1,
-        rotulos: { "erro.codigo": "rate_limit" },
-      }),
-    )
+    // o erro de LLM é contado pelo roteador (`falhou`); o loop não soma de novo
+    expect(telemetry.metricas.some((m) => m.nome === "ritu_llm_erros_total")).toBe(false)
   })
 
   it("nenhum atributo fora da lista e nenhum com o texto da mensagem", async () => {

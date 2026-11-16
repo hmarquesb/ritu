@@ -15,6 +15,7 @@ export function createNullTelemetry(): Telemetry {
     contador() {},
     histograma() {},
     medidor() {},
+    atribuirAoSpanAtual() {},
     log() {},
     traceparentAtual: () => undefined,
     async encerrar() {},

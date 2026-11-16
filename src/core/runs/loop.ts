@@ -207,7 +207,6 @@ async function tratarFalha(
   modelo: string,
   erro: LlmError,
 ): Promise<"trocar" | "repetir" | "encerrar"> {
-  amb.deps.telemetry.contador("ritu_llm_erros_total", { "erro.codigo": erro.code })
   await amb.deps.modelo.falhou(modelo, erro)
   if (erro.code === "rate_limit") {
     st.trocas += 1

@@ -1,8 +1,10 @@
+import { telemetria } from "@config/telemetria"
 import {
   type Attributes,
   type Context,
   type Counter,
   context,
+  createContextKey,
   type Gauge,
   type Histogram,
   metrics,
@@ -13,11 +15,29 @@ import {
   trace,
 } from "@opentelemetry/api"
 import { logs, SeverityNumber } from "@opentelemetry/api-logs"
-import { ATRIBUTOS_PERMITIDOS, MAX_TEXTO_ATRIBUTO } from "@/core/telemetry/nomes"
+import {
+  ATRIBUTOS_PERMITIDOS,
+  type CodigoDeLog,
+  LOGS,
+  MAX_TEXTO_ATRIBUTO,
+} from "@/core/telemetry/nomes"
 import type { Atributos, SpanAtivo, Telemetry } from "@/core/telemetry/ports"
 
 const NOME_DO_INSTRUMENTO = "ritu"
 const PERMITIDOS: ReadonlySet<string> = new Set(ATRIBUTOS_PERMITIDOS)
+
+// Portador mutável do `run.id` do span `run` ativo: o atributo pode chegar depois da abertura.
+type PortadorDoRun = { runId?: string }
+const CHAVE_DO_RUN = createContextKey("ritu.run")
+
+function portadorAtivo(): PortadorDoRun | undefined {
+  return context.active().getValue(CHAVE_DO_RUN) as PortadorDoRun | undefined
+}
+
+function lembrarRunId(portador: PortadorDoRun | undefined, atributos: Attributes): void {
+  const id = atributos["run.id"]
+  if (portador && id !== undefined) portador.runId = String(id)
+}
 
 const SEVERIDADE = {
   info: { numero: SeverityNumber.INFO, texto: "INFO" },
@@ -65,15 +85,18 @@ export function createOtelTelemetry(): Telemetry {
       if (atributoValido(chave, valor)) {
         limpos[chave] = valor
       } else if (valor !== undefined) {
-        emitir("warn", "atributo_proibido", { "erro.codigo": "atributo_proibido" }, false)
+        emitir("atributo_proibido", { "erro.codigo": "atributo_proibido" }, false)
       }
     }
     return limpos
   }
 
-  function emitir(nivel: Nivel, codigo: string, campos: Atributos | undefined, validar = true) {
+  function emitir(codigo: CodigoDeLog, campos: Atributos | undefined, validar = true) {
+    const nivel: Nivel = LOGS[codigo]
     const atributos = validar ? filtrar(campos) : { ...campos }
     const ativo = trace.getActiveSpan()?.spanContext()
+    const runId = portadorAtivo()?.runId
+    if (runId !== undefined && atributos["run.id"] === undefined) atributos["run.id"] = runId
     if (ativo && atributos.trace_id === undefined) atributos.trace_id = ativo.traceId
     const { numero, texto } = SEVERIDADE[nivel]
     logs.getLogger(NOME_DO_INSTRUMENTO).emit({
@@ -86,10 +109,12 @@ export function createOtelTelemetry(): Telemetry {
     if (semProvedorDeLogs()) console[nivel](JSON.stringify({ nivel, codigo, ...atributos }))
   }
 
-  function envolver(span: Span): SpanAtivo {
+  function envolver(span: Span, portador?: PortadorDoRun): SpanAtivo {
     return {
       atribuir(a) {
-        span.setAttributes(filtrar(a))
+        const limpos = filtrar(a)
+        span.setAttributes(limpos)
+        lembrarRunId(portador, limpos)
       },
       falhar(codigo) {
         span.setAttribute("erro.codigo", codigo)
@@ -103,6 +128,19 @@ export function createOtelTelemetry(): Telemetry {
     return propagation.extract(ROOT_CONTEXT, { traceparent })
   }
 
+  // O span `run` guarda o portador do `run.id` no contexto, também quando continua por traceparent.
+  function contextoDoSpan(
+    nome: string,
+    limpos: Attributes,
+    traceparent: string | undefined,
+  ): { ctx: Context; portador?: PortadorDoRun } {
+    const ctx = contextoPai(traceparent)
+    if (nome !== "run") return { ctx }
+    const portador: PortadorDoRun = {}
+    lembrarRunId(portador, limpos)
+    return { ctx: ctx.setValue(CHAVE_DO_RUN, portador), portador }
+  }
+
   function instrumento<T>(mapa: Map<string, T>, nome: string, criar: () => T): T {
     let item = mapa.get(nome)
     if (!item) {
@@ -112,25 +150,31 @@ export function createOtelTelemetry(): Telemetry {
     return item
   }
 
+  function criarHistograma(nome: string): Histogram {
+    const limites = (telemetria.buckets as Record<string, readonly number[]>)[nome]
+    return medidor.createHistogram(
+      nome,
+      limites ? { advice: { explicitBucketBoundaries: [...limites] } } : undefined,
+    )
+  }
+
   return {
     span(nome, atributos, fn, opts) {
-      return tracer.startActiveSpan(
-        nome,
-        { attributes: filtrar(atributos) },
-        contextoPai(opts?.traceparent),
-        async (span) => {
-          const ativo = envolver(span)
-          try {
-            return await fn(ativo)
-          } catch (erro) {
-            // Só um código fixo: a mensagem do erro pode carregar texto da pessoa.
-            ativo.falhar("erro_inesperado")
-            throw erro
-          } finally {
-            span.end()
-          }
-        },
-      )
+      const limpos = filtrar(atributos)
+      const { ctx, portador } = contextoDoSpan(nome, limpos, opts?.traceparent)
+      return tracer.startActiveSpan(nome, { attributes: limpos }, ctx, async (span) => {
+        const ativo = envolver(span, portador)
+        try {
+          return await fn(ativo)
+        } catch (erro) {
+          // Só um código fixo: a mensagem do erro pode carregar texto da pessoa.
+          ativo.falhar("erro_inesperado")
+          if (nome === "run") emitir("erro_inesperado", { "erro.codigo": "erro_inesperado" })
+          throw erro
+        } finally {
+          span.end()
+        }
+      })
     },
     evento(nome, atributos) {
       trace.getActiveSpan()?.addEvent(nome, filtrar(atributos))
@@ -139,16 +183,20 @@ export function createOtelTelemetry(): Telemetry {
       instrumento(contadores, nome, () => medidor.createCounter(nome)).add(valor, filtrar(rotulos))
     },
     histograma(nome, valor, rotulos) {
-      instrumento(histogramas, nome, () => medidor.createHistogram(nome)).record(
-        valor,
-        filtrar(rotulos),
-      )
+      instrumento(histogramas, nome, () => criarHistograma(nome)).record(valor, filtrar(rotulos))
     },
     medidor(nome, valor, rotulos) {
       instrumento(medidores, nome, () => medidor.createGauge(nome)).record(valor, filtrar(rotulos))
     },
-    log(nivel, codigo, campos) {
-      emitir(nivel, codigo, campos)
+    atribuirAoSpanAtual(a) {
+      const span = trace.getActiveSpan()
+      if (!span) return
+      const limpos = filtrar(a)
+      span.setAttributes(limpos)
+      lembrarRunId(portadorAtivo(), limpos)
+    },
+    log(codigo, campos) {
+      emitir(codigo, campos)
     },
     traceparentAtual() {
       const carrier: Record<string, string> = {}

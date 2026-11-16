@@ -3,7 +3,10 @@ import { randomBytes } from "node:crypto"
 import {
   ATRIBUTOS_PERMITIDOS,
   type AtributoPermitido,
+  type CodigoDeLog,
+  LOGS,
   MAX_TEXTO_ATRIBUTO,
+  METRICAS,
   type NomeDeMetrica,
   type NomeDeSpan,
 } from "@/core/telemetry/nomes"
@@ -27,8 +30,8 @@ export type MetricaRegistrada = {
 }
 
 export type LogRegistrado = {
+  codigo: CodigoDeLog
   nivel: "info" | "warn" | "error"
-  codigo: string
   campos: Atributos
 }
 
@@ -53,6 +56,18 @@ function validar(atributos: Atributos = {}): void {
   }
 }
 
+// Trava de rótulos: o conjunto de chaves tem de ser exatamente o declarado em METRICAS.
+function validarRotulos(nome: NomeDeMetrica, rotulos: Atributos): void {
+  validar(rotulos)
+  const declarados: readonly string[] = METRICAS[nome].rotulos
+  const recebidos = Object.keys(rotulos).filter(
+    (k) => rotulos[k as AtributoPermitido] !== undefined,
+  )
+  const igual =
+    recebidos.length === declarados.length && declarados.every((r) => recebidos.includes(r))
+  if (!igual) throw new Error(`rotulos_invalidos: ${nome}`)
+}
+
 const hex = (bytes: number) => randomBytes(bytes).toString("hex")
 
 function traceDe(traceparent: string | undefined, pai: Contexto | undefined): string {
@@ -67,10 +82,24 @@ export function createMemoryTelemetry(): MemoryTelemetry {
   const logs: LogRegistrado[] = []
   const contexto = new AsyncLocalStorage<Contexto>()
 
+  // O `run.id` do span `run` mais próximo (o atributo pode chegar depois da abertura).
+  function runIdAtual(): string | undefined {
+    let indice = contexto.getStore()?.indice
+    while (indice !== undefined) {
+      const registro = spans[indice]
+      if (registro?.nome === "run") {
+        const id = registro.atributos["run.id"]
+        if (id !== undefined) return String(id)
+      }
+      indice = registro?.pai
+    }
+    return undefined
+  }
+
   const metrica =
     (tipo: MetricaRegistrada["tipo"]) =>
     (nome: NomeDeMetrica, valor: number, rotulos: Atributos = {}) => {
-      validar(rotulos)
+      validarRotulos(nome, rotulos)
       metricas.push({ tipo, nome, valor, rotulos })
     }
 
@@ -117,16 +146,29 @@ export function createMemoryTelemetry(): MemoryTelemetry {
     },
 
     contador(nome, rotulos = {}, valor = 1) {
-      validar(rotulos)
+      validarRotulos(nome, rotulos)
       metricas.push({ tipo: "contador", nome, valor, rotulos })
     },
 
     histograma: metrica("histograma"),
     medidor: metrica("medidor"),
 
-    log(nivel, codigo, campos = {}) {
+    atribuirAoSpanAtual(a) {
+      validar(a)
+      const atual = contexto.getStore()
+      if (atual) Object.assign(spans[atual.indice]?.atributos ?? {}, a)
+    },
+
+    log(codigo, campos = {}) {
       validar(campos)
-      logs.push({ nivel, codigo, campos })
+      const atual = contexto.getStore()
+      const completos: Atributos = { ...campos }
+      const runId = runIdAtual()
+      if (atual && runId !== undefined) {
+        completos["run.id"] ??= runId
+        completos.trace_id ??= atual.trace
+      }
+      logs.push({ codigo, nivel: LOGS[codigo], campos: completos })
     },
 
     traceparentAtual() {

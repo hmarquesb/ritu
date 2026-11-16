@@ -142,8 +142,8 @@ async function executarChamada(amb: Ambiente, chamada: ChamadaDeTool): Promise<D
     return feito
   })
   telemetry.contador("ritu_tool_chamadas_total", {
-    "tool.nome": nomeSpan,
-    "tool.status": d.status,
+    tool: nomeSpan,
+    status: d.status,
   })
   await registrarEtapa(
     amb,

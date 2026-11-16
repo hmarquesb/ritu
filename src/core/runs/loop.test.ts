@@ -359,12 +359,8 @@ describe("executarTrecho", () => {
       "llm.troca_de_modelo": true,
       "llm.tentativas": 2,
     })
-    expect(m.telemetry.metricas).toContainEqual(
-      expect.objectContaining({
-        nome: "ritu_llm_erros_total",
-        rotulos: { "erro.codigo": "rate_limit" },
-      }),
-    )
+    // o erro é contado pelo roteador, em `falhou`; o loop não soma de novo
+    expect(m.telemetry.metricas.some((x) => x.nome === "ritu_llm_erros_total")).toBe(false)
   })
 
   it("rate_limit sem próximo modelo termina em sem_modelo", async () => {

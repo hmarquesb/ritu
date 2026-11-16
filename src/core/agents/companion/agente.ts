@@ -1,18 +1,26 @@
-import { acompanhanteV3 } from "@/core/agents/prompts/acompanhante.v3"
+import { acompanhanteV4 } from "@/core/agents/prompts/acompanhante.v4"
 import { askUser } from "@/core/agents/tools/ask-user"
 import { ayurvedaTools } from "@/core/agents/tools/ayurveda"
 import { climaTools } from "@/core/agents/tools/clima"
 import { finalizar } from "@/core/agents/tools/finalizar"
 import { memoriaTools } from "@/core/agents/tools/memoria"
+import { listaPropor, memoriaPropor } from "@/core/agents/tools/propostas"
 import type { DefinicaoDoAgente, ToolDeControle } from "@/core/runs/agente"
+import type { Tool } from "@/core/tools/tool"
 
 export function criarAcompanhante(): DefinicaoDoAgente {
   return {
     nome: "acompanhante",
-    instrucoes: acompanhanteV3.instrucoes,
-    prompt_versao: acompanhanteV3.versao,
-    lembreteDeEntrega: acompanhanteV3.lembreteDeEntrega,
-    tools: [...climaTools, ...memoriaTools, ...ayurvedaTools],
+    instrucoes: acompanhanteV4.instrucoes,
+    prompt_versao: acompanhanteV4.versao,
+    lembreteDeEntrega: acompanhanteV4.lembreteDeEntrega,
+    tools: [
+      ...climaTools,
+      ...memoriaTools,
+      ...ayurvedaTools,
+      memoriaPropor as Tool<unknown, unknown>,
+      listaPropor as Tool<unknown, unknown>,
+    ],
     controle: [finalizar as ToolDeControle<unknown>, askUser as ToolDeControle<unknown>],
   }
 }

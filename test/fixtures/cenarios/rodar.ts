@@ -10,7 +10,7 @@ import type { DepsDoCenario } from "./montar"
 import type { Cenario, Toque } from "./tipos"
 
 // Teto de retomadas por cenário: uma pausa além disso deixa o run em waiting_for_input.
-const MAXIMO_DE_RETOMADAS = 3
+export const MAXIMO_DE_RETOMADAS = 3
 
 type Final = RespostaDaConversa | RespostaDoRun
 

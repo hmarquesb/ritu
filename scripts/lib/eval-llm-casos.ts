@@ -20,18 +20,21 @@ import type { SaidaDoAcompanhante } from "../../src/core/agents/companion/saida"
 import { createInterpreter } from "../../src/core/agents/interpreter/interpretar"
 import type { Clock } from "../../src/core/clock"
 import type { RespostaDaConversa } from "../../src/core/conversation/conversar"
+import { RituError } from "../../src/core/errors"
 import type { KnowledgeBase } from "../../src/core/knowledge/knowledge-base"
 import { SemModeloError } from "../../src/core/llm/chamar"
 import type { LlmClient } from "../../src/core/llm/client"
-import type { ModelRouter } from "../../src/core/llm/router"
+import { createModelRouter } from "../../src/core/llm/router"
 import type { SugestaoRegistrada } from "../../src/core/memory-schemas"
 import type { Retorno } from "../../src/core/outcomes/ports"
 import type { AgentRuntime } from "../../src/core/runs/agent-runtime"
 import { escolherCaminho } from "../../src/core/runs/caminhos"
 import type { Pergunta, RespostaDaPessoa } from "../../src/core/runs/pergunta"
 import type { Run, RunEtapa } from "../../src/core/runs/ports"
+import { createMemoryLedger } from "../../src/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "../../src/infra/fakes/memory-telemetry"
 import { type DepsDoCenario, montarCenario, rodarCenario } from "../../test/fixtures/cenarios"
+import { MAXIMO_DE_RETOMADAS } from "../../test/fixtures/cenarios/rodar"
 import type { ChecagemDeExpectativa, ResultadoDoCaso, TipoDoCaso } from "./eval-llm-report"
 
 export type CasoDoEval = CasoC1 | CasoC2
@@ -54,19 +57,42 @@ export const tipoDoCaso = (caso: { tipo?: TipoDoCaso }): TipoDoCaso => caso.tipo
 export const ehInterprete = (caso: CasoDoEval): caso is CasoInterprete => caso.tipo === "interprete"
 export const ehConversa = (caso: CasoDoEval): caso is CasoConversa => caso.tipo === "conversa"
 
-/** Casos do checkpoint, na ordem das pastas. Nome desconhecido dá erro com a lista. */
-export function casosDoCheckpoint(nome: string): { pasta: Pasta; caso: CasoDoEval }[] {
+/** Casos do checkpoint, na ordem das pastas. Nome desconhecido dá erro com a lista; com `ids`, só esses casos, na ordem do checkpoint, e id desconhecido também dá erro com a lista dos válidos. */
+export function casosDoCheckpoint(
+  nome: string,
+  ids?: string[],
+): { pasta: Pasta; caso: CasoDoEval }[] {
   if (!ehCheckpoint(nome)) {
     throw new Error(
       `Checkpoint desconhecido: ${nome}. Use um de: ${nomesDeCheckpoint().join(", ")}`,
     )
   }
   const pastas: readonly Pasta[] = checkpoints[nome]
-  return pastas.flatMap((pasta) => PASTAS[pasta].map((caso) => ({ pasta, caso })))
+  const todos = pastas.flatMap((pasta) => PASTAS[pasta].map((caso) => ({ pasta, caso })))
+  if (ids === undefined) return todos
+  const validos = todos.map((x) => x.caso.id)
+  const desconhecidos = ids.filter((id) => !validos.includes(id))
+  if (desconhecidos.length > 0) {
+    throw new Error(
+      `Caso desconhecido em ${nome}: ${desconhecidos.join(", ")}. Use ids de: ${validos.join(", ")}`,
+    )
+  }
+  return todos.filter((x) => ids.includes(x.caso.id))
 }
 
-export function listarCasos(nome: string): LinhaDeCaso[] {
-  return casosDoCheckpoint(nome).map(({ pasta, caso }) => ({
+/** Caminho do relatório: com `--casos` vai para <checkpoint>-parcial.md e nunca sobrescreve o da rodada inteira. */
+export const arquivoDoRelatorio = (checkpoint: string, parcial: boolean): string =>
+  `evals/resultados/${checkpoint}${parcial ? "-parcial" : ""}.md`
+
+/** Ids de `--casos <id>[,<id>...]`: sem espaços sobrando nem itens vazios. */
+export const idsDeCasos = (valor: string): string[] =>
+  valor
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id !== "")
+
+export function listarCasos(nome: string, ids?: string[]): LinhaDeCaso[] {
+  return casosDoCheckpoint(nome, ids).map(({ pasta, caso }) => ({
     pasta,
     id: caso.id,
     tipo: tipoDoCaso(caso),
@@ -215,8 +241,8 @@ export function resultadoDaResposta(p: ParamsDaResposta): ResultadoDoCaso {
   }
 }
 
+// O Intérprete roda com o registro de uso em memória, como o cenário do acompanhante: o eval não precisa do Postgres.
 export type DepsDoInterprete = {
-  router: ModelRouter
   client: LlmClient
   kb: KnowledgeBase
   clock: Clock
@@ -256,7 +282,13 @@ export async function rodarInterprete(
   caso: CasoInterprete,
   deps: DepsDoInterprete,
 ): Promise<ResultadoDoCaso> {
-  const interpreter = createInterpreter({ ...deps, telemetry: createMemoryTelemetry() })
+  const telemetry = createMemoryTelemetry()
+  const router = createModelRouter({
+    ledger: createMemoryLedger(deps.clock),
+    clock: deps.clock,
+    telemetry,
+  })
+  const interpreter = createInterpreter({ ...deps, router, telemetry })
   const r = await interpreter.interpretar({
     texto: caso.mensagem,
     atalhos: caso.atalhos ?? [],
@@ -288,6 +320,55 @@ export async function rodarInterprete(
     latenciaMs: r.duracao_ms,
     modelos: [r.modelo],
   }
+}
+
+export type OpcoesDoAcompanhante = { runtime: AgentRuntime }
+
+export type RodadaDoAcompanhante = {
+  base: ResultadoDoCaso
+  r: ResultadoDoRun
+  deps: DepsDoCenario
+  perguntas: number
+}
+
+/**
+ * Um caso de acompanhante. O agente pode pausar para perguntar (ask_user); a pessoa do eval pula cada
+ * pergunta, como na conversa, e o run segue até o fim. Pausa acima do teto de retomadas falha o caso.
+ */
+export async function rodarAcompanhante(
+  caso: CasoC1,
+  opts: OpcoesDoAcompanhante,
+): Promise<RodadaDoAcompanhante> {
+  const cenario = { ...cenarioDoRunner(caso.cenario), roteiro: [] }
+  const { contaId, deps } = await montarCenario(cenario, opts)
+  const inicio = performance.now()
+  const rodada = await rodarCenario(deps, contaId, cenario, {
+    responder: async () => ({ tipo: "pular" }),
+  })
+  const latenciaMs = Math.round(performance.now() - inicio)
+  const resposta = rodada.final
+  const run = await deps.stores.runs.buscar(contaId, resposta.run_id)
+  if (!run) throw new Error(`run ${resposta.run_id} não encontrado`)
+  if (!resposta.saida) {
+    throw new RituError(
+      "pausa_acima_do_teto",
+      `run ${resposta.run_id} pausou mais de ${MAXIMO_DE_RETOMADAS} vezes`,
+    )
+  }
+  if (resposta.saida.origem === "sem_modelo") throw new SemModeloError()
+  const etapas = await deps.stores.runs.etapas(contaId, resposta.run_id)
+  const r = colherResultado(resposta.saida, resposta.status, etapas)
+  const base = resultadoDaResposta({
+    caso,
+    tipo: "acompanhante",
+    r,
+    run,
+    latenciaMs,
+    violacoes: violacoesDaPrimeiraEntrega(deps.telemetry.spans, deps.telemetry.metricas),
+    deve: conferir(caso.deve, r),
+    naoPode: conferir(caso.naoPode, r),
+  })
+  return { base, r, deps, perguntas: rodada.perguntas.length }
 }
 
 export type OpcoesDaConversa = { runtime: AgentRuntime; llm: LlmClient }
@@ -352,7 +433,7 @@ function daConversa(final: RespostaDaConversa | RespostaDoRun): RespostaDaConver
   return final
 }
 
-const MOTIVO_PAUSA_ACIMA_DO_TETO = "pausou mais de 3 vezes"
+const MOTIVO_PAUSA_ACIMA_DO_TETO = `pausou mais de ${MAXIMO_DE_RETOMADAS} vezes`
 
 // Caso falho por pausa acima do teto: as expectativas contam como não cumpridas, no formato do Intérprete com erro.
 function pausadoAcimaDoTeto(

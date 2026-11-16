@@ -1,32 +1,31 @@
 // ⚠️ Chama o modelo real (Gemini, com GEMINI_API_KEY). Opt-in: roda só à mão, nos checkpoints.
 // Roda os casos do checkpoint (pastas em evals/llm/casos/), um por vez, e grava evals/resultados/<checkpoint>.md.
 // Uso: npm run eval:llm -- --checkpoint c1-base
+// Só alguns casos (relatório em <checkpoint>-parcial.md): npm run eval:llm -- --checkpoint c2-conversa --casos <id>[,<id>...]
 // Listar sem modelo, sem chave e sem container: npm run eval:llm -- --checkpoint c1-base --listar
 import { mkdir, writeFile } from "node:fs/promises"
 import { parseArgs } from "node:util"
 import { z } from "zod"
 import { acompanhanteV5 } from "@/core/agents/prompts/acompanhante.v5"
 import { interpreteV1 } from "@/core/agents/prompts/interprete.v1"
-import { chamarComPapel, SemModeloError } from "@/core/llm/chamar"
-import type { RunEtapa } from "@/core/runs/ports"
+import { chamarComPapel } from "@/core/llm/chamar"
 import { type Container, getContainer } from "@/infra/container"
 import type { CasoC1, ResultadoDoRun } from "../evals/llm/casos/c1"
-import { montarCenario } from "../test/fixtures/cenarios"
+import type { montarCenario } from "../test/fixtures/cenarios"
 import {
+  arquivoDoRelatorio,
   type CasoDoEval,
   casosDoCheckpoint,
-  colherResultado,
-  conferir,
   despachar,
   ehCheckpoint,
   formatarListagem,
+  idsDeCasos,
   listarCasos,
   nomesDeCheckpoint,
-  resultadoDaResposta,
+  rodarAcompanhante,
   rodarConversa,
   rodarInterprete,
   versaoDosPrompts,
-  violacoesDaPrimeiraEntrega,
 } from "./lib/eval-llm-casos"
 import { formatarRelatorio, type ResultadoDoCaso, type Rodada } from "./lib/eval-llm-report"
 import { executarRodada, resolverExplicacao } from "./lib/eval-llm-rodada"
@@ -95,40 +94,17 @@ function acrescentarJuiz(base: ResultadoDoCaso, juiz: Juiz): ResultadoDoCaso {
   }
 }
 
-async function rodarAcompanhante(container: Container, caso: CasoC1): Promise<ResultadoDoCaso> {
-  const { contaId, deps } = await montarCenario(
-    { ...caso.cenario, roteiro: [] },
-    { runtime: container.runtime },
-  )
-  const inicio = performance.now()
-  const resposta = await deps.companion.responder(contaId, caso.cenario.entrada)
-  const latenciaMs = Math.round(performance.now() - inicio)
-  const run = await deps.stores.runs.buscar(contaId, resposta.run_id)
-  if (!run) throw new Error(`run ${resposta.run_id} não encontrado`)
-  if (!resposta.saida) throw new Error(`run ${resposta.run_id} pausou sem saída`)
-  if (resposta.saida.origem === "sem_modelo") throw new SemModeloError()
-  const etapas: RunEtapa[] = await deps.stores.runs.etapas(contaId, resposta.run_id)
-  const r = colherResultado(resposta.saida, resposta.status, etapas)
-  const base = resultadoDaResposta({
-    caso,
-    tipo: "acompanhante",
-    r,
-    run,
-    latenciaMs,
-    violacoes: violacoesDaPrimeiraEntrega(deps.telemetry.spans, deps.telemetry.metricas),
-    deve: conferir(caso.deve, r),
-    naoPode: conferir(caso.naoPode, r),
-  })
+async function rodarComJuiz(container: Container, caso: CasoC1): Promise<ResultadoDoCaso> {
+  const { base, r, deps } = await rodarAcompanhante(caso, { runtime: container.runtime })
   const juiz = await resolverExplicacao(() => explicar(container, deps, r))
   return acrescentarJuiz(base, juiz)
 }
 
 function rodarQualquer(container: Container, caso: CasoDoEval): Promise<ResultadoDoCaso> {
   return despachar(caso, {
-    acompanhante: (c) => rodarAcompanhante(container, c),
+    acompanhante: (c) => rodarComJuiz(container, c),
     interprete: (c) =>
       rodarInterprete(c, {
-        router: container.router,
         client: container.llm,
         kb: container.knowledge,
         clock: container.clock,
@@ -150,9 +126,9 @@ const rodar = (container: Container, checkpoint: string, casos: CasoDoEval[]): P
     pausaMs: PAUSA_ENTRE_CASOS_MS,
   })
 
-async function gravar(rodada: Rodada, checkpoint: string): Promise<void> {
+async function gravar(rodada: Rodada, checkpoint: string, parcial: boolean): Promise<void> {
   await mkdir("evals/resultados", { recursive: true })
-  const arquivo = `evals/resultados/${checkpoint}.md`
+  const arquivo = arquivoDoRelatorio(checkpoint, parcial)
   await writeFile(arquivo, formatarRelatorio(rodada), "utf8")
   console.log(`Relatório gravado em ${arquivo}`)
 }
@@ -160,7 +136,11 @@ async function gravar(rodada: Rodada, checkpoint: string): Promise<void> {
 async function main(args: string[]): Promise<number> {
   const { values } = parseArgs({
     args,
-    options: { checkpoint: { type: "string" }, listar: { type: "boolean" } },
+    options: {
+      checkpoint: { type: "string" },
+      listar: { type: "boolean" },
+      casos: { type: "string" },
+    },
     strict: true,
   })
   const checkpoint = values.checkpoint
@@ -168,15 +148,22 @@ async function main(args: string[]): Promise<number> {
     console.error(`Informe --checkpoint com um de: ${nomesDeCheckpoint().join(", ")}`)
     return 1
   }
+  const ids = values.casos === undefined ? undefined : idsDeCasos(values.casos)
+  let casos: CasoDoEval[]
+  try {
+    casos = casosDoCheckpoint(checkpoint, ids).map((x) => x.caso)
+  } catch (erro) {
+    console.error(erro instanceof Error ? erro.message : "Casos inválidos")
+    return 1
+  }
   if (values.listar) {
-    console.log(formatarListagem(listarCasos(checkpoint)))
+    console.log(formatarListagem(listarCasos(checkpoint, ids)))
     return 0
   }
-  const casos = casosDoCheckpoint(checkpoint).map((x) => x.caso)
   const container = getContainer()
   try {
     const rodada = await rodar(container, checkpoint, casos)
-    await gravar(rodada, checkpoint)
+    await gravar(rodada, checkpoint, ids !== undefined)
     return 0
   } catch (erro) {
     // Só a mensagem: o erro bruto do driver pode trazer a URL do banco.

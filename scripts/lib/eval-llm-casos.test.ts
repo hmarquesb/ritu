@@ -85,6 +85,7 @@ import type { Pergunta, RespostaDaPessoa } from "../../src/core/runs/pergunta"
 import type { Caminho, RunEtapa } from "../../src/core/runs/ports"
 import { createContainer } from "../../src/infra/container"
 import { createFakeLlm } from "../../src/infra/fakes/fake-llm"
+import { createFixedClock } from "../../src/infra/fakes/fixed-clock"
 import {
   createScriptedRuntime,
   type PassoRoteirizado,
@@ -95,16 +96,21 @@ import {
   cenariosDeConversa,
   montarCenario,
 } from "../../test/fixtures/cenarios"
+import { MAXIMO_DE_RETOMADAS } from "../../test/fixtures/cenarios/rodar"
 import {
+  arquivoDoRelatorio,
+  casosDoCheckpoint,
   cenarioDoRunner,
   conferir,
   contarEtapas,
   despachar,
   ehCheckpoint,
   formatarListagem,
+  idsDeCasos,
   listarCasos,
   resolverResposta,
   retornosFalsos,
+  rodarAcompanhante,
   rodarConversa,
   rodarInterprete,
   versaoDosPrompts,
@@ -310,7 +316,6 @@ describe("runner do Intérprete com LLM falso", () => {
     const kb = createContainer().knowledge
 
     const r = await rodarInterprete(casoInterprete, {
-      router: deps.router,
       client: llm,
       kb,
       clock: deps.clock,
@@ -330,7 +335,7 @@ describe("runner do Intérprete com LLM falso", () => {
 
     const r = await rodarInterprete(
       { ...casoInterprete, falsoAlerta: true },
-      { router: deps.router, client: llm, kb, clock: deps.clock },
+      { client: llm, kb, clock: deps.clock },
     )
 
     expect(r.falsoAlerta).toBe(true)
@@ -343,7 +348,6 @@ describe("runner do Intérprete com LLM falso", () => {
     const kb = createContainer().knowledge
 
     const r = await rodarInterprete(casoInterprete, {
-      router: deps.router,
       client: llm,
       kb,
       clock: deps.clock,
@@ -1497,5 +1501,127 @@ describe("expectativas de Aprendizado e Para ter em casa", () => {
     ]) {
       expect(passa(exp, { resultado: resultadoCom(saidaPronta({ resposta: texto })) })).toBe(false)
     }
+  })
+})
+
+describe("filtro de casos por id (--casos)", () => {
+  it("devolve só os casos pedidos, na ordem do checkpoint, não na ordem dos ids", () => {
+    const linhas = listarCasos("c2-conversa", ["c2-01-frio-sem-fome", "c1-08-casa-so-incertos"])
+
+    expect(linhas.map((l) => l.id)).toEqual(["c1-08-casa-so-incertos", "c2-01-frio-sem-fome"])
+  })
+
+  it("sem ids, lista os 54 casos", () => {
+    expect(listarCasos("c2-conversa")).toHaveLength(54)
+    expect(listarCasos("c2-conversa", undefined)).toHaveLength(54)
+  })
+
+  it("id desconhecido dá erro com a lista dos ids válidos", () => {
+    expect(() =>
+      casosDoCheckpoint("c2-conversa", ["c1-08-casa-so-incertos", "nao-existe"]),
+    ).toThrow(/nao-existe[\s\S]*c1-01-frio-agitada/)
+  })
+
+  it("id de outro checkpoint também é desconhecido", () => {
+    expect(() => listarCasos("c1-base", ["c2-01-frio-sem-fome"])).toThrow(/c2-01-frio-sem-fome/)
+  })
+
+  it("separa os ids por vírgula e ignora espaços e itens vazios", () => {
+    expect(idsDeCasos("a, b,,c ,")).toEqual(["a", "b", "c"])
+  })
+})
+
+describe("arquivo do relatório", () => {
+  it("rodada inteira grava <checkpoint>.md", () => {
+    expect(arquivoDoRelatorio("c2-conversa", false)).toBe("evals/resultados/c2-conversa.md")
+  })
+
+  it("rodada parcial grava <checkpoint>-parcial.md e nunca o da rodada inteira", () => {
+    expect(arquivoDoRelatorio("c2-conversa", true)).toBe("evals/resultados/c2-conversa-parcial.md")
+  })
+})
+
+describe("Intérprete sem o registro de uso do container", () => {
+  it("roda só com cliente, base e relógio: o roteador usa o registro em memória", async () => {
+    const container = createContainer()
+    const ledgerDoContainer = vi.spyOn(container.ledger, "registrarRateLimit")
+    const llm = createFakeLlm([saidaDoInterprete])
+
+    const r = await rodarInterprete(casoInterprete, {
+      client: llm,
+      kb: container.knowledge,
+      clock: createFixedClock(AGORA),
+    })
+
+    expect(r.erro).toBeUndefined()
+    expect(r.modelos).toHaveLength(1)
+    expect(ledgerDoContainer).not.toHaveBeenCalled()
+  })
+})
+
+// c1-08 e c1-11 deram `Error` no eval real: o agente pausou para perguntar (ask_user) e o runner exigia saída
+// na primeira resposta ("pausou sem saída"). O runner passa a responder a pausa, como o da conversa.
+describe("runner do acompanhante com pausa", () => {
+  const roteiroComPausa = (pedido: Record<string, unknown>) => [
+    { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+    { chamadas: [{ nome: "ask_user", argumentos: pedido }] },
+    {
+      chamadas: [
+        {
+          nome: "finalizar",
+          argumentos: {
+            resposta: "Um chá morno de gengibre ajuda a aquecer, sem pesar.",
+            explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
+            sugestoes: [],
+            evitar: [],
+            incertos: [],
+            citados: [],
+          },
+        },
+      ],
+    },
+  ]
+
+  it.each([
+    ["c1-08-casa-so-incertos", { tipo: "casa", alimentos: ["abobora", "arroz-branco"] }],
+    ["c1-11-sem-cidade", { tipo: "casa", alimentos: ["camomila"] }],
+  ])("%s: pausa, a pessoa pula a pergunta e o run entrega a saída", async (id, pedido) => {
+    const caso = casosC1.find((c) => c.id === id)
+    if (!caso) throw new Error(`caso ${id} ausente`)
+
+    const r = await rodarAcompanhante(caso, {
+      runtime: createScriptedRuntime(roteiroComPausa(pedido)),
+    })
+
+    expect(r.perguntas).toBe(1)
+    expect(r.base.erro).toBeUndefined()
+    expect(r.base.tipo).toBe("acompanhante")
+    expect(r.r.saida.resposta.length).toBeGreaterThan(0)
+  })
+
+  it("sem pausa, devolve o caso com zero perguntas", async () => {
+    const caso = casosC1.find((c) => c.id === "c1-11-sem-cidade")
+    if (!caso) throw new Error("caso ausente")
+
+    const r = await rodarAcompanhante(caso, {
+      runtime: createScriptedRuntime(roteiroComPausa({}).filter((_, i) => i !== 1)),
+    })
+
+    expect(r.perguntas).toBe(0)
+  })
+
+  it("pausa além do teto de retomadas falha o caso com RituError pausa_acima_do_teto", async () => {
+    const caso = casosC1.find((c) => c.id === "c1-08-casa-so-incertos")
+    if (!caso) throw new Error("caso ausente")
+    const pergunta = (alimento: string) => ({
+      chamadas: [{ nome: "ask_user", argumentos: { tipo: "casa", alimentos: [alimento] } }],
+    })
+    // Quatro itens diferentes: uma pausa a mais que as retomadas do teto.
+    const roteiro = ["gengibre", "limao", "camomila", "cebola"].map(pergunta)
+    expect(roteiro).toHaveLength(MAXIMO_DE_RETOMADAS + 1)
+
+    await expect(
+      rodarAcompanhante(caso, { runtime: createScriptedRuntime(roteiro) }),
+    ).rejects.toMatchObject({ code: "pausa_acima_do_teto" })
   })
 })

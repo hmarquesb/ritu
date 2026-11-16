@@ -8,6 +8,7 @@ import { doisNaoAjudou } from "./dois-nao-ajudou"
 import { dorDeCabeca } from "./dor-de-cabeca"
 import { duasIntencoes } from "./duas-intencoes"
 import { entregaRegistrada } from "./entrega-registrada"
+import { estadosJuntos } from "./estados-juntos"
 import { estomagoPesado } from "./estomago-pesado"
 import { evitarSozinho } from "./evitar-sozinho"
 import { faltouHoje } from "./faltou-hoje"
@@ -15,10 +16,15 @@ import { frioAgitada } from "./frio-agitada"
 import { gostoEscrito } from "./gosto-escrito"
 import { naoTenhoComPergunta } from "./nao-tenho-com-pergunta"
 import { ofensa } from "./ofensa"
+import { padraoAgoraNao } from "./padrao-agora-nao"
+import { padraoConfirmado } from "./padrao-confirmado"
+import { padraoRecusado } from "./padrao-recusado"
 import { perguntaManga } from "./pergunta-manga"
 import { perguntaRecusada } from "./pergunta-recusada"
 import { retornoConversa } from "./retorno-conversa"
 import { retornoPeloAgente } from "./retorno-pelo-agente"
+import { rotinaResumida } from "./rotina-resumida"
+import { rotinaSemModelo } from "./rotina-sem-modelo"
 import { semModelo } from "./sem-modelo"
 import { soAtalhos } from "./so-atalhos"
 import type { Cenario as CenarioBase, CenarioComEntrada, CenarioDeConversa } from "./tipos"
@@ -82,6 +88,16 @@ export const cenariosDeAprendizado: Record<string, CenarioDeConversa> = {
   "dois-nao-ajudou": comMensagem(doisNaoAjudou),
   "retorno-pelo-agente": comMensagem(retornoPeloAgente),
   "gosto-escrito": comMensagem(gostoEscrito),
+}
+
+// Os seis da 012 (rotina e padrões): passam pela conversa; a Memória e a detecção vêm do próprio cenário.
+export const cenariosDeMemoria: Record<string, CenarioDeConversa> = {
+  "rotina-resumida": comMensagem(rotinaResumida),
+  "rotina-sem-modelo": comMensagem(rotinaSemModelo),
+  "padrao-confirmado": comMensagem(padraoConfirmado),
+  "padrao-recusado": comMensagem(padraoRecusado),
+  "padrao-agora-nao": comMensagem(padraoAgoraNao),
+  "estados-juntos": comMensagem(estadosJuntos),
 }
 
 export { type DepsDoCenario, montarCenario, type OpcoesDoCenario } from "./montar"

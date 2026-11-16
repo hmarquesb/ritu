@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { preparar } from "@/core/agents/companion/preparo"
+import { contemIncomodo } from "@/core/knowledge/incomodo-no-texto"
 import { createContainer } from "@/infra/container"
 import {
   cenarios,
@@ -7,6 +8,7 @@ import {
   cenariosComPausa,
   cenariosDeAprendizado,
   cenariosDeConversa,
+  cenariosDeMemoria,
   montarCenario,
 } from "./index"
 import type { DepsDoCenario } from "./montar"
@@ -374,5 +376,126 @@ describe("cenários de aprendizado (011)", () => {
       { tipo: "alimento", id: "gengibre" },
     ])
     expect(pref?.gosto).toBe("gosta")
+  })
+})
+
+// Os seis da 012 (rotina e padrões): cada um confere o que a coluna "Mostra" pede, nos stores, nas etapas, no bloco e no contexto.
+const FRASE_DO_CHA =
+  "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar."
+
+async function rodarDeMemoria(nome: string) {
+  const c = cenariosDeMemoria[nome]
+  if (!c) throw new Error(`cenário ausente: ${nome}`)
+  const { contaId, deps } = await montarCenario(c)
+  const rodada = await rodarCenario(deps, contaId, c)
+  return { c, contaId, deps, rodada }
+}
+
+describe("cenários de rotina e padrões (012)", () => {
+  it("o registro de memória tem os seis e a conversa segue com sete", () => {
+    expect(Object.keys(cenariosDeMemoria).sort()).toEqual([
+      "estados-juntos",
+      "padrao-agora-nao",
+      "padrao-confirmado",
+      "padrao-recusado",
+      "rotina-resumida",
+      "rotina-sem-modelo",
+    ])
+    expect(Object.keys(cenariosDeConversa)).toHaveLength(7)
+  })
+
+  it("rotina-resumida: a linha da rotina vai no bloco, é aprovada e o resumo novo sai sem o almoço fora", async () => {
+    const { contaId, deps, rodada } = await rodarDeMemoria("rotina-resumida")
+    expect(rodada.final.status).toBe("waiting_for_approval")
+    expect(rodada.bloco?.propostas.map((p) => p.texto)).toEqual([
+      "Você voltou a almoçar em casa todo dia",
+    ])
+    expect(rodada.bloco?.resultado.gravadas.map((p) => p.tool)).toEqual(["memoria.propor"])
+    const resumo = await deps.stores.routine.resumo(contaId)
+    expect(resumo?.texto).toBe(
+      "Você voltou a almoçar em casa todo dia. Você acorda às 5 h às terças.",
+    )
+    expect(resumo?.texto).not.toContain("almoça fora")
+    const etapas = await deps.stores.runs.etapas(contaId, rodada.final.run_id)
+    expect(etapas.filter((e) => e.tipo === "memoria").map((e) => e.resumo)).toEqual(["modelo"])
+    expect(rodada.depois?.final.status).toBe("done")
+    // O contexto da segunda mensagem: o preparo lê o resumo novo (o checkpoint de um run sem pausa não guarda o preparo).
+    const dados = await preparoDaSegunda(deps, contaId)
+    expect(dados.resumo_de_rotina).toBe(resumo?.texto)
+  })
+
+  it("rotina-sem-modelo: o resumo é o de código, com as três notas, a mais recente primeiro; a aprovação termina em done", async () => {
+    const { contaId, deps, rodada } = await rodarDeMemoria("rotina-sem-modelo")
+    expect(rodada.bloco?.resultado.status).toBe("done")
+    expect(rodada.bloco?.resultado.gravadas.map((p) => p.tool)).toEqual(["memoria.propor"])
+    const resumo = await deps.stores.routine.resumo(contaId)
+    expect(resumo?.texto).toBe(
+      "Você voltou a almoçar em casa todo dia. Você acorda às 5 h às terças. Você almoça fora durante a semana.",
+    )
+    const etapas = await deps.stores.runs.etapas(contaId, rodada.final.run_id)
+    expect(etapas.filter((e) => e.tipo === "memoria").map((e) => e.resumo)).toEqual(["codigo"])
+  })
+
+  it("padrao-confirmado: a linha do padrão vai no bloco, é aprovada e a segunda mensagem leva a frase em padroes", async () => {
+    const { contaId, deps, rodada } = await rodarDeMemoria("padrao-confirmado")
+    expect(rodada.bloco?.propostas.map((p) => p.texto)).toEqual([
+      `Notei isto. Está certo? ${FRASE_DO_CHA}`,
+    ])
+    expect(rodada.bloco?.resultado.gravadas.map((p) => p.tool)).toEqual(["padrao.confirmar"])
+    const padroes = await deps.stores.patterns.listar(contaId)
+    expect(padroes.map((p) => [p.chave, p.status])).toEqual([
+      ["com_frio+agitada|pratica:cha-gengibre-canela", "confirmado"],
+    ])
+    expect(rodada.depois?.final.status).toBe("done")
+    const dados = await preparoDaSegunda(deps, contaId)
+    expect(dados.padroes).toContain(FRASE_DO_CHA)
+  })
+
+  it("padrao-recusado: a linha da casa é aprovada, o padrão vira recusado e a detecção de novo não propõe", async () => {
+    const { contaId, deps, rodada } = await rodarDeMemoria("padrao-recusado")
+    expect(rodada.bloco?.propostas.map((p) => p.tool)).toEqual(["casa.propor", "padrao.confirmar"])
+    expect(rodada.bloco?.aprovadas).toHaveLength(1)
+    expect(rodada.bloco?.resultado.gravadas.map((p) => p.tool)).toEqual(["casa.propor"])
+    const padroes = await deps.stores.patterns.listar(contaId)
+    expect(padroes.map((p) => p.status)).toEqual(["recusado"])
+    expect(await deps.patterns.detectarPadroesDaConta(contaId)).toBe(0)
+  })
+
+  it("padrao-agora-nao: o padrão continua candidato e a segunda resposta, no mesmo dia, não traz a linha", async () => {
+    const { contaId, deps, rodada } = await rodarDeMemoria("padrao-agora-nao")
+    expect(rodada.bloco?.resultado.gravadas).toEqual([])
+    expect(rodada.final.saida?.propostas.map((p) => p.tool)).toContain("padrao.confirmar")
+    const padroes = await deps.stores.patterns.listar(contaId)
+    expect(padroes.map((p) => p.status)).toEqual(["candidato"])
+    expect(rodada.depois?.final.status).toBe("done")
+    const tools = rodada.depois?.final.saida?.propostas.map((p) => p.tool) ?? []
+    expect(tools).not.toContain("padrao.confirmar")
+  })
+
+  it("estados-juntos: a linha de pesada com sem energia vai no bloco, que fica aberto", async () => {
+    const { contaId, deps, rodada } = await rodarDeMemoria("estados-juntos")
+    expect(rodada.final.status).toBe("waiting_for_approval")
+    expect(rodada.final.saida?.propostas.map((p) => p.texto)).toEqual([
+      "Notei isto. Está certo? Quando você está pesada, costuma estar também sem energia.",
+    ])
+    const padroes = await deps.stores.patterns.listar(contaId)
+    expect(padroes.map((p) => [p.tipo, p.chave, p.status])).toEqual([
+      ["estados_juntos", "pesada>sem_energia", "candidato"],
+    ])
+  })
+
+  it("nenhuma linha de rotina, resumo ou padrão dos seis tem palavra de incômodo", async () => {
+    const kb = createContainer().knowledge
+    for (const nome of Object.keys(cenariosDeMemoria)) {
+      const { contaId, deps } = await rodarDeMemoria(nome)
+      const textos = [
+        ...(await deps.stores.routine.notasAtivas(contaId)).map((n) => n.texto),
+        (await deps.stores.routine.resumo(contaId))?.texto ?? "",
+        ...(await deps.stores.patterns.listar(contaId)).map((p) => p.frase),
+      ]
+      for (const texto of textos) {
+        expect(contemIncomodo(texto, kb), `${nome}: ${texto}`).toBe(false)
+      }
+    }
   })
 })

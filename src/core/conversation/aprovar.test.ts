@@ -265,7 +265,9 @@ describe("aprovar", () => {
     expect((await estadoDaPessoa(m)).perfil.restricoes).toEqual([])
     expect(await decisoes(m, run.id)).toEqual(["pendente", "pendente"])
     expect((await m.stores.runs.buscar(m.conta.id, run.id))?.status).toBe("waiting_for_approval")
-    expect(m.telemetry.metricas).toEqual([])
+    const duracao = m.telemetry.metricas.filter((x) => x.nome === "ritu_run_duracao_ms")
+    expect(duracao[0]?.rotulos).toMatchObject({ status: "waiting_for_approval" })
+    expect(m.telemetry.metricas.filter((x) => x.nome !== "ritu_run_duracao_ms")).toEqual([])
   })
 
   it("vale ter em casa: fez_falta soma ritu_para_ter_total aprovada e recusada; gosta soma ritu_gosto_total", async () => {

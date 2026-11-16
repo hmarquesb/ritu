@@ -87,9 +87,16 @@ export function createRunService(deps: DepsDoServico) {
   ): Promise<void> {
     const run = await buscarOuFalhar(contaId, runId)
     await mudarStatus(stores, contaId, run, status, campos)
+    const final = await buscarOuFalhar(contaId, runId)
+    telemetry.histograma("ritu_run_passos", final.passos, {
+      caminho: final.caminho,
+      status: final.status,
+    })
     telemetry.log("run_fim", {
       "run.id": runId,
-      "run.status": status,
+      "run.status": final.status,
+      "run.caminho": final.caminho,
+      "run.passos": final.passos,
       ...(run.trace_id ? { trace_id: run.trace_id } : {}),
     })
   }
@@ -97,6 +104,7 @@ export function createRunService(deps: DepsDoServico) {
   async function falhar(contaId: string, runId: string, codigo: string): Promise<Run> {
     await gravarEtapa(contaId, runId, etapaDeErro(codigo))
     await encerrar(contaId, runId, "failed")
+    telemetry.log("run_falhou", { "run.id": runId, "erro.codigo": codigo })
     return buscarOuFalhar(contaId, runId)
   }
 
@@ -141,10 +149,32 @@ export function createRunService(deps: DepsDoServico) {
     } else {
       await stores.runs.atualizar(contaId, runId, campos)
     }
-    const atual = await buscarOuFalhar(contaId, runId)
-    const rotulos = { caminho: atual.caminho, status: atual.status } as const
-    telemetry.histograma("ritu_run_duracao_ms", estado.ativo_ms, rotulos)
-    telemetry.histograma("ritu_run_passos", estado.chamadas_de_modelo, rotulos)
+  }
+
+  async function medir<T>(contaId: string, runId: string, corpo: () => Promise<T>): Promise<T> {
+    const inicio = clock.now().getTime()
+    try {
+      return await corpo()
+    } finally {
+      const duracao = clock.now().getTime() - inicio
+      const atual = await stores.runs.buscar(contaId, runId)
+      if (atual) {
+        telemetry.histograma("ritu_run_duracao_ms", duracao, {
+          caminho: atual.caminho,
+          status: atual.status,
+        })
+      }
+    }
+  }
+
+  function logarInicio(run: Run, id: string | null | undefined): void {
+    const tipo = (run.pendencia as { tipo?: string } | null)?.tipo
+    const campos = { "run.id": run.id, ...(id ? { trace_id: id } : {}) }
+    if (run.trace_id) {
+      telemetry.log("run_retomado", { ...campos, ...(tipo ? { "pausa.tipo": tipo } : {}) })
+    } else {
+      telemetry.log("run_inicio", campos)
+    }
   }
 
   async function trecho(
@@ -198,10 +228,10 @@ export function createRunService(deps: DepsDoServico) {
       async (span) => {
         const id = traceparent ?? telemetry.traceparentAtual()
         if (id) await stores.runs.atualizar(contaId, runId, { trace_id: id })
-        telemetry.log("run_inicio", { "run.id": runId, ...(id ? { trace_id: id } : {}) })
+        logarInicio(run, id)
         spansAbertos.set(runId, span)
         try {
-          const resultado = await corpo(span)
+          const resultado = await medir(contaId, runId, () => corpo(span))
           fecharSpan(span, await buscarOuFalhar(contaId, runId))
           return resultado
         } finally {
@@ -242,13 +272,9 @@ export function createRunService(deps: DepsDoServico) {
           prompt_versao: p.agente.prompt_versao,
           ...(id ? { trace_id: id } : {}),
         })
-        telemetry.log("run_inicio", {
-          "run.id": run.id,
-          ...(id ? { trace_id: id } : {}),
-        })
-        const resultado = await corpo()
-        const final = await buscarOuFalhar(contaId, run.id)
-        span.atribuir({ "run.status": final.status, "run.passos": final.passos })
+        logarInicio(run, id)
+        const resultado = await medir(contaId, run.id, corpo)
+        fecharSpan(span, await buscarOuFalhar(contaId, run.id))
         return resultado
       },
       traceparent ? { traceparent } : undefined,

@@ -44,6 +44,7 @@ export const checkpointSchema = z.object({
   pausas: contagem,
   ativo_ms: z.number().nonnegative(),
   modelo: z.string().optional(),
+  chamadas_extras: contagem.optional(),
   dados: z.unknown(),
 })
 
@@ -60,6 +61,8 @@ export type Checkpoint = {
   ativo_ms: number
   /** O run tenta manter o mesmo modelo. */
   modelo?: string
+  /** Chamadas de modelo a mais, somadas ao teto (nova tentativa do Juiz). */
+  chamadas_extras?: number
   /** Contexto do preparo; quem define o formato é a 007. */
   dados: unknown
 }

@@ -15,7 +15,10 @@ import type { Caminho, NovaEtapa, Run, RunEtapa, RunMutavel, StatusRun } from ".
 
 export { RunNaoContinuavelError } from "./errors"
 export type { NovaEtapa, TipoDeEtapa } from "./ports"
-export type ResultadoDoRun = { run: Run; fim: FimDoTrecho }
+
+type Trecho = { fim: FimDoTrecho; estado: Checkpoint }
+
+export type ResultadoDoRun = { run: Run; fim: FimDoTrecho; estado?: Checkpoint }
 
 type Execucao = {
   agente: DefinicaoDoAgente
@@ -147,7 +150,7 @@ export function createRunService(deps: DepsDoServico) {
     run: Run,
     estado: Checkpoint,
     p: Execucao,
-  ): Promise<FimDoTrecho> {
+  ): Promise<Trecho> {
     const { estado: novo, fim } = await executarTrecho(p.agente, estado, p.ctx, {
       runtime: deps.runtime,
       modelo: p.modelo,
@@ -161,7 +164,7 @@ export function createRunService(deps: DepsDoServico) {
       },
     })
     await fecharTrecho(contaId, run.id, novo, fim)
-    return fim
+    return { fim, estado: novo }
   }
 
   const spansAbertos = new Map<string, SpanAtivo>()
@@ -211,18 +214,18 @@ export function createRunService(deps: DepsDoServico) {
     contaId: string,
     run: Run,
     p: Execucao,
-    corpo: () => Promise<FimDoTrecho>,
+    corpo: () => Promise<Trecho>,
   ): Promise<ResultadoDoRun> {
     const aberto = spansAbertos.get(run.id)
     if (aberto) {
       aberto.atribuir({ "prompt.versao": p.agente.prompt_versao })
       await stores.runs.atualizar(contaId, run.id, { prompt_versao: p.agente.prompt_versao })
-      const fim = await corpo()
-      return { run: await buscarOuFalhar(contaId, run.id), fim }
+      const trechoFeito = await corpo()
+      return { run: await buscarOuFalhar(contaId, run.id), ...trechoFeito }
     }
     const conta = await stores.accounts.buscar(contaId)
     const traceparent = run.trace_id ?? undefined
-    const fim = await telemetry.span(
+    const feito = await telemetry.span(
       "run",
       {
         "run.id": run.id,
@@ -248,14 +251,14 @@ export function createRunService(deps: DepsDoServico) {
       },
       traceparent ? { traceparent } : undefined,
     )
-    return { run: await buscarOuFalhar(contaId, run.id), fim }
+    return { run: await buscarOuFalhar(contaId, run.id), ...feito }
   }
 
   async function protegido(
     contaId: string,
     run: Run,
     p: Execucao,
-    corpo: () => Promise<FimDoTrecho>,
+    corpo: () => Promise<Trecho>,
   ): Promise<ResultadoDoRun> {
     try {
       return await dentroDoSpan(contaId, run, p, corpo)

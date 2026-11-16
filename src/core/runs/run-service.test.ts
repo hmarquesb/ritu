@@ -291,6 +291,34 @@ describe("createRunService", () => {
     })
   })
 
+  it("executarRun que entrega devolve o estado do trecho", async () => {
+    const m = await montar([{ chamadas: [{ nome: "a", argumentos: {} }] }, { chamadas: [fin] }])
+    const run = await m.iniciar()
+    const r = await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+    expect(r.estado?.chamadas_de_modelo).toBe(2)
+    expect(r.estado?.tokens).toEqual({ entrada: 200, saida: 40 })
+    expect(r.estado?.mensagens.some((x) => x.papel === "tool")).toBe(true)
+  })
+
+  it("continuarRun que entrega devolve o estado do trecho", async () => {
+    const m = await montar([{ chamadas: [perg] }, { chamadas: [fin] }])
+    const run = await m.iniciar()
+    await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+    const r = await m.svc.continuarRun(m.conta.id, run.id, { ...m.exec, resposta: "ok" })
+    expect(r.fim.tipo).toBe("entregue")
+    expect(r.estado?.chamadas_de_modelo).toBe(2)
+  })
+
+  it("corpo que lança devolve o resultado sem estado", async () => {
+    const m = await montar([{ chamadas: [fin] }])
+    const run = await m.iniciar()
+    m.telemetry.histograma = () => {
+      throw new Error("boom")
+    }
+    const r = await m.svc.executarRun(m.conta.id, run.id, { ...m.exec, estado: estadoInicial() })
+    expect(r.estado).toBeUndefined()
+  })
+
   it("exceção inesperada leva o run a failed", async () => {
     const m = await montar([{ chamadas: [fin] }])
     const run = await m.iniciar()

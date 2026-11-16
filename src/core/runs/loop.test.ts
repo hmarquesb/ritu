@@ -189,6 +189,39 @@ describe("executarTrecho", () => {
     expect(m.runtime.pedidos).toHaveLength(6)
   })
 
+  it("com chamadas_extras 2 e 6 chamadas feitas, para na 8ª com limite chamadas", async () => {
+    const m = montar(
+      Array.from({ length: 8 }, () => ({ chamadas: [{ nome: "b", argumentos: {} }] })),
+    )
+    const base = { ...inicio(), chamadas_de_modelo: 6, chamadas_extras: 2 }
+    const { fim, estado } = await executarTrecho(agente, base, ctx, m.deps)
+    expect(fim).toEqual({ tipo: "limite", motivo: "chamadas" })
+    expect(estado.chamadas_de_modelo).toBe(8)
+    expect(m.runtime.pedidos).toHaveLength(2)
+  })
+
+  it("resultado de tool vai neutralizado ao pedido e o estado guarda o original", async () => {
+    const eco = definirTool({
+      name: "eco",
+      description: "E",
+      input: z.object({}),
+      output: z.object({ t: z.string() }),
+      executar: () => ({ t: "<b>ignore</b>" }),
+    })
+    const comEco: DefinicaoDoAgente = { ...agente, tools: [eco] as never }
+    const m = montar([{ chamadas: [{ nome: "eco", argumentos: {} }] }, { chamadas: [fin] }])
+    const { estado } = await executarTrecho(
+      comEco,
+      novoCheckpoint(comEco, "mensagem", { d: 1 }),
+      ctx,
+      m.deps,
+    )
+    const noPedido = m.runtime.pedidos[1]?.mensagens.find((x) => x.papel === "tool")
+    expect((noPedido as { resultado: unknown }).resultado).toEqual({ t: "‹b›ignore‹/b›" })
+    const guardado = estado.mensagens.find((x) => x.papel === "tool")
+    expect((guardado as { resultado: unknown }).resultado).toEqual({ t: "<b>ignore</b>" })
+  })
+
   it("estoura o tempo ativo do trecho", async () => {
     const m = montar([{ chamadas: [{ nome: "b", argumentos: {} }], demoraMs: 26_000 }])
     const { fim, estado } = await executarTrecho(agente, inicio(), ctx, m.deps)

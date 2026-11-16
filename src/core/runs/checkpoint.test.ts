@@ -46,6 +46,15 @@ describe("lerCheckpoint", () => {
     expect(erro?.code).toBe("checkpoint_invalido")
   })
 
+  it("lê chamadas_extras e continua válido sem o campo", () => {
+    expect(lerCheckpoint(base({ chamadas_extras: 2 })).chamadas_extras).toBe(2)
+    expect(lerCheckpoint(base()).chamadas_extras).toBeUndefined()
+  })
+
+  it("recusa chamadas_extras negativas", () => {
+    expect(() => lerCheckpoint(base({ chamadas_extras: -1 }))).toThrow(RituError)
+  })
+
   it("recusa chamadas de modelo negativas", () => {
     expect(() => lerCheckpoint(base({ chamadas_de_modelo: -1 }))).toThrow(RituError)
   })

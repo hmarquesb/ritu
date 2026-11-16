@@ -2,6 +2,7 @@ import { loop } from "@config/loop"
 import type { Clock } from "@/core/clock"
 import { LlmError } from "@/core/llm/errors"
 import type { FornecedorDeModelo } from "@/core/llm/fornecedor"
+import { neutralizarProfundo } from "@/core/neutralizar"
 import type { SpanAtivo, Telemetry } from "@/core/telemetry/ports"
 import type { ToolContext } from "@/core/tools/tool"
 import type { AgentRuntime, ResultadoDePasso } from "./agent-runtime"
@@ -93,7 +94,7 @@ function limiteAtingido(amb: Ambiente): FimDoTrecho | undefined {
   if (e.entregas_recusadas >= loop.maxEntregasRecusadas) {
     return { tipo: "limite", motivo: "validacao" }
   }
-  if (e.chamadas_de_modelo >= loop.maxChamadasDeModelo) {
+  if (e.chamadas_de_modelo >= loop.maxChamadasDeModelo + (e.chamadas_extras ?? 0)) {
     return { tipo: "limite", motivo: "chamadas" }
   }
   if (amb.medirAtivo() > loop.timeoutTrechoMs) return { tipo: "limite", motivo: "tempo" }
@@ -108,7 +109,9 @@ function pedidoDoPasso(amb: Ambiente, modelo: string) {
   const restante = loop.timeoutTrechoMs - amb.medirAtivo()
   return {
     instrucoes: agente.instrucoes,
-    mensagens: estado.mensagens.slice(),
+    mensagens: estado.mensagens.map((m) =>
+      m.papel === "tool" ? { ...m, resultado: neutralizarProfundo(m.resultado) } : m,
+    ),
     tools: [...agente.tools, ...agente.controle].map((t) => ({
       name: t.name,
       description: t.description,

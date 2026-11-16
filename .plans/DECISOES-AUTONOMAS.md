@@ -153,3 +153,6 @@
 - **Desfazer:** cada D diz o que muda; reverter a tarefa correspondente.
 
 - **A6 · Lugar do schema do seed (017 T7).** Faltava: `src/core/accounts/demo-seed.ts` importa `saidaDoAcompanhanteSchema` de `agents`, e `agents` já importa `accounts`, o que fecha o ciclo `accounts → agents → accounts` (R9). Decidi: o schema, o validador e o teste viram arquivos soltos em `src/core/` (`demo-seed.ts`, `demo-seed.test.ts`), como `memory-schemas.ts`; a R9 não olha arquivos soltos. Desfazer: tirar de `accounts` o que `agents` usa e devolver o arquivo à pasta `accounts/`.
+
+- **A7 · Resumo e sugestão na cópia do seed (017 T10).** Faltava: `copiarSeed` precisa de `resumoPorCodigo` (`agents/memory`) e `sugestaoRegistrada` (`agents/companion`), e `accounts` importar `agents` fecha o ciclo R9. Decidi: duas funções locais em `src/core/accounts/copiar-seed.ts`, com a mesma regra; o `dup` não acusa clone. Risco: divergirem das originais sem teste que compare. Desfazer: mover as duas para arquivos soltos em `src/core/` e importar dos dois lados.
+- **A8 · Teste do seed real (017 T10).** A T10 pedia "`validarSeed` do seed real sem erros", mas teste de core não importa infra (R1). Decidi: a cobertura fica no `base:check` e num teste em `src/infra/knowledge/yaml-seed.test.ts`, aberto como tarefa de correção no fechamento da 017.

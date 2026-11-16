@@ -46,12 +46,12 @@
 | T4 · Add PantryStore.semear with an explicit confirmation date | concluida | 65b9e17 |
 | T6 · Add the CSP, security headers, Origin check and the proxy | concluida | c6ab80b |
 | T7 · Add the demo seed schema, its validator and the YAML reader | concluida | ae432e9 |
-| T5 · Add the onboarding step, quiz, dosha name and entry state functions | pendente | |
-| T8 · Write the demo profile seed | pendente | |
-| T9 · Wire the limiter, the demo seed and the E2E mode into the container | pendente | |
-| T10 · Add the demo creation, seed copy and Google sign-in services | pendente | |
-| T11 · Clean the old limits in the daily cleanup | pendente | |
-| T12 · Add the Auth.js session, the demo provider and the session actions | pendente | |
+| T5 · Add the onboarding step, quiz, dosha name and entry state functions | concluida | 08e23cb |
+| T8 · Write the demo profile seed | concluida | e09383f |
+| T9 · Wire the limiter, the demo seed and the E2E mode into the container | concluida | 80c88f5 |
+| T10 · Add the demo creation, seed copy and Google sign-in services | concluida | f3ae7a0 |
+| T11 · Clean the old limits in the daily cleanup | concluida | 94d1487 |
+| T12 · Add the Auth.js session, the demo provider and the session actions | em andamento | |
 | T13 · Add the account and route helpers for pages and API routes | pendente | |
 | T16 · Configure Playwright for the E2E mode and add the session fixture | pendente | |
 | T14 · Add the onboarding routes | pendente | |
@@ -63,3 +63,4 @@
 | T19 · Build the dosha and city step and the quiz | pendente | |
 | T21 · Write the entry E2E and take the entry screenshots | pendente | |
 | T22 · Write the onboarding E2E and take the onboarding screenshots | pendente | |
+> Para o relatório (017 T8): no `seed/demo.yaml`, a conversa de ontem traz o escalda-pés como 1ª sugestão, mas a resposta fala do jantar primeiro; inverter se a tela mostrar os cards junto do texto. As respostas semeadas não levam "Não é orientação médica" no texto (o schema não exige; conferir que a tela acrescenta o aviso nas conversas semeadas).

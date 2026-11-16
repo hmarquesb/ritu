@@ -1,6 +1,7 @@
 "use client"
 
 import type { Icon } from "@phosphor-icons/react"
+import { useEffect } from "react"
 import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components"
 import { ICON } from "@/components/base/icon-size"
 import { Spinner } from "@/components/base/spinner"
@@ -39,6 +40,31 @@ const SIZE: Record<ButtonSize, string> = {
   sm: "min-h-9 px-4 py-1 text-sm after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']",
 }
 
+type AnnouncementDocument = Pick<Document, "querySelectorAll" | "getElementById">
+
+/**
+ * O React Aria anuncia o botão pendente com `role="img"` e `aria-labelledby`
+ * apontando para o próprio botão. Se a navegação desmonta o botão, o anúncio
+ * fica por sete segundos no `role="log"` sem o elemento que lhe dá o nome.
+ * Remove esses anúncios órfãos.
+ */
+export function removeOrphanAnnouncements(doc: AnnouncementDocument): void {
+  for (const node of doc.querySelectorAll("[data-live-announcer] [role='img'][aria-labelledby]")) {
+    const ids = (node.getAttribute("aria-labelledby") ?? "").split(/\s+/).filter(Boolean)
+    if (ids.length === 0 || ids.some((id) => !doc.getElementById(id))) node.remove()
+  }
+}
+
+function PendingCleanup() {
+  useEffect(
+    () => () => {
+      setTimeout(() => removeOrphanAnnouncements(document), 0)
+    },
+    [],
+  )
+  return null
+}
+
 export function Button({
   variant = "secondary",
   size = "md",
@@ -72,6 +98,7 @@ export function Button({
           </span>
           {renderProps.isPending ? (
             <span className="absolute inset-0 inline-flex items-center justify-center">
+              <PendingCleanup />
               <Spinner label="Carregando" />
             </span>
           ) : null}

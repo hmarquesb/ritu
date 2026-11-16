@@ -440,4 +440,64 @@ describe("container", () => {
       if (nextRuntime !== undefined) process.env.NEXT_RUNTIME = nextRuntime
     }
   })
+
+  it("limiter e demoSeed são preguiçosos: criar não abre o banco nem lê seed/", async () => {
+    const url = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    const carregar = vi.fn(() => ({ marca: "seed" }))
+    vi.doMock("@/infra/knowledge/yaml-seed", () => ({ loadDemoSeed: carregar }))
+    try {
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+      expect(() => container.limiter).not.toThrow()
+      expect(carregar).not.toHaveBeenCalled()
+      expect(container.demoSeed).toBe(container.demoSeed)
+      expect(carregar).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.doUnmock("@/infra/knowledge/yaml-seed")
+      if (url !== undefined) process.env.DATABASE_URL = url
+    }
+  })
+
+  describe("modo e2e", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      delete (globalThis as { __rituContainerE2e?: unknown }).__rituContainerE2e
+    })
+
+    it("usa os fakes em memória e getContainer devolve a mesma instância", async () => {
+      vi.stubEnv("RITU_MODO", "e2e")
+      vi.stubEnv("VERCEL_ENV", "")
+      const { createContainer, getContainer } = await import("./container")
+      const container = createContainer()
+
+      expect(container.stores).toBe(container.tx)
+      expect(container.stores).toBe(container.stores)
+      expect(container.limiter).toBe(container.limiter)
+      expect(container.telemetry.traceparentAtual()).toBeUndefined()
+      await expect(container.stores.accounts.buscar("x")).resolves.toBeUndefined()
+      expect(getContainer()).toBe(getContainer())
+      expect(getContainer()).toBe(
+        (globalThis as { __rituContainerE2e?: unknown }).__rituContainerE2e,
+      )
+    })
+
+    it("recusa em produção", async () => {
+      vi.stubEnv("RITU_MODO", "e2e")
+      vi.stubEnv("VERCEL_ENV", "production")
+      const { createContainer } = await import("./container")
+
+      expect(() => createContainer()).toThrow(
+        expect.objectContaining({ code: "modo_e2e_em_producao" }),
+      )
+    })
+
+    it("outro valor de RITU_MODO é ignorado: adaptadores reais", async () => {
+      vi.stubEnv("RITU_MODO", "outro")
+      vi.stubEnv("DATABASE_URL", "")
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+      await expect(container.stores.accounts.buscar("x")).rejects.toThrow()
+    })
+  })
 })

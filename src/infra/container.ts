@@ -6,8 +6,10 @@ import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memori
 import type { Clock } from "@/core/clock"
 import { createConversation } from "@/core/conversation/conversar"
 import type { DemoSeed } from "@/core/demo-seed"
+import { RituError } from "@/core/errors"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
+import type { UsageLimiter } from "@/core/limits/ports"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
@@ -21,11 +23,15 @@ import { createTouches } from "@/core/touches"
 import { createCachedWeatherSource } from "@/core/weather/cache"
 import type { CityLookup, WeatherSource } from "@/core/weather/ports"
 import { createDbClient, type DbClient } from "@/infra/db/client"
+import { createPgLimiter } from "@/infra/db/limits"
 import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { optionalEnv, requireEnv } from "@/infra/env"
+import { createFakeCities } from "@/infra/fakes/fake-cities"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
+import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createGeminiClient } from "@/infra/gemini/client"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { loadDemoSeed } from "@/infra/knowledge/yaml-seed"
@@ -45,6 +51,8 @@ export type Container = {
   stores: Stores
   tx: Transactor
   ledger: UsageLedger
+  limiter: UsageLimiter
+  demoSeed: DemoSeed
   router: ModelRouter
   llm: LlmClient
   telemetry: Telemetry
@@ -81,6 +89,18 @@ export function readDemoSeed(dir?: string): DemoSeed {
 
 export function createContainer(overrides?: Partial<Container>): Container {
   const clock = overrides?.clock ?? systemClock
+  const e2e = optionalEnv("RITU_MODO") === "e2e"
+  if (e2e && optionalEnv("VERCEL_ENV") === "production") {
+    throw new RituError("modo_e2e_em_producao", "RITU_MODO=e2e não pode rodar em produção")
+  }
+  // Modo de E2E: tudo em memória, sem banco nem rede.
+  const memoria = e2e
+    ? createMemoryStores(clock, {
+        alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
+      })
+    : undefined
+  let limiter: UsageLimiter | undefined
+  let demoSeed: DemoSeed | undefined
   let knowledge: KnowledgeBase | undefined
   let weather: WeatherSource | undefined
   let cities: CityLookup | undefined
@@ -116,25 +136,36 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return weather
     },
     get cities() {
-      cities ??= createOpenMeteoCities()
+      cities ??= e2e ? createFakeCities() : createOpenMeteoCities()
       return cities
     },
     // Adaptadores Postgres: a conexão só abre na primeira consulta. Alimento desconhecido vira nome livre.
     get stores() {
+      if (memoria) return memoria
       stores ??= createPgStores(bancoPreguicoso().sql, clock, {
         alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
       })
       return stores
     },
     get tx() {
+      if (memoria) return memoria
       tx ??= createPgTransactor(bancoPreguicoso().sql, clock, {
         alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
       })
       return tx
     },
     get ledger() {
-      ledger ??= createPgUsageLedger(bancoPreguicoso().sql, clock)
+      ledger ??= e2e ? createMemoryLedger(clock) : createPgUsageLedger(bancoPreguicoso().sql, clock)
       return ledger
+    },
+    get limiter() {
+      limiter ??= e2e ? createMemoryLimiter() : createPgLimiter(bancoPreguicoso().sql)
+      return limiter
+    },
+    // Carregado na primeira leitura: criar o container não toca em seed/.
+    get demoSeed() {
+      demoSeed ??= loadDemoSeed()
+      return demoSeed
     },
     get router() {
       router ??= createModelRouter({
@@ -152,7 +183,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
     get telemetry() {
       telemetry ??=
-        optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined
+        e2e || optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined
           ? createNullTelemetry()
           : createOtelTelemetry()
       return telemetry
@@ -284,7 +315,15 @@ export function createContainer(overrides?: Partial<Container>): Container {
 
 let instance: Container | undefined
 
+type ComE2e = typeof globalThis & { __rituContainerE2e?: Container }
+
 export function getContainer(): Container {
+  if (optionalEnv("RITU_MODO") === "e2e") {
+    // O Next carrega módulos em separado: os stores em memória vivem no globalThis.
+    const global = globalThis as ComE2e
+    global.__rituContainerE2e ??= createContainer()
+    return global.__rituContainerE2e
+  }
   instance ??= createContainer()
   return instance
 }

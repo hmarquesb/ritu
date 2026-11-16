@@ -5,7 +5,15 @@ import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Run, RunEtapa } from "@/core/runs/ports"
-import { type DadosDoRelatorio, type DecisaoDoBloco, formatarRelatorio } from "./demo-report"
+import {
+  type DadosDoRelatorio,
+  type DecisaoDoBloco,
+  formatarRelatorio,
+  fraseDaTrocaNaSugestao,
+  linhaDoToque,
+  motivoDaLista,
+  type TocadoDoRelatorio,
+} from "./demo-report"
 
 const DISCLAIMER = "Não é orientação médica."
 
@@ -422,5 +430,206 @@ describe("formatarRelatorio · bloco de aprovação", () => {
     const depois = texto.indexOf("Depois: sou vegetariana, o que eu como agora?")
     expect(depois).toBeGreaterThan(texto.indexOf("trace_id: abc123"))
     expect(texto.indexOf("Cenário: vegetariana")).toBeGreaterThan(depois)
+  })
+})
+
+describe("formatarRelatorio · como ficou, gravado e toques", () => {
+  it("sem nada novo, o relatório é igual ao de hoje", () => {
+    const dados = dadosDeExemplo()
+    const vazio = formatarRelatorio({
+      ...dados,
+      comoFicou: [],
+      gravado: { faltas: 0, sugeridos: 0, lista: [] },
+      toques: [],
+    })
+    expect(vazio).toBe(formatarRelatorio(dados))
+    expect(vazio).not.toContain("Como ficou?")
+    expect(vazio).not.toContain("Gravado")
+    expect(vazio).not.toContain("Toques")
+  })
+
+  it("mostra Como ficou? com um título por linha", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      comoFicou: [{ titulo: "Chá de gengibre e canela" }, { titulo: "Arroz com abóbora" }],
+    })
+    expect(texto).toContain("Como ficou?\n  Chá de gengibre e canela\n  Arroz com abóbora")
+  })
+
+  it("sem retorno aguardando, a seção Como ficou? não aparece", () => {
+    const texto = formatarRelatorio({ ...dadosDeExemplo(), comoFicou: [] })
+    expect(texto).not.toContain("Como ficou?")
+  })
+
+  it("mostra Gravado com as faltas, os sugeridos e a lista com o motivo", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      gravado: {
+        faltas: 2,
+        sugeridos: 3,
+        lista: [
+          { nome: "Cardamomo", motivo: "Fez falta 3 vezes nos últimos 30 dias" },
+          { nome: "Gengibre", motivo: "Faltou para chá de gengibre" },
+        ],
+      },
+    })
+    expect(texto).toContain("Gravado\n  2 faltas\n  3 itens marcados como sugeridos")
+    expect(texto).toContain("  Lista Para ter em casa:\n    - Cardamomo · Fez falta 3 vezes")
+    expect(texto).toContain("    - Gengibre · Faltou para chá de gengibre")
+  })
+
+  it("no singular, diz 1 falta e 1 item marcado como sugerido", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      gravado: { faltas: 1, sugeridos: 1, lista: [] },
+    })
+    expect(texto).toContain("Gravado\n  1 falta\n  1 item marcado como sugerido")
+    expect(texto).not.toContain("Lista Para ter em casa:")
+  })
+
+  it("sem faltas, sugeridos nem lista, a seção Gravado não aparece", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      gravado: { faltas: 0, sugeridos: 0, lista: [] },
+    })
+    expect(texto).not.toContain("Gravado\n")
+  })
+
+  it("mostra Toques uma linha por toque, depois de Como ficou? e Gravado", () => {
+    const texto = formatarRelatorio({
+      ...dadosDeExemplo(),
+      comoFicou: [{ titulo: "Arroz com abóbora" }],
+      gravado: { faltas: 1, sugeridos: 0, lista: [] },
+      toques: ["Retorno da sugestão 1: Ajudou", "Gosto de Couve: gosta"],
+    })
+    expect(texto).toContain("Toques\n  Retorno da sugestão 1: Ajudou\n  Gosto de Couve: gosta")
+    expect(texto.indexOf("Como ficou?")).toBeLessThan(texto.indexOf("Gravado"))
+    expect(texto.indexOf("Gravado")).toBeLessThan(texto.indexOf("Toques"))
+  })
+})
+
+describe("linhaDoToque", () => {
+  it("mostra o retorno com o resultado em português", () => {
+    const ajudou: TocadoDoRelatorio = {
+      tipo: "retorno",
+      numero: 1,
+      resultado: "ajudou",
+      semeado: false,
+    }
+    const naoAjudou: TocadoDoRelatorio = {
+      tipo: "retorno",
+      numero: 2,
+      resultado: "nao_ajudou",
+      semeado: true,
+    }
+    const naoFez: TocadoDoRelatorio = {
+      tipo: "retorno",
+      numero: 3,
+      resultado: "nao_fez",
+      semeado: false,
+    }
+    expect(linhaDoToque(ajudou)).toBe("Retorno da sugestão 1: Ajudou")
+    expect(linhaDoToque(naoAjudou)).toBe("Retorno semeado 2: Não ajudou")
+    expect(linhaDoToque(naoFez)).toBe("Retorno da sugestão 3: Não fiz")
+  })
+
+  it("mostra o gosto como gosta, não gosta ou limpou", () => {
+    const gosta: TocadoDoRelatorio = { tipo: "gosto", nome: "Couve", gosto: "gosta" }
+    const naoGosta: TocadoDoRelatorio = { tipo: "gosto", nome: "Couve", gosto: "nao_gosta" }
+    const limpou: TocadoDoRelatorio = { tipo: "gosto", nome: "Couve", gosto: null }
+    expect(linhaDoToque(gosta)).toBe("Gosto de Couve: gosta")
+    expect(linhaDoToque(naoGosta)).toBe("Gosto de Couve: não gosta")
+    expect(linhaDoToque(limpou)).toBe("Gosto de Couve: limpou")
+  })
+
+  it("mostra a troca com a frase do substituto", () => {
+    const troca: TocadoDoRelatorio = {
+      tipo: "troca",
+      motivo: "trocar",
+      nome: "Canela",
+      numero: 1,
+      desfecho: "Se faltar, use cardamomo, que aquece de forma parecida.",
+    }
+    expect(linhaDoToque(troca)).toBe(
+      "Trocar Canela na sugestão 1: Se faltar, use cardamomo, que aquece de forma parecida.",
+    )
+  })
+
+  it("mostra o motivo Não tenho com o texto de sem substituto", () => {
+    const semSubstituto: TocadoDoRelatorio = {
+      tipo: "troca",
+      motivo: "nao_tenho",
+      nome: "Canela",
+      numero: 1,
+      desfecho: "Não achei uma troca para canela com o que você tem em casa.",
+    }
+    expect(linhaDoToque(semSubstituto)).toBe(
+      "Não tenho Canela na sugestão 1: Não achei uma troca para canela com o que você tem em casa.",
+    )
+  })
+
+  it("mostra a pergunta com a resposta e depois o desfecho", () => {
+    const respondida: TocadoDoRelatorio = {
+      tipo: "troca",
+      motivo: "nao_gosto",
+      nome: "Canela",
+      numero: 2,
+      pergunta: { texto: "Você tem cravo em casa?", resposta: "tenho" },
+      desfecho: "Cravo aquece.",
+    }
+    expect(linhaDoToque(respondida)).toBe(
+      "Não gosto Canela na sugestão 2: Pergunta: Você tem cravo em casa? → Tenho · Cravo aquece.",
+    )
+  })
+
+  it("mostra a pergunta sem resposta quando a troca ainda não foi respondida", () => {
+    const pendente: TocadoDoRelatorio = {
+      tipo: "troca",
+      motivo: "trocar",
+      nome: "Canela",
+      numero: 1,
+      pergunta: { texto: "Você tem cravo em casa?" },
+    }
+    expect(linhaDoToque(pendente)).toBe(
+      "Trocar Canela na sugestão 1: Pergunta: Você tem cravo em casa?",
+    )
+  })
+})
+
+describe("motivoDaLista", () => {
+  it("diz quantas vezes fez falta nos últimos 30 dias", () => {
+    expect(motivoDaLista({ motivo: "fez_falta", detalhe: "3" })).toBe(
+      "Fez falta 3 vezes nos últimos 30 dias",
+    )
+  })
+
+  it("diz para qual preparo faltou hoje", () => {
+    expect(motivoDaLista({ motivo: "faltou_hoje", detalhe: "chá de gengibre" })).toBe(
+      "Faltou para chá de gengibre",
+    )
+  })
+})
+
+describe("fraseDaTrocaNaSugestao", () => {
+  it("acha a frase do item trocado pelo alimento que saiu", () => {
+    const itens = [
+      { alimento_id: "gengibre" },
+      { alimento_id: "canela", troca: { frase: "Se faltar, use cravo.", anteriores: [] } },
+    ]
+    expect(fraseDaTrocaNaSugestao({ itens }, "canela")).toBe("Se faltar, use cravo.")
+  })
+
+  it("na segunda troca, acha a frase pelo alimento anterior na lista", () => {
+    const itens = [
+      {
+        alimento_id: "canela",
+        troca: { frase: "Se faltar, use noz-moscada.", anteriores: ["cravo"] },
+      },
+    ]
+    expect(fraseDaTrocaNaSugestao({ itens }, "cravo")).toBe("Se faltar, use noz-moscada.")
+  })
+
+  it("sem troca no item, a frase é vazia", () => {
+    expect(fraseDaTrocaNaSugestao({ itens: [{ alimento_id: "canela" }] }, "canela")).toBe("")
   })
 })

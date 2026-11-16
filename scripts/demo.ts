@@ -12,15 +12,18 @@ import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { textoDaMensagem } from "@/core/messages/texto"
 import type { ItemDaCasa } from "@/core/pantry/types"
+import type { ItemTipo } from "@/core/preferences/ports"
 import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { EventoAoVivo } from "@/core/runs/loop"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
+import type { ResultadoDaTroca } from "@/core/touches"
 import { getContainer } from "@/infra/container"
 import {
   type Cenario,
   cenarios,
   cenariosComAprovacao,
   cenariosComPausa,
+  cenariosDeAprendizado,
   cenariosDeConversa,
   type DepsDoCenario,
   montarCenario,
@@ -28,8 +31,17 @@ import {
   type RodadaDoCenario,
   rodarCenario,
 } from "../test/fixtures/cenarios"
-import type { CenarioDeConversa } from "../test/fixtures/cenarios/tipos"
-import { type DadosDoRelatorio, formatarRelatorio, type Pensamento } from "./lib/demo-report"
+import type { ToqueFeito } from "../test/fixtures/cenarios/rodar"
+import type { CenarioDeConversa, Toque } from "../test/fixtures/cenarios/tipos"
+import {
+  type DadosDoRelatorio,
+  formatarRelatorio,
+  fraseDaTrocaNaSugestao,
+  linhaDoToque,
+  motivoDaLista,
+  type Pensamento,
+  type TocadoDoRelatorio,
+} from "./lib/demo-report"
 import {
   aprovadasDoTexto,
   formatarBloco,
@@ -48,6 +60,7 @@ function listarCenarios(): void {
     ...Object.values(cenariosDeConversa),
     ...Object.values(cenariosComPausa),
     ...Object.values(cenariosComAprovacao),
+    ...Object.values(cenariosDeAprendizado),
   ]
   for (const c of todos) {
     console.log(`  ${c.nome}  ${c.descricao}`)
@@ -59,6 +72,7 @@ function acharCenario(nome: string): Cenario | CenarioDeConversa | undefined {
   if (Object.hasOwn(cenariosDeConversa, nome)) return cenariosDeConversa[nome]
   if (Object.hasOwn(cenariosComPausa, nome)) return cenariosComPausa[nome]
   if (Object.hasOwn(cenariosComAprovacao, nome)) return cenariosComAprovacao[nome]
+  if (Object.hasOwn(cenariosDeAprendizado, nome)) return cenariosDeAprendizado[nome]
   return undefined
 }
 
@@ -156,6 +170,104 @@ async function minhaCasaDo(ctx: Contexto): Promise<NonNullable<DadosDoRelatorio[
   return itens.map((item) => ({ nome: nomeDaCasa(item, ctx.kb), estado: item.estado }))
 }
 
+// Retornos aguardando da conta: o título de cada um, o mais recente primeiro.
+async function comoFicouDo(ctx: Contexto): Promise<NonNullable<DadosDoRelatorio["comoFicou"]>> {
+  const pendentes = await ctx.deps.stores.outcomes.pendentes(ctx.contaId)
+  return pendentes.map((r) => ({ titulo: r.sugestao.titulo }))
+}
+
+// Faltas que a entrega gravou: a soma de ritu_faltas_total com origem teria_entrado na telemetria em memória.
+function faltasDaEntrega(telemetry: DepsDoCenario["telemetry"]): number {
+  return telemetry.metricas
+    .filter((m) => m.nome === "ritu_faltas_total" && m.rotulos.origem === "teria_entrado")
+    .reduce((soma, m) => soma + m.valor, 0)
+}
+
+function nomeDoAlimento(id: string, kb: KnowledgeBase): string {
+  return kb.alimento(id)?.nome ?? id
+}
+
+// O que foi gravado: faltas, itens marcados como sugeridos e a lista Para ter em casa.
+async function gravadoDo(ctx: Contexto): Promise<NonNullable<DadosDoRelatorio["gravado"]>> {
+  const preferencias = await ctx.deps.stores.preferences.ler(ctx.contaId)
+  const lista = await ctx.deps.stores.shortages.lista(ctx.contaId)
+  return {
+    faltas: faltasDaEntrega(ctx.deps.telemetry),
+    sugeridos: preferencias.filter((p) => p.ultima_sugestao_em !== null).length,
+    lista: lista.map((i) => ({
+      nome: nomeDoAlimento(i.alimento_id, ctx.kb),
+      motivo: motivoDaLista(i),
+    })),
+  }
+}
+
+// Nome do item de um toque de gosto: alimento, preparo ou prática pelo nome da base.
+function nomeDoItem(item: { tipo: ItemTipo; id: string }, kb: KnowledgeBase): string {
+  if (item.tipo === "alimento") return nomeDoAlimento(item.id, kb)
+  if (item.tipo === "preparo") return kb.preparo(item.id)?.nome ?? item.id
+  return kb.pratica(item.id)?.nome ?? item.id
+}
+
+function desfechoDaTroca(resultado: ResultadoDaTroca, alimentoSaiu: string): string | undefined {
+  if (resultado.resultado === "trocou")
+    return fraseDaTrocaNaSugestao(resultado.sugestao, alimentoSaiu)
+  if (resultado.resultado === "sem_substituto") return resultado.texto
+  return undefined
+}
+
+// Troca: a pergunta (com a resposta, quando o toque respondeu) e o desfecho final.
+function tocadoDaTroca(
+  t: Extract<Toque, { tipo: "troca" }>,
+  f: Extract<ToqueFeito, { tipo: "troca" }>,
+  kb: KnowledgeBase,
+): TocadoDoRelatorio {
+  const nome = nomeDoAlimento(t.alimento_id, kb)
+  const final = f.resultado.resultado === "perguntar" ? f.resposta : f.resultado
+  const desfecho = final ? desfechoDaTroca(final, t.alimento_id) : undefined
+  const pergunta =
+    f.resultado.resultado === "perguntar"
+      ? {
+          texto: f.resultado.pergunta.texto,
+          ...(t.resposta ? { resposta: t.resposta } : {}),
+        }
+      : undefined
+  return {
+    tipo: "troca",
+    motivo: t.motivo,
+    nome,
+    numero: t.sugestao + 1,
+    ...(pergunta ? { pergunta } : {}),
+    ...(desfecho ? { desfecho } : {}),
+  }
+}
+
+// O toque da cenário com o que ele devolveu. Só a troca precisa do resultado da rodada.
+function tocadoDoToque(t: Toque, f: ToqueFeito, kb: KnowledgeBase): TocadoDoRelatorio | undefined {
+  if (t.tipo === "retorno") {
+    return {
+      tipo: "retorno",
+      numero: t.sugestao + 1,
+      resultado: t.resultado,
+      semeado: t.semeado === true,
+    }
+  }
+  if (t.tipo === "gosto") {
+    return { tipo: "gosto", nome: nomeDoItem(t.item, kb), gosto: t.gosto }
+  }
+  if (f.tipo !== "troca") return undefined
+  return tocadoDaTroca(t, f, kb)
+}
+
+// Uma linha por toque, na ordem em que a rodada os fez.
+function linhasDosToques(ctx: Contexto, feitos: ToqueFeito[]): string[] {
+  const pedidos = ctx.cenario.toques ?? []
+  return feitos.flatMap((f, i) => {
+    const pedido = pedidos[i]
+    const tocado = pedido ? tocadoDoToque(pedido, f, ctx.kb) : undefined
+    return tocado ? [linhaDoToque(tocado)] : []
+  })
+}
+
 async function relatorioDaRodada(
   ctx: Contexto,
   rodada: RodadaDoCenario,
@@ -165,6 +277,7 @@ async function relatorioDaRodada(
   if (!run) throw new Error(`run ${runId} não encontrado`)
   const etapas = await ctx.deps.stores.runs.etapas(ctx.contaId, runId)
   const decidido = rodada.bloco
+  const toques = rodada.toques ? linhasDosToques(ctx, rodada.toques) : undefined
   return {
     nome: ctx.cenario.nome,
     resposta: rodada.final,
@@ -176,6 +289,9 @@ async function relatorioDaRodada(
     ...camposDaConversa(rodada.final),
     nomeDoEvitar: nomeDoEvitarDaBase(ctx.kb),
     minhaCasa: await minhaCasaDo(ctx),
+    comoFicou: await comoFicouDo(ctx),
+    gravado: await gravadoDo(ctx),
+    ...(toques ? { toques } : {}),
     ...(decidido
       ? {
           decisao: {

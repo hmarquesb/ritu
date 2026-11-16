@@ -3,10 +3,13 @@ import type { RespostaDoRun } from "@/core/agents/companion/responder"
 import type { SaidaDoAcompanhante, SugestaoEntregue } from "@/core/agents/companion/saida"
 import type { Interpretacao } from "@/core/agents/interpreter/interpretacao"
 import type { EvitarItem } from "@/core/knowledge/filtros"
+import type { Resultado } from "@/core/outcomes/ports"
 import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import { textoDaResposta } from "@/core/runs/pergunta"
 import type { Caminho, Run, RunEtapa } from "@/core/runs/ports"
+import type { ItemDaLista } from "@/core/shortages/ports"
+import type { MotivoDaTroca } from "@/core/touches"
 import { formatarBloco, formatarPergunta } from "./demo-resposta"
 
 export type ResumoDoRun = Pick<
@@ -51,7 +54,27 @@ export type DadosDoRelatorio = {
   minhaCasa?: { nome: string; estado: "tem" | "acabou" }[]
   // Segunda mensagem da conversa (com `depois`), com o relatório do seu run.
   depois?: { mensagem: string; relatorio: DadosDoRelatorio }
+  // Retornos aguardando da conta depois da rodada, mais recente primeiro.
+  comoFicou?: { titulo: string }[]
+  // O que a entrega e a lista gravaram: faltas somadas, itens marcados como sugeridos e a lista Para ter em casa.
+  gravado?: { faltas: number; sugeridos: number; lista: { nome: string; motivo: string }[] }
+  // Uma linha por toque da pessoa (ver linhaDoToque).
+  toques?: string[]
 }
+
+// Toque já traduzido para o relatório: `numero` é a posição na sugestão ou no retorno, a partir de 1.
+export type TocadoDoRelatorio =
+  | { tipo: "retorno"; numero: number; resultado: Resultado; semeado: boolean }
+  | { tipo: "gosto"; nome: string; gosto: "gosta" | "nao_gosta" | null }
+  | {
+      tipo: "troca"
+      motivo: MotivoDaTroca
+      nome: string
+      numero: number
+      pergunta?: { texto: string; resposta?: "tenho" | "nao_tenho" }
+      // A frase da troca, o texto de sem substituto ou vazio quando a troca ainda espera a resposta.
+      desfecho?: string
+    }
 
 type Item = SugestaoEntregue["itens"][number]
 type Para = NonNullable<SaidaDoAcompanhante["para_ter"]>
@@ -239,6 +262,104 @@ function secaoResumo(resposta: RespostaDoRelatorio, run: ResumoDoRun): string[] 
 
 const nomeSemMudar = (item: EvitarItem): string => item.valor
 
+const RESULTADO_DO_RETORNO: Record<Resultado, string> = {
+  ajudou: "Ajudou",
+  nao_ajudou: "Não ajudou",
+  nao_fez: "Não fiz",
+}
+
+const ROTULO_DA_TROCA: Record<MotivoDaTroca, string> = {
+  trocar: "Trocar",
+  nao_tenho: "Não tenho",
+  nao_gosto: "Não gosto",
+}
+
+// Motivo da linha da lista Para ter em casa (D13): o texto da tela Minha casa, montado só no relatório.
+export function motivoDaLista(item: Pick<ItemDaLista, "motivo" | "detalhe">): string {
+  if (item.motivo === "fez_falta") return `Fez falta ${item.detalhe} vezes nos últimos 30 dias`
+  return `Faltou para ${item.detalhe}`
+}
+
+// A frase da troca fica no item que trocou: o do alimento que saiu (primeira troca) ou o que traz
+// esse alimento entre os anteriores (troca seguinte). Sem troca no item, a frase é vazia.
+export function fraseDaTrocaNaSugestao(
+  sugestao: { itens: { alimento_id: string; troca?: { frase: string; anteriores: string[] } }[] },
+  alimentoSaiu: string,
+): string {
+  const item = sugestao.itens.find(
+    (i) =>
+      i.troca !== undefined &&
+      (i.alimento_id === alimentoSaiu || i.troca.anteriores.includes(alimentoSaiu)),
+  )
+  return item?.troca?.frase ?? ""
+}
+
+function linhaDoRetorno(t: Extract<TocadoDoRelatorio, { tipo: "retorno" }>): string {
+  const rotulo = t.semeado ? "Retorno semeado" : "Retorno da sugestão"
+  return `${rotulo} ${t.numero}: ${RESULTADO_DO_RETORNO[t.resultado]}`
+}
+
+function rotuloDoGosto(gosto: "gosta" | "nao_gosta" | null): string {
+  if (gosto === null) return "limpou"
+  return gosto === "gosta" ? "gosta" : "não gosta"
+}
+
+// A pergunta da troca, com a resposta quando a pessoa respondeu.
+function textoDaPergunta(
+  p: NonNullable<Extract<TocadoDoRelatorio, { tipo: "troca" }>["pergunta"]>,
+): string {
+  if (!p.resposta) return `Pergunta: ${p.texto}`
+  return `Pergunta: ${p.texto} → ${p.resposta === "tenho" ? "Tenho" : "Não tenho"}`
+}
+
+function linhaDaTroca(t: Extract<TocadoDoRelatorio, { tipo: "troca" }>): string {
+  const cabeca = `${ROTULO_DA_TROCA[t.motivo]} ${t.nome} na sugestão ${t.numero}:`
+  const partes = [
+    ...(t.pergunta ? [textoDaPergunta(t.pergunta)] : []),
+    ...(t.desfecho ? [t.desfecho] : []),
+  ]
+  return partes.length > 0 ? `${cabeca} ${partes.join(" · ")}` : cabeca
+}
+
+// Uma linha por toque: o retorno, o gosto ou a troca, com o que o toque devolveu.
+export function linhaDoToque(t: TocadoDoRelatorio): string {
+  if (t.tipo === "retorno") return linhaDoRetorno(t)
+  if (t.tipo === "gosto") return `Gosto de ${t.nome}: ${rotuloDoGosto(t.gosto)}`
+  return linhaDaTroca(t)
+}
+
+function secaoComoFicou(comoFicou: DadosDoRelatorio["comoFicou"]): string[] {
+  if (!comoFicou || comoFicou.length === 0) return []
+  return ["Como ficou?", ...comoFicou.map((r) => `  ${r.titulo}`)]
+}
+
+// Contagem com o singular quando é 1: "1 falta", "3 faltas".
+function contagem(n: number, singular: string, plurais: string): string {
+  return `${n} ${n === 1 ? singular : plurais}`
+}
+
+// Sem faltas, sugeridos nem lista, a seção não aparece: o relatório fica igual ao de antes.
+function secaoGravado(gravado: DadosDoRelatorio["gravado"]): string[] {
+  if (!gravado) return []
+  const linhas = [
+    ...(gravado.faltas > 0 ? [`  ${contagem(gravado.faltas, "falta", "faltas")}`] : []),
+    ...(gravado.sugeridos > 0
+      ? [
+          `  ${contagem(gravado.sugeridos, "item marcado como sugerido", "itens marcados como sugeridos")}`,
+        ]
+      : []),
+    ...(gravado.lista.length > 0
+      ? ["  Lista Para ter em casa:", ...gravado.lista.map((i) => `    - ${i.nome} · ${i.motivo}`)]
+      : []),
+  ]
+  return linhas.length > 0 ? ["Gravado", ...linhas] : []
+}
+
+function secaoToques(toques: DadosDoRelatorio["toques"]): string[] {
+  if (!toques || toques.length === 0) return []
+  return ["Toques", ...toques.map((linha) => `  ${linha}`)]
+}
+
 // Função pura: não imprime. O script decide o que mostrar e o código de saída.
 export function formatarRelatorio(d: DadosDoRelatorio): string {
   const { resposta, run } = d
@@ -251,6 +372,9 @@ export function formatarRelatorio(d: DadosDoRelatorio): string {
     ...(d.perguntas ?? []).map(blocoDaPergunta),
     secaoResposta(saida?.resposta ?? ""),
     secaoDoBloco(d),
+    secaoComoFicou(d.comoFicou),
+    secaoGravado(d.gravado),
+    secaoToques(d.toques),
     secaoSugestoes(saida?.sugestoes ?? []),
     secaoEvitar(saida?.evitar ?? []),
     secaoValeTerEmCasa(saida?.para_ter),

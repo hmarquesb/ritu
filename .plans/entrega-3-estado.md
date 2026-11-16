@@ -51,16 +51,20 @@
 | T9 · Wire the limiter, the demo seed and the E2E mode into the container | concluida | 80c88f5 |
 | T10 · Add the demo creation, seed copy and Google sign-in services | concluida | f3ae7a0 |
 | T11 · Clean the old limits in the daily cleanup | concluida | 94d1487 |
-| T12 · Add the Auth.js session, the demo provider and the session actions | em andamento | |
-| T13 · Add the account and route helpers for pages and API routes | pendente | |
-| T16 · Configure Playwright for the E2E mode and add the session fixture | pendente | |
-| T14 · Add the onboarding routes | pendente | |
-| T15 · Add the city and food search routes and the cleanup cron route | pendente | |
-| T17 · Build the entry page with the diagonal illustration | pendente | |
-| T20 · Build the signed-in frame, the demo banner and the empty conversation page | pendente | |
-| T18 · Build the onboarding layout, the notice and the always-avoid step | pendente | |
-| T23 · Add the security deterministic evals | pendente | |
+| T12 · Add the Auth.js session, the demo provider and the session actions | concluida | 20e6fbd |
+| T13 · Add the account and route helpers for pages and API routes | concluida | f5caaa6 |
+| T16 · Configure Playwright for the E2E mode and add the session fixture | concluida | 3a28de4 |
+| T14 · Add the onboarding routes | concluida | 5937ef2 |
+| T15 · Add the city and food search routes and the cleanup cron route | concluida | 497d5b1 |
+| T17 · Build the entry page with the diagonal illustration | concluida | 4c5e762 |
+| T20 · Build the signed-in frame, the demo banner and the empty conversation page | concluida | 5c637e1 |
+| T18 · Build the onboarding layout, the notice and the always-avoid step | concluida | a86c2ba |
+| T23 · Add the security deterministic evals | concluida | 31be27a |
 | T19 · Build the dosha and city step and the quiz | pendente | |
 | T21 · Write the entry E2E and take the entry screenshots | pendente | |
 | T22 · Write the onboarding E2E and take the onboarding screenshots | pendente | |
 > Para o relatório (017 T8): no `seed/demo.yaml`, a conversa de ontem traz o escalda-pés como 1ª sugestão, mas a resposta fala do jantar primeiro; inverter se a tela mostrar os cards junto do texto. As respostas semeadas não levam "Não é orientação médica" no texto (o schema não exige; conferir que a tela acrescenta o aviso nas conversas semeadas).
+> 2026-11-16 (3ª sessão): vereditos da onda T14+T15 perdidos com o fim dos tokens; os verificadores rodaram de novo sobre os arquivos prontos (sem reimplementar). Resto da onda 9 (T17, T20) juntado com a onda 10 (T18, T23): sem arquivo em comum e dependências com commit.
+> 017 T18 e T23: uma reprovação cada nos gates da onda (teste de arquitetura: R5, `react-aria-components` em `src/app/`; R6, eval importando `@/infra/auth/ip`). Corrigidas pelo mesmo implementador. Na re-rodada, o `eval:det` completo ficou inconclusivo por carga da máquina (load > 260, outras sessões): timeouts em arquivos fora da onda; os evals da T23 passam isolados e o `eval:det` inteiro já tinha passado na 1ª rodada da onda. Conferir de novo no fechamento da 017.
+> Para o relatório (017 T23): `demonstracao.eval.ts` refaz o `hashDoIp` (HMAC sha256) dentro do eval, porque R6 proíbe importar `@/infra/auth/ip`; se o cálculo mudar em produção, a cópia não acompanha (o eval não testa o hash).
+> 017 T19: implementada e reprovada só no `npm run dup` (o `continuar()` de `escolher-dosha.tsx` repete o POST + 401 + `router.push(proximo)` de `aviso/aceitar.tsx` e `evitar/escolher-evitar.tsx`; o resto aprovado pelo verificador, com lint, typecheck, test e build verdes). Interrompida na passagem (5 h em 91%): os 4 arquivos foram guardados em `.local/t19-pendente/` (fora do git) e retirados da árvore. Ver `.local/PASSAGEM.md`.

@@ -4,5 +4,13 @@ import { optionalEnv } from "@/infra/env"
 export async function register(): Promise<void> {
   if (optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined) return
   const { registerOTel } = await import("@vercel/otel")
-  registerOTel({ serviceName: optionalEnv("OTEL_SERVICE_NAME") ?? "ritu" })
+  const { opcoesDoOtel } = await import("./infra/otel/opcoes")
+  const o = opcoesDoOtel()
+  registerOTel({
+    serviceName: optionalEnv("OTEL_SERVICE_NAME") ?? "ritu",
+    traceExporter: o.traceExporter,
+    metricReaders: [o.metricReader],
+    logRecordProcessors: [o.logRecordProcessor],
+    attributes: { "service.instance.id": String(o.resource.attributes["service.instance.id"]) },
+  })
 }

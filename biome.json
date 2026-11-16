@@ -25,7 +25,9 @@
       "!**/next-env.d.ts",
       "!**/package-lock.json",
       "!**/*.md",
-      "!evals/resultados/historico.json"
+      "!evals/resultados/historico.json",
+      "!observability/dashboards/ritu.json",
+      "!observability/grafana/alerting/ritu.yaml"
     ]
   },
   "formatter": {

@@ -1,0 +1,1544 @@
+{
+  "uid": "ritu",
+  "title": "Ritu",
+  "schemaVersion": 39,
+  "tags": [
+    "ritu"
+  ],
+  "timezone": "browser",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "ds_metricas",
+        "label": "Métricas",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "name": "ds_logs",
+        "label": "Logs",
+        "type": "datasource",
+        "query": "loki",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "name": "ds_traces",
+        "label": "Rastro",
+        "type": "datasource",
+        "query": "tempo",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "1. Saúde",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Runs por hora",
+      "description": "Quantos runs terminaram por hora, e com qual status?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (status) (increase(ritu_run_passos_count[1h]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Espera por resposta, p50 e p95",
+      "description": "Quanto a pessoa espera por uma resposta, no p50 e no p95?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(ritu_run_duracao_ms_bucket[$__rate_interval])))",
+          "legendFormat": "p50",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(ritu_run_duracao_ms_bucket[$__rate_interval])))",
+          "legendFormat": "p95",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Runs que falharam",
+      "description": "Qual a fração de runs que falharam no período?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.05
+              },
+              {
+                "color": "red",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum(max_over_time(ritu_run_passos_count{status=\"failed\"}[$__range])) / sum(max_over_time(ritu_run_passos_count[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "429 do modelo",
+      "description": "Quantas vezes o modelo respondeu com limite de taxa (429) no período?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 9,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum(max_over_time(ritu_llm_erros_total{codigo=\"rate_limit\"}[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Latência do modelo, p95",
+      "description": "Quanto cada modelo demora para responder, no p95?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le, modelo) (rate(ritu_llm_duracao_ms_bucket[$__rate_interval])))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "barchart",
+      "title": "Latência das tools, p95",
+      "description": "Qual tool é a mais lenta, no p95?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le, tool) (increase(ritu_tool_duracao_ms_bucket[$__range])))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "2. Agente",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 9,
+      "type": "barchart",
+      "title": "Intenções",
+      "description": "Quais intenções as mensagens tiveram no período?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (intencao) (max_over_time(ritu_run_intencao_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "Caminhos",
+      "description": "Por qual caminho os runs passaram?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 26,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (caminho) (max_over_time(ritu_run_passos_count[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Passos por run",
+      "description": "Quantos passos um run leva em média, por caminho?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (caminho) (rate(ritu_run_passos_sum[$__rate_interval])) / sum by (caminho) (rate(ritu_run_passos_count[$__rate_interval]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "barchart",
+      "title": "Tools",
+      "description": "Quais tools o agente chamou, e com que resultado?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (tool, status) (max_over_time(ritu_tool_chamadas_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "barchart",
+      "title": "Violações do validador",
+      "description": "Que regras o validador da resposta mais barrou?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (violacao) (max_over_time(ritu_validacao_violacoes_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "barchart",
+      "title": "Juiz",
+      "description": "Como o Juiz julgou as respostas, e por quais motivos reprovou ou avisou?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 42,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (resultado) (max_over_time(ritu_juiz_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (motivo) (max_over_time(ritu_juiz_reprovacoes_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (motivo) (max_over_time(ritu_juiz_avisos_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "barchart",
+      "title": "Guardrail",
+      "description": "Quantas mensagens o guardrail deixou passar ou tratou, e por qual origem?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (resultado, origem) (max_over_time(ritu_guardrail_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "barchart",
+      "title": "Pausas",
+      "description": "Quantas vezes o run pausou para pedir algo à pessoa, e de que tipo?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 50,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (tipo) (max_over_time(ritu_pausas_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "barchart",
+      "title": "Memória",
+      "description": "Quantos resumos de rotina e padrões foram gerados, e de onde vieram?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 58,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (origem) (max_over_time(ritu_rotina_resumo_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (tipo, etapa) (max_over_time(ritu_padroes_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "row",
+      "title": "3. Modelos e cota",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 66,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Chamadas por modelo e papel",
+      "description": "Quantas chamadas cada modelo recebeu em cada papel na última hora?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (modelo, papel) (increase(ritu_llm_chamadas_total[1h]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "barchart",
+      "title": "Tokens",
+      "description": "Quantos tokens de entrada e de saída cada modelo consumiu?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 67,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (modelo, direcao) (max_over_time(ritu_tokens_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "bargauge",
+      "title": "Cota do dia",
+      "description": "Quanto da cota diária de cada modelo já foi usado?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 75,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.8
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "max by (modelo) (last_over_time(ritu_llm_cota_usada{janela=\"dia\"}[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Cota do minuto",
+      "description": "Como está a cota do minuto de cada modelo?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 75,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "max by (modelo) (ritu_llm_cota_usada{janela=\"minuto\"})",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "type": "table",
+      "title": "Trocas de modelo",
+      "description": "Quando e por que o roteador trocou de modelo?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 83,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (papel, de, para, motivo) (max_over_time(ritu_llm_troca_de_modelo_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Respostas sem modelo",
+      "description": "Quantas respostas foram montadas sem modelo?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 83,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum(max_over_time(ritu_fallback_sem_llm_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "type": "barchart",
+      "title": "Erros do modelo",
+      "description": "Quais erros os modelos devolveram, por modelo e código?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 91,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (modelo, codigo) (max_over_time(ritu_llm_erros_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "type": "row",
+      "title": "4. Qualidade",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 99,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 27,
+      "type": "barchart",
+      "title": "👍/👎",
+      "description": "Como a pessoa avaliou as respostas?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 100,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (voto) (max_over_time(ritu_feedback_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "type": "barchart",
+      "title": "Retornos",
+      "description": "Como foram os retornos da pessoa sobre o que foi sugerido, e de onde vieram?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 100,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (resultado, origem) (max_over_time(ritu_retorno_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "type": "barchart",
+      "title": "Trocas de ingrediente",
+      "description": "As trocas de ingrediente deram certo?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 108,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (resultado) (max_over_time(ritu_troca_ingrediente_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "barchart",
+      "title": "Gostos",
+      "description": "Quais gostos a pessoa registrou?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 108,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (gosto) (max_over_time(ritu_gosto_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "type": "barchart",
+      "title": "Faltas",
+      "description": "Que itens faltaram em casa, e de qual origem veio o aviso?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 116,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (origem) (max_over_time(ritu_faltas_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "type": "barchart",
+      "title": "Propostas",
+      "description": "Quais propostas o agente fez, e o que a pessoa decidiu?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 116,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (tool, decisao) (max_over_time(ritu_propostas_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "type": "barchart",
+      "title": "Vale ter em casa",
+      "description": "Em que etapa está a indicação de vale ter em casa?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 124,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (etapa) (max_over_time(ritu_para_ter_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "type": "row",
+      "title": "5. Rastro",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 132,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 35,
+      "type": "table",
+      "title": "Runs recentes",
+      "description": "Quais foram os runs recentes, com caminho, status, passos e duração?",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${ds_traces}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 133,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "${ds_traces}"
+          },
+          "queryType": "traceql",
+          "tableType": "traces",
+          "query": "{ name = \"run\" }",
+          "limit": 20
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "run.caminho": 0,
+              "run.status": 1,
+              "run.passos": 2,
+              "duration": 3
+            },
+            "excludeByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "type": "logs",
+      "title": "Avisos e erros",
+      "description": "Quais avisos e erros aconteceram recentemente?",
+      "datasource": {
+        "type": "loki",
+        "uid": "${ds_logs}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 133,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${ds_logs}"
+          },
+          "expr": "{service_name=\"ritu\"} | severity_text=~\"WARN|ERROR\"",
+          "queryType": "range"
+        }
+      ]
+    }
+  ]
+}

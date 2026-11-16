@@ -303,6 +303,14 @@ export const PAINEL: { uid: string; titulo: "Ritu"; linhas: Linha[] } = {
           fonte: "metricas",
           consultas: [{ expr: TOTAL("ritu_para_ter_total", "etapa") }],
         },
+        {
+          titulo: "Entradas",
+          descricao: "Quantas entradas houve, por tipo de conta, e quantas o limite recusou?",
+          tipo: "barchart",
+          fonte: "metricas",
+          // Rótulos com ponto chegam ao Prometheus com sublinhado.
+          consultas: [{ expr: TOTAL("ritu_entrada_total", "conta_tipo", "entrada_resultado") }],
+        },
       ],
     },
     {

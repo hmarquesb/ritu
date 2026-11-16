@@ -370,6 +370,31 @@ describe("container", () => {
     expect(container.conversation).toBe(conversation)
   })
 
+  it("judge é preguiçoso: sem GEMINI_API_KEY nem DATABASE_URL, criar não lança e a instância é a mesma", async () => {
+    const chave = process.env.GEMINI_API_KEY
+    const url = process.env.DATABASE_URL
+    delete process.env.GEMINI_API_KEY
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+      expect(() => container.judge).not.toThrow()
+      expect(container.judge).toBeDefined()
+      expect(container.judge).toBe(container.judge)
+    } finally {
+      if (chave !== undefined) process.env.GEMINI_API_KEY = chave
+      if (url !== undefined) process.env.DATABASE_URL = url
+    }
+  })
+
+  it("judge aceita override", async () => {
+    const { createContainer } = await import("./container")
+    const { createApprovingJudge } = await import("./fakes/fake-judge")
+    const judge = createApprovingJudge()
+    const container = createContainer({ judge })
+    expect(container.judge).toBe(judge)
+  })
+
   it("iniciarTelemetria sem endpoint não carrega o SDK de Node", async () => {
     const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
     delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT

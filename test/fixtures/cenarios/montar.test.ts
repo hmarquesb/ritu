@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest"
+import { saidaSegura } from "@/core/agents/companion/saida"
+import type { LlmClient } from "@/core/llm/client"
 import type { Caminho } from "@/core/runs/ports"
 import { diaLocal } from "@/core/time/dia-local"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
@@ -366,5 +368,80 @@ describe("montarCenario: rotina, histórico, padrões e Memória", () => {
     const { deps } = await montarCenario(c, { llm })
     const r = await deps.memory.resumir([{ texto: "almoço fora", criado_em: AGORA }])
     expect(r).toMatchObject({ origem: "modelo", texto: "Você almoça fora." })
+  })
+})
+
+describe("montarCenario: Juiz roteirizado", () => {
+  const interpretacao = {
+    intencoes: ["vida"] as ("vida" | "casa")[],
+    estados: [],
+    itens_casa: [],
+    evitar_sempre: [],
+    nao_come: [],
+    gosta: [],
+    restricoes: [],
+    suspeito: false,
+  }
+  const entrada = { saida: saidaSegura(), evitar: [], tentativa: 1 }
+
+  it("cada julgamento tira a próxima resposta: reprova com promessa, sem modelo, depois aprova", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "juiz-fila",
+      descricao: "reprova, sem modelo e aprova",
+      juiz: [{ apontamentos: [{ motivo: "promessa", trecho: "x" }] }, "sem_modelo"],
+    }
+    const { deps } = await montarCenario(c)
+
+    const primeiro = await deps.judge.julgar(entrada)
+    expect(primeiro).toMatchObject({ ok: true, aprovado: false, graves: ["promessa"] })
+
+    const segundo = await deps.judge.julgar(entrada)
+    expect(segundo).toMatchObject({ ok: false, motivo: "sem_modelo" })
+
+    const terceiro = await deps.judge.julgar(entrada)
+    expect(terceiro).toMatchObject({ ok: true, aprovado: true, graves: [] })
+  })
+
+  it("sem juiz no cenário, o Juiz aprova", async () => {
+    const { deps } = await montarCenario({ ...base, nome: "juiz-vazio", descricao: "x" })
+
+    await expect(deps.judge.julgar(entrada)).resolves.toMatchObject({ ok: true, aprovado: true })
+  })
+
+  it("o Juiz não consome a fila do Intérprete do cenário", async () => {
+    const c: Cenario = {
+      ...base,
+      nome: "juiz-e-interprete",
+      descricao: "x",
+      mensagem: { texto: "não aguento mais", atalhos: [] },
+      interpretacao,
+      juiz: [{ apontamentos: [{ motivo: "tom", trecho: "y" }] }],
+    }
+    const { deps } = await montarCenario(c)
+
+    await deps.judge.julgar(entrada)
+    await deps.judge.julgar(entrada)
+
+    expect((deps.llm as LlmClient & { pedidos: unknown[] }).pedidos).toHaveLength(0)
+    const r = await deps.interpreter.interpretar({
+      texto: "não aguento mais",
+      atalhos: [],
+      conversa: [],
+      pendentes: [],
+    })
+    expect(r).toMatchObject({ ok: true, interpretacao: { intencoes: ["vida"] } })
+  })
+
+  it("com llm nas opções, o Juiz usa esse cliente", async () => {
+    const llm = createFakeLlm([{ apontamentos: [{ motivo: "dosagem", trecho: "z" }] }])
+    const c: Cenario = { ...base, nome: "juiz-llm", descricao: "x" }
+    const { deps } = await montarCenario(c, { llm })
+
+    await expect(deps.judge.julgar(entrada)).resolves.toMatchObject({
+      ok: true,
+      aprovado: false,
+      graves: ["dosagem"],
+    })
   })
 })

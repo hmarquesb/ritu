@@ -2,6 +2,7 @@ import { llmCotas, type Papel } from "@config/llm-cotas"
 import type { createCompanion } from "@/core/agents/companion/responder"
 import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { SaidaDoInterprete } from "@/core/agents/interpreter/saida"
+import { createJudge, type Judge } from "@/core/agents/judge/julgar"
 import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memoria"
 import { resumoPorCodigo } from "@/core/agents/memory/resumo"
 import type { createConversation } from "@/core/conversation/conversar"
@@ -40,6 +41,7 @@ export type DepsDoCenario = {
   runs: ReturnType<typeof createRunService>
   companion: ReturnType<typeof createCompanion>
   interpreter: ReturnType<typeof createInterpreter>
+  judge: Judge
   conversation: ReturnType<typeof createConversation>
   touches: ReturnType<typeof createTouches>
   memory: MemoryAgent
@@ -299,6 +301,43 @@ async function criarMemoria(
   return createMemoryAgent({ router: base.router, client, kb, telemetry, clock })
 }
 
+// Roteador sem nenhum modelo do papel apoio no dia.
+async function roteadorSemApoio(
+  clock: ReturnType<typeof createFixedClock>,
+  telemetry: MemoryTelemetry,
+): Promise<ModelRouter> {
+  const ledger = createMemoryLedger(clock)
+  await esgotarModelos(ledger, llmCotas.papeis.apoio)
+  return createModelRouter({ ledger, clock, telemetry })
+}
+
+// Juiz do cenário (D15): com opts.llm, o mesmo cliente; sem ele, cada julgamento tira a próxima resposta de c.juiz
+// e roda num cliente só dele; "sem_modelo" roda com o apoio esgotado. Fila vazia aprova. A base é lida na chamada.
+function criarJuiz(
+  c: Cenario,
+  opts: OpcoesDoCenario,
+  base: {
+    clock: ReturnType<typeof createFixedClock>
+    telemetry: MemoryTelemetry
+    router: ModelRouter
+    kb: () => KnowledgeBase
+  },
+): Judge {
+  const { clock, telemetry, router } = base
+  const respostas = [...(c.juiz ?? [])]
+  return {
+    async julgar(p) {
+      const kb = base.kb()
+      if (opts.llm) return createJudge({ router, client: opts.llm, kb, telemetry, clock }).julgar(p)
+      const resposta = respostas.shift() ?? { apontamentos: [] }
+      const semModelo = resposta === "sem_modelo"
+      const roteador = semModelo ? await roteadorSemApoio(clock, telemetry) : router
+      const client = createFakeLlm(semModelo ? [] : [resposta])
+      return createJudge({ router: roteador, client, kb, telemetry, clock }).julgar(p)
+    },
+  }
+}
+
 /**
  * Monta um cenário em memória: stores, ledger e clima em memória, relógio fixo em c.agora,
  * base real de data/ (pelo container), telemetria em memória, roteador real sobre o ledger,
@@ -331,6 +370,7 @@ export async function montarCenario(
   const stores = createMemoryStores(clock, {
     alimentoExiste: (id) => Boolean(container.knowledge.alimento(id)),
   })
+  const judge = criarJuiz(c, opts, { clock, telemetry, router, kb: () => container.knowledge })
   const container = createContainer({
     clock,
     telemetry,
@@ -342,6 +382,7 @@ export async function montarCenario(
     stores,
     tx: stores,
     memory,
+    judge,
   })
 
   const principal = opts.esgotar ? llmCotas.papeis[opts.esgotar][0] : undefined
@@ -376,6 +417,7 @@ export async function montarCenario(
       runs: container.runs,
       companion: container.companion,
       interpreter: container.interpreter,
+      judge: container.judge,
       conversation: container.conversation,
       touches: container.touches,
       memory: container.memory,

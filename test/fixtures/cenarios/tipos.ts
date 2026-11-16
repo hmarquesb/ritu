@@ -75,6 +75,8 @@ export type Cenario = {
   toques?: Toque[]
   // Notas de rotina ativas; `diasAtras` diz quando cada nota foi feita. Com alguma, o resumo inicial é o de resumoPorCodigo.
   rotina?: { texto: string; diasAtras: number }[]
+  // Respostas roteirizadas do Juiz, na ordem; "sem_modelo" deixa o papel apoio sem modelo nessa chamada. Sem o campo, aprova.
+  juiz?: ({ apontamentos: { motivo: string; trecho: string }[] } | "sem_modelo")[]
   // Resposta roteirizada da Memória; "sem_modelo" deixa o papel apoio sem modelo no dia.
   memoria?: { resumo: string } | "sem_modelo"
   // Runs `done` com momento, de dias passados; com `sugestao`, o retorno é criado e, com `resultado`, respondido.

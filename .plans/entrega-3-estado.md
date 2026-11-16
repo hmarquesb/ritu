@@ -1,6 +1,7 @@
 # Entrega 3 · Estado
 
 > A dona autorizou (2026-11-16) seguir até 96% da janela de 5 horas nesta sessão.
+> Sem `git push`: o remoto `origin` não está acessível (como na entrega 2); a branch `entrega-3` fica só local. Push e CI ficam para quando o repositório remoto existir.
 > Trilha adiantada (worktree `../ritu-worktrees/entrega-3`, branch `entrega-3`), aberta em 2026-11-16.
 > Pré-condição da trilha: só spec `approved` cujas dependências estão `implemented` na `main`. Em 2026-11-16, só a 016 (depende de 001). 017 depende de 016; 018 a 020 dependem de 008–013 (013 ainda não está `implemented` na `main`).
 > `npm run lint` pelo rtk dá falso erro de JSON: usar `rtk bypass npm run lint`.

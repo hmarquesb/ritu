@@ -154,6 +154,20 @@ export const dadosDoPreparoSchema = z.object({
   nao_come_do_run: z.array(z.string()).default([]),
   candidatos_completos: z.array(z.string()).default([]),
   acabou: z.array(z.string()).default([]),
+  nao_tem_do_run: z.array(z.string()).default([]),
+  candidatos_do_preparo: z
+    .array(
+      z.object({
+        tipo: z.enum(["cha", "refeicao", "oleo", "pratica"]),
+        id: z.string(),
+        nome: z.string(),
+        alimentos: z.array(z.string()),
+      }),
+    )
+    .default([]),
+  na_lista: z.array(z.string()).default([]),
+  lista_recusada: z.array(z.string()).default([]),
+  notas_ativas: z.array(z.string()).default([]),
 })
 
 export type DadosDoPreparo = z.infer<typeof dadosDoPreparoSchema>
@@ -364,29 +378,54 @@ function candidatosEFaltas(c: Contexto): { todos: Candidato[]; faltas: string[] 
   return { todos, faltas }
 }
 
-async function paraTerDoRun(c: Contexto, faltas: string[]): Promise<ParaTer | undefined> {
-  if (!c.entrada.intencoes.includes("momento") || c.entrada.incomodo) return undefined
-  const { shortages, proposals } = c.deps.stores
-  const [diasComFalta, lista, recusadas] = await Promise.all([
-    shortages.diasComFalta(c.contaId, diasAtras(c.dia, config.ranking.faltas.janelaDias - 1)),
-    shortages.lista(c.contaId),
-    proposals.recusadas(c.contaId, "lista.propor"),
+type Listas = Pick<DadosDoPreparo, "na_lista" | "lista_recusada" | "notas_ativas">
+
+// Lidas uma vez por preparo: alimentam o para_ter e o ctx.run das tools de proposta.
+async function listasDoRun(stores: Stores, contaId: string): Promise<Listas> {
+  const [lista, recusadas, notas] = await Promise.all([
+    stores.shortages.lista(contaId),
+    stores.proposals.recusadas(contaId, "lista.propor"),
+    stores.routine.notasAtivas(contaId),
   ])
+  return {
+    na_lista: lista.map((i) => i.alimento_id),
+    lista_recusada: recusadas.flatMap((p) => {
+      const id = (p.conteudo as { alimento_id?: unknown } | null)?.alimento_id
+      return typeof id === "string" ? [id] : []
+    }),
+    notas_ativas: notas.map((n) => n.texto),
+  }
+}
+
+async function paraTerDoRun(
+  c: Contexto,
+  faltas: string[],
+  listas: Listas,
+): Promise<ParaTer | undefined> {
+  if (!c.entrada.intencoes.includes("momento") || c.entrada.incomodo) return undefined
+  const diasComFalta = await c.deps.stores.shortages.diasComFalta(
+    c.contaId,
+    diasAtras(c.dia, config.ranking.faltas.janelaDias - 1),
+  )
   return escolherParaTer(
     {
       diasComFalta,
       faltasDeHoje: faltas,
       hoje: c.dia,
       filtro: c.filtro,
-      naLista: lista.map((i) => i.alimento_id),
-      recusados: recusadas.flatMap((p) => {
-        const id = (p.conteudo as { alimento_id?: unknown } | null)?.alimento_id
-        return typeof id === "string" ? [id] : []
-      }),
+      naLista: listas.na_lista,
+      recusados: listas.lista_recusada,
       buscadas: c.qualidades.buscadas,
     },
     c.deps.kb,
   )
+}
+
+// Os alimentos de itens e de todas as opções, sem repetir: o que a tool de proposta confere.
+function doPreparo(c: Candidato): DadosDoPreparo["candidatos_do_preparo"][number] {
+  const opcoes = Object.values(c.opcoes ?? {}).flatMap((lista) => lista ?? [])
+  const ids = [...c.itens, ...opcoes].map((item) => item.alimento_id)
+  return { tipo: c.tipo, id: c.id, nome: c.nome, alimentos: [...new Set(ids)] }
 }
 
 async function lerContexto(
@@ -460,7 +499,8 @@ export function preparar(
         deps.kb,
       ),
     )
-    const para_ter = await paraTerDoRun(c, faltas)
+    const listas = await listasDoRun(deps.stores, contaId)
+    const para_ter = await paraTerDoRun(c, faltas, listas)
     const dados = await completar(c, {
       evitar_textos,
       perfil,
@@ -468,6 +508,8 @@ export function preparar(
       faltas,
       para_ter,
       candidatos_completos: todos.map((t) => t.id),
+      candidatos_do_preparo: todos.map(doPreparo),
+      listas,
       perguntas: { feitas, alimentos: [] },
     })
     span.atribuir({
@@ -486,6 +528,8 @@ type Montado = {
   faltas: string[]
   para_ter?: ParaTer
   candidatos_completos: string[]
+  candidatos_do_preparo: DadosDoPreparo["candidatos_do_preparo"]
+  listas: Listas
   perguntas: DadosDoPreparo["perguntas"]
 }
 
@@ -548,6 +592,11 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
     nao_come_do_run: [],
     candidatos_completos: m.candidatos_completos,
     acabou: c.acabou,
+    nao_tem_do_run: [],
+    candidatos_do_preparo: m.candidatos_do_preparo,
+    na_lista: m.listas.na_lista,
+    lista_recusada: m.listas.lista_recusada,
+    notas_ativas: m.listas.notas_ativas,
     ...(entrada.casa_da_mensagem
       ? { casa_da_mensagem: nomesDaCasaDaMensagem(entrada.casa_da_mensagem, kb) }
       : {}),

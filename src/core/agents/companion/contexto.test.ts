@@ -201,4 +201,29 @@ describe("acompanhanteV1", () => {
     expect(json.retorno).toEqual({ resultado: "nao_fez", registrado: false })
     expect(Object.keys(json.retorno as object)).not.toContain("titulo")
   })
+
+  it("não leva ao modelo as listas das tools de proposta", async () => {
+    const base = await dados()
+    const msg = montarMensagemInicial({
+      ...base,
+      nao_tem_do_run: ["marca-nao-tem"],
+      candidatos_do_preparo: [
+        { tipo: "cha", id: "marca-cha", nome: "marca-nome", alimentos: ["marca-alimento"] },
+      ],
+      na_lista: ["marca-na-lista"],
+      lista_recusada: ["marca-recusada"],
+      notas_ativas: ["marca-nota"],
+    })
+    for (const marca of [
+      "marca-nao-tem",
+      "marca-cha",
+      "marca-nome",
+      "marca-alimento",
+      "marca-na-lista",
+      "marca-recusada",
+      "marca-nota",
+    ]) {
+      expect(msg).not.toContain(marca)
+    }
+  })
 })

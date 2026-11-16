@@ -72,6 +72,7 @@ function aplicarItem(
       ...dados,
       casa: { confirmados, incertos: semId(incertos, id) },
       candidatos: dados.candidatos.map((c) => marcarCandidato(c, id, "ausente")),
+      nao_tem_do_run: comId(dados.nao_tem_do_run, id),
     }
   }
   return {

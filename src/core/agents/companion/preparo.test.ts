@@ -402,3 +402,67 @@ describe("preparar: perguntas do run", () => {
     expect(lido.candidatos_completos).toEqual([])
   })
 })
+
+describe("preparar: dados das tools de proposta", () => {
+  it("candidatos_do_preparo traz a lista completa, antes do corte, com os ids de candidatos_completos", async () => {
+    const { run } = montar(JANTAR)
+    const dados = await run({ estados: ["com_frio", "agitada"] }, { perguntasFeitas: 2 })
+    expect(dados.candidatos_do_preparo.map((c) => c.id)).toEqual(dados.candidatos_completos)
+    expect(dados.candidatos_do_preparo.length).toBeGreaterThan(dados.candidatos.length)
+  })
+
+  it("a refeição leva os alimentos de itens e de todas as opções, sem repetir", async () => {
+    const { run } = montar(JANTAR)
+    const dados = await run({ estados: ["com_frio", "agitada"] })
+    const refeicao = dados.candidatos.find((c) => c.tipo === "refeicao" && c.opcoes)
+    expect(refeicao).toBeDefined()
+    const opcoesIds = Object.values(refeicao?.opcoes ?? {})
+      .flatMap((lista) => lista ?? [])
+      .map((item) => item.alimento_id)
+    const doPreparo = dados.candidatos_do_preparo.find((c) => c.id === refeicao?.id)
+    expect(doPreparo?.alimentos).toEqual(expect.arrayContaining(opcoesIds))
+    for (const c of dados.candidatos_do_preparo) {
+      expect(new Set(c.alimentos).size).toBe(c.alimentos.length)
+    }
+  })
+
+  it("na_lista, lista_recusada e notas_ativas vêm das portas; nao_tem_do_run começa vazio", async () => {
+    const { run, stores } = montar()
+    await stores.shortages.porNaLista(CONTA, {
+      alimento_id: "gengibre",
+      motivo: "faltou_hoje",
+      detalhe: "gengibre",
+    })
+    const [recusada] = await stores.proposals.criar(CONTA, "run-1", [
+      { tool: "lista.propor", conteudo: { alimento_id: "canela" } },
+    ])
+    await stores.proposals.decidir(CONTA, recusada?.id ?? "", "recusada")
+    await stores.routine.anotar(CONTA, "trabalho noturno")
+    const dados = await run({ estados: ["com_frio"] })
+    expect(dados.na_lista).toEqual(["gengibre"])
+    expect(dados.lista_recusada).toEqual(["canela"])
+    expect(dados.notas_ativas).toEqual(["trabalho noturno"])
+    expect(dados.nao_tem_do_run).toEqual([])
+  })
+
+  it("checkpoint sem os campos novos continua válido, com listas vazias", async () => {
+    const { run } = montar()
+    const dados = await run({ estados: ["com_frio"] })
+    const {
+      candidatos_do_preparo: _c,
+      na_lista: _n,
+      lista_recusada: _l,
+      notas_ativas: _o,
+      nao_tem_do_run: _t,
+      ...antigo
+    } = dados
+    const lido = dadosDoPreparoSchema.parse(antigo)
+    expect(lido).toMatchObject({
+      candidatos_do_preparo: [],
+      na_lista: [],
+      lista_recusada: [],
+      notas_ativas: [],
+      nao_tem_do_run: [],
+    })
+  })
+})

@@ -15,6 +15,7 @@ import type { ToolContext } from "@/core/tools/tool"
 import type { CidadeDaPessoa, WeatherSource } from "@/core/weather/ports"
 import { criarAcompanhante } from "./agente"
 import { montarMensagemInicial } from "./contexto"
+import { contextoDoRun } from "./contexto-do-run"
 import { type EntradaDoAcompanhante, entradaDoAcompanhanteSchema } from "./entrada"
 import {
   campos,
@@ -177,6 +178,7 @@ export function createCompanion(deps: Deps) {
       fuso: perfil.cidade_fuso ?? undefined,
       telemetry,
       ...(casaDaMensagem ? { casaDaMensagem } : {}),
+      run: contextoDoRun(dados),
     }
   }
 

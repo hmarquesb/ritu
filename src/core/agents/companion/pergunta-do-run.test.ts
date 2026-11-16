@@ -100,6 +100,11 @@ function dados(mudar: Partial<DadosDoPreparo> = {}): DadosDoPreparo {
     nao_come_do_run: [],
     candidatos_completos: [],
     acabou: [],
+    nao_tem_do_run: [],
+    candidatos_do_preparo: [],
+    na_lista: [],
+    lista_recusada: [],
+    notas_ativas: [],
     ...mudar,
   }
 }
@@ -298,5 +303,41 @@ describe("conteudoDaPendenciaSchema", () => {
   it("recusa origem desconhecida e codigo sem entrada", () => {
     expect(conteudoDaPendenciaSchema.safeParse({ origem: "outra", pergunta }).success).toBe(false)
     expect(conteudoDaPendenciaSchema.safeParse({ origem: "codigo", pergunta }).success).toBe(false)
+  })
+})
+
+describe("aplicarResposta · nao_tem_do_run", () => {
+  it("Não tenho põe o id em nao_tem_do_run, sem repetir em duas respostas", () => {
+    const uma = aplicarResposta(
+      dados(),
+      perguntaDeBatata,
+      respostaDeCasa("batata-doce", "nao_tenho"),
+      kb,
+    )
+    expect(uma.nao_tem_do_run).toEqual(["batata-doce"])
+    const duas = aplicarResposta(
+      uma,
+      perguntaDeBatata,
+      respostaDeCasa("batata-doce", "nao_tenho"),
+      kb,
+    )
+    expect(duas.nao_tem_do_run).toEqual(["batata-doce"])
+  })
+
+  it("Tenho e Não gosto não entram em nao_tem_do_run", () => {
+    const tenho = aplicarResposta(
+      dados(),
+      perguntaDeBatata,
+      respostaDeCasa("batata-doce", "tenho"),
+      kb,
+    )
+    const naoGosto = aplicarResposta(
+      dados(),
+      perguntaDeBatata,
+      respostaDeCasa("batata-doce", "nao_gosto"),
+      kb,
+    )
+    expect(tenho.nao_tem_do_run).toEqual([])
+    expect(naoGosto.nao_tem_do_run).toEqual([])
   })
 })

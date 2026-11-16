@@ -5,6 +5,7 @@ import { RunNaoContinuavelError } from "@/core/runs/errors"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Run, RunEtapa } from "@/core/runs/ports"
 import { createRunService } from "@/core/runs/run-service"
+import type { ToolContext } from "@/core/tools/tool"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
@@ -66,7 +67,7 @@ async function montar(roteiro: PassoRoteirizado[], opts: { semModelo?: boolean }
   const conta = await stores.accounts.criar({ tipo: "demo" })
   const companion = (r: ModelRouter = router) =>
     createCompanion({ stores, kb, clock, weather, router: r, runs, telemetry })
-  return { clock, stores, telemetry, weather, router, conta, companion, runtime }
+  return { clock, stores, telemetry, weather, router, conta, companion, runtime, runs }
 }
 
 const tipos = (etapas: RunEtapa[]) => etapas.map((e) => e.tipo)
@@ -377,6 +378,62 @@ const tenhoENao: RespostaDaPessoa = {
     { alimento_id: "cenoura", resposta: "nao_tenho" },
   ],
 }
+
+describe("ctx.run das tools de proposta", () => {
+  function espiar(m: Awaited<ReturnType<typeof montar>>) {
+    const visto: { ctx?: ToolContext } = {}
+    const original = m.runs.executarRun
+    m.runs.executarRun = (contaId, runId, p) => {
+      visto.ctx = p.ctx
+      return original(contaId, runId, p)
+    }
+    return visto
+  }
+
+  function espiarContinuar(m: Awaited<ReturnType<typeof montar>>) {
+    const visto: { ctx?: ToolContext } = {}
+    const original = m.runs.continuarRun
+    m.runs.continuarRun = (contaId, runId, p) => {
+      visto.ctx = p.ctx
+      return original(contaId, runId, p)
+    }
+    return visto
+  }
+
+  it("responder leva ctx.run com as listas e as notas do preparo", async () => {
+    const m = await montar([finalizar(entregaOk)])
+    await m.stores.shortages.porNaLista(m.conta.id, {
+      alimento_id: "gengibre",
+      motivo: "fez_falta",
+      detalhe: "2 vezes",
+    })
+    await m.stores.routine.anotar(m.conta.id, "trabalho noturno")
+    const visto = espiar(m)
+    await m
+      .companion()
+      .responder(m.conta.id, entrada({ intencoes: ["momento"], estados: ["com_frio"] }))
+    expect(visto.ctx?.run).toMatchObject({
+      com_incomodo: false,
+      nao_tem: [],
+      na_lista: ["gengibre"],
+      lista_recusada: [],
+      notas_ativas: ["trabalho noturno"],
+    })
+    expect(visto.ctx?.run?.candidatos.map((c) => c.id)).toContain("cha-gengibre")
+  })
+
+  it("continuar leva ctx.run com o Não tenho respondido no run", async () => {
+    const { m, r } = await comPausa([
+      { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+      pedirCasa(),
+      finalizar(entregaComLegume("cenoura")),
+      finalizar(entregaComLegume("abobora")),
+    ])
+    const visto = espiarContinuar(m)
+    await retomar(m, r, tenhoENao)
+    expect(visto.ctx?.run?.nao_tem).toEqual(["cenoura"])
+  })
+})
 
 describe("pausa e continuar", () => {
   it("responder para em waiting_for_input com a pergunta, sem saída", async () => {

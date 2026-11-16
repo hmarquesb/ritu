@@ -4,9 +4,24 @@ import type { Prakriti } from "@/core/knowledge/adequacao"
 import type { FiltroPessoa } from "@/core/knowledge/filtros"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { SinaisPessoa } from "@/core/knowledge/substitutos"
+import type { TipoDeSugestao } from "@/core/ranking/tipos"
 import type { Stores } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import type { CidadeDaPessoa, WeatherSource } from "@/core/weather/ports"
+
+// O que as tools de proposta leem do run: o preparo e as listas, sem nada que vá ao modelo.
+export type ContextoDoRun = {
+  fato_de_rotina?: string
+  com_incomodo: boolean
+  tem_para_ter: boolean
+  /** Ids respondidos com "Não tenho" neste run. */
+  nao_tem: string[]
+  /** Lista completa do preparo, antes de `entregaveis` e das retiradas por resposta. */
+  candidatos: { tipo: TipoDeSugestao; id: string; nome: string; alimentos: string[] }[]
+  na_lista: string[]
+  lista_recusada: string[]
+  notas_ativas: string[]
+}
 
 export type ToolContext = {
   kb: KnowledgeBase
@@ -21,6 +36,7 @@ export type ToolContext = {
   telemetry: Telemetry
   /** Ids de alimentos da base citados na mensagem; ajustam o que `casa.ler` devolve. */
   casaDaMensagem?: { tem: string[]; acabou: string[] }
+  run?: ContextoDoRun
 }
 
 export type Tool<I, O> = {

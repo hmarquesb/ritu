@@ -70,6 +70,11 @@ function dados(): DadosDoPreparo {
     nao_come_do_run: [],
     candidatos_completos: [],
     acabou: [],
+    nao_tem_do_run: [],
+    candidatos_do_preparo: [],
+    na_lista: [],
+    lista_recusada: [],
+    notas_ativas: [],
   }
 }
 

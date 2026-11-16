@@ -5,6 +5,7 @@ import { base } from "./base"
 import { casa } from "./casa"
 import { clima } from "./clima"
 import { conversa } from "./conversa"
+import { juiz } from "./juiz"
 import { llmCotas } from "./llm-cotas"
 import { loop } from "./loop"
 import { memoria } from "./memoria"
@@ -30,6 +31,7 @@ export const config = {
   aprovacao,
   casa,
   conversa,
+  juiz,
   loop,
   llmCotas,
   ranking,

@@ -1,7 +1,26 @@
 import { describe, expect, it } from "vitest"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { ATRIBUTOS_PERMITIDOS, METRICAS, SPANS } from "./nomes"
 
 describe("nomes da telemetria", () => {
+  it("METRICAS contém o guardrail e os avisos do Juiz", () => {
+    expect(METRICAS).toContain("ritu_guardrail_total")
+    expect(METRICAS).toContain("ritu_juiz_avisos_total")
+  })
+
+  it("createMemoryTelemetry aceita o guardrail com resultado e origem, e os avisos com motivo", () => {
+    const t = createMemoryTelemetry()
+
+    expect(() =>
+      t.contador("ritu_guardrail_total", { resultado: "alerta_fisico", origem: "codigo" }),
+    ).not.toThrow()
+    expect(() => t.contador("ritu_juiz_avisos_total", { motivo: "tom" })).not.toThrow()
+    expect(t.metricas.map((m) => m.nome)).toEqual([
+      "ritu_guardrail_total",
+      "ritu_juiz_avisos_total",
+    ])
+  })
+
   it("SPANS contém os nomes da árvore do run", () => {
     expect(SPANS).toContain("agente.passo")
     expect(SPANS).toContain("aprovacao.execucao")

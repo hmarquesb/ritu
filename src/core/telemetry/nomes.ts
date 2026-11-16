@@ -30,6 +30,8 @@ export const METRICAS = [
   "ritu_tool_chamadas_total",
   "ritu_validacao_violacoes_total",
   "ritu_juiz_reprovacoes_total",
+  "ritu_guardrail_total",
+  "ritu_juiz_avisos_total",
   "ritu_pausas_total",
   "ritu_propostas_total",
   "ritu_llm_erros_total",

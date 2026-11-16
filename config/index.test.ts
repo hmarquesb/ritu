@@ -66,6 +66,26 @@ describe("config", () => {
     })
   })
 
+  it("expõe a configuração do Juiz com os valores da spec", () => {
+    expect(config.juiz).toEqual({
+      maxTentativas: 2,
+      chamadasDaNovaTentativa: 2,
+      maxTrecho: 120,
+      graves: [
+        "promessa",
+        "dosagem",
+        "conselho",
+        "evitar_sempre",
+        "texto_diferente",
+        "motivo_sem_base",
+        "para_ter",
+        "vulgar",
+        "tom",
+      ],
+      registros: ["jargao"],
+    })
+  })
+
   it("expõe a validade da casa por durabilidade com os valores da spec", () => {
     expect(config.casa.validadeDias).toEqual({ curta: 5, media: 14, longa: 90 })
     expect(config.casa.durabilidadeDesconhecido).toBe("media")

@@ -27,6 +27,12 @@ export interface OutcomeStore {
     resultado: Resultado,
     origem: "toque" | "conversa",
   ): Promise<Retorno | undefined>
+  /** Só troca a sugestão de um aguardando; devolve undefined se não mudou (respondido, outra conta ou inexistente). */
+  atualizarSugestao(
+    contaId: string,
+    retornoId: string,
+    sugestao: SugestaoRegistrada,
+  ): Promise<Retorno | undefined>
   doRun(contaId: string, runId: string): Promise<Retorno[]>
   /** Sem contaId. */
   apagarAguardandoAntesDe(limite: Date): Promise<number>

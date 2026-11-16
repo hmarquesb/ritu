@@ -121,6 +121,78 @@ export function outcomesContract(make: () => Promise<ContractEnv> | ContractEnv)
       expect(resposta).toBeUndefined()
     })
 
+    it("atualizarSugestao troca a sugestão de um retorno aguardando e os pendentes passam a trazer a nova", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const runId = await criarRun(env.stores, a)
+      const retorno = await criarRetorno(env.stores, a, runId, "chá antigo")
+
+      const trocado = await env.stores.outcomes.atualizarSugestao(
+        a,
+        retorno.id,
+        sugestao("chá novo"),
+      )
+
+      expect(trocado).toMatchObject({
+        id: retorno.id,
+        status: "aguardando",
+        sugestao: { tipo: "cha", titulo: "chá novo" },
+      })
+      const pendentes = await env.stores.outcomes.pendentes(a)
+      expect(pendentes).toMatchObject([{ id: retorno.id, sugestao: { titulo: "chá novo" } }])
+    })
+
+    it("atualizarSugestao em retorno já respondido devolve undefined e não troca a sugestão", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const runId = await criarRun(env.stores, a)
+      const retorno = await criarRetorno(env.stores, a, runId, "chá antigo")
+      await env.stores.outcomes.responder(a, retorno.id, "ajudou", "toque")
+
+      const trocado = await env.stores.outcomes.atualizarSugestao(
+        a,
+        retorno.id,
+        sugestao("chá novo"),
+      )
+
+      expect(trocado).toBeUndefined()
+      const doRun = await env.stores.outcomes.doRun(a, runId)
+      expect(doRun).toMatchObject([
+        { id: retorno.id, status: "respondido", sugestao: { titulo: "chá antigo" } },
+      ])
+    })
+
+    it("atualizarSugestao de outra conta devolve undefined e não muda o retorno da conta A", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const runId = await criarRun(env.stores, a)
+      const retorno = await criarRetorno(env.stores, a, runId, "chá antigo")
+
+      const trocado = await env.stores.outcomes.atualizarSugestao(
+        b,
+        retorno.id,
+        sugestao("chá invadido"),
+      )
+
+      expect(trocado).toBeUndefined()
+      expect(await env.stores.outcomes.pendentes(a)).toMatchObject([
+        { id: retorno.id, sugestao: { titulo: "chá antigo" } },
+      ])
+    })
+
+    it("atualizarSugestao recusa sugestão fora do schema e não grava nada", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const runId = await criarRun(env.stores, a)
+      const retorno = await criarRetorno(env.stores, a, runId, "chá antigo")
+      const invalida = {
+        tipo: "bebida",
+        alimentos: [],
+        titulo: "x",
+      } as unknown as SugestaoRegistrada
+
+      await expect(env.stores.outcomes.atualizarSugestao(a, retorno.id, invalida)).rejects.toThrow()
+      expect(await env.stores.outcomes.pendentes(a)).toMatchObject([
+        { id: retorno.id, sugestao: { titulo: "chá antigo" } },
+      ])
+    })
+
     it("doRun devolve os retornos do run da conta", async () => {
       const { a } = await criarDuasContas(env.stores)
       const runId = await criarRun(env.stores, a)

@@ -47,6 +47,17 @@ export function createPgOutcomes(sql: Conexao, clock: Clock): OutcomeStore {
       })
     },
 
+    async atualizarSugestao(contaId, retornoId, sugestao) {
+      // Valida antes de gravar; a conta e o status entram no filtro, como em responder.
+      const valida = sugestaoRegistradaSchema.parse(sugestao)
+      const [row] = await sql<RetornoRow[]>`
+        update retornos
+        set sugestao = ${sql.json(valida)}
+        where id = ${retornoId} and conta_id = ${contaId} and status = 'aguardando'
+        returning id, conta_id, run_id, sugestao, status, resultado, origem, criado_em, respondido_em`
+      return row ? retornoDe(row) : undefined
+    },
+
     async doRun(contaId, runId) {
       const linhas = await sql<RetornoRow[]>`
         select id, conta_id, run_id, sugestao, status, resultado, origem, criado_em, respondido_em

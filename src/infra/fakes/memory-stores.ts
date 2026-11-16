@@ -724,6 +724,14 @@ function criarOutcomes(db: Db, clock: Clock): OutcomeStore {
       }
       return copia(retorno)
     },
+    async atualizarSugestao(contaId, retornoId, sugestao) {
+      // Valida antes de mexer: uma sugestão inválida não deixa nada alterado.
+      const valida = sugestaoRegistradaSchema.parse(sugestao)
+      const retorno = retornoDaConta(contaId, retornoId)
+      if (retorno?.status !== "aguardando") return undefined
+      retorno.sugestao = valida
+      return copia(retorno)
+    },
     async doRun(contaId, runId) {
       return copia(db.estado.retornos.filter((r) => r.conta_id === contaId && r.run_id === runId))
     },

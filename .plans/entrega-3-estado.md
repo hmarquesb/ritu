@@ -62,8 +62,10 @@
 | T23 · Add the security deterministic evals | concluida | 31be27a |
 | C1 · Share the onboarding step submit helper | concluida | dc55b5c |
 | T19 · Build the dosha and city step and the quiz | concluida | 6dc0b55 |
-| T21 · Write the entry E2E and take the entry screenshots | em andamento | |
-| T22 · Write the onboarding E2E and take the onboarding screenshots | pendente | |
+| C2 · Remove the inline style CSP violation on every page | concluida | 3ca2c0f |
+| C3 · Name the pending button announcement | concluida | 4885e18 |
+| T21 · Write the entry E2E and take the entry screenshots | concluida | 81f248a |
+| T22 · Write the onboarding E2E and take the onboarding screenshots | em andamento | |
 > Para o relatório (017 T8): no `seed/demo.yaml`, a conversa de ontem traz o escalda-pés como 1ª sugestão, mas a resposta fala do jantar primeiro; inverter se a tela mostrar os cards junto do texto. As respostas semeadas não levam "Não é orientação médica" no texto (o schema não exige; conferir que a tela acrescenta o aviso nas conversas semeadas).
 > 2026-11-16 (3ª sessão): vereditos da onda T14+T15 perdidos com o fim dos tokens; os verificadores rodaram de novo sobre os arquivos prontos (sem reimplementar). Resto da onda 9 (T17, T20) juntado com a onda 10 (T18, T23): sem arquivo em comum e dependências com commit.
 > 017 T18 e T23: uma reprovação cada nos gates da onda (teste de arquitetura: R5, `react-aria-components` em `src/app/`; R6, eval importando `@/infra/auth/ip`). Corrigidas pelo mesmo implementador. Na re-rodada, o `eval:det` completo ficou inconclusivo por carga da máquina (load > 260, outras sessões): timeouts em arquivos fora da onda; os evals da T23 passam isolados e o `eval:det` inteiro já tinha passado na 1ª rodada da onda. Conferir de novo no fechamento da 017.
@@ -72,3 +74,6 @@
 > 2026-11-16 (4ª sessão): retomada da passagem; T19 restaurada de `.local/t19-pendente/` e despachada com a C1 (A9).
 > 017 C1: uma reprovação por processo (skills de tela não carregadas; o bloco da C1 dizia "nenhuma", corrigido no plano); nada mudou no código. C1 commitada antes da T19 porque `escolher-dosha.tsx` já usa o helper.
 > Para o relatório (017 T19): no quiz, o último botão diz "Ver resultado" (a tarefa dizia "Próxima"); rótulos "Seu dosha", "Buscar cidade", "Misto", "Escolha dois dos três." e mensagens de erro ficam fixos nos componentes, fora de `config.textosEntrada`; a mensagem de 503 acrescenta "Você pode seguir sem ela.".
+> 017 T21: implementada (sem commit); bloqueada em 2 casos de CSP e um axe `role-img-alt` (contornado com reload) por defeitos de tela → C2 e C3 (A10). Carga 260–330; Playwright rodou com `--timeout=120000` na linha de comando.
+> 017 C2: a origem era o `<style>` que o React Aria injeta (usePress, `disableTextSelection`), que procura o nonce em `<meta name="csp-nonce">`; a correção ficou em `src/app/layout.tsx` (meta com o `x-nonce` do pedido), `csp.ts` intacto. C3: o anúncio do botão pendente (`role=img` com `aria-labelledby` do botão, 7 s no LiveAnnouncer) ficava órfão quando a navegação desmontava o botão; `button.tsx` remove os anúncios órfãos ao sair do pendente. Gates da onda verdes; `npm test` com 4 timeouts de carga (`test/fixtures/cenarios`, passa isolado).
+> 017 T21: uma reprovação (axe intermitente no Aviso: anúncio órfão ainda não limpo e `<title>` não assentado; `.catch` engolindo erro de navegação). Corrigida com `aguardarAssentar` (espera observável; o `toHaveCount(0)` em 5 s só passa com a limpeza da C3, não com os 7 s do React Aria). 36/36 duas vezes. Observação do verificador: stack trace de `[WebServer]` durante a rodada, testes verdes; conferir no fechamento.

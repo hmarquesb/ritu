@@ -616,6 +616,34 @@ export { expect }
 - pronto quando: `npm run dup` sem clones em `src/app/(comecar)/`; as telas de aviso, evitar, dosha e quiz se comportam como antes.
 - fora: textos, layout, rotas de API.
 
+### C2 · Remove the inline style CSP violation on every page
+- nivel: nucleo
+- objetivo: nenhuma página (`/`, `/marca`, `/comecar/aviso`, `/conversa`) gera violação de CSP no console.
+- arquivos: `src/core/security/csp.ts`, `src/core/security/csp.test.ts`, e, só se a origem estiver lá, o arquivo de `src/app/` ou `src/components/` que injeta o estilo (relate qual)
+- depende de: T6, T21 (o E2E que acusa)
+- leitura: nenhuma
+- skills: `next-best-practices`
+- referencia: nenhuma
+- contratos: o E2E da T21 (`e2e/entrada.spec.ts`, sem commit, não edite) acusa no console, em toda página, "Applying inline style violates ... style-src 'self' 'nonce-…'", vindo do chunk compartilhado que contém o React Aria. A CSP atual (`montarCsp`) tem `style-src 'self' 'nonce-X'` e `style-src-attr 'unsafe-inline'`. Ache a origem (por exemplo, um `<style>` injetado em tempo de execução sem nonce, ou CSSOM) com o servidor de produção (`npm run build` e `npm start` com `RITU_MODO=e2e` como em `playwright.config.ts`, ou `CI=1 npx playwright test e2e/entrada.spec.ts -g "CSP"`). Corrija da forma mais estreita: preferir dar o nonce à origem; se a origem for de biblioteca e não aceitar nonce, liberar só o necessário em `style-src-elem`/`style-src-attr`, nunca `unsafe-inline` em `script-src`. Mantenha: nonce em `script-src` e `style-src`, sem `unsafe-inline` em `script-src`, `frame-ancestors 'none'` (testados também em `evals/det/seguranca/origem-e-headers.eval.ts`).
+- testes primeiro: caso em `csp.test.ts` que trava a diretiva nova (se mudar a CSP).
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test`, `npm run eval:det`, `npm run build`, e `CI=1 npx playwright test e2e/entrada.spec.ts -g "CSP"` (porta 3000 ocupada: espere e repita)
+- pronto quando: os testes de CSP do `e2e/entrada.spec.ts` passam nos dois projetos.
+- fora: `e2e/`, `src/components/base/button.tsx`.
+
+### C3 · Name the pending button announcement
+- nivel: tela
+- objetivo: o botão em `isPending` não deixa na página um `role="img"` sem nome acessível.
+- arquivos: `src/components/base/button.tsx` (e `spinner.tsx` se a origem for ele)
+- depende de: T21 (o E2E que acusa)
+- leitura: `.docs/DESIGN.md` §3 (só se precisar)
+- skills: `frontend-design` (antes), `web-design-guidelines` (antes de entregar)
+- referencia: nenhuma
+- contratos: depois do clique em "Testar com perfil de demonstração" (botão `isPending`), sobra um `div[role=img][aria-labelledby=react-aria-…]` dentro de `div[role=log]` (o anunciador do React Aria), sem nome acessível; o axe acusa `role-img-alt` (serious) na página seguinte (Aviso, Conversa) na navegação sem recarregar. Faça o botão pendente anunciar com nome (por exemplo, `aria-label` no spinner ou texto "Carregando" visualmente escondido) de modo que o anúncio tenha nome, ou que não sobre `role="img"` sem nome. Comportamento visual igual.
+- testes primeiro: caso no teste do botão (se existir `button.test.tsx`; senão, relate) que garante nome acessível no estado pendente.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test`, `npm run build`
+- pronto quando: o elemento anunciado tem nome; os testes de axe da Entrada passam sem recarregar a página (a T21 confere).
+- fora: `src/core/`, `e2e/`.
+
 ## Ondas
 
 | Onda | Tarefas | Por quê |
@@ -632,4 +660,5 @@ export { expect }
 | 10 | T18, T23 | Onboarding precisa das rotas (T14); evals das rotas (T14, T15) |
 | 11 | T19, C1 | T19 precisa da moldura (T18) e da busca (T15); C1 tira a duplicação que a T19 revelou: mesmo implementador, commits separados (T19, depois C1) |
 | 12 | T21 | E2E da Entrada (Playwright na porta 3000: uma rodada por vez) |
+| 12b | C2, C3 | Correções de tela e CSP reveladas pela T21; sem arquivo em comum. Depois, a T21 roda de novo e só então é commitada (C2 e C3 antes dela) |
 | 13 | T22 | E2E do onboarding |

@@ -12,6 +12,7 @@ import type { AgentRuntime } from "@/core/runs/agent-runtime"
 import { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
+import { createTouches } from "@/core/touches"
 import { createCachedWeatherSource } from "@/core/weather/cache"
 import type { CityLookup, WeatherSource } from "@/core/weather/ports"
 import { createDbClient, type DbClient } from "@/infra/db/client"
@@ -46,6 +47,7 @@ export type Container = {
   companion: ReturnType<typeof createCompanion>
   interpreter: ReturnType<typeof createInterpreter>
   conversation: ReturnType<typeof createConversation>
+  touches: ReturnType<typeof createTouches>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -79,6 +81,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let companion: ReturnType<typeof createCompanion> | undefined
   let interpreter: ReturnType<typeof createInterpreter> | undefined
   let conversation: ReturnType<typeof createConversation> | undefined
+  let touches: ReturnType<typeof createTouches> | undefined
   let sdk: { encerrar(): Promise<void> } | undefined
   let telemetriaIniciada = false
   const container: Container = {
@@ -186,6 +189,17 @@ export function createContainer(overrides?: Partial<Container>): Container {
         companion: container.companion,
       })
       return conversation
+    },
+    // Os quatro toques da tela (retorno, gosto e troca): as deps são as do próprio container.
+    get touches() {
+      touches ??= createTouches({
+        tx: container.tx,
+        stores: container.stores,
+        kb: container.knowledge,
+        clock,
+        telemetry: container.telemetry,
+      })
+      return touches
     },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {

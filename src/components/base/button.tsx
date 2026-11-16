@@ -33,10 +33,10 @@ const BASE =
 
 // Padding, texto e altura ficam só aqui: duas classes da mesma propriedade no
 // mesmo elemento não se sobrepõem pela ordem do className, e sim pela da folha.
-// `sm`: 2.25rem visuais; a área de toque de 2.75rem vem do pseudo-elemento.
+// `sm`: 2.25rem visuais; a área de toque (3rem, para cobrir os 2.75rem mesmo com borda) vem do pseudo-elemento.
 const SIZE: Record<ButtonSize, string> = {
   md: "min-h-11 px-5 py-2 text-body",
-  sm: "min-h-9 px-4 py-1 text-sm after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+  sm: "min-h-9 px-4 py-1 text-sm after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']",
 }
 
 export function Button({

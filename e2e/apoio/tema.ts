@@ -9,5 +9,5 @@ export async function usarTema(
   context: BrowserContext,
   tema: (typeof TEMAS)[number],
 ): Promise<void> {
-  await context.addCookies([{ name: "ritu_theme", value: tema, url: BASE_URL, path: "/" }])
+  await context.addCookies([{ name: "ritu_theme", value: tema, url: BASE_URL }])
 }

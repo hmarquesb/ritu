@@ -12,7 +12,6 @@ import {
   type ToggleButtonProps as AriaToggleButtonProps,
   type Key,
   Label,
-  Text,
 } from "react-aria-components"
 import { ICON } from "@/components/base/icon-size"
 import { cx } from "@/components/cx"
@@ -104,7 +103,7 @@ export function TagList({ label, items, onRemove, emptyText, className }: TagLis
       <AriaTagList
         items={items}
         className="flex flex-wrap gap-2"
-        renderEmptyState={() => <Text className="text-sm text-ink-muted">{emptyText ?? ""}</Text>}
+        renderEmptyState={() => <p className="text-sm text-ink-muted">{emptyText ?? ""}</p>}
       >
         {(item) => <Tag id={item.id}>{item.label}</Tag>}
       </AriaTagList>

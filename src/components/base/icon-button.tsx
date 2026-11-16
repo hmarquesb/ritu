@@ -19,10 +19,10 @@ const VARIANT = {
     "bg-surface text-ink border border-line-strong data-hovered:bg-raised data-pressed:bg-sunken",
 } as const
 
-// `sm`: 2.25rem visuais; a área de toque de 2.75rem vem do pseudo-elemento.
+// `sm`: 2.25rem visuais; a área de toque (3rem, para cobrir os 2.75rem mesmo com borda) vem do pseudo-elemento.
 const SIZE = {
   md: "size-11",
-  sm: "relative size-9 after:absolute after:-inset-1 after:content-['']",
+  sm: "relative size-9 after:absolute after:-inset-1.5 after:content-['']",
 } as const
 
 export function IconButton({

@@ -43,7 +43,9 @@ export function ComboBox<T extends object>({
 }: ComboBoxProps<T>) {
   return (
     <AriaComboBox
-      allowsEmptyCollection
+      // Abre ao digitar mesmo antes de as sugestões chegarem, mas não reabre
+      // quando o campo é limpo depois de uma escolha.
+      allowsEmptyCollection={Boolean(props.inputValue)}
       {...props}
       isInvalid={isInvalid || Boolean(errorMessage)}
       className={cx("group flex flex-col gap-1.5 font-body", className)}

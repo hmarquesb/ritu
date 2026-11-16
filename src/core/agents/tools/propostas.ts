@@ -1,6 +1,8 @@
+import { config } from "@config/index"
 import { z } from "zod"
 import { type FiltroPessoa, passaNoFiltro } from "@/core/knowledge/filtros"
 import { normalizar } from "@/core/knowledge/identificar"
+import { contemIncomodo } from "@/core/knowledge/incomodo-no-texto"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { type ConteudoDaProposta, conteudoDaPropostaSchema } from "@/core/proposals/conteudo"
 import { type ContextoDoRun, definirTool } from "@/core/tools/tool"
@@ -19,6 +21,7 @@ const CODIGOS_DE_RECUSA = [
   "ja_na_lista",
   "ja_recusado",
   "filtrado",
+  "rotina_cheia",
 ] as const
 
 export type CodigoDeRecusaDeProposta = (typeof CODIGOS_DE_RECUSA)[number]
@@ -64,16 +67,6 @@ function resumir(resultado: ResultadoDeProposta): string {
   return resultado.proposto ? "proposto" : `recusado: ${resultado.motivo}`
 }
 
-function contemIncomodo(fato: string, kb: KnowledgeBase): boolean {
-  const fatoNormal = normalizar(fato)
-  return kb.incomodos.some((incomodo) =>
-    incomodo.palavras.some((palavra) => {
-      const alvo = normalizar(palavra)
-      return alvo !== "" && fatoNormal.includes(alvo)
-    }),
-  )
-}
-
 export function validarMemoriaPropor(
   run: ContextoDoRun,
   kb: KnowledgeBase,
@@ -83,6 +76,7 @@ export function validarMemoriaPropor(
   if (contemIncomodo(run.fato_de_rotina, kb)) return "fato_com_incomodo"
   const fato = normalizar(run.fato_de_rotina)
   if (run.notas_ativas.some((nota) => normalizar(nota) === fato)) return "ja_anotado"
+  if (run.notas_ativas.length >= config.memoria.rotinaNotasAtivas) return "rotina_cheia"
   return undefined
 }
 

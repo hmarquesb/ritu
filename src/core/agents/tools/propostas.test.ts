@@ -109,6 +109,24 @@ describe("memoria.propor", () => {
     })
   })
 
+  it("recusa com rotina_cheia quando a conta já tem 30 notas ativas", async () => {
+    const notas = Array.from({ length: 30 }, (_, i) => `Nota ${i}`)
+    const ctx = comRun({ ...RUN_BASE, fato_de_rotina: "Caminho cedo", notas_ativas: notas })
+    expect(await memoriaPropor.execute(PEDIDO_MEMORIA, ctx)).toEqual({
+      proposto: false,
+      motivo: "rotina_cheia",
+    })
+  })
+
+  it("propõe com 29 notas ativas", async () => {
+    const notas = Array.from({ length: 29 }, (_, i) => `Nota ${i}`)
+    const ctx = comRun({ ...RUN_BASE, fato_de_rotina: "Caminho cedo", notas_ativas: notas })
+    expect(await memoriaPropor.execute(PEDIDO_MEMORIA, ctx)).toEqual({
+      proposto: true,
+      proposta: { tool: "memoria.propor", tipo: "rotina", texto: "Caminho cedo" },
+    })
+  })
+
   it("sem ctx.run usa o run vazio e recusa com sem_fato", async () => {
     expect(await memoriaPropor.execute(PEDIDO_MEMORIA, semRun())).toEqual({
       proposto: false,

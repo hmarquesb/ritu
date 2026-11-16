@@ -2,10 +2,14 @@ import type { ItemDaCasa } from "./types"
 
 export type ReferenciaDeItem = { alimento_id?: string; nome_livre?: string }
 
+export type ItemSemeado = ReferenciaDeItem & { confirmado_em: Date; sempre_tenho?: boolean }
+
 export interface PantryStore {
   listar(contaId: string): Promise<ItemDaCasa[]>
   /** Estado tem, confirmado agora; apaga faltas e tira da lista. */
   registrar(contaId: string, itens: ReferenciaDeItem[], origem: ItemDaCasa["origem"]): Promise<void>
+  /** Estado tem, origem tela, com o confirmado_em dado; não apaga faltas nem mexe na lista. */
+  semear(contaId: string, itens: ItemSemeado[]): Promise<void>
   marcarAcabou(contaId: string, itens: ReferenciaDeItem[]): Promise<void>
   definirSempreTenho(contaId: string, itemId: string, valor: boolean): Promise<void>
   tirar(contaId: string, itemId: string): Promise<void>

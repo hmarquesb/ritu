@@ -55,6 +55,38 @@ async function registrarLivre(
     on conflict (nome) do update set vezes = alimentos_desconhecidos.vezes + 1`
 }
 
+// Semear só grava o item: não apaga faltas nem mexe na lista "Para ter em casa".
+async function semearAlimento(
+  tx: TransactionSql,
+  contaId: string,
+  alimentoId: string,
+  confirmado: Date,
+  sempreTenho: boolean,
+): Promise<void> {
+  await tx`
+    insert into casa (conta_id, alimento_id, estado, sempre_tenho, confirmado_em, origem)
+    values (${contaId}, ${alimentoId}, 'tem', ${sempreTenho}, ${confirmado}, 'tela')
+    on conflict (conta_id, alimento_id) do update
+      set estado = 'tem', sempre_tenho = excluded.sempre_tenho,
+        confirmado_em = excluded.confirmado_em, origem = 'tela'`
+}
+
+async function semearLivre(
+  tx: TransactionSql,
+  contaId: string,
+  nome: string,
+  confirmado: Date,
+  sempreTenho: boolean,
+): Promise<void> {
+  await tx`
+    insert into casa (conta_id, nome_livre, nome_normalizado, estado, sempre_tenho,
+      confirmado_em, origem)
+    values (${contaId}, ${nome}, ${normalizar(nome)}, 'tem', ${sempreTenho}, ${confirmado}, 'tela')
+    on conflict (conta_id, nome_normalizado) do update
+      set estado = 'tem', sempre_tenho = excluded.sempre_tenho,
+        confirmado_em = excluded.confirmado_em, origem = 'tela'`
+}
+
 export function createPgPantry(sql: Conexao, clock: Clock, opts: OpcoesPantry = {}): PantryStore {
   const existe = opts.alimentoExiste ?? (() => true)
 
@@ -75,6 +107,20 @@ export function createPgPantry(sql: Conexao, clock: Clock, opts: OpcoesPantry = 
           const r = resolverRef(ref, existe)
           if ("alimento" in r) await registrarAlimento(tx, contaId, r.alimento, origem, agora)
           else await registrarLivre(tx, contaId, r.livre, origem, agora)
+        }
+      })
+    },
+
+    async semear(contaId, itens) {
+      await numaTransacao(sql, async (tx) => {
+        for (const item of itens) {
+          const r = resolverRef(item, existe)
+          const sempreTenho = item.sempre_tenho ?? false
+          if ("alimento" in r) {
+            await semearAlimento(tx, contaId, r.alimento, item.confirmado_em, sempreTenho)
+          } else {
+            await semearLivre(tx, contaId, r.livre, item.confirmado_em, sempreTenho)
+          }
         }
       })
     },

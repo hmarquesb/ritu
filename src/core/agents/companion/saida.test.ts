@@ -7,6 +7,7 @@ import {
   type Anotacao,
   completarSaida,
   type EntregaDoModelo,
+  type SugestaoEntregue,
   saidaDeCodigo,
   saidaDoAcompanhanteSchema,
   saidaSegura,
@@ -348,5 +349,60 @@ describe("propostas na saída", () => {
     })
     expect(r.success).toBe(true)
     expect(r.success && r.data.propostas).toEqual([linha])
+  })
+})
+
+describe("retorno_id e troca na saída", () => {
+  const sugestao: SugestaoEntregue = {
+    tipo: "cha",
+    pratica_id: "cha-gengibre",
+    retorno_id: "ret-1",
+    titulo: "Chá de gengibre",
+    como_fazer: "Ferva.",
+    itens: [
+      {
+        alimento_id: "gengibre",
+        nome: "Gengibre",
+        contribui: ["quente"],
+        verbos: ["aquece"],
+        linha_base: "alimentos:gengibre",
+        casa: "ausente",
+        troca: {
+          alimento_id: "canela",
+          nome: "Canela",
+          contribui: ["quente"],
+          verbos: ["aquece"],
+          linha_base: "alimentos:canela",
+          frase: "Troquei gengibre por canela: ambos aquecem.",
+          anteriores: [],
+        },
+      },
+    ],
+    verbos: ["aquece"],
+    motivo: "Aquece.",
+    linhas_base: ["praticas:cha-gengibre"],
+    novidade: false,
+  }
+
+  it("sugestão com retorno_id e item com troca passa no schema e volta igual", () => {
+    const saida = { ...saidaDeCodigo("Ok.", []), sugestoes: [sugestao] }
+    const r = saidaDoAcompanhanteSchema.safeParse(saida)
+    expect(r.success).toBe(true)
+    expect(r.success && r.data.sugestoes).toEqual([sugestao])
+    expect(r.success && r.data.sugestoes[0]?.retorno_id).toBe("ret-1")
+    expect(r.success && r.data.sugestoes[0]?.itens[0]?.troca?.alimento_id).toBe("canela")
+  })
+
+  it("sem retorno_id nem troca, a sugestão passa igual e os campos não aparecem", () => {
+    const { retorno_id: _, ...semRetorno } = sugestao
+    const base = { ...semRetorno, itens: sugestao.itens.map(({ troca: _t, ...item }) => item) }
+    const r = saidaDoAcompanhanteSchema.safeParse({
+      ...saidaDeCodigo("Ok.", []),
+      sugestoes: [base],
+    })
+    expect(r.success).toBe(true)
+    expect(r.success && r.data.sugestoes).toEqual([base])
+    expect(r.success && r.data.sugestoes.some((s) => "retorno_id" in s)).toBe(false)
+    expect(r.success && r.data.sugestoes.some((s) => s.itens.some((i) => "troca" in i))).toBe(false)
   })
 })

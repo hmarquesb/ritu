@@ -73,6 +73,7 @@ export type SugestaoEntregue = {
   tipo: TipoDeSugestao
   pratica_id?: string
   preparo_id?: string
+  retorno_id?: string
   titulo: string
   como_fazer: string
   itens: {
@@ -85,6 +86,15 @@ export type SugestaoEntregue = {
     casa: EstadoNaCasa
     observacao?: string
     se_faltar?: { alimento_id: string; nome: string; frase: string }
+    troca?: {
+      alimento_id: string
+      nome: string
+      contribui: Guna[]
+      verbos: string[]
+      linha_base: string
+      frase: string
+      anteriores: string[]
+    }
   }[]
   verbos: string[]
   motivo: string
@@ -119,12 +129,24 @@ const itemEntregueSchema = z.object({
   casa: z.enum(["confirmado", "incerto", "ausente"]),
   observacao: z.string().optional(),
   se_faltar: z.object({ alimento_id: z.string(), nome: z.string(), frase: z.string() }).optional(),
+  troca: z
+    .object({
+      alimento_id: z.string(),
+      nome: z.string(),
+      contribui: z.array(gunaSchema),
+      verbos: z.array(z.string()),
+      linha_base: z.string(),
+      frase: z.string(),
+      anteriores: z.array(z.string()),
+    })
+    .optional(),
 })
 
 const sugestaoEntregueSchema = z.object({
   tipo: z.enum(["cha", "refeicao", "oleo", "pratica"]),
   pratica_id: z.string().optional(),
   preparo_id: z.string().optional(),
+  retorno_id: z.string().optional(),
   titulo: z.string(),
   como_fazer: z.string(),
   itens: z.array(itemEntregueSchema),

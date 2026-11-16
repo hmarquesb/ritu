@@ -157,7 +157,7 @@ describe("não como: a entrega com ovo é recusada por nao_come", () => {
     expect(resultadoDoFinalizar?.violacoes).toContainEqual(
       expect.objectContaining({ codigo: "nao_come" }),
     )
-    expect(rodada.final.status).toBe("done")
+    expect(rodada.final.status).toBe("waiting_for_approval")
     expect(
       rodada.final.saida?.sugestoes.flatMap((s) => s.itens.map((i) => i.alimento_id)),
     ).not.toContain("ovo")
@@ -175,7 +175,7 @@ describe("não como: a anotação nao_come sai na saída final", () => {
 
     const rodada = await rodarCenario(deps, contaId, c)
 
-    expect(rodada.final.status).toBe("done")
+    expect(rodada.final.status).toBe("waiting_for_approval")
     expect(rodada.final.saida?.anotacoes).toContainEqual({
       tipo: "nao_come",
       itens: [{ alimento_id: "ovo", nome: "Ovo" }],

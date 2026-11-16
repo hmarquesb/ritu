@@ -180,8 +180,13 @@ describe("continuar: pausa do agente", () => {
     const m = await montar({ roteiro: [askCome, fim()] })
     const p = await pausar(m)
     const r = await continuar(m, p.run_id, { tipo: "come", resposta: "nao_como" })
-    expect(r.status).toBe("done")
+    expect(r.status).toBe("waiting_for_approval")
     const run = await estado(m, p.run_id)
+    expect(run.status).toBe("waiting_for_approval")
+    expect(run.pendencia).toMatchObject({ tipo: "aprovacao" })
+    const linhas = await m.stores.proposals.doRun(m.conta.id, p.run_id)
+    expect(linhas.map((l) => l.tool)).toEqual(["memoria.propor"])
+    expect(r.saida?.propostas).toHaveLength(1)
     const dados = (run.checkpoint as { dados: { nao_come_do_run: string[] } }).dados
     expect(dados.nao_come_do_run).toEqual(["ghee"])
     expect(r.saida?.anotacoes).toContainEqual({

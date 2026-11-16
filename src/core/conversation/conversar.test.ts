@@ -1,5 +1,5 @@
 import { llmCotas } from "@config/index"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import { executarLimpeza } from "@/core/cleanup"
@@ -171,16 +171,20 @@ describe("conversar: caminhos sem agente", () => {
   ] as const
 
   for (const caso of casos) {
-    it(`${caso.caminho} termina done com origem codigo e sem pedido ao runtime`, async () => {
+    it(`${caso.caminho} termina com origem codigo e sem pedido ao runtime`, async () => {
       const m = await montar({ llm: [caso.llm] })
       if (caso.caminho === "retorno") await criarRetorno(m)
       const r = await dizer(m, "mensagem")
-      expect(r).toMatchObject({ status: "done", caminho: caso.caminho })
+      const comBloco = caso.caminho === "casa" || caso.caminho === "evitar"
+      expect(r).toMatchObject({
+        status: comBloco ? "waiting_for_approval" : "done",
+        caminho: caso.caminho,
+      })
       expect(r.saida?.origem).toBe("codigo")
       expect(r.saida?.resposta).toMatch(caso.texto)
       expect(m.runtime.pedidos).toHaveLength(0)
       const run = await runDe(m, r.run_id)
-      expect(run.status).toBe("done")
+      expect(run.status).toBe(comBloco ? "waiting_for_approval" : "done")
       expect(run.caminho).toBe(caso.caminho)
     })
   }
@@ -592,5 +596,150 @@ describe("conversar: pausas", () => {
     const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)
     expect(mensagens.map((x) => x.autor)).toEqual(["pessoa", "agente"])
     expect(mensagens[1]).toMatchObject({ texto: r.pergunta?.texto, com_incomodo: false })
+  })
+})
+
+describe("conversar: fim do run com o bloco de aprovação", () => {
+  const casaDaFeira = saida({
+    intencoes: ["casa"],
+    itens_casa: [
+      { nome: "abóbora", acao: "tem" },
+      { nome: "couve", acao: "tem" },
+      { nome: "pitaia", acao: "tem" },
+    ],
+  })
+
+  it("caminho casa: uma linha pendente, etapa, pendência, pausa e resposta gravada", async () => {
+    const m = await montar({ llm: [casaDaFeira] })
+    const r = await dizer(m, "fui à feira")
+    expect(r.status).toBe("waiting_for_approval")
+    const run = await runDe(m, r.run_id)
+    expect(run.status).toBe("waiting_for_approval")
+    const linhas = await m.stores.proposals.doRun(m.conta.id, r.run_id)
+    expect(linhas).toHaveLength(1)
+    expect(linhas[0]).toMatchObject({ tool: "casa.propor", decisao: "pendente" })
+    expect(r.saida?.propostas).toEqual([
+      {
+        id: linhas[0]?.id,
+        tool: "casa.propor",
+        texto: "Você tem abóbora, couve e pitaia em casa",
+      },
+    ])
+    expect(run.pendencia).toMatchObject({
+      tipo: "aprovacao",
+      conteudo: { propostas: [linhas[0]?.id] },
+    })
+    const etapas = await etapasDe(m, r.run_id)
+    const propostas = etapas.filter((e) => e.tipo === "proposta")
+    expect(propostas.map((e) => [e.nome, e.resumo])).toEqual([["casa.propor", "casa: 3 itens"]])
+    const pausas = m.telemetry.eventos.filter((e) => e.nome === "pausa")
+    expect(pausas).toHaveLength(1)
+    expect(m.telemetry.metricas.find((x) => x.nome === "ritu_pausas_total")?.rotulos).toMatchObject(
+      { tipo: "aprovacao" },
+    )
+    const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)
+    expect(mensagens.at(-1)?.texto).toBe(r.saida?.resposta)
+    expect(run.saida).toMatchObject({ resposta: r.saida?.resposta })
+  })
+
+  it("nada é gravado antes da aprovação e nenhum rastro leva nome ou texto", async () => {
+    const m = await montar({ llm: [casaDaFeira] })
+    const antes = JSON.stringify([
+      await m.stores.profiles.ler(m.conta.id),
+      await m.stores.pantry.listar(m.conta.id),
+      await m.stores.routine.notasAtivas(m.conta.id),
+      await m.stores.shortages.lista(m.conta.id),
+    ])
+    const r = await dizer(m, SEGREDO)
+    const depois = JSON.stringify([
+      await m.stores.profiles.ler(m.conta.id),
+      await m.stores.pantry.listar(m.conta.id),
+      await m.stores.routine.notasAtivas(m.conta.id),
+      await m.stores.shortages.lista(m.conta.id),
+    ])
+    expect(depois).toBe(antes)
+    const etapas = await etapasDe(m, r.run_id)
+    const rastro = JSON.stringify([
+      etapas.map((e) => e.resumo),
+      m.telemetry.spans,
+      m.telemetry.metricas,
+      m.telemetry.logs,
+    ])
+    for (const proibido of ["abóbora", "couve", "pitaia", SEGREDO]) {
+      expect(rastro).not.toContain(proibido)
+    }
+  })
+
+  it("nota de rotina do agente vira linha de rotina e a saída não leva propostas_do_agente", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["vida"], fato_de_rotina: "acordo cedo" })],
+      roteiro: [
+        { chamadas: [{ nome: "memoria.propor", argumentos: { tipo: "rotina" } }] },
+        finalizar(),
+      ],
+    })
+    const r = await dizer(m, "acordo cedo")
+    expect(r.status).toBe("waiting_for_approval")
+    const linhas = await m.stores.proposals.doRun(m.conta.id, r.run_id)
+    expect(linhas.map((l) => l.conteudo)).toEqual([{ tipo: "rotina", texto: "acordo cedo" }])
+    expect(r.saida && "propostas_do_agente" in r.saida).toBe(false)
+    const run = await runDe(m, r.run_id)
+    expect(run.saida && "propostas_do_agente" in (run.saida as object)).toBe(false)
+  })
+
+  it("sem nada a propor termina em done com propostas vazias", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["vida"] })], roteiro: [finalizar()] })
+    const r = await dizer(m, "oi")
+    expect(r.status).toBe("done")
+    expect(r.saida?.propostas).toEqual([])
+    expect(await m.stores.proposals.doRun(m.conta.id, r.run_id)).toEqual([])
+  })
+
+  it("com incômodo e anotação de casa, nenhuma proposta e done", async () => {
+    const m = await montar({
+      llm: [
+        saida({
+          intencoes: ["momento"],
+          incomodo: { id: "dor-de-cabeca", variante: "latejante" },
+          itens_casa: [{ nome: "abóbora", acao: "tem" }],
+        }),
+      ],
+      roteiro: [
+        finalizar({
+          ...entregaDoMomento,
+          explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
+        }),
+      ],
+    })
+    const r = await dizer(m, "dor de cabeça")
+    expect(r.status).toBe("done")
+    expect(await m.stores.proposals.doRun(m.conta.id, r.run_id)).toEqual([])
+  })
+
+  it("alerta não propõe nada", async () => {
+    const m = await montar({
+      llm: [
+        saida({
+          intencoes: ["momento"],
+          alerta: "fisico",
+          itens_casa: [{ nome: "abóbora", acao: "tem" }],
+        }),
+      ],
+    })
+    const r = await dizer(m, "alerta")
+    expect(r.status).toBe("done")
+    expect(r.saida?.propostas).toEqual([])
+  })
+
+  it("falha ao criar as propostas: run failed, mensagem do agente gravada, saída sem propostas", async () => {
+    const m = await montar({ llm: [casaDaFeira] })
+    vi.spyOn(m.stores.proposals, "criar").mockRejectedValue(new Error("banco fora"))
+    const r = await dizer(m, "fui à feira")
+    expect(r.status).toBe("failed")
+    expect(r.saida?.propostas).toEqual([])
+    const run = await runDe(m, r.run_id)
+    expect(run.saida).toEqual(r.saida)
+    const mensagens = await m.stores.messages.doDia(m.conta.id, run.dia)
+    expect(mensagens.at(-1)).toMatchObject({ autor: "agente", texto: r.saida?.resposta })
   })
 })

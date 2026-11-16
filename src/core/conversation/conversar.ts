@@ -31,6 +31,7 @@ import {
   resolverCaminhoDeCodigo,
 } from "./caminhos-de-codigo"
 import { criarContinuar } from "./continuar"
+import { fecharOuFalhar } from "./fim-com-propostas"
 import { anotarPendencia, ETAPA_DA_VARIANTE, perguntaDaVariantePendente } from "./pausa-de-codigo"
 
 export { type MensagemRecebida, mensagemRecebidaSchema } from "@/core/messages/texto"
@@ -204,6 +205,7 @@ export function createConversation(deps: Deps) {
     const r = await companion.responder(x.contaId, entrada, {
       run: x.run,
       semModelo: true,
+      manterAberto: true,
       aoVivo: x.aoVivo,
     })
     if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
@@ -219,7 +221,7 @@ export function createConversation(deps: Deps) {
     const r = await resolverCaminhoDeCodigo(caminho, ctx)
     if (r.etapa) await etapaAoVivo(x, r.etapa)
     const saida = saidaDeCodigo(r.texto, r.anotacoes)
-    await runs.encerrar(x.contaId, x.run.id, "done", {
+    await stores.runs.atualizar(x.contaId, x.run.id, {
       saida,
       modelos: { apoio: apoio ? [apoio.modelo] : [] },
       tokens_entrada: apoio?.tokens.entrada ?? 0,
@@ -274,7 +276,11 @@ export function createConversation(deps: Deps) {
     const incomodo = Boolean(ctx.interpretacao.incomodo)
     const variante = perguntaDaVariantePendente(entrada, kb)
     if (variante) return pausarNaVariante(x, ctx, entrada, variante, apoio)
-    const r = await companion.responder(x.contaId, entrada, { run: x.run, aoVivo: x.aoVivo })
+    const r = await companion.responder(x.contaId, entrada, {
+      run: x.run,
+      manterAberto: true,
+      aoVivo: x.aoVivo,
+    })
     const anotacoes = await anotacoesDaMensagem(ctx)
     if (r.pergunta) {
       await anotarPendencia(stores, x.contaId, x.run.id, anotacoes)
@@ -306,6 +312,24 @@ export function createConversation(deps: Deps) {
     return viaAcompanhante(x, ctx, intencoes, apoio)
   }
 
+  // Fecha o run da conversa: done sem propostas, waiting_for_approval com elas (D5, D8).
+  async function fecharRun(x: Execucao, saida: SaidaDoAcompanhante, incomodo: boolean) {
+    const atual = await stores.runs.buscar(x.contaId, x.run.id)
+    if (atual?.status !== "running") return saida
+    return fecharOuFalhar(
+      { stores, kb, runs, telemetry },
+      {
+        contaId: x.contaId,
+        runId: x.run.id,
+        caminho: atual.caminho,
+        comIncomodo: incomodo || atual.com_incomodo,
+        saida,
+        anotacoes: saida.anotacoes,
+        aoVivo: x.aoVivo,
+      },
+    )
+  }
+
   async function responderMensagem(x: Execucao, estado: { gravada: boolean }) {
     const { interpretacao, apoio } = await interpretar(x)
     const r = interpretacao ? await seguirCaminho(x, interpretacao, apoio) : await semModelo(x)
@@ -318,7 +342,8 @@ export function createConversation(deps: Deps) {
     })
     estado.gravada = true
     if (r.incomodo) await stores.messages.marcarIncomodoDoRun(x.contaId, x.run.id)
-    return { saida: r.saida, pergunta: r.pergunta, interpretacao }
+    const saida = r.saida ? await fecharRun(x, r.saida, r.incomodo) : undefined
+    return { saida, pergunta: r.pergunta, interpretacao }
   }
 
   async function fecharComoFalho(x: Execucao, saida?: SaidaDoAcompanhante): Promise<void> {
@@ -374,7 +399,10 @@ export function createConversation(deps: Deps) {
       const { interpretacao, ...parte } = await responderMensagem(x, estado)
       return await respostaDoRun(x, parte, interpretacao)
     } catch (e) {
-      if (estado.gravada) throw e
+      if (estado.gravada) {
+        await fecharComoFalho(x)
+        throw e
+      }
       return respostaSegura(x)
     }
   }

@@ -105,7 +105,8 @@ describe("cenários de conversa", () => {
     if (!c?.mensagem) throw new Error(`cenário sem mensagem: ${nome}`)
     const { contaId, deps } = await montarCenario(c)
     const r = await deps.conversation.conversar(contaId, c.mensagem)
-    expect(r.status).toBe("done")
+    const comBloco = ["casa-sozinha", "evitar-sozinho", "duas-intencoes"].includes(nome)
+    expect(r.status).toBe(comBloco ? "waiting_for_approval" : "done")
     expect(r.caminho).toBe(esperados[nome])
   })
 

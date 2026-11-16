@@ -20,6 +20,7 @@ import {
 } from "@/core/runs/pergunta"
 import type { Run } from "@/core/runs/ports"
 import type { Deps, RespostaDaConversa } from "./conversar"
+import { fecharOuFalhar } from "./fim-com-propostas"
 import { anotarPendencia } from "./pausa-de-codigo"
 
 type AoVivo = (e: EventoAoVivo) => void
@@ -99,7 +100,7 @@ export function criarContinuar(deps: Deps) {
         contaId,
         runAtual,
         { pergunta: conteudo.pergunta, resposta },
-        { aoVivo },
+        { aoVivo, manterAberto: true },
       )
     }
     const { entrada } = conteudo
@@ -107,7 +108,12 @@ export function criarContinuar(deps: Deps) {
       resposta.tipo === "variante" && entrada.incomodo
         ? { ...entrada, incomodo: { ...entrada.incomodo, variante: resposta.variante } }
         : entrada
-    return companion.responder(contaId, nova, { run: runAtual, perguntasFeitas: 1, aoVivo })
+    return companion.responder(contaId, nova, {
+      run: runAtual,
+      perguntasFeitas: 1,
+      manterAberto: true,
+      aoVivo,
+    })
   }
 
   // Total determinístico: tokens de todas as etapas do run (loop e Intérprete, cada uma uma vez).
@@ -147,7 +153,20 @@ export function criarContinuar(deps: Deps) {
     await fixarTotais(contaId, run.id)
     await gravarMensagemDoAgente(contaId, run, final.resposta, false)
     if (atual?.com_incomodo) await stores.messages.marcarIncomodoDoRun(contaId, run.id)
-    return { saida: final }
+    if (atual?.status !== "running") return { saida: final }
+    const fechada = await fecharOuFalhar(
+      { stores, kb, runs, telemetry },
+      {
+        contaId,
+        runId: run.id,
+        caminho: atual.caminho,
+        comIncomodo: atual.com_incomodo,
+        saida: final,
+        anotacoes,
+        aoVivo: x.aoVivo,
+      },
+    )
+    return { saida: fechada }
   }
 
   async function seguir(x: Retomada, resposta: RespostaDaPessoa): Promise<Parte> {

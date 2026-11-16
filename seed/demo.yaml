@@ -1,0 +1,252 @@
+# Perfil semeado da demonstração — schema e conferência em src/core/demo-seed.ts
+faixa: "Você está no perfil de demonstração: Vata-Pitta, no Rio, com gengibre, canela, abóbora e arroz em casa"
+mensagem_sugerida: "acordei com frio e agitada, o que eu como?"
+
+perfil:
+  prakriti: { vata: 0.45, pitta: 0.45, kapha: 0.1 }
+  cidade: { nome: Rio de Janeiro, lat: -22.91, lon: -43.21, fuso: America/Sao_Paulo }
+  evitar_sempre:
+    - { tipo: grupo, valor: castanhas }
+  restricoes: []
+  nao_come: []
+
+casa:
+  # Confirmados (dentro da validade do grupo) e "sempre tenho"
+  - { alimento_id: gengibre, dias_atras: 2 }
+  - { alimento_id: abobora, dias_atras: 1 }
+  - { alimento_id: arroz-branco, dias_atras: 40, sempre_tenho: true }
+  - { alimento_id: canela, dias_atras: 60, sempre_tenho: true }
+  - { alimento_id: ghee, dias_atras: 10 }
+  - { alimento_id: cominho, dias_atras: 20 }
+  - { alimento_id: erva-doce, dias_atras: 30 }
+  - { alimento_id: limao, dias_atras: 2 }
+  - { alimento_id: aveia, dias_atras: 7 }
+  # Incertos (acima da validade: curta 5 dias, média 14 dias)
+  - { alimento_id: couve, dias_atras: 8 }
+  - { alimento_id: banana, dias_atras: 7 }
+  - { alimento_id: leite, dias_atras: 20 }
+
+preferencias:
+  - { tipo: alimento, id: canela, gosto: gosta }
+  - { tipo: alimento, id: abobora, gosto: gosta }
+  - { tipo: alimento, id: quiabo, gosto: nao_gosta }
+  - { tipo: pratica, id: cha-gengibre-canela, ajudou: 3 }
+  - { tipo: pratica, id: escalda-pes-morno, ajudou: 1 }
+  - { tipo: pratica, id: cha-camomila, nao_ajudou: 1 }
+
+faltas:
+  - { alimento_id: cardamomo, dias_atras: 1 }
+  - { alimento_id: cardamomo, dias_atras: 2 }
+  - { alimento_id: cardamomo, dias_atras: 3 }
+
+rotina:
+  - "Almoça fora durante a semana"
+  - "Acorda às 5 h às terças"
+  - "Janta tarde, depois das 21 h"
+
+padrao:
+  estados: [com_frio, agitada]
+  item: { tipo: pratica, id: cha-gengibre-canela }
+  ocorrencias: 3
+
+historico:
+  - dias_atras: 6
+    mensagem: "Bom dia! Levantei com frio e meio agitada, a cabeça já correndo pras coisas do dia. O que eu faço agora de manhã?"
+    estados: [com_frio, agitada]
+    momento_do_dia: manha
+    gunas_buscadas: [quente, estavel]
+    saida:
+      origem: agente
+      resposta: "Bom dia! Com esse frio e essa pressa por dentro, o que mais cai bem agora é algo quentinho e tranquilo. Você tem gengibre e canela em casa, então que tal um chá dos dois? Ferva umas rodelas de gengibre com um pau de canela por alguns minutos, coe e beba morno, devagar, sentada, antes de começar a correria. O calor aquece de dentro para fora e o ritual de parar uns minutos ajuda a assentar. Depois me conta como ficou."
+      geral: false
+      avisos: []
+      explicacao:
+        qualidades_do_momento: [frio, movel]
+        qualidades_buscadas: [quente, estavel]
+      sugestoes:
+        - tipo: cha
+          pratica_id: cha-gengibre-canela
+          titulo: "Chá de gengibre com canela"
+          como_fazer: "Ferva rodelas de gengibre com um pau de canela por alguns minutos. Coe e beba morno."
+          itens:
+            - alimento_id: gengibre
+              nome: Gengibre
+              contribui: [quente]
+              verbos: [aquece]
+              linha_base: "alimentos:gengibre"
+              casa: confirmado
+            - alimento_id: canela
+              nome: Canela
+              contribui: [quente]
+              verbos: [aquece]
+              linha_base: "alimentos:canela"
+              casa: confirmado
+          verbos: [aquece]
+          motivo: "Quente para o frio da manhã, feito com o que você tem em casa."
+          linhas_base: ["praticas:cha-gengibre-canela"]
+          novidade: false
+      evitar: []
+      incertos: []
+      citados:
+        - "praticas:cha-gengibre-canela"
+        - "alimentos:gengibre"
+        - "alimentos:canela"
+      anotacoes: []
+      propostas: []
+    resultados: [ajudou]
+
+  - dias_atras: 4
+    mensagem: "De novo acordei friorenta e inquieta, mil coisas na lista. Repito aquele chá?"
+    estados: [com_frio, agitada]
+    momento_do_dia: manha
+    gunas_buscadas: [quente, estavel]
+    saida:
+      origem: agente
+      resposta: "Pode repetir, sim! Da última vez o chá de gengibre com canela caiu bem, e hoje a manhã pede o mesmo calor. Ferva o gengibre em rodelas com a canela, coe e tome morno. Se der, beba antes de olhar a lista: uns minutos parada com a xícara nas mãos já ajudam a desacelerar. Me conta depois se ajudou de novo."
+      geral: false
+      avisos: []
+      explicacao:
+        qualidades_do_momento: [frio, movel]
+        qualidades_buscadas: [quente, estavel]
+      sugestoes:
+        - tipo: cha
+          pratica_id: cha-gengibre-canela
+          titulo: "Chá de gengibre com canela"
+          como_fazer: "Ferva rodelas de gengibre com um pau de canela por alguns minutos. Coe e beba morno."
+          itens:
+            - alimento_id: gengibre
+              nome: Gengibre
+              contribui: [quente]
+              verbos: [aquece]
+              linha_base: "alimentos:gengibre"
+              casa: confirmado
+            - alimento_id: canela
+              nome: Canela
+              contribui: [quente]
+              verbos: [aquece]
+              linha_base: "alimentos:canela"
+              casa: confirmado
+          verbos: [aquece]
+          motivo: "Quente para o frio da manhã, feito com o que você tem em casa."
+          linhas_base: ["praticas:cha-gengibre-canela"]
+          novidade: false
+      evitar: []
+      incertos: []
+      citados:
+        - "praticas:cha-gengibre-canela"
+        - "alimentos:gengibre"
+        - "alimentos:canela"
+      anotacoes: []
+      propostas: []
+    resultados: [ajudou]
+
+  - dias_atras: 2
+    mensagem: "Manhã fria aqui e eu acelerada desde que levantei. Quero algo quente antes de sair."
+    estados: [com_frio, agitada]
+    momento_do_dia: manha
+    gunas_buscadas: [quente, estavel]
+    saida:
+      origem: agente
+      resposta: "Manhã fria e o ritmo lá em cima: o seu chá de gengibre com canela já mostrou que funciona para você nesses dias. Ferva os dois juntos por alguns minutos, coe e beba morno, sem pressa. Se sobrar um tempinho, respire fundo algumas vezes enquanto ele esfria um pouco. Bom dia e boa saída!"
+      geral: false
+      avisos: []
+      explicacao:
+        qualidades_do_momento: [frio, movel]
+        qualidades_buscadas: [quente, estavel]
+      sugestoes:
+        - tipo: cha
+          pratica_id: cha-gengibre-canela
+          titulo: "Chá de gengibre com canela"
+          como_fazer: "Ferva rodelas de gengibre com um pau de canela por alguns minutos. Coe e beba morno."
+          itens:
+            - alimento_id: gengibre
+              nome: Gengibre
+              contribui: [quente]
+              verbos: [aquece]
+              linha_base: "alimentos:gengibre"
+              casa: confirmado
+            - alimento_id: canela
+              nome: Canela
+              contribui: [quente]
+              verbos: [aquece]
+              linha_base: "alimentos:canela"
+              casa: confirmado
+          verbos: [aquece]
+          motivo: "Quente para o frio da manhã, feito com o que você tem em casa."
+          linhas_base: ["praticas:cha-gengibre-canela"]
+          novidade: false
+      evitar: []
+      incertos: []
+      citados:
+        - "praticas:cha-gengibre-canela"
+        - "alimentos:gengibre"
+        - "alimentos:canela"
+      anotacoes: []
+      propostas: []
+    resultados: [ajudou]
+
+  - dias_atras: 1
+    mensagem: "Fim de dia, cheguei em casa tarde e ainda meio ligada. Queria jantar algo simples e desligar um pouco antes de deitar."
+    estados: [agitada]
+    momento_do_dia: noite
+    gunas_buscadas: [estavel, pesado, quente]
+    saida:
+      origem: agente
+      resposta: "Que bom que chegou! Para fechar o dia com mais calma, pensei em duas coisas. Para jantar, um arroz bem cozido com abóbora e um fio de ghee: é quentinho, macio e nutre sem pesar, e você tem tudo em casa. Depois, um escalda-pés morno, com calma, os pés na água enquanto o corpo vai baixando o ritmo. Seque bem os pés e calce meias. Amanhã me conta como foi."
+      geral: false
+      avisos: []
+      explicacao:
+        qualidades_do_momento: [movel]
+        qualidades_buscadas: [estavel, pesado, quente]
+      sugestoes:
+        - tipo: pratica
+          pratica_id: escalda-pes-morno
+          titulo: "Escalda-pés morno"
+          como_fazer: "Deixe os pés de molho numa bacia com água morna, sem estar quente demais, e seque bem antes de calçar meias."
+          itens: []
+          verbos: [aquece, assenta]
+          motivo: "Morno e parado, para assentar o corpo antes de deitar."
+          linhas_base: ["praticas:escalda-pes-morno"]
+          novidade: false
+          aviso: "Confira a temperatura da água com a mão antes de pôr os pés."
+        - tipo: refeicao
+          preparo_id: arroz-com-legume
+          titulo: "Arroz bem cozido com abóbora e ghee"
+          como_fazer: "Lave o arroz. Aqueça o ghee na panela. Junte a abóbora em pedaços e o arroz, cubra com mais água que o habitual e cozinhe tampado em fogo baixo até tudo ficar macio."
+          itens:
+            - alimento_id: arroz-branco
+              nome: Arroz branco
+              funcao: base
+              contribui: [pesado, suave]
+              verbos: [nutre, suaviza]
+              linha_base: "alimentos:arroz-branco"
+              casa: confirmado
+            - alimento_id: abobora
+              nome: Abóbora
+              funcao: legume
+              contribui: [pesado, suave]
+              verbos: [nutre, suaviza]
+              linha_base: "alimentos:abobora"
+              casa: confirmado
+            - alimento_id: ghee
+              nome: Ghee
+              funcao: gordura
+              contribui: [oleoso, pesado]
+              verbos: [umedece, nutre]
+              linha_base: "alimentos:ghee"
+              casa: confirmado
+          verbos: [nutre, suaviza, umedece]
+          motivo: "Quente, macio e nutritivo para um jantar tarde, com o que você tem em casa."
+          linhas_base: ["preparos:arroz-com-legume"]
+          novidade: true
+      evitar: []
+      incertos: []
+      citados:
+        - "praticas:escalda-pes-morno"
+        - "preparos:arroz-com-legume"
+        - "alimentos:arroz-branco"
+        - "alimentos:abobora"
+        - "alimentos:ghee"
+      anotacoes: []
+      propostas: []
+    resultados: [aguardando, aguardando]

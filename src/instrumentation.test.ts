@@ -17,6 +17,7 @@ vi.mock("./infra/otel/opcoes", () => ({
 
 describe("register", () => {
   const guardado = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+  const runtimeGuardado = process.env.NEXT_RUNTIME
   beforeEach(() => {
     registerOTel.mockClear()
     opcoes.mockClear()
@@ -24,10 +25,13 @@ describe("register", () => {
   afterEach(() => {
     if (guardado === undefined) delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
     else process.env.OTEL_EXPORTER_OTLP_ENDPOINT = guardado
+    if (runtimeGuardado === undefined) delete process.env.NEXT_RUNTIME
+    else process.env.NEXT_RUNTIME = runtimeGuardado
   })
 
   it("com endpoint liga traces, métricas e logs", async () => {
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    process.env.NEXT_RUNTIME = "nodejs"
     const { register } = await import("./instrumentation")
     await register()
     expect(registerOTel).toHaveBeenCalledTimes(1)
@@ -39,6 +43,15 @@ describe("register", () => {
 
   it("sem endpoint não importa nada de OTel", async () => {
     delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    const { register } = await import("./instrumentation")
+    await register()
+    expect(registerOTel).not.toHaveBeenCalled()
+    expect(opcoes).not.toHaveBeenCalled()
+  })
+
+  it("no Edge não importa nada de OTel", async () => {
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    process.env.NEXT_RUNTIME = "edge"
     const { register } = await import("./instrumentation")
     await register()
     expect(registerOTel).not.toHaveBeenCalled()

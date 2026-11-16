@@ -15,8 +15,7 @@ import { createMemoryLedger } from "../../../src/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "../../../src/infra/fakes/memory-telemetry"
 import { conferir, retornosFalsos } from "./colher"
 import { type Checagem, type Colhido, calcularAcertou, type ResultadoDoCaso } from "./resultado"
-
-export type CasoRodado = { resultado: ResultadoDoCaso; colhido: Colhido }
+import type { CasoRodado } from "./rodar-run"
 
 export type DepsDeApoio = { client: LlmClient; kb: KnowledgeBase; clock: Clock }
 

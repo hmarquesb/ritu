@@ -181,6 +181,7 @@ export function createCompanion(deps: Deps) {
       telemetry,
       ...(casaDaMensagem ? { casaDaMensagem } : {}),
       run: contextoDoRun(dados),
+      tx,
     }
   }
 

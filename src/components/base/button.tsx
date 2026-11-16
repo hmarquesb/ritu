@@ -55,10 +55,27 @@ export function removeOrphanAnnouncements(doc: AnnouncementDocument): void {
   }
 }
 
+/**
+ * O primeiro anúncio da página só entra no DOM 100 ms depois do pedido (o
+ * React Aria espera o `role="log"` existir), então um botão que sai antes disso
+ * deixa o anúncio chegar depois da limpeza. Repete a limpeza em intervalos
+ * curtos para pegar esse caso também.
+ */
+export const ORPHAN_CLEANUP_DELAYS = [0, 150, 500, 1500] as const
+
+export function scheduleOrphanCleanup(
+  doc: AnnouncementDocument,
+  schedule: (fn: () => void, delay: number) => unknown = setTimeout,
+): void {
+  for (const delay of ORPHAN_CLEANUP_DELAYS) {
+    schedule(() => removeOrphanAnnouncements(doc), delay)
+  }
+}
+
 function PendingCleanup() {
   useEffect(
     () => () => {
-      setTimeout(() => removeOrphanAnnouncements(document), 0)
+      scheduleOrphanCleanup(document)
     },
     [],
   )

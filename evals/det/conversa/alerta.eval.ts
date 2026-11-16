@@ -7,7 +7,7 @@ import { montarCenario } from "../../../test/fixtures/cenarios"
 import type { CenarioDeConversa } from "../../../test/fixtures/cenarios/tipos"
 import { cenario, com } from "./apoio"
 
-const TEXTO_EMOCIONAL = "não aguento mais, queria sumir"
+const TEXTO_EMOCIONAL = "ando sem vontade de nada, pra que continuar?"
 
 // Alerta emocional com "evitar sempre" e casa na mesma saída: o alerta deve ignorar os dois.
 const emocional = com(cenario("alerta-emocional"), TEXTO_EMOCIONAL, {

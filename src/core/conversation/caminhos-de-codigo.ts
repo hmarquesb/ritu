@@ -22,17 +22,21 @@ export type ContextoDoCaminho = {
   dia: string
   perfil: Perfil
   interpretacao: Interpretacao
+  guardrail?: "codigo"
 }
 
 export type ResultadoDeCodigo = { texto: string; anotacoes: Anotacao[]; etapa?: NovaEtapa }
 
 // Etapa de guardrail de um caminho de código: a mensagem foi barrada, sem modelo e sem tokens (D9).
-function etapaDeGuardrail(nome: string): NovaEtapa {
+// Com `guardrail: "codigo"` a barreira foi o código; sem, foi o Intérprete (D13).
+function etapaDeGuardrail(ctx: ContextoDoCaminho, nome: string): NovaEtapa {
+  const origem = ctx.guardrail ?? "interprete"
+  if (nome !== "fora") ctx.telemetry.contador("ritu_guardrail_total", { resultado: nome, origem })
   return {
     tipo: "guardrail",
     nome,
     status: "recusado",
-    resumo: null,
+    resumo: origem,
     duracao_ms: 0,
     modelo: null,
     tokens_entrada: 0,
@@ -77,15 +81,20 @@ async function alerta(ctx: ContextoDoCaminho): Promise<ResultadoDeCodigo> {
   return {
     texto: fisico ? textosDaConversa.alertaFisico : textosDaConversa.alertaEmocional,
     anotacoes: [],
-    etapa: etapaDeGuardrail(fisico ? "alerta_fisico" : "alerta_emocional"),
+    etapa: etapaDeGuardrail(ctx, fisico ? "alerta_fisico" : "alerta_emocional"),
   }
+}
+
+function nomeDoFora(ctx: ContextoDoCaminho): string {
+  if (ctx.guardrail) return "injection"
+  return ctx.interpretacao.suspeito ? "suspeito" : "fora"
 }
 
 async function fora(ctx: ContextoDoCaminho): Promise<ResultadoDeCodigo> {
   return {
     texto: textosDaConversa.fora,
     anotacoes: [],
-    etapa: etapaDeGuardrail(ctx.interpretacao.suspeito ? "suspeito" : "fora"),
+    etapa: etapaDeGuardrail(ctx, nomeDoFora(ctx)),
   }
 }
 

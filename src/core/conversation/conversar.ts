@@ -11,6 +11,7 @@ import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { MemoryAgent } from "@/core/agents/memory/memoria"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
+import { conferirEntrada } from "@/core/guardrails/entrada"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { ESTADOS } from "@/core/knowledge/vocab"
 import { lerConversaDoDia } from "@/core/messages/para-o-prompt"
@@ -61,7 +62,7 @@ export type Deps = {
 
 type AoVivo = (e: EventoAoVivo) => void
 type Apoio = { modelo: string; tokens: { entrada: number; saida: number }; duracao_ms: number }
-type Interpretado = { interpretacao?: Interpretacao; apoio?: Apoio }
+type Interpretado = { interpretacao?: Interpretacao; apoio?: Apoio; guardrail?: "codigo" }
 type Resultado = { saida?: SaidaDoAcompanhante; pergunta?: Pergunta; incomodo: boolean }
 type Execucao = {
   contaId: string
@@ -199,7 +200,21 @@ export function createConversation(deps: Deps) {
 
   async function interpretar(x: Execucao): Promise<Interpretado> {
     if (!x.m.texto) return { interpretacao: interpretacaoDosAtalhos(x.m.atalhos) }
+    const barrado = await conferirNaEntrada(x.m.texto)
+    if (barrado) return { interpretacao: barrado, guardrail: "codigo" }
     return interpretarTexto(x, x.m.texto)
+  }
+
+  // Guardrail de entrada: alerta e injection claros são barrados por código, antes do Intérprete.
+  function conferirNaEntrada(texto: string): Promise<Interpretacao | undefined> {
+    return telemetry.span("guardrail.entrada", {}, async (s) => {
+      const r = conferirEntrada(texto)
+      const resultado = r.resultado === "alerta" ? `alerta_${r.tipo}` : r.resultado
+      s.atribuir({ "guardrail.resultado": resultado })
+      if (r.resultado === "alerta") return { ...interpretacaoDosAtalhos([]), alerta: r.tipo }
+      if (r.resultado === "injection") return { ...interpretacaoDosAtalhos([]), suspeito: true }
+      return undefined
+    })
   }
 
   async function semModelo(x: Execucao): Promise<Resultado> {
@@ -299,7 +314,12 @@ export function createConversation(deps: Deps) {
     return { saida, incomodo }
   }
 
-  async function seguirCaminho(x: Execucao, i: Interpretacao, apoio?: Apoio): Promise<Resultado> {
+  async function seguirCaminho(
+    x: Execucao,
+    i: Interpretacao,
+    apoio?: Apoio,
+    guardrail?: "codigo",
+  ): Promise<Resultado> {
     const { contaId, run } = x
     const { caminho, intencoes } = escolherCaminho(i)
     await stores.runs.atualizar(contaId, run.id, { caminho, intencoes })
@@ -313,6 +333,7 @@ export function createConversation(deps: Deps) {
       dia: run.dia,
       perfil: x.perfil,
       interpretacao: i,
+      ...(guardrail ? { guardrail } : {}),
     }
     if (ehCaminhoDeCodigo(caminho)) return viaCodigo(x, caminho, ctx, apoio)
     return viaAcompanhante(x, ctx, intencoes, apoio)
@@ -338,8 +359,10 @@ export function createConversation(deps: Deps) {
   }
 
   async function responderMensagem(x: Execucao, estado: { gravada: boolean }) {
-    const { interpretacao, apoio } = await interpretar(x)
-    const r = interpretacao ? await seguirCaminho(x, interpretacao, apoio) : await semModelo(x)
+    const { interpretacao, apoio, guardrail } = await interpretar(x)
+    const r = interpretacao
+      ? await seguirCaminho(x, interpretacao, apoio, guardrail)
+      : await semModelo(x)
     await stores.messages.gravar(x.contaId, {
       run_id: x.run.id,
       autor: "agente",

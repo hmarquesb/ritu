@@ -106,7 +106,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // Criadas na primeira leitura: criar o container não abre rede.
     get weather() {
-      weather ??= createCachedWeatherSource(createOpenMeteoWeather(), clock)
+      weather ??= createCachedWeatherSource(createOpenMeteoWeather(), clock, container.telemetry)
       return weather
     },
     get cities() {

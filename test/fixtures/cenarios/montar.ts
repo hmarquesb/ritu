@@ -18,6 +18,7 @@ import type { createRunService } from "@/core/runs/run-service"
 import type { Stores } from "@/core/stores"
 import { diaLocal } from "@/core/time/dia-local"
 import type { createTouches } from "@/core/touches"
+import { createCachedWeatherSource } from "@/core/weather/cache"
 import { createContainer } from "@/infra/container"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFakeWeather, type FakeWeather } from "@/infra/fakes/fake-weather"
@@ -375,7 +376,7 @@ export async function montarCenario(
     clock,
     telemetry,
     ledger,
-    weather,
+    weather: createCachedWeatherSource(weather, clock, telemetry),
     router,
     runtime,
     llm,

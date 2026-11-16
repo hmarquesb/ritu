@@ -215,7 +215,11 @@ describe("resumir das tools de clima", () => {
 describe("cache e tools", () => {
   it("as duas tools para a mesma cidade, com a fonte em cache, chamam a porta uma vez", async () => {
     const fake = createFakeWeather()
-    const fonte = createCachedWeatherSource(fake, createFixedClock("2026-01-15T12:00:00Z"))
+    const fonte = createCachedWeatherSource(
+      fake,
+      createFixedClock("2026-01-15T12:00:00Z"),
+      createMemoryTelemetry(),
+    )
     const c = ctx(fonte, RIO)
 
     await climaAgoraTool.execute({}, c)

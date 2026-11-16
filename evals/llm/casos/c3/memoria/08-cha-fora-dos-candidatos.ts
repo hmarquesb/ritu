@@ -46,7 +46,6 @@ export const casoMemoria08: CasoConversa = {
       },
     ],
   },
-  familia: "memoria",
   deve: [terminou()],
   naoPode: [naoSugere("cha-gengibre-canela"), soDosCandidatos()],
 }

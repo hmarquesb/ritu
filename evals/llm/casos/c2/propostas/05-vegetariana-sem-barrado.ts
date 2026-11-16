@@ -36,7 +36,6 @@ export const casoPropostas05: CasoConversa = {
       suspeito: false,
     },
   },
-  proposta: "esperada",
   deve: [terminou(), blocoComRestricao("vegetariana")],
   naoPode: [semAlimentoBarrado("vegetariana")],
 }

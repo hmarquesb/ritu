@@ -12,7 +12,6 @@ export const casoMemoria02: CasoMemoria = {
     { texto: "Nos dias de semana, levanta antes do sol nascer.", diasAtras: 4 },
     { texto: "Começa o dia bem cedo, sem despertador no fim de semana.", diasAtras: 1 },
   ],
-  familia: "memoria",
   deve: [umaFraseSobre("cedo")],
   naoPode: [],
 }

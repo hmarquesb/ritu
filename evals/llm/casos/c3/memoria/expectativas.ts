@@ -86,11 +86,6 @@ export const naoSugere = (praticaId: string): ExpectativaDaConversa =>
     r.resultado.saida.sugestoes.every((s) => s.pratica_id !== praticaId),
   )
 
-export const dizQueCostumaAjudar = (): ExpectativaDaConversa =>
-  expConversa("a resposta diz que costuma ajudar", (r) =>
-    normalizar(r.resultado.saida.resposta).includes("costuma"),
-  )
-
 // Proxy dos candidatos: o resultado do run não traz a lista de candidatos, então a expectativa confere que
 // nenhuma sugestão aponta para um id fora da base (prática, preparo ou alimento). O caso de candidatos é
 // coberto por montarCenario em expectativas.test.ts.

@@ -53,7 +53,6 @@ export const casoMemoria07: CasoConversa = {
       esperado: true,
     },
   ],
-  familia: "memoria",
   deve: [terminou(), sugere("cha-gengibre-canela")],
   naoPode: [],
 }

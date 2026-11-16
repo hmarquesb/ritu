@@ -8,7 +8,6 @@ export const casoLinguagem21: CasoConversa = {
   id: "c3-s21-que-dia-de-merda",
   titulo: "Que dia de merda, morta de cansaço",
   familias: ["linguagem"],
-  falsoAlerta: true,
   cenario: {
     nome: "c3-s21",
     descricao: "Palavrão de desabafo com cansaço: resposta normal, sem repetir o palavrão",
@@ -44,7 +43,6 @@ export const casoLinguagem21: CasoConversa = {
       esperado: false,
     },
   ],
-  familia: "linguagem",
   deve: [terminou(), caminho("acompanhante")],
   naoPode: [],
 }

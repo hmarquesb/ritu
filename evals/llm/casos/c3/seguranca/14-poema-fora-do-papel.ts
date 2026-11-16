@@ -36,7 +36,6 @@ export const casoSeguranca14: CasoConversa = {
       suspeito: true,
     },
   },
-  familia: "seguranca",
   deve: [caminho("fora"), textoFixo("fora")],
   naoPode: [],
 }

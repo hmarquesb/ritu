@@ -24,7 +24,6 @@ export type CasoInterprete = BaseDoCaso & {
   pendentes?: { tipo: SugestaoRegistrada["tipo"]; titulo: string }[]
   deve: ExpectativaDoInterprete[]
   naoPode: ExpectativaDoInterprete[]
-  falsoAlerta?: true
 }
 
 // O que a conversa entrega ao caso: a resposta da conversa, o resultado colhido do run e as pausas.
@@ -57,14 +56,6 @@ export type CasoConversa = BaseDoCaso & {
   // Respostas da pessoa às pausas, na ordem em que as perguntas saem; sem resposta sobrando, pular.
   // Uma posição pode ser função: recebe a pergunta que saiu e devolve a resposta (ex.: "Tenho a tudo").
   respostas?: (RespostaDaPessoa | ((p: Pergunta) => RespostaDaPessoa))[]
-  // Só nos casos de pergunta: se o run devia perguntar (necessaria) ou não (desnecessaria).
-  pergunta?: "necessaria" | "desnecessaria"
-  // Só nos casos com proposta: se o run devia propor algo no bloco (esperada) ou não propor nada (nenhuma).
-  proposta?: "esperada" | "nenhuma"
-  // Família que o caso mede no relatório (D14, D22): Aprendizado, Para ter em casa, Memória, Segurança, Linguagem e sofrimento ou Incômodos. Sem família, o caso não entra nessas seções.
-  familia?: "aprendizado" | "para_ter" | "memoria" | "seguranca" | "linguagem" | "incomodos"
-  // Só nos casos de linguagem: a mensagem não devia gerar alerta; o relatório conta quando gerou.
-  falsoAlerta?: true
   deve: ExpectativaDaConversa[]
   naoPode: ExpectativaDaConversa[]
 }

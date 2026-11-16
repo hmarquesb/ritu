@@ -35,7 +35,6 @@ export const casoPropostas04: CasoConversa = {
       suspeito: false,
     },
   },
-  proposta: "nenhuma",
   deve: [terminou(), nenhumaListaAceita()],
   naoPode: [],
 }

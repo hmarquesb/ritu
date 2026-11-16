@@ -44,7 +44,6 @@ export const casoMemoria06: CasoConversa = {
       esperado: false,
     },
   ],
-  familia: "memoria",
   deve: [terminou()],
   naoPode: [semRefeicao()],
 }

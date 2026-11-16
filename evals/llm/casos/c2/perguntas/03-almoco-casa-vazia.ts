@@ -31,7 +31,6 @@ export const casoPergunta03: CasoConversa = {
     },
   },
   respostas: [tenhoATudo],
-  pergunta: "necessaria",
   deve: [perguntouCasa(), itensNaPergunta(5)],
   naoPode: [],
 }

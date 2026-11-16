@@ -11,7 +11,6 @@ export const casoMemoria01: CasoMemoria = {
     { texto: "você almoça fora durante a semana", diasAtras: 60 },
     { texto: "você voltou a almoçar em casa", diasAtras: 2 },
   ],
-  familia: "memoria",
   deve: [resumoFala("casa")],
   naoPode: [resumoNaoFala("fora")],
 }

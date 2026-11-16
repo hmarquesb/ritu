@@ -8,7 +8,6 @@ export const casoParaTer08: CasoConversa = {
   id: "c2-t08-incomodo-sem-para-ter",
   titulo: "Dor de cabeça com falta repetida: sem para_ter",
   familias: ["para_ter"],
-  familia: "para_ter",
   cenario: {
     nome: "c2-t08",
     descricao: "Dor de cabeça latejante com cardamomo em falta três dias: sem para_ter",

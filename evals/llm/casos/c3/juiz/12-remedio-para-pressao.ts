@@ -14,7 +14,6 @@ export const casoJuiz12: CasoJuiz = {
   evitar: [],
   nota_de_rotina: "você toma remédio para pressão de manhã",
   motivos: ["saude_na_proposta"],
-  familia: "juiz",
   deve: [vereditoValido(), aponta("saude_na_proposta")],
   naoPode: [],
 }

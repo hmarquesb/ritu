@@ -13,9 +13,9 @@ import { textosDaConversa } from "@/core/conversation/textos"
 import { conferirEntrada } from "@/core/guardrails/entrada"
 import type { Estado } from "@/core/knowledge/vocab"
 import { createContainer } from "@/infra/container"
-import type { ResultadoDoRun } from "../../evals/llm/casos/c1/tipos"
-import type { CasoConversa, ExpectativaDaConversa } from "../../evals/llm/casos/c2/tipos"
-import { casosC3 } from "../../evals/llm/casos/c3"
+import type { ResultadoDoRun } from "../../../evals/llm/casos/c1/tipos"
+import type { CasoConversa, ExpectativaDaConversa } from "../../../evals/llm/casos/c2/tipos"
+import { casosC3 } from "../../../evals/llm/casos/c3"
 import {
   aponta,
   aprovado,
@@ -23,10 +23,10 @@ import {
   nenhumApontamento,
   reprovado,
   vereditoValido,
-} from "../../evals/llm/casos/c3/juiz/expectativas"
-import { casoMemoria06 } from "../../evals/llm/casos/c3/memoria/06-almoco-fora-sem-cozinhar"
-import { casoMemoria07 } from "../../evals/llm/casos/c3/memoria/07-cha-com-padrao"
-import { casoMemoria08 } from "../../evals/llm/casos/c3/memoria/08-cha-fora-dos-candidatos"
+} from "../../../evals/llm/casos/c3/juiz/expectativas"
+import { casoMemoria06 } from "../../../evals/llm/casos/c3/memoria/06-almoco-fora-sem-cozinhar"
+import { casoMemoria07 } from "../../../evals/llm/casos/c3/memoria/07-cha-com-padrao"
+import { casoMemoria08 } from "../../../evals/llm/casos/c3/memoria/08-cha-fora-dos-candidatos"
 import {
   ateTeto,
   naoSugere,
@@ -39,16 +39,16 @@ import {
   sugere,
   trazAsMaisRecentes,
   umaFraseSobre,
-} from "../../evals/llm/casos/c3/memoria/expectativas"
+} from "../../../evals/llm/casos/c3/memoria/expectativas"
 import {
   aprovadoPeloJuiz,
   caminho,
   comAvisoDeIncomodo,
   juizNaoApontou,
   textoFixo,
-} from "../../evals/llm/casos/c3/seguranca/expectativas"
-import type { CasoJuiz, NotaDoCaso } from "../../evals/llm/casos/c3/tipos"
-import { montarCenario } from "../../test/fixtures/cenarios/montar"
+} from "../../../evals/llm/casos/c3/seguranca/expectativas"
+import type { CasoJuiz, NotaDoCaso } from "../../../evals/llm/casos/c3/tipos"
+import { montarCenario } from "../../../test/fixtures/cenarios/montar"
 
 type EntradaDaConversa = Parameters<ExpectativaDaConversa["confere"]>[0]
 
@@ -302,7 +302,7 @@ describe("casos novos do c3 (Juiz e segurança)", () => {
 
   it("13 casos de Juiz, todos da família juiz", () => {
     expect(casosJuiz).toHaveLength(13)
-    expect(casosJuiz.every((c) => c.familia === "juiz")).toBe(true)
+    expect(casosJuiz.every((c) => c.familias.includes("juiz"))).toBe(true)
   })
 
   it("9 casos de conversa novos, com as famílias da tabela", () => {
@@ -312,7 +312,7 @@ describe("casos novos do c3 (Juiz e segurança)", () => {
       "15": "seguranca",
       "16": "seguranca",
       "17": "incomodos",
-      "18": "linguagem",
+      "18": "conversa",
       "19": "linguagem",
       "20": "linguagem",
       "21": "linguagem",
@@ -320,12 +320,14 @@ describe("casos novos do c3 (Juiz e segurança)", () => {
     }
     for (const [numero, familia] of Object.entries(familias)) {
       const caso = novosDeConversa.find((c) => c.id.startsWith(`c3-s${numero}-`))
-      expect(caso?.familia).toBe(familia)
+      expect(caso?.familias).toContain(familia)
     }
   })
 
   it("os casos boa são 1, 3, 5 e 10", () => {
-    const boa = casosJuiz.filter((c) => c.boa === true).map((c) => c.id.slice(0, 9))
+    const boa = casosJuiz
+      .filter((c) => c.marcas?.includes("falsa_reprovacao") === true)
+      .map((c) => c.id.slice(0, 9))
     expect(boa).toEqual(["c3-j01-re", "c3-j03-po", "c3-j05-co", "c3-j10-is"])
   })
 

@@ -61,7 +61,6 @@ const casoJuiz: CasoJuiz = {
   familias: ["juiz"],
   id: "t-juiz",
   titulo: "Promessa de cura",
-  familia: "juiz",
   saida: { ...saidaDoJuiz, resposta: "Isso cura a dor." },
   evitar: [],
   motivos: ["promessa"],
@@ -84,7 +83,6 @@ const casoMemoria: CasoMemoria = {
   familias: ["memoria"],
   id: "t-memoria",
   titulo: "Notas repetidas viram uma frase",
-  familia: "memoria",
   notas: [
     { texto: "almoço fora na semana", diasAtras: 10 },
     { texto: "almoço fora de segunda a sexta", diasAtras: 3 },
@@ -229,7 +227,7 @@ describe("runner da Memória com LLM falso", () => {
     const llm = createFakeLlm([{ resumo: "Você almoça fora." }])
 
     const { resultado } = await rodarMemoria(
-      { ...casoMemoria, juiz: true },
+      { ...casoMemoria },
       { client: llm, kb, clock: createFixedClock(AGORA) },
     )
 

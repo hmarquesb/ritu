@@ -14,7 +14,6 @@ export const casoJuiz02: CasoJuiz = {
   }),
   evitar: [],
   motivos: ["promessa"],
-  familia: "juiz",
   deve: [vereditoValido(), aponta("promessa")],
   naoPode: [],
 }

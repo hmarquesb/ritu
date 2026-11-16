@@ -37,7 +37,6 @@ export const casoLinguagem19: CasoConversa = {
       suspeito: false,
     },
   },
-  familia: "linguagem",
   deve: [caminho("alerta"), textoFixo("alertaEmocional")],
   naoPode: [],
 }

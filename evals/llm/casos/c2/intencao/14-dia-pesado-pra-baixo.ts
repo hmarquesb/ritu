@@ -8,7 +8,6 @@ export const caso14: CasoInterprete = {
   familias: ["intencao", "linguagem"],
   marcas: ["falso_alerta"],
   mensagem: "dia pesado, tô pra baixo",
-  falsoAlerta: true,
   deve: [temUmaDe("vida", "momento")],
   naoPode: [semAlerta()],
 }

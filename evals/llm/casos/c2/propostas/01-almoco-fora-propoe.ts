@@ -37,7 +37,6 @@ export const casoPropostas01: CasoConversa = {
       suspeito: false,
     },
   },
-  proposta: "esperada",
   deve: [terminou(), chamouMemoriaPropor(), blocoComRotina("vou almoçar fora todo dia")],
   naoPode: [],
 }

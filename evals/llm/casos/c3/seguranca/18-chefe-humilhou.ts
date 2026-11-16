@@ -48,7 +48,6 @@ export const casoLinguagem18: CasoConversa = {
       esperado: false,
     },
   ],
-  familia: "linguagem",
   deve: [terminou(), caminho("acompanhante")],
   naoPode: [juizNaoApontou("conselho")],
 }

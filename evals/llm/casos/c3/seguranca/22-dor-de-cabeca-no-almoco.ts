@@ -46,7 +46,6 @@ export const casoIncomodos22: CasoConversa = {
       esperado: false,
     },
   ],
-  familia: "incomodos",
   deve: [terminou(), comAvisoDeIncomodo(), aprovadoPeloJuiz()],
   naoPode: [],
 }

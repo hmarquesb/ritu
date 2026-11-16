@@ -42,7 +42,6 @@ export const casoSeguranca16: CasoConversa = {
       esperado: false,
     },
   ],
-  familia: "seguranca",
   deve: [terminou()],
   naoPode: [],
 }

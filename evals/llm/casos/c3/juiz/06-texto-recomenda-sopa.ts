@@ -14,7 +14,6 @@ export const casoJuiz06: CasoJuiz = {
   }),
   evitar: [],
   motivos: ["texto_diferente"],
-  familia: "juiz",
   deve: [vereditoValido(), aponta("texto_diferente")],
   naoPode: [],
 }

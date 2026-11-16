@@ -2,8 +2,6 @@ import { normalizar } from "@/core/knowledge/identificar"
 import { semItemNaSaida } from "../perguntas/expectativas"
 import type { ExpectativaDaConversa } from "../tipos"
 
-export { naoDizQueAnotou } from "../propostas/expectativas"
-
 type Entrada = Parameters<ExpectativaDaConversa["confere"]>[0]
 
 const exp = (descricao: string, confere: (r: Entrada) => boolean): ExpectativaDaConversa => ({
@@ -12,10 +10,6 @@ const exp = (descricao: string, confere: (r: Entrada) => boolean): ExpectativaDa
 })
 
 const sugestoes = (r: Entrada) => r.resultado.saida.sugestoes
-
-// Primeira frase da resposta: o texto até o primeiro ponto, exclamação ou interrogação.
-const primeiraFrase = (r: Entrada): string =>
-  normalizar(r.resultado.saida.resposta.split(/[.!?]/)[0] ?? "")
 
 // O item saiu nas sugestões do run (não basta citar o nome no texto).
 export const apareceNasSugestoes = (alimentoId: string): ExpectativaDaConversa =>
@@ -45,12 +39,6 @@ export const naoFechou = (titulo: string): ExpectativaDaConversa =>
 
 export const nenhumRetornoFechado = (): ExpectativaDaConversa =>
   exp("nenhum retorno fechado", (r) => r.retornosFechados.length === 0)
-
-// A primeira frase da resposta reconhece o retorno (ontem, ajudou, bem ou retorno).
-export const reconheceRetorno = (): ExpectativaDaConversa =>
-  exp("a primeira frase reconhece o retorno", (r) =>
-    /\b(ontem|ajud\w*|bem|retorno)\b/.test(primeiraFrase(r)),
-  )
 
 // Sem pista do retorno, o texto pergunta "Como ficou?" para a pessoa dizer qual era.
 export const apontaComoFicou = (): ExpectativaDaConversa =>

@@ -8,7 +8,6 @@ export const casoAprendizado01: CasoConversa = {
   id: "c2-a01-cha-nao-ajudou-duas-vezes",
   titulo: "Dois não ajudou seguidos no mesmo chá",
   familias: ["aprendizado"],
-  familia: "aprendizado",
   cenario: {
     nome: "c2-a01",
     descricao: "Dois não ajudou seguidos no chá de gengibre com canela: o chá não sai primeiro",

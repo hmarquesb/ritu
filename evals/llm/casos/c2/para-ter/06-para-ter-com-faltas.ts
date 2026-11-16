@@ -8,7 +8,6 @@ export const casoParaTer06: CasoConversa = {
   id: "c2-t06-para-ter-com-faltas",
   titulo: "Cardamomo em falta três dias: vale ter em casa",
   familias: ["para_ter"],
-  familia: "para_ter",
   cenario: {
     nome: "c2-t06",
     descricao:

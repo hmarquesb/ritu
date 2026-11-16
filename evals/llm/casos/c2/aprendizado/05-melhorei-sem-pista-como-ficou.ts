@@ -8,7 +8,6 @@ export const casoAprendizado05: CasoConversa = {
   id: "c2-a05-melhorei-sem-pista-como-ficou",
   titulo: "Melhorei, sem dizer de qual retorno",
   familias: ["aprendizado"],
-  familia: "aprendizado",
   cenario: {
     nome: "c2-a05",
     descricao: "Três pendentes e um melhorei sem pista: nenhum retorno é fechado",

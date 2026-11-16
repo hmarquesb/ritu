@@ -18,8 +18,6 @@ export const casoMemoria05: CasoMemoria = {
       esperado: false,
     },
   ],
-  juiz: true,
-  familia: "memoria",
   deve: [resumoNaoVazio()],
   naoPode: [],
 }

@@ -116,7 +116,6 @@ describe("runner da conversa com proposta", () => {
     id: "t-proposta",
     titulo: "Compras da feira",
     cenario: semRoteiro,
-    proposta: "esperada",
     deve: [
       {
         descricao: "termina no bloco, com ao menos uma proposta",

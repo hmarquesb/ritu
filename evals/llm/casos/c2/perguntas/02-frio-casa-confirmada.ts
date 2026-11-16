@@ -36,7 +36,6 @@ export const casoPergunta02: CasoConversa = {
       suspeito: false,
     },
   },
-  pergunta: "desnecessaria",
   deve: [naoPerguntou(), terminou()],
   naoPode: [],
 }

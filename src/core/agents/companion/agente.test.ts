@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acompanhanteV5 } from "@/core/agents/prompts/acompanhante.v5"
+import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
 import { createModelRouter } from "@/core/llm/router"
 import { createRunService } from "@/core/runs/run-service"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
@@ -24,9 +24,9 @@ describe("criarAcompanhante", () => {
       "resultado.registrar",
     ])
     expect(a.controle.map((c) => c.name)).toEqual(["finalizar", "ask_user"])
-    expect(a.prompt_versao).toBe(acompanhanteV5.versao)
-    expect(a.instrucoes).toBe(acompanhanteV5.instrucoes)
-    expect(a.lembreteDeEntrega).toBe(acompanhanteV5.lembreteDeEntrega)
+    expect(a.prompt_versao).toBe(acompanhanteV6.versao)
+    expect(a.instrucoes).toBe(acompanhanteV6.instrucoes)
+    expect(a.lembreteDeEntrega).toBe(acompanhanteV6.lembreteDeEntrega)
   })
 })
 

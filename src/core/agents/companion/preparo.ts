@@ -23,6 +23,7 @@ import {
 } from "@/core/knowledge/vocab"
 import { lerConversaDoDia } from "@/core/messages/para-o-prompt"
 import { estadoDoItem } from "@/core/pantry/estado"
+import { padraoVale } from "@/core/patterns/vale"
 import type { Preferencia } from "@/core/preferences/ports"
 import { cortarParaOContexto, montarCandidatos } from "@/core/ranking/candidatos"
 import { escolherParaTer, faltasDoRun } from "@/core/ranking/faltas"
@@ -630,8 +631,11 @@ async function completar(c: Contexto, m: Montado): Promise<DadosDoPreparo> {
       restricoes: perfil.restricoes,
       nao_come: perfil.nao_come.map((i) => nomeDoItem(i, kb)),
     },
-    ...(resumo ? { resumo_de_rotina: resumo.texto } : {}),
-    padroes: padroes.slice(0, config.memoria.padroesNoPrompt).map((p) => p.frase),
+    ...(resumo?.texto ? { resumo_de_rotina: resumo.texto } : {}),
+    padroes: padroes
+      .filter((p) => padraoVale(p, c.filtro, kb))
+      .slice(0, config.memoria.padroesNoPrompt)
+      .map((p) => p.frase),
     mensagens_do_dia: mensagensDoPrompt,
     perguntas: m.perguntas,
     nao_come_do_run: [],

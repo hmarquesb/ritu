@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest"
+import { ESTADOS } from "@/core/knowledge/vocab"
+import { chaveDeAjuda, chaveDeJuntos } from "@/core/patterns/textos"
 import type { Candidato } from "@/core/ranking/tipos"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
@@ -561,5 +563,59 @@ describe("preparar: retornos pendentes do run", () => {
     const { retornos_pendentes: _fora, ...antigo } = await m.run({})
     const lido = dadosDoPreparoSchema.parse(antigo)
     expect(lido.retornos_pendentes).toEqual([])
+  })
+})
+
+describe("preparar: padrões confirmados", () => {
+  const CHA = chaveDeAjuda(["com_frio", "agitada"], { tipo: "pratica", id: "cha-gengibre" })
+  const JUNTOS = ESTADOS.flatMap((a, i) => ESTADOS.slice(i + 1).map((b) => chaveDeJuntos(a, b)))
+
+  async function confirmar(
+    stores: ReturnType<typeof montar>["stores"],
+    tipo: "ajuda_em_estado" | "estados_juntos",
+    chave: string,
+    frase: string,
+    status: "candidato" | "confirmado" | "recusado" = "confirmado",
+  ) {
+    const p = await stores.patterns.propor(CONTA, { tipo, chave, frase, ocorrencias: 3 })
+    if (!p || status === "candidato") return
+    await stores.patterns.decidir(CONTA, p.id, status === "recusado" ? "recusado" : "confirmado")
+  }
+
+  it("confirmado de sugestão barrada não vai a padroes", async () => {
+    const { run, stores } = montar()
+    await stores.profiles.acrescentarEvitarSempre(CONTA, [{ tipo: "alimento", valor: "gengibre" }])
+    await confirmar(stores, "ajuda_em_estado", CHA, "Frase do chá de gengibre.")
+    await confirmar(stores, "estados_juntos", JUNTOS[0] ?? "", "Frase de juntos.")
+    const dados = await run({ estados: ["com_frio"] })
+    expect(dados.padroes).toEqual(["Frase de juntos."])
+  })
+
+  it("com 12 confirmados válidos e 1 barrado no começo, vão 10 válidos", async () => {
+    const { run, stores } = montar()
+    await stores.profiles.acrescentarEvitarSempre(CONTA, [{ tipo: "alimento", valor: "gengibre" }])
+    await confirmar(stores, "ajuda_em_estado", CHA, "barrado")
+    for (const chave of JUNTOS.slice(0, 12))
+      await confirmar(stores, "estados_juntos", chave, `v:${chave}`)
+    const dados = await run({ estados: ["com_frio"] })
+    expect(dados.padroes).toHaveLength(10)
+    expect(dados.padroes).not.toContain("barrado")
+    expect(dados.padroes[0]).toBe(`v:${JUNTOS[0]}`)
+  })
+
+  it("candidato e recusado nunca vão a padroes", async () => {
+    const { run, stores } = montar()
+    await confirmar(stores, "estados_juntos", JUNTOS[0] ?? "", "candidato", "candidato")
+    await confirmar(stores, "estados_juntos", JUNTOS[1] ?? "", "recusado", "recusado")
+    const dados = await run({ estados: ["com_frio"] })
+    expect(dados.padroes).toEqual([])
+  })
+
+  it("resumo vazio guardado não põe resumo_de_rotina", async () => {
+    const { run, stores } = montar()
+    await stores.routine.gravarResumo(CONTA, "")
+    const dados = await run({ estados: ["com_frio"] })
+    expect(dados.resumo_de_rotina).toBeUndefined()
+    expect("resumo_de_rotina" in dados).toBe(false)
   })
 })

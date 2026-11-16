@@ -9,6 +9,7 @@ import { llmCotas } from "./llm-cotas"
 import { loop } from "./loop"
 import { memoria } from "./memoria"
 import { momentoDoDia } from "./momento-do-dia"
+import { padroes } from "./padroes"
 import { pausas } from "./pausas"
 import { ranking } from "./ranking"
 import { resposta } from "./resposta"
@@ -24,6 +25,7 @@ export const config = {
   adequacao,
   clima,
   memoria,
+  padroes,
   pausas,
   aprovacao,
   casa,

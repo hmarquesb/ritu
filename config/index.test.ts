@@ -74,4 +74,16 @@ describe("config", () => {
   it("expõe os limites dos toques com os valores da spec", () => {
     expect(config.toques).toEqual({ maxTrocasPorItem: 3, substitutosAvaliados: 8 })
   })
+
+  it("expõe os limites dos padrões com os valores da spec", () => {
+    expect(config.padroes).toEqual({
+      minimoDeOcorrencias: 3,
+      consistencia: 0.75,
+      janelaDias: 60,
+      maxEstadosNaChave: 2,
+      maxCandidatosAbertos: 3,
+      runsPorConta: 400,
+      bloco: { vezesSemResposta: 3 },
+    })
+  })
 })

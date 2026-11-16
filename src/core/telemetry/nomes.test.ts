@@ -6,7 +6,23 @@ describe("nomes da telemetria", () => {
     expect(SPANS).toContain("agente.passo")
     expect(SPANS).toContain("aprovacao.execucao")
     expect(SPANS).toContain("toque")
-    expect(SPANS).toHaveLength(11)
+    expect(SPANS).toHaveLength(13)
+  })
+
+  it("SPANS contém a memória e a detecção de padrões", () => {
+    expect(SPANS).toContain("memoria.resumo")
+    expect(SPANS).toContain("padroes.deteccao")
+  })
+
+  it("METRICAS contém o resumo de rotina e os padrões", () => {
+    expect(METRICAS).toContain("ritu_rotina_resumo_total")
+    expect(METRICAS).toContain("ritu_padroes_total")
+  })
+
+  it("ATRIBUTOS_PERMITIDOS contém os atributos da memória e dos padrões", () => {
+    expect(ATRIBUTOS_PERMITIDOS).toContain("resumo.origem")
+    expect(ATRIBUTOS_PERMITIDOS).toContain("padroes.contas")
+    expect(ATRIBUTOS_PERMITIDOS).toContain("padroes.propostos")
   })
 
   it("toda métrica começa com ritu_", () => {

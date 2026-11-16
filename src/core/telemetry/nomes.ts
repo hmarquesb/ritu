@@ -13,6 +13,8 @@ export const SPANS = [
   "juiz",
   "aprovacao.execucao",
   "toque",
+  "memoria.resumo",
+  "padroes.deteccao",
 ] as const
 
 export type NomeDeSpan = (typeof SPANS)[number]
@@ -38,6 +40,8 @@ export const METRICAS = [
   "ritu_gosto_total",
   "ritu_faltas_total",
   "ritu_para_ter_total",
+  "ritu_rotina_resumo_total",
+  "ritu_padroes_total",
 ] as const
 
 export type NomeDeMetrica = (typeof METRICAS)[number]
@@ -73,6 +77,9 @@ export const ATRIBUTOS_PERMITIDOS = [
   "juiz.tentativa",
   "propostas.total",
   "propostas.aprovadas",
+  "resumo.origem",
+  "padroes.contas",
+  "padroes.propostos",
   // rótulos da tabela de métricas
   "caminho",
   "status",

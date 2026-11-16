@@ -78,6 +78,7 @@ export type TipoDeEtapa =
   | "juiz"
   | "guardrail"
   | "troca_de_modelo"
+  | "memoria"
   | "erro"
 
 export type NovaEtapa = Omit<RunEtapa, "run_id" | "ordem" | "criado_em" | "tipo"> & {

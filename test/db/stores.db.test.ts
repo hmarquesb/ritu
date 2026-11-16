@@ -2,6 +2,7 @@ import { mkdir, readdir, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createDbClient, type DbClient } from "@/infra/db/client"
+import { createPgLimiter } from "@/infra/db/limits"
 import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
@@ -10,6 +11,7 @@ import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { accountsContract } from "../contracts/accounts.contract"
 import { deleteAccountContract } from "../contracts/delete-account.contract"
 import { type ContractEnv, contractStoreOpts, criarDuasContas } from "../contracts/env"
+import { runLimitsContract } from "../contracts/limits.contract"
 import { messagesContract } from "../contracts/messages.contract"
 import { outcomesContract } from "../contracts/outcomes.contract"
 import { pantryContract } from "../contracts/pantry.contract"
@@ -86,6 +88,12 @@ runUsageLedgerContract("Postgres", (clock) => ({
   ledger: createPgUsageLedger(cliente.sql, clock),
   limpar: truncarTudo,
 }))
+
+runLimitsContract(
+  "Postgres",
+  async () => ({ limiter: createPgLimiter(cliente.sql), reset: truncarTudo }),
+  { concorrencia: true },
+)
 
 // Efeitos que nenhuma porta devolve: conferidos com SQL direto.
 describe("efeitos no banco", () => {

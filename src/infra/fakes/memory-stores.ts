@@ -714,7 +714,8 @@ function criarOutcomes(db: Db, clock: Clock): OutcomeStore {
     async responder(contaId, retornoId, resultado, origem) {
       const retorno = retornoDaConta(contaId, retornoId)
       if (!retorno) return undefined
-      if (retorno.status === "aguardando") {
+      const mudou = retorno.status === "aguardando"
+      if (mudou) {
         Object.assign(retorno, {
           status: "respondido",
           resultado,
@@ -722,7 +723,7 @@ function criarOutcomes(db: Db, clock: Clock): OutcomeStore {
           respondido_em: agoraIso(clock),
         })
       }
-      return copia(retorno)
+      return { retorno: copia(retorno), mudou }
     },
     async atualizarSugestao(contaId, retornoId, sugestao) {
       // Valida antes de mexer: uma sugestão inválida não deixa nada alterado.

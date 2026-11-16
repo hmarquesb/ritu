@@ -20,16 +20,14 @@ export async function registrarResultado(
   resultado: Resultado,
   origem: "toque" | "conversa",
 ): Promise<Retorno | undefined> {
-  const { retorno, contou } = await deps.tx.emTransacao(async (s) => {
-    const pendentes = await s.outcomes.pendentes(contaId)
-    const aguardando = pendentes.find((r) => r.id === retornoId)
+  const r = await deps.tx.emTransacao(async (s) => {
     const resposta = await s.outcomes.responder(contaId, retornoId, resultado, origem)
-    if (!aguardando || !resposta) return { retorno: resposta, contou: false }
-    for (const item of itensDoRetorno(aguardando)) {
+    if (!resposta?.mudou) return resposta
+    for (const item of itensDoRetorno(resposta.retorno)) {
       await s.preferences.contarResultado(contaId, item, resultado)
     }
-    return { retorno: resposta, contou: true }
+    return resposta
   })
-  if (contou) deps.telemetry.contador("ritu_retorno_total", { resultado, origem })
-  return retorno
+  if (r?.mudou) deps.telemetry.contador("ritu_retorno_total", { resultado, origem })
+  return r?.retorno
 }

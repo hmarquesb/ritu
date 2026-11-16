@@ -85,7 +85,8 @@ export function outcomesContract(make: () => Promise<ContractEnv> | ContractEnv)
 
       const respondido = await env.stores.outcomes.responder(a, retorno.id, "ajudou", "toque")
 
-      expect(respondido).toMatchObject({
+      expect(respondido?.mudou).toBe(true)
+      expect(respondido?.retorno).toMatchObject({
         status: "respondido",
         resultado: "ajudou",
         origem: "toque",
@@ -103,7 +104,8 @@ export function outcomesContract(make: () => Promise<ContractEnv> | ContractEnv)
 
       const de_novo = await env.stores.outcomes.responder(a, retorno.id, "nao_ajudou", "conversa")
 
-      expect(de_novo).toMatchObject({
+      expect(de_novo?.mudou).toBe(false)
+      expect(de_novo?.retorno).toMatchObject({
         resultado: "ajudou",
         origem: "toque",
         respondido_em: "2026-01-15T12:00:00.000Z",
@@ -219,7 +221,8 @@ export function outcomesContract(make: () => Promise<ContractEnv> | ContractEnv)
       expect((await outcomes.pendentes(a)).map((r) => r.id)).toEqual([recente.id])
       expect(await outcomes.responder(a, velho.id, "ajudou", "toque")).toBeUndefined()
       expect(await outcomes.responder(a, respondido.id, "nao_ajudou", "toque")).toMatchObject({
-        resultado: "ajudou",
+        mudou: false,
+        retorno: { resultado: "ajudou" },
       })
     })
 

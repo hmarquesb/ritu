@@ -97,4 +97,25 @@ describe("registrarResultado", () => {
     expect(p?.nao_fez).toBe(1)
     expect(p?.ultimos_resultados).toEqual([])
   })
+
+  it("conta os alimentos de retorno.sugestao depois de uma troca", async () => {
+    const { stores, deps } = montar()
+    const r = await criar(stores, "c1", pratica)
+    await stores.outcomes.atualizarSugestao("c1", r.id, { ...pratica, alimentos: ["canela"] })
+    await registrarResultado(deps, "c1", r.id, "ajudou", "toque")
+    expect((await pref(stores, "alimento", "canela"))?.ajudou).toBe(1)
+    expect((await pref(stores, "alimento", "gengibre"))?.ajudou ?? 0).toBe(0)
+  })
+
+  it("duas chamadas simultâneas somam uma vez só", async () => {
+    const { stores, telemetry, deps } = montar()
+    const r = await criar(stores, "c1", pratica)
+    await Promise.all([
+      registrarResultado(deps, "c1", r.id, "ajudou", "toque"),
+      registrarResultado(deps, "c1", r.id, "ajudou", "conversa"),
+    ])
+    expect((await pref(stores, "pratica", "abhyanga"))?.ajudou).toBe(1)
+    expect((await pref(stores, "alimento", "gengibre"))?.ajudou).toBe(1)
+    expect(telemetry.metricas).toHaveLength(1)
+  })
 })

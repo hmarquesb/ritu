@@ -35,15 +35,16 @@ export function createPgOutcomes(sql: Conexao, clock: Clock): OutcomeStore {
     async responder(contaId, retornoId, resultado: Resultado, origem) {
       return numaTransacao(sql, async (tx) => {
         // Só o aguardando muda; um já respondido fica como está.
-        await tx`
+        const mudadas = await tx`
           update retornos
           set status = 'respondido', resultado = ${resultado}, origem = ${origem},
             respondido_em = ${clock.now()}
-          where id = ${retornoId} and conta_id = ${contaId} and status = 'aguardando'`
+          where id = ${retornoId} and conta_id = ${contaId} and status = 'aguardando'
+          returning id`
         const [row] = await tx<RetornoRow[]>`
           select id, conta_id, run_id, sugestao, status, resultado, origem, criado_em, respondido_em
           from retornos where id = ${retornoId} and conta_id = ${contaId}`
-        return row ? retornoDe(row) : undefined
+        return row ? { retorno: retornoDe(row), mudou: mudadas.length > 0 } : undefined
       })
     },
 

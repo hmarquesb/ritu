@@ -20,13 +20,13 @@ export interface OutcomeStore {
   criar(contaId: string, runId: string, sugestoes: SugestaoRegistrada[]): Promise<Retorno[]>
   /** Mais recente primeiro. */
   pendentes(contaId: string): Promise<Retorno[]>
-  /** Já respondido: não muda. */
+  /** Só o aguardando muda; mudou diz se este chamado mudou. Retorno inexistente ou de outra conta: undefined. */
   responder(
     contaId: string,
     retornoId: string,
     resultado: Resultado,
     origem: "toque" | "conversa",
-  ): Promise<Retorno | undefined>
+  ): Promise<{ retorno: Retorno; mudou: boolean } | undefined>
   /** Só troca a sugestão de um aguardando; devolve undefined se não mudou (respondido, outra conta ou inexistente). */
   atualizarSugestao(
     contaId: string,

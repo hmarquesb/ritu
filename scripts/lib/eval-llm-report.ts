@@ -11,7 +11,8 @@ export type Explicacao = {
 export type UsoDoPapel = { chamadas: number; tokens_entrada: number; tokens_saida: number }
 
 // Ausente = acompanhante. O Intérprete não tem trajetória nem validação: só entra na seção Intenção.
-export type TipoDoCaso = "acompanhante" | "interprete" | "conversa"
+// A Memória tem resumo, não run: entra nas métricas de resposta e na seção Memória.
+export type TipoDoCaso = "acompanhante" | "interprete" | "conversa" | "memoria"
 
 export type ResultadoDoCaso = {
   id: string
@@ -49,8 +50,10 @@ export type ResultadoDoCaso = {
   propostasRecusadas?: number
   /** Status do run lido depois do bloco: waiting_for_approval quando o runner não decidiu o bloco. */
   statusDoRun?: string
-  /** Família do caso conversa (D14): cada família tem a sua seção. Ausente = fora das seções de família. */
-  familia?: "aprendizado" | "para_ter"
+  /** Família do caso (D14): cada família tem a sua seção. Ausente = fora das seções de família. */
+  familia?: "aprendizado" | "para_ter" | "memoria"
+  /** Caso memoria: se o resumo veio do modelo ou caiu no código (sem modelo, erro ou resumo inválido). */
+  origem?: "modelo" | "codigo"
   uso: Record<string, UsoDoPapel>
   trocas: number
   latenciaMs: number
@@ -464,6 +467,9 @@ export function formatarRelatorio(rodada: Rodada): string {
   }
   if (daFamilia(rodada.casos, "para_ter").length > 0) {
     linhas.push("", ...secaoDeFamilia("Para ter em casa", "para_ter", rodada.casos))
+  }
+  if (daFamilia(rodada.casos, "memoria").length > 0) {
+    linhas.push("", ...secaoDeFamilia("Memória", "memoria", rodada.casos))
   }
   linhas.push("", "## Custo por papel", "", ...tabelaDeCusto(r.uso))
   if (r.casos > 0) linhas.push(...secaoDeCasos(rodada.casos))

@@ -14,10 +14,13 @@ import {
   type CasoInterprete,
   casosC2,
 } from "../../evals/llm/casos/c2"
+import { type CasoC3, type CasoMemoria, casosC3 } from "../../evals/llm/casos/c3"
 import { checkpoints } from "../../evals/llm/checkpoints"
 import type { RespostaDoRun } from "../../src/core/agents/companion/responder"
 import type { SaidaDoAcompanhante } from "../../src/core/agents/companion/saida"
 import { createInterpreter } from "../../src/core/agents/interpreter/interpretar"
+import type { NotaParaResumo } from "../../src/core/agents/memory/entrada"
+import { createMemoryAgent, type ResumoFeito } from "../../src/core/agents/memory/memoria"
 import type { Clock } from "../../src/core/clock"
 import type { RespostaDaConversa } from "../../src/core/conversation/conversar"
 import { RituError } from "../../src/core/errors"
@@ -35,12 +38,17 @@ import { createMemoryLedger } from "../../src/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "../../src/infra/fakes/memory-telemetry"
 import { type DepsDoCenario, montarCenario, rodarCenario } from "../../test/fixtures/cenarios"
 import { MAXIMO_DE_RETOMADAS } from "../../test/fixtures/cenarios/rodar"
-import type { ChecagemDeExpectativa, ResultadoDoCaso, TipoDoCaso } from "./eval-llm-report"
+import type {
+  ChecagemDeExpectativa,
+  ResultadoDoCaso,
+  TipoDoCaso,
+  UsoDoPapel,
+} from "./eval-llm-report"
 
-export type CasoDoEval = CasoC1 | CasoC2
+export type CasoDoEval = CasoC1 | CasoC2 | CasoC3
 export type Pasta = (typeof checkpoints)[keyof typeof checkpoints][number]
 
-const PASTAS: Record<Pasta, CasoDoEval[]> = { c1: casosC1, c2: casosC2 }
+const PASTAS: Record<Pasta, CasoDoEval[]> = { c1: casosC1, c2: casosC2, c3: casosC3 }
 
 const CONTA_FALSA = "conta-eval"
 const RUN_FALSO = "run-eval"
@@ -56,6 +64,7 @@ export const tipoDoCaso = (caso: { tipo?: TipoDoCaso }): TipoDoCaso => caso.tipo
 
 export const ehInterprete = (caso: CasoDoEval): caso is CasoInterprete => caso.tipo === "interprete"
 export const ehConversa = (caso: CasoDoEval): caso is CasoConversa => caso.tipo === "conversa"
+export const ehMemoria = (caso: CasoDoEval): caso is CasoMemoria => caso.tipo === "memoria"
 
 /** Casos do checkpoint, na ordem das pastas. Nome desconhecido dá erro com a lista; com `ids`, só esses casos, na ordem do checkpoint, e id desconhecido também dá erro com a lista dos válidos. */
 export function casosDoCheckpoint(
@@ -103,13 +112,14 @@ export function listarCasos(nome: string, ids?: string[]): LinhaDeCaso[] {
 export const formatarListagem = (linhas: LinhaDeCaso[]): string =>
   linhas.map((l) => `${l.pasta}  ${l.id}  ${l.tipo}  ${l.titulo}`).join("\n")
 
-/** Versão dos prompts do cabeçalho: sempre a do acompanhante; a do Intérprete entra com caso interprete. */
+/** Versão dos prompts do cabeçalho: sempre a do acompanhante; a do Intérprete e a da Memória entram com caso delas. */
 export function versaoDosPrompts(
   casos: CasoDoEval[],
-  versoes: { acompanhante: string; interprete: string },
+  versoes: { acompanhante: string; interprete: string; memoria: string },
 ): string {
   const usadas = [versoes.acompanhante]
   if (casos.some(ehInterprete)) usadas.push(versoes.interprete)
+  if (casos.some(ehMemoria)) usadas.push(versoes.memoria)
   return usadas.join(", ")
 }
 
@@ -117,12 +127,14 @@ export type Rodadores<R> = {
   acompanhante: (caso: CasoC1) => R
   interprete: (caso: CasoInterprete) => R
   conversa: (caso: CasoConversa) => R
+  memoria: (caso: CasoMemoria) => R
 }
 
 /** Caso sem tipo (ou acompanhante) vai ao rodador do acompanhante. */
 export function despachar<R>(caso: CasoDoEval, rodadores: Rodadores<R>): R {
   if (ehInterprete(caso)) return rodadores.interprete(caso)
   if (ehConversa(caso)) return rodadores.conversa(caso)
+  if (ehMemoria(caso)) return rodadores.memoria(caso)
   return rodadores.acompanhante(caso)
 }
 
@@ -320,6 +332,119 @@ export async function rodarInterprete(
     latenciaMs: r.duracao_ms,
     modelos: [r.modelo],
   }
+}
+
+// Juiz do eval para a Memória (caso com juiz: true): o runner monta a chamada do papel apoio; undefined = não avaliada.
+export type JulgamentoDaMemoria = {
+  fiel: boolean
+  modelo: string
+  tokens: { entrada: number; saida: number }
+  trocas: number
+}
+
+export type DepsDaMemoria = {
+  client: LlmClient
+  kb: KnowledgeBase
+  clock: Clock
+  juiz?: (notas: NotaParaResumo[], texto: string) => Promise<JulgamentoDaMemoria | undefined>
+}
+
+/** Checagem do juiz em deve: fiel passa; sem chamada (undefined) fica não avaliada e reprova. */
+export function checagemDoJuiz(fiel: boolean | undefined): ChecagemDeExpectativa {
+  if (fiel === undefined) {
+    return { descricao: "Nada fora das notas (juiz do eval, não avaliada)", ok: false }
+  }
+  return { descricao: "Nada fora das notas (juiz do eval)", ok: fiel }
+}
+
+const DIA_EM_MS = 24 * 60 * 60 * 1000
+
+// As notas do caso com o dia calculado pelo relógio: agora menos os dias atrás (ids nota-1, nota-2, …).
+function notasDoCaso(caso: CasoMemoria, clock: Clock): NotaParaResumo[] {
+  const agora = clock.now().getTime()
+  return caso.notas.map((nota, i) => ({
+    id: `nota-${i + 1}`,
+    texto: nota.texto,
+    criado_em: new Date(agora - nota.diasAtras * DIA_EM_MS).toISOString(),
+  }))
+}
+
+const chamadaDoApoio = (
+  tokens: { entrada: number; saida: number },
+  feita: boolean,
+): UsoDoPapel => ({
+  chamadas: feita ? 1 : 0,
+  tokens_entrada: tokens.entrada,
+  tokens_saida: tokens.saida,
+})
+
+const somarUsoDoPapel = (a: UsoDoPapel, b: UsoDoPapel): UsoDoPapel => ({
+  chamadas: a.chamadas + b.chamadas,
+  tokens_entrada: a.tokens_entrada + b.tokens_entrada,
+  tokens_saida: a.tokens_saida + b.tokens_saida,
+})
+
+function resultadoDaMemoria(
+  caso: CasoMemoria,
+  resumo: ResumoFeito,
+  checagens: { deve: ChecagemDeExpectativa[]; naoPode: ChecagemDeExpectativa[] },
+  julgado: JulgamentoDaMemoria | undefined,
+): ResultadoDoCaso {
+  const doJuiz = julgado
+    ? chamadaDoApoio(julgado.tokens, true)
+    : chamadaDoApoio({ entrada: 0, saida: 0 }, false)
+  const modelos = [resumo.modelo, julgado?.modelo].filter((m): m is string => m !== undefined)
+  return {
+    id: caso.id,
+    titulo: caso.titulo,
+    tipo: "memoria",
+    familia: "memoria",
+    origem: resumo.origem,
+    deve: checagens.deve,
+    naoPode: checagens.naoPode,
+    trajetoriaOk: true,
+    chamadasDesnecessarias: 0,
+    validaNa1a: resumo.origem === "modelo",
+    houveViolacao: false,
+    corrigiuAposViolacao: false,
+    uso: {
+      apoio: somarUsoDoPapel(chamadaDoApoio(resumo.tokens, resumo.modelo !== undefined), doJuiz),
+    },
+    trocas: resumo.trocas + (julgado?.trocas ?? 0),
+    latenciaMs: resumo.duracao_ms,
+    modelos,
+  }
+}
+
+/** Um caso da Memória: o resumo das notas pelo agente, conferido por deve e naoPode, com o juiz quando o caso pede. */
+export async function rodarMemoria(
+  caso: CasoMemoria,
+  deps: DepsDaMemoria,
+): Promise<ResultadoDoCaso> {
+  const telemetry = createMemoryTelemetry()
+  const router = createModelRouter({
+    ledger: createMemoryLedger(deps.clock),
+    clock: deps.clock,
+    telemetry,
+  })
+  const agente = createMemoryAgent({
+    router,
+    client: deps.client,
+    kb: deps.kb,
+    telemetry,
+    clock: deps.clock,
+  })
+  const notas = notasDoCaso(caso, deps.clock)
+  const resumo = await agente.resumir(notas)
+  const alvo = { resumo, notas: caso.notas }
+  const julgado = caso.juiz === true && deps.juiz ? await deps.juiz(notas, resumo.texto) : undefined
+  const doJuiz = caso.juiz === true ? [checagemDoJuiz(julgado?.fiel)] : []
+  return resultadoDaMemoria(
+    caso,
+    resumo,
+    { deve: [...conferir(caso.deve, alvo), ...doJuiz], naoPode: conferir(caso.naoPode, alvo) },
+    julgado,
+  )
 }
 
 export type OpcoesDoAcompanhante = { runtime: AgentRuntime }

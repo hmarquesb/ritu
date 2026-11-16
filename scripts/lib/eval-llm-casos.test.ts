@@ -77,6 +77,7 @@ import {
   semAlimentoBarrado,
 } from "../../evals/llm/casos/c2/propostas/expectativas"
 import type { ExpectativaDaConversa, ExpectativaDoInterprete } from "../../evals/llm/casos/c2/tipos"
+import type { CasoMemoria } from "../../evals/llm/casos/c3"
 import type { SaidaDoAcompanhante, SugestaoEntregue } from "../../src/core/agents/companion/saida"
 import type { Interpretacao } from "../../src/core/agents/interpreter/interpretacao"
 import type { PedidoDePergunta } from "../../src/core/agents/tools/ask-user"
@@ -86,6 +87,7 @@ import type { Caminho, RunEtapa } from "../../src/core/runs/ports"
 import { createContainer } from "../../src/infra/container"
 import { createFakeLlm } from "../../src/infra/fakes/fake-llm"
 import { createFixedClock } from "../../src/infra/fakes/fixed-clock"
+import { createMiniKnowledge } from "../../src/infra/fakes/mini-knowledge"
 import {
   createScriptedRuntime,
   type PassoRoteirizado,
@@ -101,6 +103,7 @@ import {
   arquivoDoRelatorio,
   casosDoCheckpoint,
   cenarioDoRunner,
+  checagemDoJuiz,
   conferir,
   contarEtapas,
   despachar,
@@ -113,6 +116,7 @@ import {
   rodarAcompanhante,
   rodarConversa,
   rodarInterprete,
+  rodarMemoria,
   versaoDosPrompts,
   violacoesDaPrimeiraEntrega,
 } from "./eval-llm-casos"
@@ -171,6 +175,29 @@ const casoConversa: CasoConversa = {
   ],
 }
 
+const casoMemoria: CasoMemoria = {
+  tipo: "memoria",
+  id: "t-memoria",
+  titulo: "Notas repetidas viram uma frase",
+  familia: "memoria",
+  notas: [
+    { texto: "almoço fora na semana", diasAtras: 10 },
+    { texto: "almoço fora de segunda a sexta", diasAtras: 3 },
+  ],
+  deve: [
+    {
+      descricao: "junta as repetidas",
+      confere: ({ resumo }) => resumo.texto.includes("fora"),
+    },
+  ],
+  naoPode: [
+    {
+      descricao: "não inventa diagnóstico",
+      confere: ({ resumo }) => !resumo.texto.includes("diagnóstico"),
+    },
+  ],
+}
+
 describe("listagem por checkpoint", () => {
   it("c1-base lista os 12 casos do c1, sem tipo ausente", () => {
     const linhas = listarCasos("c1-base")
@@ -206,6 +233,12 @@ describe("listagem por checkpoint", () => {
     expect(propostas.every((c) => c.tipo === "conversa" && !!c.cenario.mensagem.texto)).toBe(true)
   })
 
+  it("c3-confiavel lista os 12 do c1 e os 42 do c2; o c3 ainda não tem casos", () => {
+    const linhas = listarCasos("c3-confiavel")
+    expect(linhas).toHaveLength(54)
+    expect(linhas.filter((l) => l.pasta === "c3")).toHaveLength(0)
+  })
+
   it("formata cada caso com pasta, id, tipo e título", () => {
     const texto = formatarListagem(listarCasos("c1-base"))
     expect(texto).toContain("c1")
@@ -226,10 +259,15 @@ describe("despacho por tipo", () => {
     acompanhante: () => "acompanhante",
     interprete: () => "interprete",
     conversa: () => "conversa",
+    memoria: () => "memoria",
   }
 
   it("caso sem tipo vai a acompanhante", () => {
     expect(despachar(casosC1[0] ?? casoInterprete, dispachos)).toBe("acompanhante")
+  })
+
+  it("caso memoria vai ao seu tipo", () => {
+    expect(despachar(casoMemoria, dispachos)).toBe("memoria")
   })
 
   it("caso interprete e caso conversa vão aos seus tipos", () => {
@@ -296,10 +334,18 @@ describe("violações da primeira entrega", () => {
 })
 
 describe("versão dos prompts no cabeçalho", () => {
-  const versoes = { acompanhante: "acompanhante.v2", interprete: "interprete.v1" }
+  const versoes = {
+    acompanhante: "acompanhante.v2",
+    interprete: "interprete.v1",
+    memoria: "memoria.v1",
+  }
 
-  it("só acompanhante quando não há caso interprete", () => {
+  it("só acompanhante quando não há caso interprete nem memoria", () => {
     expect(versaoDosPrompts(casosC1, versoes)).toBe("acompanhante.v2")
+  })
+
+  it("inclui memoria.v1 quando há caso memoria, e não o interprete", () => {
+    expect(versaoDosPrompts([...casosC1, casoMemoria], versoes)).toBe("acompanhante.v2, memoria.v1")
   })
 
   it("inclui interprete.v1 quando há caso interprete", () => {
@@ -1623,5 +1669,125 @@ describe("runner do acompanhante com pausa", () => {
     await expect(
       rodarAcompanhante(caso, { runtime: createScriptedRuntime(roteiro) }),
     ).rejects.toMatchObject({ code: "pausa_acima_do_teto" })
+  })
+})
+
+describe("checagem do juiz da Memória", () => {
+  it("fiel vira ok; não fiel reprova; sem chamada fica não avaliada e reprova", () => {
+    expect(checagemDoJuiz(true)).toEqual({
+      descricao: "Nada fora das notas (juiz do eval)",
+      ok: true,
+    })
+    expect(checagemDoJuiz(false)).toEqual({
+      descricao: "Nada fora das notas (juiz do eval)",
+      ok: false,
+    })
+    expect(checagemDoJuiz(undefined)).toEqual({
+      descricao: "Nada fora das notas (juiz do eval, não avaliada)",
+      ok: false,
+    })
+  })
+})
+
+describe("runner da Memória com LLM falso", () => {
+  const kb = createMiniKnowledge()
+
+  it("roda o resumo pelo agente, confere deve e naoPode e grava o uso do apoio", async () => {
+    const clock = createFixedClock(AGORA)
+    const llm = createFakeLlm([{ resumo: "Você almoça fora durante a semana." }])
+
+    const r = await rodarMemoria(casoMemoria, { client: llm, kb, clock })
+
+    expect(r.tipo).toBe("memoria")
+    expect(r.familia).toBe("memoria")
+    expect(r.origem).toBe("modelo")
+    expect(r.erro).toBeUndefined()
+    expect(r.deve).toEqual([{ descricao: "junta as repetidas", ok: true }])
+    expect(r.naoPode).toEqual([{ descricao: "não inventa diagnóstico", ok: true }])
+    expect(r.validaNa1a).toBe(true)
+    expect(r.uso.apoio).toEqual({ chamadas: 1, tokens_entrada: 10, tokens_saida: 5 })
+    expect(r.modelos).toHaveLength(1)
+  })
+
+  it("as notas entram com o dia calculado pelo relógio: agora menos os dias atrás", async () => {
+    const clock = createFixedClock(AGORA)
+    const llm = createFakeLlm([{ resumo: "Você almoça fora." }])
+
+    await rodarMemoria(casoMemoria, { client: llm, kb, clock })
+
+    const [pedido] = llm.pedidos as { entrada: string }[]
+    expect(pedido?.entrada).toContain("1. (2026-06-05) almoço fora na semana")
+    expect(pedido?.entrada).toContain("2. (2026-06-12) almoço fora de segunda a sexta")
+  })
+
+  it("resposta sem resumo válido cai no código: origem codigo, e a validação não conta como primeira", async () => {
+    const llm = createFakeLlm([{ resumo: "   " }])
+
+    const r = await rodarMemoria(casoMemoria, { client: llm, kb, clock: createFixedClock(AGORA) })
+
+    expect(r.origem).toBe("codigo")
+    expect(r.validaNa1a).toBe(false)
+    expect(r.deve).toEqual([{ descricao: "junta as repetidas", ok: true }])
+  })
+
+  it("fila vazia do fake não derruba o caso: também cai no código", async () => {
+    const r = await rodarMemoria(casoMemoria, {
+      client: createFakeLlm([]),
+      kb,
+      clock: createFixedClock(AGORA),
+    })
+
+    expect(r.origem).toBe("codigo")
+    expect(r.erro).toBeUndefined()
+  })
+
+  it("caso com juiz sem juiz injetado: a checagem sai como não avaliada", async () => {
+    const llm = createFakeLlm([{ resumo: "Você almoça fora." }])
+
+    const r = await rodarMemoria(
+      { ...casoMemoria, juiz: true },
+      { client: llm, kb, clock: createFixedClock(AGORA) },
+    )
+
+    expect(r.deve.at(-1)).toEqual({
+      descricao: "Nada fora das notas (juiz do eval, não avaliada)",
+      ok: false,
+    })
+  })
+
+  it("caso com juiz: a resposta fiel vira a última checagem e soma o uso do apoio", async () => {
+    const llm = createFakeLlm([{ resumo: "Você almoça fora." }])
+    const juiz = async () => ({
+      fiel: true,
+      modelo: "modelo-do-juiz",
+      tokens: { entrada: 7, saida: 2 },
+      trocas: 0,
+    })
+
+    const r = await rodarMemoria(
+      { ...casoMemoria, juiz: true },
+      { client: llm, kb, clock: createFixedClock(AGORA), juiz },
+    )
+
+    expect(r.deve.at(-1)).toEqual({ descricao: "Nada fora das notas (juiz do eval)", ok: true })
+    expect(r.uso.apoio).toEqual({ chamadas: 2, tokens_entrada: 17, tokens_saida: 7 })
+    expect(r.modelos).toContain("modelo-do-juiz")
+  })
+
+  it("juiz que acha fato fora das notas reprova a checagem", async () => {
+    const llm = createFakeLlm([{ resumo: "Você almoça fora." }])
+    const juiz = async () => ({
+      fiel: false,
+      modelo: "modelo-do-juiz",
+      tokens: { entrada: 7, saida: 2 },
+      trocas: 0,
+    })
+
+    const r = await rodarMemoria(
+      { ...casoMemoria, juiz: true },
+      { client: llm, kb, clock: createFixedClock(AGORA), juiz },
+    )
+
+    expect(r.deve.at(-1)?.ok).toBe(false)
   })
 })

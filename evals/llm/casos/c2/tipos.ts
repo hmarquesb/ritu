@@ -62,8 +62,8 @@ export type CasoConversa = {
   pergunta?: "necessaria" | "desnecessaria"
   // Só nos casos com proposta: se o run devia propor algo no bloco (esperada) ou não propor nada (nenhuma).
   proposta?: "esperada" | "nenhuma"
-  // Família que o caso mede no relatório (D14): Aprendizado ou Para ter em casa. Sem família, o caso não entra nessas seções.
-  familia?: "aprendizado" | "para_ter"
+  // Família que o caso mede no relatório (D14): Aprendizado, Para ter em casa ou Memória. Sem família, o caso não entra nessas seções.
+  familia?: "aprendizado" | "para_ter" | "memoria"
   deve: ExpectativaDaConversa[]
   naoPode: ExpectativaDaConversa[]
 }

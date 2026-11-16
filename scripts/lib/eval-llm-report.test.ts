@@ -553,3 +553,46 @@ describe("seções Aprendizado e Para ter em casa", () => {
     expect(texto).not.toContain("## Para ter em casa")
   })
 })
+
+describe("seção Memória", () => {
+  const memoria = (id: string, parcial: Partial<ResultadoDoCaso>) =>
+    caso({ id, tipo: "memoria", familia: "memoria", ...parcial })
+
+  it("mostra acerto por caso e o total: deve falho e naoPode falho não acertam", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c3-confiavel",
+      promptVersao: "acompanhante.v6, memoria.v1",
+      totalDeCasos: 3,
+      casos: [
+        memoria("m1", {}),
+        memoria("m2", { deve: [{ descricao: "x", ok: false }] }),
+        memoria("m3", { naoPode: [{ descricao: "y", ok: false }] }),
+      ],
+    })
+    expect(texto).toContain("## Memória")
+    expect(texto).toContain("| m1 | sim |")
+    expect(texto).toContain("| m2 | não |")
+    expect(texto).toContain("| m3 | não |")
+    expect(texto).toContain("- Acerto: 1/3 (33%)")
+  })
+
+  it("aparece depois de Para ter em casa", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c3-confiavel",
+      promptVersao: "acompanhante.v6, memoria.v1",
+      totalDeCasos: 2,
+      casos: [caso({ id: "p1", tipo: "conversa", familia: "para_ter" }), memoria("m1", {})],
+    })
+    expect(texto.indexOf("## Memória")).toBeGreaterThan(texto.indexOf("## Para ter em casa"))
+  })
+
+  it("sem casos de memória, a seção não aparece", () => {
+    const texto = formatarRelatorio({
+      checkpoint: "c2-conversa",
+      promptVersao: "acompanhante.v6",
+      totalDeCasos: 1,
+      casos: [caso({ id: "a" })],
+    })
+    expect(texto).not.toContain("## Memória")
+  })
+})

@@ -33,10 +33,21 @@ Um agente **decide o caminho**, **age**, **observa o resultado** e **corrige**. 
 |---|---|---|---|---|
 | **Intérprete** | Texto da mensagem + últimas mensagens do dia + lista numerada das sugestões que esperam retorno | — | `{intencoes[], estados[], incomodo, alerta, itens_casa[], retorno, fato_de_rotina, evitar[], nao_come[], gosta[], restricoes[], suspeito}` | `apoio` |
 | **Acompanhante** (o agente principal) | Saída do Intérprete + contexto montado no preparo | Catálogo de §4 | `{resposta, geral, explicacao, sugestoes[], evitar[], incertos[], para_ter, propostas[]}` | `decisao` |
-| **Juiz** (guardrail de saída) | Saída do Acompanhante + linhas da base citadas | — | `{aprovado, violacoes[]}` | `apoio` |
+| **Juiz** (guardrail de saída) | A resposta, as sugestões, os citados, o `para_ter` e as linhas da base que eles citam; a lista do que nunca pode aparecer; a nota de rotina proposta, se houver. Nunca a mensagem da pessoa | — | `{apontamentos[]}`, cada um com `motivo` e `trecho` (até 120 caracteres) | `apoio` |
 | **Memória** | Notas de rotina ativas (texto e data) | — | `{resumo}`, o resumo de rotina compactado (`memoria.v1`) | `apoio` |
 
 O Acompanhante usa o prompt `acompanhante.v6`: além do contexto da v5, recebe `resumo_de_rotina` e `padroes` (os confirmados, até 10) e dá preferência ao padrão que fala do momento de agora quando o item está entre os candidatos. Resumo e padrões vão ao contexto neutralizados, como dados, e padrão não autoriza nada fora dos candidatos. O Memória só compacta: não escolhe o que anotar nem grava (regra 4).
+
+O Juiz usa o prompt `juiz.v1`, sem tools, pela mesma chamada de apoio do Intérprete. **Ele só aponta; quem decide é o código**, por `config/juiz.ts`:
+
+| Motivo | O que o código faz |
+|---|---|
+| `promessa`, `dosagem`, `conselho`, `evitar_sempre`, `texto_diferente`, `motivo_sem_base`, `para_ter`, `vulgar`, `tom` | Graves: reprovam a resposta |
+| `jargao` | Só registra: aviso na etapa e na métrica |
+| `saude_na_proposta` | Tira a proposta de nota de rotina do bloco, sem reprovar nem nova tentativa; sem nota de rotina na entrada, o apontamento é descartado |
+| Qualquer outro | Descartado |
+
+O Juiz roda no Acompanhante (`juiz-do-run.ts`), depois do trecho do agente e antes do fim do run, quando a saída é do agente: em `responder` e em `continuar`, depois de uma pausa. Caminhos sem agente, `sem_modelo` e a resposta segura são textos fixos de código e não passam por ele. São no máximo 2 leituras por run.
 
 ### Intenções e caminhos
 
@@ -165,7 +176,7 @@ Cada violação tem um código, o lugar e uma mensagem. Os códigos são `fora_d
 - `novidade`: sugestão marcada como novidade que o preparo não marcou;
 - `para_ter`: campo sem candidato no preparo, diferente do candidato, com `vezes` diferente da contagem ou com outra linha da base;
 - `texto_sem_estrutura`: alimento ou prática da base citado no texto da resposta e ausente da parte estruturada (sugestões, trocas, `para_ter` ou `citados`);
-- `dosagem`: unidade de dose (mg, cápsula, comprimido, gotas), suplemento, fitoterápico ou extrato no texto ou num motivo; medida de cozinha não conta;
+- `dosagem`: unidade de dose (mg, mcg, UI, cápsula, comprimido, sachê, ampola, gotas), suplemento, fitoterápico, extrato ou tintura, na resposta, num motivo ou num incerto. A conferência é sobre o texto normalizado (minúsculas, sem acento nem pontuação); medida de cozinha não conta;
 - `tamanho`: resposta vazia ou acima de 900 caracteres; mais de 3 sugestões, de 3 `incertos` ou de 5 `citados`; motivo acima de 200 caracteres; incerto acima de 120;
 - `vazia`: run de `momento` com candidatos no contexto e resposta sem sugestão nem `incertos`.
 
@@ -307,13 +318,13 @@ Pausa: o run é salvo como `waiting_for_input` ou `waiting_for_approval`, com o 
 
 ## 8. Guardrails
 
-**Entrada (código, antes de qualquer LLM):** teto de tamanho; padrões de injection; padrões de sinal de alerta, físico e emocional; texto da pessoa sempre delimitado e marcado como dado; limites de uso. Os padrões pegam só as frases claras e encerram o run com o texto fixo, sem chamar modelo; injection clara leva à resposta padrão mesmo com um pedido legítimo junto. O que passa dos padrões é julgado pelo Intérprete: ele marca `alerta` (físico ou emocional) e `suspeito` (tentativa de mudar as regras), e o código leva `alerta` ao encaminhamento fixo e `suspeito` à resposta padrão de `fora`, sem chamar o Acompanhante. Alerta ganha de suspeito.
+**Entrada (código, antes de qualquer LLM):** teto de tamanho; padrões de injection; padrões de sinal de alerta, físico e emocional; texto da pessoa sempre delimitado e marcado como dado; limites de uso. Os padrões ficam em `src/core/guardrails/` e pegam só as frases claras. O texto é normalizado (minúsculas, sem acento, espaços juntos; a pontuação fica) e testado nesta ordem: alerta emocional, alerta físico, injection; o primeiro que casa decide. As tags que imitam a delimitação (`<mensagem_da_pessoa>`, `<sistema>`, `<contexto>`) são testadas no texto original. O run termina com o texto fixo, sem chamar o Intérprete nem o Acompanhante; injection clara leva à resposta padrão mesmo com um pedido legítimo junto. Mensagem só com atalhos não passa por esse guardrail. O que passa dos padrões é julgado pelo Intérprete: ele marca `alerta` (físico ou emocional) e `suspeito` (tentativa de mudar as regras), e o código leva `alerta` ao encaminhamento fixo e `suspeito` à resposta padrão de `fora`, sem chamar o Acompanhante. Alerta ganha de injection e emocional ganha de físico, nos padrões e no Intérprete.
 
 **Memória também é dado:** tudo o que veio do texto da pessoa e volta ao prompt depois (resumo de rotina, mensagens do dia, "evitar sempre" em texto livre, frases de padrões) entra delimitado, com `<` e `>` neutralizados, e o prompt diz que é dado, como a mensagem. Uma nota aprovada com "ignore suas regras" não vira instrução.
 
-**Entre os passos (código):** resultado de tool é dado, nunca instrução; argumentos de tool validados em zod; tool fora do catálogo do agente é recusada e vira etapa de erro.
+**Entre os passos (código):** resultado de tool é dado, nunca instrução: vai ao modelo com `<` e `>` neutralizados em toda string, e o estado do run guarda o original; argumentos de tool validados em zod; tool fora do catálogo do agente é recusada e vira etapa de erro.
 
-**Saída (Juiz, fail-closed, uma nova tentativa):** fica com o que precisa de leitura: promessa de saúde ou de tratamento ("trata", "cura", "resolve a dor"), dosagem, suplemento e fitoterápico; conselho fora do papel; "evitar sempre" citado com outro nome; motivo que não faz sentido diante da linha citada; texto que diz algo diferente da parte estruturada; tom que cobra ou julga a pessoa; indicação de "vale ter em casa" apresentada como solução para o momento, ou com marca, loja ou preço; palavrão, linguagem vulgar ou repetição de ofensa da pessoa. Qualquer um desses reprova: o Acompanhante recebe a lista e tenta de novo, uma vez, no papel `reforco`; reprovada de novo, sai a resposta segura. **Jargão sem explicação não reprova:** fica registrado na etapa e na métrica. O Juiz também lê a proposta de nota de rotina: com assunto de saúde, a linha sai do bloco e a resposta segue. Ele não recebe a mensagem da pessoa. Tudo o que dá para conferir por regra já foi barrado pelo validador.
+**Saída (Juiz, fail-closed, uma nova tentativa):** fica com o que precisa de leitura: promessa de saúde ou de tratamento ("trata", "cura", "resolve a dor"), dosagem, suplemento e fitoterápico; conselho fora do papel; "evitar sempre" citado com outro nome; motivo que não faz sentido diante da linha citada; texto que diz algo diferente da parte estruturada; tom que cobra ou julga a pessoa; indicação de "vale ter em casa" apresentada como solução para o momento, ou com marca, loja ou preço; palavrão, linguagem vulgar ou repetição de ofensa da pessoa. Qualquer um desses reprova: o Acompanhante recebe os motivos e os trechos numa mensagem de sistema e tenta de novo, uma vez, no mesmo run e com o mesmo estado, no papel `reforco` e **sem `ask_user`** (uma pausa deixaria o run esperando com uma resposta já reprovada). A nova entrega passa de novo pelo validador e pelo Juiz, com até 2 chamadas de modelo a mais além do teto do run; o tempo continua acumulado. Reprovada de novo, ou nova tentativa que não entrega (limite, sem modelo, erro, pausa), sai a resposta segura, montada por código, e nada da entrega reprovada vira mensagem, retorno, falta ou proposta. **Fail-closed:** Juiz sem modelo ou com erro também leva à resposta segura. **Jargão sem explicação não reprova:** fica registrado na etapa e na métrica. O Juiz também lê a proposta de nota de rotina (`saude_na_proposta`): com assunto de saúde, a linha sai do bloco e a resposta segue, sem nova tentativa. Ele não recebe a mensagem da pessoa, e tudo o que entra nele passa por `<` e `>` neutralizados. Tudo o que dá para conferir por regra já foi barrado pelo validador.
 
 **Incômodo e sinal de alerta:** incômodo leve recebe recomendação de conforto, com linguagem de conforto e o aviso reforçado, que é anexado por código (`BUSINESS.md` §12). Sinal de alerta é barrado antes do agente: só encaminhamento. O incômodo não vai para nenhum nível de memória nem para propostas.
 
@@ -382,9 +393,11 @@ Cada ambiente (desenvolvimento e produção) tem a sua chave e o seu registro de
 |---|---|---|---|
 | Momento com texto | 2 (Intérprete, Juiz) | 2 a 4 | 4 a 6 |
 | Pergunta ou relato | 2 | 1 a 2 | 3 a 4 |
+| Frase de alerta ou injection pega pelo código | 0 | 0 | 0 |
 | Só casa ou só retorno | 1 | 0 | 1 |
 | Toques na tela | 0 | 0 | 0 |
 
+- Resposta reprovada pelo Juiz: mais 1 leitura do Juiz (`apoio`) e até 2 chamadas no papel `reforco`; vale como no máximo 2 leituras do Juiz por run.
 - Cache do clima e da previsão: 1 h por cidade.
 - Testes e evals determinísticos não chamam modelo. Evals com LLM só nos checkpoints (`QA.md`).
 

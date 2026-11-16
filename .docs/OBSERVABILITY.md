@@ -45,14 +45,16 @@ run                         run.id, run.intencoes, run.caminho, conta.tipo, prom
 │  └─ tool.chamada          tool.nome, tool.status, cache.hit
 ├─ validacao                validacao.ok, validacao.violacoes, validacao.tentativa
 ├─ pausa (evento)           pausa.tipo = pergunta | aprovacao (a pergunta de código também emite)
-├─ juiz                     juiz.aprovado, juiz.tentativa
+├─ juiz (1 ou 2)            juiz.aprovado, juiz.tentativa
 │  └─ llm.chamada
 └─ aprovacao.execucao       propostas.total, propostas.aprovadas
 ```
 
 Um run pausado continua **no mesmo trace** quando retoma: o `trace_id` fica salvo no run, e o trecho novo entra como filho do span raiz.
 
-`run` leva `prompt.versao` quando o caminho tem agente, e `run.intencoes` é a lista de ids de intenção do caminho escolhido (ADR 0029). Etapa `interprete`: `resumo` só com ids de intenção (ou `alerta`), nunca o texto. Etapa `pergunta`: `resumo` é `casa: N itens` (ou `casa: 1 item`), `come` ou `variante`, nunca os alimentos nem a resposta; o `nome` é `ask_user` na pergunta do agente e `variante` na do código. Caminhos `alerta` e `fora` gravam uma etapa `guardrail` com status `recusado` e nome `alerta_fisico`, `alerta_emocional`, `suspeito` ou `fora`, sem modelo nem tokens. `tool.chamada` das tools de clima leva `cache.hit`.
+`run` leva `prompt.versao` quando o caminho tem agente, e `run.intencoes` é a lista de ids de intenção do caminho escolhido (ADR 0029). Etapa `interprete`: `resumo` só com ids de intenção (ou `alerta`), nunca o texto. Etapa `pergunta`: `resumo` é `casa: N itens` (ou `casa: 1 item`), `come` ou `variante`, nunca os alimentos nem a resposta; o `nome` é `ask_user` na pergunta do agente e `variante` na do código. Caminhos `alerta` e `fora` gravam uma etapa `guardrail` com status `recusado` e nome `alerta_fisico`, `alerta_emocional`, `injection`, `suspeito` ou `fora`, sem modelo nem tokens. O `resumo` diz quem barrou: `codigo` (os padrões de entrada, antes do Intérprete; o nome `injection` só existe aqui) ou `interprete`. O span `guardrail.entrada` leva `guardrail.resultado` (`ok`, `alerta_fisico`, `alerta_emocional` ou `injection`).
+
+Etapa `juiz` (uma por leitura): `resumo` é `aprovado`, `reprovado: <motivos>` ou `indisponivel`, com `; registros: <motivos>` quando houve aviso, só com os códigos de motivo, nunca o trecho apontado. O status é `ok` (aprovado), `recusado` (reprovado) ou `falhou` (Juiz sem modelo ou com erro; sem modelo nem tokens). Nova tentativa que não entrega grava a etapa `erro` de nome `nova_tentativa:<fim>` (`limite`, `sem_modelo`, `erro`, `pausa`, `sem_estado`), com status `falhou` e sem resumo, e a resposta segura sai. O run guarda `juiz_tentativas` e `juiz_aprovado` (`null` com o Juiz indisponível); `modelos.reforco` lista os modelos da nova tentativa, e `modelos.apoio` junta os do Intérprete e do Juiz. `tool.chamada` das tools de clima leva `cache.hit`.
 
 Aprovação (`AI.md` §5): cada linha do bloco grava uma etapa `proposta`, com `nome` igual à tool (`casa.propor`, `memoria.propor`, `lista.propor`) e `resumo` só de tipo e contagem (`casa: 2 itens`, `evitar_sempre: 1 item`, `rotina`, `lista`, `padrao`), nunca o texto da linha, o alimento nem a nota. A decisão grava uma etapa `aprovacao` com `resumo` `N de M` (linhas gravadas de linhas pendentes). Linha que o executor recusa por conteúdo que a base não conhece grava a etapa `erro` `proposta_invalida`, com status `falhou` e sem resumo. Aprovada uma nota de rotina, o resumo refeito grava a etapa `memoria` de nome `resumo_de_rotina`, com `resumo` igual à origem (`vazio`, `direto`, `modelo` ou `codigo`), mais modelo e tokens quando houve chamada; a etapa fica no run mesmo quando o resumo não mudou. Se o resumo falha, a aprovação segue e o run grava a etapa `erro` `resumo_de_rotina`, com status `falhou` e sem resumo. A gravação da entrega (`AI.md` §6) que falha grava a etapa `erro` `registro_da_entrega`, com status `falhou` e sem resumo; o run segue e a resposta sai. A pausa para aprovação emite o evento `pausa` com `pausa.tipo = aprovacao` e soma `ritu_pausas_total{tipo: "aprovacao"}`. As métricas da decisão (`ritu_propostas_total`, `ritu_para_ter_total`, `ritu_gosto_total`) só somam depois que a transação termina, para uma decisão desfeita não contar.
 
@@ -77,10 +79,9 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_tool_chamadas_total` | contador | `tool`, `status` |
 | `ritu_tool_duracao_ms` | histograma | `tool` |
 | `ritu_validacao_violacoes_total` | contador | `violacao` |
-| `ritu_guardrail_total` | contador | `resultado`, `origem` (codigo, interprete) |
-| `ritu_juiz_total` | contador | `resultado` (aprovado, reprovado, sem_juiz) |
-| `ritu_juiz_reprovacoes_total` | contador | `motivo` |
-| `ritu_juiz_avisos_total` | contador | `motivo` |
+| `ritu_guardrail_total` | contador | `resultado` (`alerta_fisico`, `alerta_emocional`, `injection`, `suspeito`), `origem` (`codigo`, `interprete`): uma vez por mensagem barrada antes do Acompanhante |
+| `ritu_juiz_reprovacoes_total` | contador | `motivo`: um por motivo grave de cada leitura reprovada |
+| `ritu_juiz_avisos_total` | contador | `motivo` (`jargao`, `saude_na_proposta`): apontamentos que só registram |
 | `ritu_pausas_total` | contador | `tipo` |
 | `ritu_propostas_total` | contador | `tool`, `decisao` |
 | `ritu_rotina_resumo_total` | contador | `origem` (vazio, direto, modelo, codigo); soma quando o resumo gravado muda |

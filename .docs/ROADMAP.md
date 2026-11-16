@@ -4,7 +4,7 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 em construção: specs 008 a 012 implementadas (com a correção C13 da 002); 013 a 015 aprovadas; 016 a 020 aprovadas (entrega 3 toda especificada); 021 a 024 aprovadas (entrega 4 toda especificada).
+Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 em construção: specs 008 a 013 implementadas (com a correção C13 da 002); 014 e 015 aprovadas; 016 a 020 aprovadas (entrega 3 toda especificada), com a 016 implementada na trilha adiantada e juntada na `main` antes do portão 2; 021 a 024 aprovadas (entrega 4 toda especificada).
 
 **Próximos passos, na ordem:**
 1. `/construir-entrega 2`: continuar pela 013.

@@ -109,6 +109,17 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - `restricao-no-run`: restrição, "não como" e nome livre ditos no run filtram no dia, somem no dia seguinte e vão ao perfil quando aprovados.
 - `privacidade`: texto da pessoa, nome de alimento e texto das linhas não vão para span, métrica, log nem resumo de etapa.
 
+**Guardrails e Juiz** (`evals/det/guardrails/`: `alerta-por-codigo`, `falso-alerta`, `injection`, `dado-nao-instrucao`, `dosagem`, `juiz-aprovado`, `juiz-nova-tentativa`, `juiz-fail-closed`, `juiz-e-entrega`, `nota-com-saude`, `privacidade`)
+- `alerta-por-codigo`, `falso-alerta` e `injection`: as frases claras de sofrimento e de alerta físico encerram o run por código, sem Intérprete nem Acompanhante, e as mensagens somem no dia seguinte; "morrendo de fome" e tristeza comum seguem o caminho normal; injection com pedido legítimo junto vai para `fora`; a tag vale no texto original; alerta ganha de injection.
+- `dado-nao-instrucao`: instrução embutida em nota, mensagem anterior, "evitar sempre" e resultado de tool chega a cada prompt delimitada e com `<` e `>` neutralizados.
+- `dosagem`: a 1ª entrega com dose, suplemento ou fitoterápico é recusada pelo validador e a 2ª passa.
+- `juiz-aprovado`: quem decide é o código (um grave reprova, `jargao` só registra, motivo repetido soma uma vez, motivo desconhecido é descartado).
+- `juiz-nova-tentativa`: reprovação, nova tentativa no papel `reforco` sem `ask_user`, aprovação; duas reprovações e limite de chamadas viram resposta segura.
+- `juiz-fail-closed`: Juiz sem modelo ou com erro dá a resposta segura e a etapa `juiz` falha.
+- `juiz-e-entrega`: retorno, falta e proposta só existem para a saída aprovada; depois de pausa o Juiz roda igual; caminhos sem agente e `sem_modelo` não chamam o Juiz.
+- `nota-com-saude`: a linha de rotina com assunto de saúde sai do bloco, as outras ficam, e sem nota no run o apontamento é ignorado.
+- `privacidade`: os sete cenários de guardrail e Juiz não vazam texto da pessoa, trecho apontado nem alimento em span, métrica, log ou resumo de etapa.
+
 **Rotina e padrões** (`evals/det/rotina-e-padroes/`: `ajuda-em-estado`, `estados-juntos`, `job`, `padrao-no-bloco`, `padrao-decisao`, `padrao-e-filtro`, `resumo`, `resumo-por-codigo`, `aprovacao-com-rotina`, `teto-de-notas`, `notas-pela-pessoa`, `nota-como-dado`, `privacidade`)
 - `ajuda-em-estado` e `estados-juntos`: o mínimo de 3 ocorrências e os 75%, nas bordas, a chave, a frase e o que a detecção ignora (run com incômodo, retorno sem item).
 - `job`: a detecção diária só propõe o que ainda não está guardado, respeita o teto de candidatos abertos, não chama modelo e segue quando uma conta falha.
@@ -150,7 +161,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
 
-62 casos (12 no `c1`, 42 no `c2`, 8 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
+84 casos (12 no `c1`, 42 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
 
 | Família | O que mede | Métrica |
 |---|---|---|
@@ -181,7 +192,7 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 |---|---|---|
 | `c1-base` | Fim da entrega 1 | Conteúdo, fidelidade, explicação, trajetória, autocorreção, custo |
 | `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 42 do `c2` (20 de intérprete e 22 de conversa: 8 de perguntas, 6 de propostas, 5 de aprendizado e 3 de para ter em casa), 54 no total. Mede Intenção (acerto e falsos alertas), Perguntas (necessárias feitas, desnecessárias evitadas e recusas de `ask_user` por run), Propostas (acerto da proposta e média de recusas do código por run), Aprendizado e Para ter em casa (acerto, por caso e no total), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1`. Nos casos de pergunta, o runner responde às pausas (até 3 por run) |
-| `c3-confiavel` | Fim da entrega 2 | Roda as pastas `c1`, `c2` e `c3` (62 casos hoje: os 54 do `c2-conversa` e os 8 de Memória do `c3`). Mede também a família Memória (resumo e resposta com padrão confirmado), além de todas as anteriores |
+| `c3-confiavel` | Fim da entrega 2 | Roda as pastas `c1`, `c2` e `c3` (84 casos hoje, 12 + 42 + 30: os 54 do `c2-conversa` e os 30 do `c3`, que são 8 de Memória, 13 de Juiz e 9 de Segurança, Linguagem e sofrimento e Incômodos). Mede também as famílias Memória (resumo e resposta com padrão confirmado), Juiz (acerto por motivo e falsas reprovações), Segurança (taxa de bloqueio), Linguagem e sofrimento (acerto e falsos alertas) e Incômodos (acerto e promessas bloqueadas), além de todas as anteriores |
 | `c4-site` | Fim da entrega 3 | Todas, pelas rotas reais do site |
 | `c5-publico` | Fim da entrega 4 | Todas, com os prompts e a configuração de produção |
 

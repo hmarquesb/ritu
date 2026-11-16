@@ -2,6 +2,7 @@
 
 > Sem `git push` até a dona criar o repositório remoto (dona, 2026-11-15): só commits locais.
 > A dona edita em paralelo `.docs/ROADMAP.md`, `.specs/README.md`, `AGENTS.md`, `.specs/016..019`, `design/` e arquivos de skill/agentes: não reverter nem commitar as edições dela; nos fechamentos, commitar só os trechos do orquestrador (`git add -p` ou conferir o diff).
+> **Fluxo em ondas desde 2026-11-16** (dona; ADR 0038, `RULES.md` §3, skill §2): as ondas que faltam da 013 estão na seção "Ondas" do plano; da 014 em diante o plano já nasce com `depende de` e `## Ondas`. Edições da dona nesta mudança, para **não reverter** na retomada: `.adrs/0038-*.md`, `.adrs/README.md`, `.docs/RULES.md`, `.docs/QA.md`, `.docs/ROADMAP.md`, `AGENTS.md`, `.agents/skills/construir-entrega/SKILL.md`, `.claude/agents/*.md`. Não há resto de tarefa: T1 a T9 da 013 têm commit.
 > `npm run lint` pelo rtk dá falso erro de JSON: usar `rtk bypass npm run lint`.
 > `test:db` pendente: sem docker neste ambiente; `mudarStatusSe` no Postgres (009 T3) só conferido por leitura. Rodar onde houver Postgres antes do portão.
 > Para o relatório (dona decide): "Não tenho" de alimento nunca registrado em Minha casa vira só falta `nao_tenho` (`marcarAcabou` não faz upsert, como a spec 009 manda); não aparece como `acabou` em Minha casa.
@@ -28,6 +29,19 @@
 > Para o relatório, dona decide (012 D18): `agitada` evita a guna `movel` do chá de gengibre com canela; um padrão "com frio e agitada → chá" pode ser confirmado pelo histórico, mas com `agitada` o chá nunca é candidato.
 > Para o relatório, dona decide (012 D19): a casa não tira prática dos candidatos (chá cuja especiaria acabou só perde nota).
 > `test:db` e `npm run padroes` da 012 não rodaram (sem docker): somam à pendência de `test:db`.
+
+> Lacuna (013 T1, verificador): o fake `createMemoryTelemetry` valida só os atributos, não o nome de métrica; os planos dizem que ele "falha com nome fora da lista". Quem trava os nomes é o teste de `METRICAS`.
+> Flake (013 T9, verificador): `eval:det` teve 6 falhas em 6 arquivos numa rodada sob carga, sem reprodução nas 3 seguintes (873/873).
+> Para o relatório (013 D7): com modelo real, o tempo acumulado do run pode fazer a nova tentativa do Juiz cair em `limite:tempo` (resposta segura); olhar na rodada do `c3-confiavel`.
+> Para o relatório (013 D14): o cenário `alerta-emocional` mudou de frase ("ando sem vontade de nada, pra que continuar?"), porque a antiga passou a ser barrada por código.
+> Para o relatório (013 D5): a nova tentativa do Juiz roda sem `ask_user`.
+> Para o relatório (013 D17): `ritu_juiz_total` não foi criado (a spec não pedia).
+> Para o relatório, dona decide (013): a regra 2 diz "toda resposta passa pelo Juiz"; os textos montados por código (caminhos sem agente, `sem_modelo`, resposta segura) ficam fora, como a spec manda.
+> Para o relatório (013 T18, verificador): a expressão de promessa do `c3` pega "trata" em "se trata de" e não ignora "promete curar"; pode dar falso resultado na rodada.
+> Para o relatório (013 C2): evals determinísticos com `testTimeout` de 30 s; sob carga alta (load > 160, testes de outra pasta em paralelo) o `npm test` ainda dá timeout de 20 s em casos que mudam a cada rodada, sem falha de asserção.
+> `test:db` da 013 não rodou (sem docker): soma à pendência do topo.
+> Fechamento da 013 (2026-11-16, sessão anterior, log trazido pela dona): lint, typecheck, `npm test` 2246/2246, `eval:det` 1040/1040, `dup` 0 clones, lista do `demo` com código 0. Build, os 38 cenários do `demo` e o E2E rodam no verificador depois da junção da 016.
+> **Junção antecipada da 016 (dona, 2026-11-16):** a branch `entrega-3` (016 `implemented`) foi juntada na `main` antes do portão 2, para destravar a 017 na trilha adiantada (exceção ao §0.6 da skill). A ADR 0039 da 016 virou 0040 (a 0039 da `main` é a do Juiz).
 
 | Spec | Tarefa | Nível | Status | Commit |
 |---|---|---|---|---|
@@ -146,3 +160,23 @@
 | 012 | T24 · Add the routine and patterns deterministic evals, part 4 | mecanica | concluida | 3f92f5f |
 | 012 | T25 · Let eval:llm run memory cases and add the c3-confiavel checkpoint | mecanica | concluida | ec17be5 |
 | 012 | T26 · Add the 8 memory cases of c3 | mecanica | concluida | af3d544 |
+| 013 | T1 · Add the judge config and the guardrail and judge metric names | mecanica | concluida | 7b9f105 |
+| 013 | T2 · Add the input guardrail patterns and conferirEntrada | mecanica | concluida | fd956bc |
+| 013 | T3 · Add the dosage check to the validator | mecanica | concluida | 866b736 |
+| 013 | T4 · Add the judge output, the retry message and the prompt juiz.v1 | mecanica | concluida | 141f62c |
+| 013 | T5 · Add the judge input builders | mecanica | concluida | 13aed81 |
+| 013 | T6 · Add the judge agent | nucleo | concluida | 4db52d2 |
+| 013 | T7 · Return the trecho state, add extra model calls and neutralize tool results in the request | nucleo | concluida | dbf3ae8 |
+| 013 | T8 · Add the judge step of the companion run | nucleo | concluida | bc66687 |
+| 013 | T9 · Add the judge to the container and the scripted judge to scenarios | mecanica | concluida | b662ffa |
+| 013 | T10 · Run the judge in responder and continuar | nucleo | concluida | 8735a45 |
+| 013 | T11 · Add the input guardrail step to conversar | nucleo | concluida | 8df0b0a |
+| 013 | T12 · Add the seven guardrail and judge scenarios | mecanica | concluida | 5db16ae |
+| 013 | T13 · Show the judge in the demo and list the new scenarios | mecanica | concluida | 367eafa |
+| 013 | T14 · Add the guardrail deterministic evals, part 1 | mecanica | concluida | 8c50f57 |
+| 013 | T15 · Add the guardrail deterministic evals, part 2 | mecanica | concluida | 6d11319 |
+| 013 | T16 · Add the guardrail deterministic evals, part 3 | mecanica | concluida | aeaeb67 |
+| 013 | T17 · Let eval:llm run judge cases and measure the safety families | mecanica | concluida | 09966da |
+| 013 | T18 · Add the 22 judge and safety cases of c3 | mecanica | concluida | 7f0a5bf |
+| 013 | C1 · Remove the clone between interpretar.ts and julgar.ts (npm run dup) | mecanica | concluida | cd1196f |
+| 013 | C2 · Raise the eval timeout, share the judge reasons reader and keep judge cases out of the response metrics | mecanica | concluida | d2d75cc |

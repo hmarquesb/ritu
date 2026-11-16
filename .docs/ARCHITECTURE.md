@@ -64,12 +64,12 @@ Os padrões de fundação seguem as referências locais (`.local/REFERENCIAS.md`
 
 1. A tela envia a mensagem (`POST /api/runs`), com texto, atalhos de check-in ou os dois.
 2. Sessão → conta. Sem sessão: `401`. A rota confirma no banco que a conta existe e não venceu.
-3. Guardrail de entrada (tamanho, injection, sinal de alerta) e limite de uso (por conta e por IP).
+3. Limite de uso (por conta e por IP) e tamanho da mensagem.
 4. `conversar` cria o run (caminho provisório, `trace_id`) e abre o span `run`, que cobre tudo até a resposta. A barreira de run aberto é conferida antes de gastar modelo (ADR 0029). A mensagem da pessoa é gravada com o `run_id`.
-5. Com texto: o Intérprete devolve as intenções e os campos (`AI.md` §3). Só com atalhos: esse passo é pulado. Se o Intérprete falha, o run segue com a resposta montada por código.
+5. Com texto: o guardrail de entrada (`src/core/guardrails/`) confere em código as frases claras de alerta e de injection, antes de qualquer modelo; se casa, o run segue para o caminho de alerta ou de `fora`, sem Intérprete. Se não, o Intérprete devolve as intenções e os campos (`AI.md` §3). Só com atalhos: os dois passos são pulados. Se o Intérprete falha, o run segue com a resposta montada por código.
 6. O código escolhe o caminho pela intenção. Casa, retorno ou "evitar sempre" sozinhos, ajuda, ofensa, alerta e fora do assunto são resolvidos aqui, sem o agente. O que a mensagem traz (itens de casa, "evitar sempre", "não como", restrição) vale no mesmo run sem gravar a casa nem o perfil (ADR 0028).
 7. Preparo em código: qualidades, filtros, ordenação, faltas e contexto. O Acompanhante roda, **transmitindo as etapas** (streaming): "vendo o clima…", "olhando sua casa…", "conferindo a resposta…". O código anexa à saída as anotações a propor, e a resposta do agente é gravada em `mensagens`.
-8. `finalizar` → validador → correções, se houver → Juiz.
+8. `finalizar` → validador → correções, se houver. Entregue a saída do agente, o Juiz a lê (`AI.md` §3), entre o fim do trecho e o fim do run. Reprovada, o Acompanhante tenta de novo no mesmo run, uma vez, no papel `reforco`; reprovada de novo, ou com o Juiz fora do ar, sai a resposta segura montada por código (`AI.md` §8). O Juiz não lê textos montados por código.
 9. A tela mostra o texto do agente e as sugestões. Cada sugestão vira um registro em `retornos` (aguardando). As faltas do run são gravadas em `faltas`. Se houver propostas, a tela mostra o bloco de aprovação e o run fica em `waiting_for_approval`. Quem fecha o run é `conversar` (ou `continuar`): o Acompanhante o deixa em `running`, e a conversa o leva a `done`, ou à pausa com as propostas montadas por código (`AI.md` §5).
 10. Etapas, tokens, modelo usado e latência ficam no banco; spans e métricas saem por OTel.
 
@@ -198,12 +198,15 @@ A recusa de uma indicação de "vale ter em casa" não tem tabela própria: é a
 src/
   core/                      # sem framework
     knowledge/               # base, substitutos, combinações, explicação
-    weather/  pantry/  preferences/  routine/  patterns/  limits/  guardrails/
+    weather/  pantry/  preferences/  routine/  patterns/  limits/
+    guardrails/              # padrões e conferência da entrada: alerta emocional, alerta físico, injection (sem LLM)
     filtro-da-pessoa.ts      # filtro do dia (perfil, temporários, gostos), usado pelo preparo e pelos padrões
     ranking/                 # ordenação dos candidatos
     llm/                     # ModelRouter, papéis, cotas
     agents/
-      interpreter/  companion/  judge/  memory/
+      interpreter/  companion/  memory/
+      judge/                 # Juiz: entrada, prompt juiz.v1, leitura dos apontamentos, veredito, textos da nova tentativa
+      chamada-de-apoio.ts    # a chamada do papel apoio, dividida por Intérprete e Juiz
       tools/                 # catálogo fechado: leitura, controle, escrita
       prompts/               # prompts versionados
     runs/                    # estados, checkpoint, etapas, loop, caminhos por intenção, aprovação

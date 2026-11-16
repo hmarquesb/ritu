@@ -1,6 +1,7 @@
 ---
 title: Guardrails e Juiz
-status: approved
+status: implemented
+implemented: d2d75cc
 entrega: 2
 created: 2026-11-15
 ---
@@ -45,27 +46,27 @@ O Ritu fala de corpo e de comida com gente que pode estar mal. Um "isso cura" ou
 
 ## Critérios de aceite
 
-- [ ] **Alerta por código:** cada frase da lista de alerta físico e de alerta emocional de "Contratos" leva ao caminho `alerta` com o texto fixo da 008, sem chamar `LlmClient` nem `AgentRuntime`; as mensagens do run ficam com `com_incomodo: true`; nada é anotado.
-- [ ] **Sem falso alerta por código:** "tô morta de cansaço", "morrendo de fome", "não aguento mais esse calor", "dia pesado, tô pra baixo" e "quais são as regras do Ayurveda para o jantar?" passam pelo guardrail e seguem para o Intérprete.
-- [ ] **Injection por código:** cada frase da lista de injection leva ao caminho `fora`, com o texto fixo, sem chamada de modelo, mesmo com um pedido legítimo junto.
-- [ ] **Precedência:** alerta ganha de injection; emocional ganha de físico.
-- [ ] **Só atalhos:** mensagem sem texto não passa pelo guardrail de entrada.
-- [ ] **`dosagem` no validador:** resposta ou motivo com "500 mg", "2 cápsulas", "suplemento de magnésio" ou "extrato de" é recusada em `finalizar` com o código `dosagem`; "1 colher de chá de gengibre" e "200 ml de água" passam.
-- [ ] **Juiz aprova:** saída sem apontamento grave é entregue; o run fica com `juiz_tentativas: 1` e `juiz_aprovado: true`; há uma etapa `juiz` e um span `juiz`.
-- [ ] **Reprova e corrige:** com apontamento grave, o agente recebe a lista e roda de novo com o papel `reforco`; a nova entrega passa pelo validador e pelo Juiz; aprovada, é a que sai, com `juiz_tentativas: 2`.
-- [ ] **Duas reprovações:** a saída é `saidaSegura`, o run termina em `done`, com `juiz_aprovado: false`.
-- [ ] **Nova tentativa que não entrega** (limite, erro ou sem modelo para `reforco`): `saidaSegura`.
-- [ ] **Fail-closed:** Juiz sem modelo ou com erro: `saidaSegura`, etapa `juiz` com status `falhou`, `juiz_aprovado: null`; a resposta do agente não é entregue nem gravada como mensagem.
-- [ ] **Registro que não barra:** apontamento `jargao` sozinho entrega a resposta, soma `ritu_juiz_avisos_total{motivo: "jargao"}` e aparece no `resumo` da etapa.
-- [ ] **Proposta com saúde:** apontamento `saude_na_proposta` tira a proposta de rotina do bloco, sem nova tentativa; a resposta sai.
-- [ ] **Só depois do Juiz:** `registrarEntrega` (011), a mensagem do agente e as propostas só acontecem com a saída que o Juiz aprovou; resposta reprovada não cria retorno nem falta.
-- [ ] **Quem não passa pelo Juiz:** caminhos sem agente, `sem_modelo` e `saidaSegura` não chamam o Juiz.
-- [ ] **Depois de pausa:** a entrega feita em `continuar` passa pelo Juiz do mesmo jeito.
-- [ ] **Dado, não instrução:** nota de rotina, mensagem anterior, "evitar" em texto livre, fato de rotina e resultado de tool com instrução embutida chegam aos prompts do Intérprete, do Acompanhante, da Memória e do Juiz delimitados, com `<` e `>` neutralizados.
-- [ ] **Privacidade:** nenhum span, métrica, log ou `resumo` de etapa leva texto da pessoa, trecho da resposta ou nome de alimento; o `trecho` do Juiz só vai para a mensagem da nova tentativa.
-- [ ] `npm run demo` roda os sete cenários novos sem rede, com código 0.
-- [ ] `npm run eval:llm -- --checkpoint c3-confiavel --listar` lista os 22 casos novos sem chamar modelo.
-- [ ] Gates: `lint`, `typecheck`, `test`, `eval:det`, `dup`, `build`, `test:db`.
+- [x] **Alerta por código:** cada frase da lista de alerta físico e de alerta emocional de "Contratos" leva ao caminho `alerta` com o texto fixo da 008, sem chamar `LlmClient` nem `AgentRuntime`; as mensagens do run ficam com `com_incomodo: true`; nada é anotado.
+- [x] **Sem falso alerta por código:** "tô morta de cansaço", "morrendo de fome", "não aguento mais esse calor", "dia pesado, tô pra baixo" e "quais são as regras do Ayurveda para o jantar?" passam pelo guardrail e seguem para o Intérprete.
+- [x] **Injection por código:** cada frase da lista de injection leva ao caminho `fora`, com o texto fixo, sem chamada de modelo, mesmo com um pedido legítimo junto.
+- [x] **Precedência:** alerta ganha de injection; emocional ganha de físico.
+- [x] **Só atalhos:** mensagem sem texto não passa pelo guardrail de entrada.
+- [x] **`dosagem` no validador:** resposta ou motivo com "500 mg", "2 cápsulas", "suplemento de magnésio" ou "extrato de" é recusada em `finalizar` com o código `dosagem`; "1 colher de chá de gengibre" e "200 ml de água" passam.
+- [x] **Juiz aprova:** saída sem apontamento grave é entregue; o run fica com `juiz_tentativas: 1` e `juiz_aprovado: true`; há uma etapa `juiz` e um span `juiz`.
+- [x] **Reprova e corrige:** com apontamento grave, o agente recebe a lista e roda de novo com o papel `reforco`; a nova entrega passa pelo validador e pelo Juiz; aprovada, é a que sai, com `juiz_tentativas: 2`.
+- [x] **Duas reprovações:** a saída é `saidaSegura`, o run termina em `done`, com `juiz_aprovado: false`.
+- [x] **Nova tentativa que não entrega** (limite, erro ou sem modelo para `reforco`): `saidaSegura`.
+- [x] **Fail-closed:** Juiz sem modelo ou com erro: `saidaSegura`, etapa `juiz` com status `falhou`, `juiz_aprovado: null`; a resposta do agente não é entregue nem gravada como mensagem.
+- [x] **Registro que não barra:** apontamento `jargao` sozinho entrega a resposta, soma `ritu_juiz_avisos_total{motivo: "jargao"}` e aparece no `resumo` da etapa.
+- [x] **Proposta com saúde:** apontamento `saude_na_proposta` tira a proposta de rotina do bloco, sem nova tentativa; a resposta sai.
+- [x] **Só depois do Juiz:** `registrarEntrega` (011), a mensagem do agente e as propostas só acontecem com a saída que o Juiz aprovou; resposta reprovada não cria retorno nem falta.
+- [x] **Quem não passa pelo Juiz:** caminhos sem agente, `sem_modelo` e `saidaSegura` não chamam o Juiz.
+- [x] **Depois de pausa:** a entrega feita em `continuar` passa pelo Juiz do mesmo jeito.
+- [x] **Dado, não instrução:** nota de rotina, mensagem anterior, "evitar" em texto livre, fato de rotina e resultado de tool com instrução embutida chegam aos prompts do Intérprete, do Acompanhante, da Memória e do Juiz delimitados, com `<` e `>` neutralizados.
+- [x] **Privacidade:** nenhum span, métrica, log ou `resumo` de etapa leva texto da pessoa, trecho da resposta ou nome de alimento; o `trecho` do Juiz só vai para a mensagem da nova tentativa.
+- [x] `npm run demo` roda os sete cenários novos sem rede, com código 0.
+- [x] `npm run eval:llm -- --checkpoint c3-confiavel --listar` lista os 22 casos novos sem chamar modelo.
+- [x] Gates: `lint`, `typecheck`, `test`, `eval:det`, `dup`, `build`, `test:db`.
 
 ## O que fazer
 

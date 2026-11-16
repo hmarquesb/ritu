@@ -119,3 +119,13 @@
 - Por quê: mede o mesmo (padrão confirmado com o item fora dos candidatos não vira sugestão) sem mudar o ranking.
 - Para o relatório: um chá cuja especiaria acabou continua sendo candidato (só perde nota). A dona decide se a casa deve tirar prática.
 - Desfazer: voltar à casa quando ela passar a tirar prática.
+
+## 013 · Plano · "Toda resposta passa pelo Juiz" e os textos montados por código
+- Faltava: a regra 2 do AGENTS.md diz que toda resposta passa pelo Juiz; a spec 013 deixa de fora, de propósito, os textos montados por código (caminhos sem agente, `sem_modelo`, resposta segura).
+- Decidido: seguir a spec. Os textos montados por código são fixos, escritos e revisados no repositório, sem saída de modelo; o Juiz julga o que o modelo escreveu. Não tratei como contradição que bloqueia.
+- Para o relatório: a dona confirma a leitura ou pede o Juiz também nos textos fixos (ou ajusta a redação da regra 2).
+- Desfazer: chamar o Juiz também na saída montada por código.
+
+- **013 · T17 · `eval-llm-c3.test.ts` entra na tarefa.** Faltava: o contrato novo (`juiz` obrigatório em `ExpectativaDaConversa.confere`) quebrava o tipo do helper `entradaConversa` de `scripts/lib/eval-llm-c3.test.ts`, fora da lista da T17. Decidido: incluir o arquivo na T17 só para acrescentar `juiz: { tentativas: 0, aprovado: null, motivos: [] }` ao helper. Por quê: acomodação de assinatura, sem mudar asserção. Desfazer: tornar `juiz` opcional na expectativa.
+
+- **013 · Onda 4 · commit com `eval:det` vermelho só por timeout.** Faltava: os gates da onda deram `eval:det` com 5 a 8 falhas, todas "Test timed out in 5000ms", em casos que mudam a cada rodada, inclusive em arquivos fora da onda, com load average acima de 160 (vitests da trilha da entrega 3 rodando em paralelo). Nenhuma falha de asserção; `evals/det/guardrails` passou inteiro numa terceira rodada. Decidido: commitar T13 a T17 (aprovadas pelos verificadores) e abrir a C2 (timeout dos evals determinísticos em `vitest.eval.config.ts`). Desfazer: reverter a C2.

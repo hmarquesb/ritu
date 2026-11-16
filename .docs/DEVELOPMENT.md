@@ -33,7 +33,7 @@ O teste de arquitetura garante a tabela.
 - **Prompts em arquivo** (`src/core/agents/prompts/`), com versão.
 - **Telemetria pela porta `Telemetry`**, com os nomes de `OBSERVABILITY.md`. Nunca texto da pessoa, prompt, saída do agente ou segredo em span, métrica ou log.
 - **Tempo pela porta `Clock`**, nunca `new Date()` no core.
-- **Segredos** só por variável de ambiente, lidos em `src/infra/env.ts`. O `.env.example` lista todas: `DATABASE_URL`, `GEMINI_API_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `IP_HMAC_SECRET`, `CRON_SECRET`, `TESTER_IDS`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_SERVICE_NAME`.
+- **Segredos** só por variável de ambiente, lidos em `src/infra/env.ts`. O `.env.example` lista todas: `DATABASE_URL`, `GEMINI_API_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `IP_HMAC_SECRET`, `RITU_MODO`, `CRON_SECRET`, `TESTER_IDS`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_SERVICE_NAME`.
 - **Identificador de modelo não é segredo:** fica em `config/llm-cotas.ts`, versionado (`AI.md` §10), nunca em variável de ambiente.
 - **Agentes de código não leem `.env.local`.** Para saber se uma variável existe, usam `npm run env:check`, que só diz presente ou ausente.
 - **Idioma:** código e identificadores em inglês; mensagens à pessoa, docs, specs e ADRs em português. Nomes de tools, spans e métricas ficam em português, como em `AI.md` e `OBSERVABILITY.md`.
@@ -59,6 +59,7 @@ O teste de arquitetura garante a tabela.
 - **Padrão sem rede, sem banco e sem chave:** fakes das portas, fixtures, `Clock` fixo.
 - **TDD** nas funções puras, nas tools e no loop (com o `AgentRuntime` roteirizado).
 - Telas com interação: **E2E (Playwright)** com rotas simuladas.
+- **E2E com o servidor no modo e2e:** o Playwright sobe `npm run start` com `RITU_MODO=e2e` (stores, limitador e cidades em memória, sem banco nem rede; `x-ritu-e2e` separa os cenários). Com `CI=1` ele não reaproveita um servidor já no ar, que poderia ser de outra pasta.
 - O que toca serviço real (LLM, banco na nuvem, Open-Meteo) é script opt-in, marcado com ⚠️.
 - Cada bug corrigido ganha um teste; cada 👎 relevante pode virar caso de eval.
 - Evals com LLM não fazem parte do ciclo de uma tarefa: só rodam nos checkpoints (`QA.md`).

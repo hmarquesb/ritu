@@ -122,15 +122,16 @@ Rotina e padrões têm funções do core que as rotas de "O que sei sobre você"
 ## 4. Autenticação e demonstração
 
 - **Google** pelo Auth.js, só com `sub` e e-mail. Sem as credenciais do Google, a tela mostra só a demonstração.
-- **Conta de demonstração por clique:** cria uma conta nova, **copia o perfil semeado** (`seed/demo.yaml`: dosha, cidade, casa com itens confirmados e incertos, gostos, resultados, faltas (um alimento já com 3 dias), notas de rotina, um padrão a confirmar, retornos pendentes e conversas anteriores) e cai direto na tela Conversa com uma mensagem sugerida. Expira em 24 h. No máximo 5 por IP por dia.
-- Cookie `httpOnly`, `SameSite=Lax`. Toda rota protegida confere a conta no banco.
+- **Conta de demonstração por clique:** é o provedor `demo` do Auth.js, do tipo credenciais e sem campos. O `authorize` consome o limite de demonstrações (por IP e global, `config/limites.ts`) e cria a conta nova **com a cópia do perfil semeado** (`seed/demo.yaml`: dosha, cidade, casa com itens confirmados e incertos, gostos, resultados, faltas (um alimento já com 3 dias), notas de rotina, um padrão a confirmar, retornos pendentes e conversas anteriores). Depois do Aviso inicial, que a demonstração também vê, cai na tela Conversa com uma mensagem sugerida. Expira em 24 h. No máximo 5 por IP por dia.
+- Sessão em JWT, em cookie `httpOnly`, `SameSite=Lax`. O token guarda só `contaId` e `tipo`; nome, e-mail e foto nunca ficam nele. Toda rota protegida confere a conta no banco. O porquê está na ADR 0043.
 - Autorização por conta **no repositório**: toda consulta leva o `conta_id`. Um teste tenta ler o run de outra conta e tem que falhar.
 
 ### Proteção do site
 
 - **Texto puro na tela:** a resposta do agente e todo texto da pessoa são renderizados como texto. Nada de `dangerouslySetInnerHTML` nem de markdown vindo do modelo.
 - **Headers** em todas as respostas: CSP com nonce (sem `unsafe-inline` em script, `frame-ancestors 'none'`), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` desligando câmera, microfone e geolocalização, e HSTS em produção.
-- **Origem:** toda rota que muda estado confere o header `Origin` contra a URL do site; diferente ou ausente → `403`. Soma-se ao `SameSite=Lax`.
+- **Origem:** o `src/proxy.ts` confere o header `Origin` em todo pedido cujo método não é `GET`, `HEAD` nem `OPTIONS`: o host do `Origin` tem que ser igual ao host do pedido (`x-forwarded-host` ou `host`); senão (diferente, ausente ou inválido), `403`. Soma-se ao `SameSite=Lax`.
+- **Nonce da CSP:** o proxy gera um nonce por pedido, põe na CSP e o repassa à página, que o lê do header e o expõe também em `<meta name="csp-nonce">`.
 - **Entrada das rotas:** corpo validado em zod, com tamanho máximo. Erro para fora nunca mostra stack nem detalhe interno.
 - **Limites:** mensagens, toques e demonstrações têm limites próprios (`BUSINESS.md` §14), contados por conta e por IP em HMAC.
 - **Cron:** só com `CRON_SECRET`.
@@ -150,11 +151,13 @@ A lógica fica em `src/core/`, sem Next, Auth.js, driver de banco, Mastra ou SDK
 | `CityLookup` | Open-Meteo (geocodificação) | Lista fixa de cidades |
 | `KnowledgeBase` | YAML em `data/` | Os mesmos arquivos ou mini-tabela |
 | `RunRepository`, `MessageRepository`, `AccountRepository`, `PantryStore`, `ShortageStore`, `PreferenceStore`, `OutcomeStore`, `RoutineStore`, `PatternStore`, `ProposalStore` | Postgres | Em memória |
-| `UsageLimiter` | Postgres | Em memória |
+| `UsageLimiter` (`src/core/limits/`; consome várias chaves de uma vez, todas ou nenhuma) | Postgres | Em memória |
 | `Telemetry` | OpenTelemetry | Em memória (os testes conferem spans e métricas) |
 | `Clock` | Relógio do sistema | Data fixa |
 
 A montagem acontece num único composition root (`src/infra/container.ts`). O teste de arquitetura falha se uma camada importar o que não pode.
+
+**Modo de E2E.** Com `RITU_MODO=e2e`, o container monta stores, limitador e cidades em memória, guardados no `globalThis` (o Next carrega os módulos em separado). Nesse modo o header `x-ritu-e2e` vale como o IP do pedido e como prefixo das chaves do limitador, para cada cenário ter a sua cota. O container recusa subir no modo e2e com `VERCEL_ENV=production`.
 
 ## 6. Modelo de dados
 
@@ -178,7 +181,7 @@ A montagem acontece num único composition root (`src/infra/container.ts`). O te
 | `feedback` | `run_id`, `conta_id`, `voto` (up, down), `criado_em`. Um voto por run |
 | `alimentos_desconhecidos` | `nome`, `vezes` (sem `conta_id`; candidatos a entrar na base) |
 | `llm_uso` | `modelo`, `janela` (minuto ou dia), `inicio`, `pedidos`, `tokens` |
-| `limites` | Contadores por conta e por IP (HMAC) |
+| `limites` | `chave` (opaca: HMAC do IP ou identificador, nunca texto da pessoa), `janela` (minuto, dia), `inicio`, `total`. Uma linha por chave, janela e início; as de dia são apagadas pela limpeza diária |
 
 O estado "incerto" de um item da casa não é gravado: é calculado de `confirmado_em`, da durabilidade do grupo e de `sempre_tenho` (`BUSINESS.md` §9).
 
@@ -199,6 +202,7 @@ src/
   core/                      # sem framework
     knowledge/               # base, substitutos, combinações, explicação
     weather/  pantry/  preferences/  routine/  patterns/  limits/
+    security/                # CSP e headers de segurança, checagem de Origin
     guardrails/              # padrões e conferência da entrada: alerta emocional, alerta físico, injection (sem LLM)
     filtro-da-pessoa.ts      # filtro do dia (perfil, temporários, gostos), usado pelo preparo e pelos padrões
     ranking/                 # ordenação dos candidatos
@@ -211,10 +215,11 @@ src/
       prompts/               # prompts versionados
     runs/                    # estados, checkpoint, etapas, loop, caminhos por intenção, aprovação
     telemetry/               # porta Telemetry e nomes de spans e métricas
-  infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth, otel
+  infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth (Auth.js, token, IP em HMAC), otel
     container.ts             # composition root
   app/                       # Next.js: telas e rotas; marca/ é a vitrine do design system
     fonts/                   # Cormorant Garamond e Figtree (woff2 variável, OFL)
+  proxy.ts                   # headers de segurança (CSP com nonce) e checagem de Origin
   components/                # UI: só aqui se importa react-aria-components (R5)
     tokens/                  # tokens.css (o único lugar com cor, raio, sombra) e teste de contraste
     theme/                   # cookie ritu_theme e seletor de tema
@@ -225,7 +230,7 @@ public/marca/                # símbolo do logo, manchas dos doshas, textura de 
 scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts
   lib/evals/                 # runner do eval com LLM: casos, rodadores, avaliador, rodada, métricas, metas, relatório, histórico e comparação
 data/                        # base ayurvédica em YAML
-seed/                        # perfil de demonstração
+seed/                        # perfil de demonstração (demo.yaml)
 evals/
   det/                       # evals determinísticos; mapa.ts liga cada linha de QA.md aos arquivos
   llm/                       # tipos.ts (famílias e marcas), avaliador.v1.ts, checkpoints.ts, casos/{c1,c2,c3} e casos/index.ts

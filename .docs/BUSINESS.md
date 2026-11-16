@@ -77,13 +77,14 @@ O Ritu é um **site** (responsivo, pensado primeiro para o celular).
 Meta: **primeira resposta em menos de 1 minuto, sem preencher nenhum campo.**
 
 1. Na Entrada, o botão **"Testar com perfil de demonstração"** é o primeiro e o mais visível.
-2. Um clique. Sem formulário: a cópia do perfil semeado é criada e a pessoa já entra.
-3. Cai direto na tela **Conversa**, com:
+2. Um toque. Sem formulário: a cópia do perfil semeado é criada e a pessoa já entra.
+3. Aparece o **Aviso inicial** (§12), que a demonstração também vê. O botão do Aviso é o segundo toque: são **dois toques** até a conversa, sem preencher nada.
+4. Cai na tela **Conversa**, com:
    - uma faixa: *"Você está no perfil de demonstração: Vata-Pitta, no Rio, com gengibre, canela, abóbora e arroz em casa · [Criar meu perfil]"*;
    - uma **mensagem sugerida já escrita** (ex.: "acordei com frio e agitada, o que eu como?"), que pode ser trocada. Basta tocar em **Enviar**.
-4. Vê o progresso ao vivo, a resposta do agente, as sugestões e o botão **"Como pensei"**.
-5. Abaixo da resposta aparece o que o agente propõe anotar.
-6. A demo já vem com itens em **"Como ficou?"**, com itens incertos em **Minha casa**, com um alimento que já fez falta várias vezes e com a página **"O que sei sobre você"** preenchida.
+5. Vê o progresso ao vivo, a resposta do agente, as sugestões e o botão **"Como pensei"**.
+6. Abaixo da resposta aparece o que o agente propõe anotar.
+7. A demo já vem com itens em **"Como ficou?"**, com itens incertos em **Minha casa**, com um alimento que já fez falta várias vezes e com a página **"O que sei sobre você"** preenchida.
 
 "Criar meu perfil" sai da demo e leva ao login com Google.
 
@@ -350,7 +351,7 @@ Regras da memória:
 |---|---|
 | **Evitar sempre** | Logo depois do aviso, para toda conta nova, antes do dosha e mesmo para quem não fizer o quiz: *"Tem algum alimento que você nunca pode comer?"* Grupos para tocar (amendoim, castanhas, leite, ovo, soja, trigo, gergelim, peixe, frutos do mar), busca de alimento e campo livre. Botões: Pronto · Nenhum · Pular. Quem pula vê, uma única vez, na primeira resposta com sugestão de alimento: *"Se tiver algo que você não pode comer, me conta."* Muda no Perfil |
 | **Dosha** | Depois do passo "Evitar sempre", só para conta nova: "Quer descobrir seu dosha?" → Fazer o quiz · Já sei meu dosha (Vata · Pitta · Kapha · Misto, escolhendo dois) · Agora não. Depois, a qualquer momento, pelo painel do dosha |
-| **Quiz** | **8 perguntas**, 3 opções cada, uma por dosha. Temas: corpo, pele, apetite e digestão, sono, clima que incomoda, reação ao estresse, ritmo e energia, padrão de peso. **Resultado dual** quando os dois primeiros ficam próximos. O texto fica em `data/quiz.yaml` |
+| **Quiz** | Dentro do onboarding: **8 perguntas**, uma por vez, 3 opções cada, uma por dosha. Temas: corpo, pele, apetite e digestão, sono, clima que incomoda, reação ao estresse, ritmo e energia, padrão de peso. **Resultado dual** quando os dois primeiros doshas ficam a até `config.quiz.diferencaDual` respostas de distância. O texto fica em `data/quiz.yaml` |
 | **Cidade** | Junto com o dosha: a pessoa busca a cidade pelo nome. Pode pular; sem cidade, o agente responde sem o clima e avisa. Muda no Perfil |
 | **Restrições e "não como"** | No Perfil, pela conversa, ou quando o agente pergunta antes de sugerir algo que dependa disso |
 | **Minha casa** | Começa vazia. Na primeira conversa, o agente pergunta o básico que precisa; o resto vem com o uso |

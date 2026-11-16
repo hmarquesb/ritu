@@ -669,6 +669,28 @@ export { expect }
 - fora: `src/core/`.
 - nota: o clique interceptado pelo rótulo "Outro alimento" não era defeito de tela: o React Aria deixa a lista invisível (`opacity: 0`, `clip-path: inset(50%)`) enquanto a posiciona, e o teste clicava antes. A T22 espera a opção ser o alvo do ponteiro (`elementFromPoint`) antes de clicar.
 
+### C6 · Check the real demo seed against the real base in a test
+- nivel: mecanica
+- objetivo: um teste de infra garante que `seed/demo.yaml` passa em `validarSeed` contra a base real de `data/` (decisão A8).
+- arquivos: `src/infra/knowledge/yaml-seed.test.ts`
+- depende de: T7, T8, T10
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos: `loadDemoSeed(dir = "seed"): DemoSeed` em `src/infra/knowledge/yaml-seed.ts`; `validarSeed(seed: DemoSeed, kb: KnowledgeBase, agora: Date): string[]` em `src/core/demo-seed.ts` (devolve a lista de achados; vazia = válido); a base real é carregada como em `scripts/base-check.ts` (use a mesma função de carga de `data/`). Caso novo: `loadDemoSeed()` do seed real e a base real → `validarSeed(seed, kb, new Date())` é `[]`.
+- testes primeiro: é o próprio caso.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test`
+- pronto quando: o caso passa e falharia com um id de alimento inexistente no seed.
+- fora: `seed/`, `data/`, `src/core/`.
+
+### C7 · Show the entry metric on the dashboard
+- nivel: mecanica (feita pelo orquestrador, na acomodação da junção)
+- objetivo: `ritu_entrada_total` aparece numa consulta do painel, como exige `scripts/lib/painel.test.ts` da `main` (015).
+- arquivos: `scripts/lib/painel.ts`, `observability/dashboards/ritu.json` (gerado por `npm run painel:gerar`)
+- contratos: painel "Entradas" (barchart, métricas) na linha 4, com `TOTAL("ritu_entrada_total", "conta_tipo", "entrada_resultado")` (rótulos com ponto chegam ao Prometheus com sublinhado).
+- comandos: `npm test`, `npm run painel:gerar`
+- pronto quando: `painel.test.ts` verde e o JSON gerado bate com a definição.
+
 ## Ondas
 
 | Onda | Tarefas | Por quê |
@@ -688,4 +710,5 @@ export { expect }
 | 12b | C2, C3 | Correções de tela e CSP reveladas pela T21; sem arquivo em comum. Depois, a T21 roda de novo e só então é commitada (C2 e C3 antes dela) |
 | 13 | T22 | E2E do onboarding |
 | 13c | C5, T22 | C5 pelo orquestrador; T22 de novo, sem contornos; commits C5 e depois T22 |
+| 14 | C6, C7 | C6 pendência A8; C7 acomodação da junção (painel) |
 | 13b | C4 | Defeitos de tela revelados pela T22; depois a T22 roda de novo, sem contornos, e é commitada depois da C4 |

@@ -49,6 +49,7 @@
 | [0039](0039-gravidade-dos-apontamentos-do-juiz-e-nova-tentativa.md) | Gravidade dos apontamentos do Juiz e nova tentativa no mesmo loop | Aceito |
 | [0040](0040-tokens-em-css-tema-por-cookie-e-fontes-locais.md) | Tokens em CSS com Tailwind v4 e `light-dark()`, tema por cookie lido no servidor, fontes locais | Aceito |
 | [0041](0041-runner-de-eval-com-andamento-metas-e-historico.md) | Runner de eval com andamento, metas e histórico | Aceito |
+| [0043](0043-sessao-jwt-demonstracao-por-credenciais-limitador-e-modo-e2e.md) | Sessão em JWT, demonstração como provedor de credenciais, limitador em tabela e modo de E2E em memória | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

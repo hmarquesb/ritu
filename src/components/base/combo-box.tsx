@@ -1,19 +1,18 @@
 "use client"
 
-import { CaretDown, WarningCircle } from "@phosphor-icons/react"
+import { CaretDown } from "@phosphor-icons/react"
 import {
   ComboBox as AriaComboBox,
   type ComboBoxProps as AriaComboBoxProps,
   Button,
-  FieldError,
   Input,
   Label,
   ListBox,
   ListBoxItem,
   type ListBoxItemProps,
   Popover,
-  Text,
 } from "react-aria-components"
+import { FieldHelp } from "@/components/base/field-error"
 import { ICON } from "@/components/base/icon-size"
 import { Spinner } from "@/components/base/spinner"
 import { cx } from "@/components/cx"
@@ -58,20 +57,7 @@ export function ComboBox<T extends object>({
           <CaretDown weight="light" size={ICON.md} aria-hidden="true" />
         </Button>
       </div>
-      {description ? (
-        <Text slot="description" className="text-caption text-ink-muted">
-          {description}
-        </Text>
-      ) : null}
-      <FieldError className="flex items-start gap-1.5 text-caption text-danger">
-        <WarningCircle
-          weight="light"
-          size={ICON.sm}
-          aria-hidden="true"
-          className="mt-0.5 shrink-0"
-        />
-        <span>{errorMessage}</span>
-      </FieldError>
+      <FieldHelp description={description} errorMessage={errorMessage} />
       <Popover className="w-(--trigger-width) rounded-lg border border-line bg-raised shadow-lift">
         <ListBox
           className="max-h-72 overflow-y-auto p-1.5 outline-none"

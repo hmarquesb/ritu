@@ -1,16 +1,13 @@
 "use client"
 
-import { WarningCircle } from "@phosphor-icons/react"
 import {
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps,
-  FieldError,
   Input,
   Label,
-  Text,
   TextArea,
 } from "react-aria-components"
-import { ICON } from "@/components/base/icon-size"
+import { FieldHelp } from "@/components/base/field-error"
 import { cx } from "@/components/cx"
 
 export type TextFieldProps = Omit<AriaTextFieldProps, "children" | "className"> & {
@@ -49,20 +46,7 @@ export function TextField({
       ) : (
         <Input className={CONTROL} />
       )}
-      {description ? (
-        <Text slot="description" className="text-caption text-ink-muted">
-          {description}
-        </Text>
-      ) : null}
-      <FieldError className="flex items-start gap-1.5 text-caption text-danger">
-        <WarningCircle
-          weight="light"
-          size={ICON.sm}
-          aria-hidden="true"
-          className="mt-0.5 shrink-0"
-        />
-        <span>{errorMessage}</span>
-      </FieldError>
+      <FieldHelp description={description} errorMessage={errorMessage} />
     </AriaTextField>
   )
 }

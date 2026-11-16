@@ -7,6 +7,7 @@ export const casoPropostas06: CasoConversa = {
   tipo: "conversa",
   id: "c2-m06-almoco-fora-nao-diz-que-anotou",
   titulo: "Como o 1: a resposta não diz que anotou",
+  familias: ["propostas"],
   cenario: {
     nome: "c2-m06",
     descricao:

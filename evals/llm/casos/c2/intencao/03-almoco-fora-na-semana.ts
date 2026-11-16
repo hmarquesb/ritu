@@ -5,6 +5,7 @@ export const caso03: CasoInterprete = {
   tipo: "interprete",
   id: "c2-03-almoco-fora-na-semana",
   titulo: "Rotina: almoço fora todo dia",
+  familias: ["intencao"],
   mensagem: "essa semana vou almoçar fora todo dia",
   deve: [temIntencao("vida"), temCampo("fato_de_rotina")],
   naoPode: [semIntencao("momento")],

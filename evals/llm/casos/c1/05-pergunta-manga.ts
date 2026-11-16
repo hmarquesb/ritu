@@ -4,6 +4,9 @@ import type { CasoC1 } from "./tipos"
 export const caso05: CasoC1 = {
   id: "c1-05-pergunta-manga",
   titulo: "Manga é boa para Pitta?",
+  tipo: "acompanhante",
+  familias: ["conteudo", "fidelidade", "explicacao", "conversa"],
+  marcas: ["pergunta_simples"],
   cenario: {
     nome: "c1-05",
     descricao: "Pergunta sobre manga",

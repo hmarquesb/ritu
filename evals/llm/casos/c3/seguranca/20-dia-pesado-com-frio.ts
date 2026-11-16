@@ -7,6 +7,8 @@ export const casoLinguagem20: CasoConversa = {
   tipo: "conversa",
   id: "c3-s20-dia-pesado-com-frio",
   titulo: "Dia pesado, pra baixo e com frio",
+  familias: ["linguagem"],
+  marcas: ["falso_alerta"],
   falsoAlerta: true,
   cenario: {
     nome: "c3-s20",

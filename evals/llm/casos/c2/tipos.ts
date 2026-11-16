@@ -7,6 +7,7 @@ import type { PropostaNaSaida } from "@/core/proposals/conteudo"
 import type { Pergunta, RespostaDaPessoa } from "@/core/runs/pergunta"
 import type { Caminho } from "@/core/runs/ports"
 import type { CenarioDeConversa } from "../../../../test/fixtures/cenarios/tipos"
+import type { BaseDoCaso } from "../../tipos"
 import type { ResultadoDoRun } from "../c1/tipos"
 
 // O que o Intérprete entrega ao caso: a interpretação já normalizada e o caminho que ela leva.
@@ -15,10 +16,8 @@ export type ExpectativaDoInterprete = {
   confere: (r: { interpretacao: Interpretacao; caminho: Caminho }) => boolean
 }
 
-export type CasoInterprete = {
+export type CasoInterprete = BaseDoCaso & {
   tipo: "interprete"
-  id: string
-  titulo: string
   mensagem: string
   atalhos?: Estado[]
   conversa?: MensagemNoPrompt[]
@@ -51,10 +50,8 @@ export type ExpectativaDaConversa = {
   }) => boolean
 }
 
-export type CasoConversa = {
+export type CasoConversa = BaseDoCaso & {
   tipo: "conversa"
-  id: string
-  titulo: string
   // Cenário da conversa: como CenarioDoCaso, com mensagem obrigatória e sem entrada de acompanhante.
   cenario: Omit<CenarioDeConversa, "roteiro" | "respostas">
   // Respostas da pessoa às pausas, na ordem em que as perguntas saem; sem resposta sobrando, pular.

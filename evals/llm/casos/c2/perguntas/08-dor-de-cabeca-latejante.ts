@@ -6,6 +6,8 @@ export const casoPergunta08: CasoConversa = {
   tipo: "conversa",
   id: "c2-p08-dor-de-cabeca-latejante",
   titulo: "Dor de cabeça latejante",
+  familias: ["perguntas", "incomodos"],
+  marcas: ["promessa"],
   cenario: {
     nome: "c2-p08",
     descricao:

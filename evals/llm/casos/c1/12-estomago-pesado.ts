@@ -4,6 +4,9 @@ import type { CasoC1 } from "./tipos"
 export const caso12: CasoC1 = {
   id: "c1-12-estomago-pesado",
   titulo: "Estômago pesado (incômodo)",
+  tipo: "acompanhante",
+  familias: ["conteudo", "fidelidade", "explicacao", "incomodos"],
+  marcas: ["promessa"],
   cenario: {
     nome: "c1-12",
     descricao: "Incômodo leve: estômago pesado",

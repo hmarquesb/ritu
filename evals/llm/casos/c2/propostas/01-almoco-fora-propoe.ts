@@ -7,6 +7,7 @@ export const casoPropostas01: CasoConversa = {
   tipo: "conversa",
   id: "c2-m01-almoco-fora-propoe",
   titulo: "Rotina dita de passagem: almoço fora todo dia",
+  familias: ["propostas"],
   cenario: {
     nome: "c2-m01",
     descricao: "Almoço fora todo dia na semana: memoria.propor e a nota no bloco",

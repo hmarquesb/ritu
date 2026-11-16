@@ -6,6 +6,7 @@ export const casoMemoria05: CasoMemoria = {
   tipo: "memoria",
   id: "c3-05-duas-notas-juiz",
   titulo: "Duas notas comuns: nada além delas no resumo",
+  familias: ["memoria"],
   notas: [
     { texto: "Gosta de caminhar no fim da tarde.", diasAtras: 4 },
     { texto: "Costuma tomar café da manhã sentada, sem pressa.", diasAtras: 2 },

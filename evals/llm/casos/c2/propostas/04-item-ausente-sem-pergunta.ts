@@ -7,6 +7,7 @@ export const casoPropostas04: CasoConversa = {
   tipo: "conversa",
   id: "c2-m04-item-ausente-sem-pergunta",
   titulo: "Momento sem resposta à pergunta, com item ausente entre os candidatos",
+  familias: ["propostas"],
   cenario: {
     nome: "c2-m04",
     descricao: "Frio, gengibre fora da casa, sem resposta à pergunta: nenhuma lista.propor aceita",

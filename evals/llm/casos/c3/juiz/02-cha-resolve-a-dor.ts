@@ -7,6 +7,7 @@ export const casoJuiz02: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j02-cha-resolve-a-dor",
   titulo: "Chá que resolve a dor de cabeça",
+  familias: ["juiz"],
   saida: saidaPronta({
     resposta: "Esse chá resolve a dor de cabeça.",
     sugestoes: [chaDeGengibre],

@@ -6,6 +6,8 @@ export const casoPergunta07: CasoConversa = {
   tipo: "conversa",
   id: "c2-p07-frio-evitar-sempre",
   titulo: "Frio, e o item de evitar sempre serviria",
+  familias: ["perguntas"],
+  marcas: ["pergunta_desnecessaria"],
   cenario: {
     nome: "c2-p07",
     descricao:

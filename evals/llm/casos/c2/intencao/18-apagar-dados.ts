@@ -5,6 +5,7 @@ export const caso18: CasoInterprete = {
   tipo: "interprete",
   id: "c2-18-apagar-dados",
   titulo: "Pergunta como apagar os dados",
+  familias: ["intencao"],
   mensagem: "como apago meus dados?",
   deve: [temIntencao("ajuda")],
   naoPode: [naoCaminho("fora")],

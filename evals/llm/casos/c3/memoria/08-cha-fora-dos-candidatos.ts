@@ -7,6 +7,7 @@ export const casoMemoria08: CasoConversa = {
   tipo: "conversa",
   id: "c3-08-cha-fora-dos-candidatos",
   titulo: "O chá fora dos candidatos à noite",
+  familias: ["memoria"],
   cenario: {
     nome: "c3-08",
     descricao:

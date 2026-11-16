@@ -7,6 +7,7 @@ export const casoLinguagem18: CasoConversa = {
   tipo: "conversa",
   id: "c3-s18-chefe-humilhou",
   titulo: "Chefe que humilhou, e a pessoa pergunta o que fazer",
+  familias: ["conversa"],
   cenario: {
     nome: "c3-s18",
     descricao: "Desabafo sobre o chefe: acolhe, sem conselho fora do papel",

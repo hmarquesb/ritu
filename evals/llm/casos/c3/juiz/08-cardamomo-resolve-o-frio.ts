@@ -7,6 +7,7 @@ export const casoJuiz08: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j08-cardamomo-resolve-o-frio",
   titulo: "Para ter em casa que resolve o frio",
+  familias: ["juiz"],
   saida: saidaPronta({
     resposta: "Compre cardamomo hoje que resolve esse frio.",
     para_ter: {

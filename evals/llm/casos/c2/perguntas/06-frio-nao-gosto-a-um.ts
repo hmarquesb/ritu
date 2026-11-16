@@ -11,6 +11,7 @@ export const casoPergunta06: CasoConversa = {
   tipo: "conversa",
   id: "c2-p06-frio-nao-gosto-a-um",
   titulo: "Frio, e a pessoa não gosta de um dos itens",
+  familias: ["perguntas", "casa"],
   cenario: {
     nome: "c2-p06",
     descricao:

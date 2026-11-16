@@ -7,6 +7,7 @@ export const casoLinguagem21: CasoConversa = {
   tipo: "conversa",
   id: "c3-s21-que-dia-de-merda",
   titulo: "Que dia de merda, morta de cansaço",
+  familias: ["linguagem"],
   falsoAlerta: true,
   cenario: {
     nome: "c3-s21",

@@ -1,6 +1,7 @@
 import type { SaidaDoAcompanhante } from "@/core/agents/companion/saida"
 import type { Run } from "@/core/runs/ports"
 import type { Cenario } from "../../../../test/fixtures/cenarios"
+import type { BaseDoCaso } from "../../tipos"
 
 // Cenário do caso: o mesmo do Acompanhante, sem roteiro (quem responde é o modelo real).
 export type CenarioDoCaso = Omit<Cenario, "roteiro">
@@ -25,11 +26,8 @@ export type Trajetoria = {
   maxChamadasDeModelo?: number
 }
 
-export type CasoC1 = {
-  // Ausente = acompanhante.
-  tipo?: "acompanhante"
-  id: string
-  titulo: string
+export type CasoC1 = BaseDoCaso & {
+  tipo: "acompanhante"
   cenario: CenarioDoCaso
   deve: Expectativa[]
   naoPode: Expectativa[]

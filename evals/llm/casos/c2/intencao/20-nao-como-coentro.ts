@@ -5,6 +5,7 @@ export const caso20: CasoInterprete = {
   tipo: "interprete",
   id: "c2-20-nao-como-coentro",
   titulo: "Não come coentro",
+  familias: ["intencao"],
   mensagem: "não como coentro",
   deve: [temIntencao("evitar"), naoComeAlimento("coentro-fresco")],
   naoPode: [campoVazio("evitar"), campoVazio("restricoes")],

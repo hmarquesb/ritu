@@ -5,6 +5,7 @@ export const caso05: CasoInterprete = {
   tipo: "interprete",
   id: "c2-05-acabou-arroz",
   titulo: "Acabou o arroz",
+  familias: ["intencao"],
   mensagem: "acabou o arroz",
   deve: [temIntencao("casa"), itemDeCasa("arroz-branco", "acabou")],
   naoPode: [],

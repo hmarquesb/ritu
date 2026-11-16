@@ -6,6 +6,7 @@ export const casoMemoria02: CasoMemoria = {
   tipo: "memoria",
   id: "c3-02-acorda-cedo-palavras-diferentes",
   titulo: "Três notas sobre acordar cedo, com palavras diferentes",
+  familias: ["memoria"],
   notas: [
     { texto: "Ela acorda cedo, antes das seis da manhã.", diasAtras: 9 },
     { texto: "Nos dias de semana, levanta antes do sol nascer.", diasAtras: 4 },

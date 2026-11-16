@@ -141,6 +141,7 @@ const saidaDoInterprete = {
 
 const casoInterprete: CasoInterprete = {
   tipo: "interprete",
+  familias: ["intencao"],
   id: "t-interprete",
   titulo: "Frio na mensagem",
   mensagem: "Estou com frio",
@@ -160,6 +161,7 @@ const casoInterprete: CasoInterprete = {
 
 const casoConversa: CasoConversa = {
   tipo: "conversa",
+  familias: ["conversa"],
   id: "t-conversa",
   titulo: "Só atalhos",
   cenario: soAtalhos,
@@ -193,6 +195,7 @@ const saidaDoJuiz: SaidaDoAcompanhante = {
 
 const casoJuiz: CasoJuiz = {
   tipo: "juiz",
+  familias: ["juiz"],
   id: "t-juiz",
   titulo: "Promessa de cura",
   familia: "juiz",
@@ -215,6 +218,7 @@ const casoJuiz: CasoJuiz = {
 
 const casoMemoria: CasoMemoria = {
   tipo: "memoria",
+  familias: ["memoria"],
   id: "t-memoria",
   titulo: "Notas repetidas viram uma frase",
   familia: "memoria",
@@ -508,6 +512,7 @@ describe("runner da conversa com proposta", () => {
 
   const casoDeProposta = (parcial: Partial<CasoConversa> = {}): CasoConversa => ({
     tipo: "conversa",
+    familias: ["propostas"],
     id: "t-proposta",
     titulo: "Compras da feira",
     cenario: semRoteiro,
@@ -583,6 +588,7 @@ describe("runner da conversa com pausa", () => {
     const { respostas: _ignorada, ...cenario } = semRoteiro
     return {
       tipo: "conversa",
+      familias: ["conversa"],
       id: "t-pausa",
       titulo: "Casa incerta",
       cenario,
@@ -641,6 +647,7 @@ describe("runner da conversa com pausa", () => {
     const r = await rodarConversa(
       {
         tipo: "conversa",
+        familias: ["conversa"],
         id: "t-sem-pausa",
         titulo: "Só atalhos",
         cenario: soAtalhos,
@@ -669,6 +676,7 @@ describe("pausas acima do teto de retomadas", () => {
   it("um caso que pausa quatro vezes sai como falho com o motivo, e o caso seguinte roda", async () => {
     const quatroPausas: CasoConversa = {
       tipo: "conversa",
+      familias: ["conversa"],
       id: "t-quatro-pausas",
       titulo: "Quatro pausas",
       cenario,
@@ -691,6 +699,7 @@ describe("pausas acima do teto de retomadas", () => {
     const seguinte = await rodarConversa(
       {
         tipo: "conversa",
+        familias: ["conversa"],
         id: "t-seguinte",
         titulo: "Só atalhos",
         cenario: soAtalhos,
@@ -905,6 +914,7 @@ describe("respostas como função", () => {
     const { roteiro, respostas: _ignorada, ...cenario } = casaIncerta
     const caso: CasoConversa = {
       tipo: "conversa",
+      familias: ["conversa"],
       id: "t-resposta-na-hora",
       titulo: "Resposta montada na hora",
       cenario,
@@ -1355,6 +1365,7 @@ describe("runner da conversa com retornos fechados", () => {
 
   const casoDeRetorno = (): CasoConversa => ({
     tipo: "conversa",
+    familias: ["aprendizado"],
     id: "t-retorno",
     titulo: "Retorno contado na mensagem",
     familia: "aprendizado",

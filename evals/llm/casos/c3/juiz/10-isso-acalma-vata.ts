@@ -7,6 +7,8 @@ export const casoJuiz10: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j10-isso-acalma-vata",
   titulo: "Jargão sem explicar: isso acalma Vata",
+  familias: ["juiz"],
+  marcas: ["falsa_reprovacao"],
   saida: saidaPronta({
     resposta: "Isso acalma Vata.",
     sugestoes: [chaDeGengibre],

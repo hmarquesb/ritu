@@ -6,6 +6,8 @@ export const casoPergunta02: CasoConversa = {
   tipo: "conversa",
   id: "c2-p02-frio-casa-confirmada",
   titulo: "Frio, com a casa cheia e confirmada",
+  familias: ["perguntas"],
+  marcas: ["pergunta_desnecessaria"],
   cenario: {
     nome: "c2-p02",
     descricao: "Frio; abóbora, arroz, ghee, gengibre e canela confirmados: nenhuma pergunta",

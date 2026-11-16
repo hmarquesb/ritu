@@ -7,6 +7,7 @@ export const casoAprendizado03: CasoConversa = {
   tipo: "conversa",
   id: "c2-a03-gosto-aparece",
   titulo: "Gosto de gengibre, e ele aparece",
+  familias: ["aprendizado"],
   familia: "aprendizado",
   cenario: {
     nome: "c2-a03",

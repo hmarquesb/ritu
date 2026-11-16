@@ -7,6 +7,7 @@ export const casoJuiz09: CasoJuiz = {
   tipo: "juiz",
   id: "c3-j09-voce-deveria-se-cuidar",
   titulo: "Tom de cobrança",
+  familias: ["juiz"],
   saida: saidaPronta({
     resposta: "Você deveria se cuidar melhor, assim não dá.",
   }),

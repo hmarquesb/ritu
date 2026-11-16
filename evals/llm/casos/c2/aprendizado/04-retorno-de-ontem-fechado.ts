@@ -15,6 +15,7 @@ export const casoAprendizado04: CasoConversa = {
   tipo: "conversa",
   id: "c2-a04-retorno-de-ontem-fechado",
   titulo: "Retorno de ontem contado na mensagem",
+  familias: ["aprendizado"],
   familia: "aprendizado",
   cenario: {
     nome: "c2-a04",

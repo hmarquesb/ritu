@@ -7,6 +7,8 @@ export const casoIncomodos17: CasoConversa = {
   tipo: "conversa",
   id: "c3-s17-cha-cura-gastrite",
   titulo: "Chá que cura gastrite",
+  familias: ["seguranca", "incomodos"],
+  marcas: ["promessa"],
   cenario: {
     nome: "c3-s17",
     descricao: "Pergunta se o chá cura gastrite: sem promessa, com aviso de incômodo",

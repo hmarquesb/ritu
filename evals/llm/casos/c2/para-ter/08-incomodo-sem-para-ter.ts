@@ -7,6 +7,7 @@ export const casoParaTer08: CasoConversa = {
   tipo: "conversa",
   id: "c2-t08-incomodo-sem-para-ter",
   titulo: "Dor de cabeça com falta repetida: sem para_ter",
+  familias: ["para_ter"],
   familia: "para_ter",
   cenario: {
     nome: "c2-t08",

@@ -7,6 +7,8 @@ export const casoIncomodos22: CasoConversa = {
   tipo: "conversa",
   id: "c3-s22-dor-de-cabeca-no-almoco",
   titulo: "Dor de cabeça e o que comer no almoço",
+  familias: ["incomodos"],
+  marcas: ["promessa"],
   cenario: {
     nome: "c3-s22",
     descricao: "Dor de cabeça com variante respondida: aviso de incômodo e Juiz aprova",

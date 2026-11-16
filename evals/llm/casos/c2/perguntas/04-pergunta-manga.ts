@@ -6,6 +6,8 @@ export const casoPergunta04: CasoConversa = {
   tipo: "conversa",
   id: "c2-p04-manga-pergunta-pitta",
   titulo: "Pergunta sobre manga para Pitta",
+  familias: ["perguntas"],
+  marcas: ["pergunta_desnecessaria"],
   cenario: {
     nome: "c2-p04",
     descricao: "Pergunta sobre manga e Pitta, com Minha casa vazia: nenhuma pergunta",

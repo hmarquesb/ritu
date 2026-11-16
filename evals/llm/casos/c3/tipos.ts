@@ -2,6 +2,7 @@ import type { SaidaDoAcompanhante } from "@/core/agents/companion/saida"
 import type { Veredito } from "@/core/agents/judge/julgar"
 import type { MotivoDoJuiz } from "@/core/agents/judge/saida"
 import type { ResumoFeito } from "@/core/agents/memory/memoria"
+import type { BaseDoCaso } from "../../tipos"
 import type { CasoConversa } from "../c2/tipos"
 
 // Nota de rotina do caso: o texto e quantos dias atrás a nota foi criada, a partir do relógio do eval.
@@ -13,10 +14,8 @@ export type ExpectativaDaMemoria = {
   confere: (r: { resumo: ResumoFeito; notas: NotaDoCaso[] }) => boolean
 }
 
-export type CasoMemoria = {
+export type CasoMemoria = BaseDoCaso & {
   tipo: "memoria"
-  id: string
-  titulo: string
   notas: NotaDoCaso[]
   // Pede o juiz do eval (caso 5): uma checagem a mais em deve.
   juiz?: true
@@ -29,10 +28,8 @@ export type CasoMemoria = {
 export type ExpectativaDoJuiz = { descricao: string; confere: (v: Veredito) => boolean }
 
 // Caso do Juiz: uma resposta pronta, conferida pelo Juiz sozinho (sem run nem Acompanhante).
-export type CasoJuiz = {
+export type CasoJuiz = BaseDoCaso & {
   tipo: "juiz"
-  id: string
-  titulo: string
   saida: SaidaDoAcompanhante
   evitar: string[] // <nunca_citar>
   nota_de_rotina?: string

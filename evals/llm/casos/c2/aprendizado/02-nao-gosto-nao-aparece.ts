@@ -7,6 +7,7 @@ export const casoAprendizado02: CasoConversa = {
   tipo: "conversa",
   id: "c2-a02-nao-gosto-nao-aparece",
   titulo: "Não gosto de gengibre, e ele não sai",
+  familias: ["aprendizado"],
   familia: "aprendizado",
   cenario: {
     nome: "c2-a02",

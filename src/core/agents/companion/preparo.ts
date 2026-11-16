@@ -223,7 +223,7 @@ function ajustarCasa(
 }
 
 // Minha casa vira a casa do run e a lista dos ids marcados como acabou (que não seguram refeição).
-async function casaEAcabou(
+export async function casaEAcabou(
   deps: Deps,
   contaId: string,
   filtro: FiltroPessoa,

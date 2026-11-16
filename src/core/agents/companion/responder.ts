@@ -17,6 +17,7 @@ import { criarAcompanhante } from "./agente"
 import { montarMensagemInicial } from "./contexto"
 import { contextoDoRun } from "./contexto-do-run"
 import { type EntradaDoAcompanhante, entradaDoAcompanhanteSchema } from "./entrada"
+import { sinaisDe } from "./filtro-da-pessoa"
 import {
   campos,
   criarFimDoRun,
@@ -76,14 +77,7 @@ async function sinaisDaPessoa(
   contaId: string,
   dados: DadosDoPreparo,
 ): Promise<SinaisPessoa> {
-  const preferencias = await stores.preferences.ler(contaId)
-  const ajudou: Record<string, number> = {}
-  for (const p of preferencias) if (p.ajudou > 0) ajudou[p.item_id] = p.ajudou
-  return {
-    em_casa: dados.casa.confirmados,
-    gosta: preferencias.filter((p) => p.gosto === "gosta").map((p) => p.item_id),
-    ajudou,
-  }
+  return sinaisDe(await stores.preferences.ler(contaId), dados.casa.confirmados)
 }
 
 // Guarda o resultado ok de clima.agora, sem o nome da cidade, para gravar no run.

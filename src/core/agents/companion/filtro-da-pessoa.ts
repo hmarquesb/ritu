@@ -2,6 +2,7 @@ import { config } from "@config/index"
 import type { ItemTemporario } from "@/core/accounts/ports"
 import type { Perfil } from "@/core/accounts/types"
 import type { EvitarItem, FiltroPessoa } from "@/core/knowledge/filtros"
+import type { SinaisPessoa } from "@/core/knowledge/substitutos"
 import type { Restricao } from "@/core/knowledge/vocab"
 import type { Preferencia } from "@/core/preferences/ports"
 
@@ -81,4 +82,15 @@ export function montarFiltro(p: Entrada): { filtro: FiltroPessoa; evitar_textos:
   ]
 
   return { filtro, evitar_textos }
+}
+
+/** Sinais da pessoa para a troca: a casa do run, o que gosta e o que já ajudou (só ajudou > 0). */
+export function sinaisDe(preferencias: Preferencia[], emCasa: string[]): SinaisPessoa {
+  const ajudou: Record<string, number> = {}
+  for (const p of preferencias) if (p.ajudou > 0) ajudou[p.item_id] = p.ajudou
+  return {
+    em_casa: emCasa,
+    gosta: preferencias.filter((p) => p.gosto === "gosta").map((p) => p.item_id),
+    ajudou,
+  }
 }

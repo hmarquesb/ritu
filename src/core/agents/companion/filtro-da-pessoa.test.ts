@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { Perfil } from "@/core/accounts/types"
 import type { EvitarItem } from "@/core/knowledge/filtros"
 import type { Preferencia } from "@/core/preferences/ports"
-import { montarFiltro } from "./filtro-da-pessoa"
+import { montarFiltro, sinaisDe } from "./filtro-da-pessoa"
 
 const DESDE = "2026-11-01T10:00:00.000Z"
 
@@ -245,5 +245,40 @@ describe("montarFiltro: privacidade", () => {
     }
     expect(JSON.stringify(resultado)).not.toContain("desde")
     expect(JSON.stringify(resultado)).not.toContain(DESDE)
+  })
+})
+
+describe("sinaisDe", () => {
+  it("em_casa vai como recebido", () => {
+    expect(sinaisDe([], ["ghee", "arroz"]).em_casa).toEqual(["ghee", "arroz"])
+  })
+
+  it("gosta leva só os itens com gosto gosta", () => {
+    const sinais = sinaisDe(
+      [
+        preferencia({ item_tipo: "alimento", item_id: "ghee", gosto: "gosta" }),
+        preferencia({ item_tipo: "alimento", item_id: "leite", gosto: "nao_gosta" }),
+        preferencia({ item_tipo: "alimento", item_id: "arroz", gosto: null }),
+      ],
+      [],
+    )
+
+    expect(sinais.gosta).toEqual(["ghee"])
+  })
+
+  it("ajudou leva os itens com ajudou maior que zero, com a contagem", () => {
+    const sinais = sinaisDe(
+      [
+        preferencia({ item_tipo: "preparo", item_id: "khichari", ajudou: 2 }),
+        preferencia({ item_tipo: "alimento", item_id: "gengibre", ajudou: 0, nao_ajudou: 1 }),
+      ],
+      [],
+    )
+
+    expect(sinais.ajudou).toEqual({ khichari: 2 })
+  })
+
+  it("sem preferências, as listas vêm vazias", () => {
+    expect(sinaisDe([], [])).toEqual({ em_casa: [], gosta: [], ajudou: {} })
   })
 })

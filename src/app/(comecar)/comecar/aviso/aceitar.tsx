@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { enviarPasso } from "@/app/(comecar)/_lib/enviar-passo"
 import { Button } from "@/components/base/button"
 
 export function AceitarAviso({ rotulo }: { rotulo: string }) {
@@ -13,18 +14,7 @@ export function AceitarAviso({ rotulo }: { rotulo: string }) {
     setEnviando(true)
     setErro(false)
     try {
-      const resposta = await fetch("/api/onboarding/aviso", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: "{}",
-      })
-      if (resposta.status === 401) {
-        window.location.href = "/"
-        return
-      }
-      if (!resposta.ok) throw new Error("falhou")
-      const { proximo } = (await resposta.json()) as { proximo: string }
-      router.push(proximo)
+      router.push(await enviarPasso("/api/onboarding/aviso", {}))
     } catch {
       setErro(true)
       setEnviando(false)

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
+import { enviarPasso } from "@/app/(comecar)/_lib/enviar-passo"
 import { Button } from "@/components/base/button"
 import { TagList, ToggleChip } from "@/components/base/chip"
 import { ComboBox, ComboBoxItem } from "@/components/base/combo-box"
@@ -119,18 +120,7 @@ export function EscolherEvitar({ grupos, botoes, maxItens, maxTexto, minBusca }:
         ? { passo, itens: itens.map(({ tipo, valor }) => ({ tipo, valor })) }
         : { passo }
     try {
-      const resposta = await fetch("/api/onboarding/evitar", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(corpo),
-      })
-      if (resposta.status === 401) {
-        window.location.href = "/"
-        return
-      }
-      if (!resposta.ok) throw new Error("falhou")
-      const { proximo } = (await resposta.json()) as { proximo: string }
-      router.push(proximo)
+      router.push(await enviarPasso("/api/onboarding/evitar", corpo))
     } catch {
       setErro(true)
       setEnviando(null)

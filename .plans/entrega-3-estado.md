@@ -1,10 +1,11 @@
 # Entrega 3 · Estado
 
+> A dona autorizou (2026-11-16) seguir até 96% da janela de 5 horas nesta sessão.
 > Trilha adiantada (worktree `../ritu-worktrees/entrega-3`, branch `entrega-3`), aberta em 2026-11-16.
 > Pré-condição da trilha: só spec `approved` cujas dependências estão `implemented` na `main`. Em 2026-11-16, só a 016 (depende de 001). 017 depende de 016; 018 a 020 dependem de 008–013 (013 ainda não está `implemented` na `main`).
 > `npm run lint` pelo rtk dá falso erro de JSON: usar `rtk bypass npm run lint`.
 > E2E neste worktree: `CI=1 npm run test:e2e`.
-> Fechamento da 016 (2026-11-16): gates 1 a 6 verdes depois do merge da `main` (6cfb382); `npm run dup` vermelho com 3 clones: 2 da 016 (C2) e 1 da `main` (`interpretar.ts` × `julgar.ts`, spec 013: fica com a sessão principal; anotar no relatório se ainda existir). ADR 0039 e docs (`DESIGN.md`, `DEVELOPMENT.md`, `QA.md`, `ARCHITECTURE.md` §7) commitados antes da C2; falta: C2, `dup` verde, spec `implemented` com o hash, push. Na junção, conferir se a `main` não usou o número 0039 de ADR.
+> 016 fechada (2026-11-16) em f4ad97d: gates 1 a 6 verdes e `npm run dup` com 0 clones, sobre a `main` juntada (cd63c49; o clone do intérprete × juiz saiu na `main`, cd1196f). Flakes de carga, que passam isolados: um teste que importa `./container` no `npm test` e `marca.spec.ts` › teclado › abas trocam com as setas (desktop) no E2E. Na junção, conferir se a `main` não usou o número 0039 de ADR.
 > Para o relatório (016 T16): com a lista da busca aberta, o axe exclui `[aria-hidden="true"]` (o React Aria esconde o resto da página sem tirar o foco); o teste do `ThemeSwitcher` aceita papel `radio` ou `button`.
 > `eval:det` completo tem timeouts de 5 s sob carga (arquivos diferentes a cada rodada, todos fora da 016; passam isolados). Visto nas ondas 2 e 3 da 016.
 > 016 T9: duas reprovações (classes da mesma propriedade em `BASE` e `SIZE` do `Button` se anulavam pela ordem da folha); a 2ª correção foi feita pelo orquestrador. Lição para T11/T12/T15: tamanho, padding e texto só no mapa de variante.
@@ -31,4 +32,4 @@
 | T15 · Build the /marca components section with every state and overlay | concluida | 694ed57 |
 | T16 · Assemble /marca, write its E2E and take the screenshots | concluida | ee464fe |
 | C1 · Fix the component and section defects revealed by the /marca E2E | concluida | d823d12 |
-| C2 · Remove the duplication flagged by npm run dup | pendente | |
+| C2 · Remove the duplication flagged by npm run dup | concluida | f4ad97d |

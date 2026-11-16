@@ -644,6 +644,20 @@ export { expect }
 - pronto quando: o elemento anunciado tem nome; os testes de axe da Entrada passam sem recarregar a página (a T21 confere).
 - fora: `src/core/`, `e2e/`.
 
+### C4 · Fix the combo box opening and click, and the lingering pending announcement
+- nivel: tela
+- objetivo: a busca de alimento e de cidade abre a lista quando as sugestões chegam e aceita clique na opção; o anúncio do botão pendente não fica até 7 s na página seguinte.
+- arquivos: `src/components/base/combo-box.tsx`, `src/app/(comecar)/comecar/evitar/escolher-evitar.tsx`, `src/app/(comecar)/comecar/dosha/escolher-dosha.tsx`, `src/components/base/button.tsx` (e `button.test.ts`) só se a causa do item 3 estiver lá
+- depende de: T22 (o E2E que acusa)
+- leitura: `.docs/DESIGN.md` §3 (só se precisar)
+- skills: `frontend-design` (antes), `web-design-guidelines` (antes de entregar)
+- referencia: nenhuma
+- contratos: (1) o `ComboBox` não abre a lista quando as sugestões assíncronas chegam depois da digitação (`aria-expanded=false`; só abre com ArrowDown); deve abrir sozinho quando houver sugestões e o campo estiver focado com texto. (2) com a lista aberta, o clique numa opção falha porque o rótulo do campo seguinte ("Outro alimento") intercepta o ponteiro: a lista tem de ficar acima do resto (camada/`z-index` por token) e receber o clique. (3) o anúncio `[role="log"] [role="img"]` do botão pendente às vezes fica até 7 s na página seguinte (a limpeza da C3 em `button.tsx` deveria removê-lo logo após desmontar): ache o caso em que a limpeza não roda (por exemplo, o pendente termina antes da navegação, o botão não desmonta, ou o anúncio é criado depois do cleanup) e corrija. Comportamento visual igual fora disso.
+- testes primeiro: casos unitários onde der (o vitest roda em `node`, sem DOM); o E2E da T22 confere.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test`, `npm run build`
+- pronto quando: digitar e clicar seleciona a opção; o E2E da T22 passa sem ArrowDown e com `toHaveCount(0)` no prazo padrão de 5 s.
+- fora: `src/core/`, `e2e/`.
+
 ## Ondas
 
 | Onda | Tarefas | Por quê |
@@ -662,3 +676,4 @@ export { expect }
 | 12 | T21 | E2E da Entrada (Playwright na porta 3000: uma rodada por vez) |
 | 12b | C2, C3 | Correções de tela e CSP reveladas pela T21; sem arquivo em comum. Depois, a T21 roda de novo e só então é commitada (C2 e C3 antes dela) |
 | 13 | T22 | E2E do onboarding |
+| 13b | C4 | Defeitos de tela revelados pela T22; depois a T22 roda de novo, sem contornos, e é commitada depois da C4 |

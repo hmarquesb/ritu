@@ -689,3 +689,25 @@ describe("mensagens que dizem o valor aceito", () => {
     expect(m.some((x) => x.includes("pratica_id") && x.includes("preparo_id"))).toBe(true)
   })
 })
+
+describe("dosagem", () => {
+  const dosagens = (e: EntregaDoModelo) =>
+    validarEntrega(e, { dados: dados(), kb, sinais }).filter((v) => v.codigo === "dosagem")
+
+  it("500 mg na resposta, no motivo de uma sugestão e num incerto dá três violações com o onde certo", () => {
+    const e = entrega({
+      resposta: "Tome 500 mg de gengibre.",
+      sugestoes: [{ ...cha, motivo: "Use 2 cápsulas à noite." }],
+      incertos: ["Talvez um extrato de cúrcuma ajude."],
+    })
+    expect(dosagens(e).map((v) => v.onde)).toEqual([
+      "resposta",
+      "sugestoes[0].motivo",
+      "incertos[0]",
+    ])
+  })
+
+  it("entrega válida de hoje não aponta dosagem", () => {
+    expect(dosagens(entrega())).toEqual([])
+  })
+})

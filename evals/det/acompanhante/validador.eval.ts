@@ -197,6 +197,7 @@ const CASOS: Record<CodigoDeViolacao, Mudanca> = {
       resposta: "Me conta mais sobre como você está.",
     },
   },
+  dosagem: { entrega: { resposta: "Tome 500 mg de gengibre por dia." } },
 }
 
 describe("validador sobre a base real", () => {

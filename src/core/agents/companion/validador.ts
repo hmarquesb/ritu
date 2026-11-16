@@ -6,6 +6,7 @@ import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { Alimento, Pratica, Preparo } from "@/core/knowledge/schemas"
 import { type SinaisPessoa, substitutos } from "@/core/knowledge/substitutos"
 import { type Guna, OPOSTO } from "@/core/knowledge/vocab"
+import { checarDosagem } from "./dosagem"
 import type { DadosDoPreparo } from "./preparo"
 import type { EntregaDoModelo } from "./saida"
 
@@ -27,6 +28,7 @@ export type CodigoDeViolacao =
   | "texto_sem_estrutura"
   | "tamanho"
   | "vazia"
+  | "dosagem"
 
 export type Violacao = { codigo: CodigoDeViolacao; onde: string; mensagem: string }
 
@@ -531,5 +533,6 @@ export function validarEntrega(entrega: EntregaDoModelo, p: Parametros): Violaca
   checarParaTer(ctx)
   checarTextoSemEstrutura(ctx)
   checarVazia(ctx)
+  for (const v of checarDosagem(entrega)) apontar(ctx, v.codigo, v.onde, v.mensagem)
   return ctx.violacoes
 }

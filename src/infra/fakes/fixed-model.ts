@@ -5,10 +5,11 @@ import type { FornecedorDeModelo } from "@/core/llm/fornecedor"
 export function createFixedModel(
   modelos: string[] = ["modelo-a", "modelo-b"],
 ): FornecedorDeModelo & {
-  usos: { modelo: string; tokens: { entrada: number; saida: number } }[]
+  usos: { modelo: string; tokens: { entrada: number; saida: number }; duracaoMs: number }[]
   falhas: { modelo: string; erro: LlmError }[]
 } {
-  const usos: { modelo: string; tokens: { entrada: number; saida: number } }[] = []
+  const usos: { modelo: string; tokens: { entrada: number; saida: number }; duracaoMs: number }[] =
+    []
   const falhas: { modelo: string; erro: LlmError }[] = []
   let indice = 0
   let esgotado = false
@@ -27,8 +28,8 @@ export function createFixedModel(
       }
       return { modelo }
     },
-    async usou(modelo, tokens) {
-      usos.push({ modelo, tokens })
+    async usou(modelo, tokens, duracaoMs) {
+      usos.push({ modelo, tokens, duracaoMs })
     },
     async falhou(modelo, erro) {
       falhas.push({ modelo, erro })

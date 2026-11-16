@@ -45,7 +45,7 @@ export function createInterpreter(deps: Deps) {
       return telemetry.span("interprete", {}, async (span) => {
         const inicio = clock.now().getTime()
         const duracao = () => clock.now().getTime() - inicio
-        const r = await chamarApoio({ router, client, telemetry }, span, {
+        const r = await chamarApoio({ router, client, telemetry, clock }, span, {
           instrucoes: interpreteV1.instrucoes,
           entrada: montarEntradaDoInterprete({ ...p, kb }),
           schema: saidaDoInterpreteSchema,

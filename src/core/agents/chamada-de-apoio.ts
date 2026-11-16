@@ -1,11 +1,12 @@
 import type { z } from "zod"
+import type { Clock } from "@/core/clock"
 import { chamarComPapel, SemModeloError } from "@/core/llm/chamar"
 import type { LlmClient } from "@/core/llm/client"
 import { LlmError } from "@/core/llm/errors"
 import type { ModelRouter } from "@/core/llm/router"
 import type { SpanAtivo, Telemetry } from "@/core/telemetry/ports"
 
-type Deps = { router: ModelRouter; client: LlmClient; telemetry: Telemetry }
+type Deps = { router: ModelRouter; client: LlmClient; telemetry: Telemetry; clock: Clock }
 
 type Pedido<T> = {
   instrucoes: string

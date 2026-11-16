@@ -172,7 +172,12 @@ export async function avaliar(
   })
   try {
     const r = await chamarComPapel(
-      { router: deps.router, client: deps.client, telemetry: deps.telemetry },
+      {
+        router: deps.router,
+        client: deps.client,
+        telemetry: deps.telemetry,
+        clock: deps.clock,
+      },
       {
         papel: "apoio",
         instrucoes: avaliadorV1.instrucoes,

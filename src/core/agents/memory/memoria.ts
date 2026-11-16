@@ -43,7 +43,7 @@ export function createMemoryAgent(deps: Deps): MemoryAgent {
     }
     try {
       const r = await chamarComPapel(
-        { router, client, telemetry },
+        { router, client, telemetry, clock },
         {
           papel: "apoio",
           instrucoes: memoriaV1.instrucoes,

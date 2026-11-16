@@ -62,12 +62,9 @@ export function createModelRouter(deps: Deps): ModelRouter {
 
   function anunciarTroca(t: Troca, aoTrocar?: (t: Troca) => void): void {
     aoTrocar?.(t)
-    telemetry.contador("ritu_llm_troca_de_modelo_total", {
-      papel: t.papel,
-      de: t.de,
-      para: t.para,
-      motivo: t.motivo,
-    })
+    const rotulos = { papel: t.papel, de: t.de, para: t.para, motivo: t.motivo }
+    telemetry.contador("ritu_llm_troca_de_modelo_total", rotulos)
+    telemetry.log("troca_de_modelo", rotulos)
   }
 
   return {
@@ -90,9 +87,10 @@ export function createModelRouter(deps: Deps): ModelRouter {
             anunciarTroca({ papel, de, para: modelo, motivo }, opts.aoTrocar)
             return { modelo, troca: { de, motivo } }
           }
+          telemetry.log("sem_modelo", { papel })
           return null
         },
-        async usou(modelo, tokens) {
+        async usou(modelo, tokens, duracaoMs) {
           await ledger.registrarTokens(modelo, tokens.entrada + tokens.saida)
           telemetry.contador("ritu_llm_chamadas_total", { modelo, papel })
           telemetry.contador(
@@ -101,13 +99,16 @@ export function createModelRouter(deps: Deps): ModelRouter {
             tokens.entrada,
           )
           telemetry.contador("ritu_tokens_total", { modelo, papel, direcao: "saida" }, tokens.saida)
+          telemetry.histograma("ritu_llm_duracao_ms", duracaoMs, { modelo, papel })
         },
         async falhou(modelo, erro: LlmError) {
           if (erro.code === "rate_limit") {
             await ledger.registrarRateLimit(modelo)
             houve429 = true
           }
-          telemetry.contador("ritu_llm_erros_total", { modelo, papel, codigo: erro.code })
+          const rotulos = { modelo, papel, codigo: erro.code }
+          telemetry.contador("ritu_llm_erros_total", rotulos)
+          telemetry.log("llm_erro", rotulos)
         },
       }
     },

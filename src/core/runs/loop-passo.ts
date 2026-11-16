@@ -145,6 +145,7 @@ async function executarChamada(amb: Ambiente, chamada: ChamadaDeTool): Promise<D
     tool: nomeSpan,
     status: d.status,
   })
+  telemetry.histograma("ritu_tool_duracao_ms", clock.now().getTime() - inicio, { tool: nomeSpan })
   await registrarEtapa(
     amb,
     etapaDe({

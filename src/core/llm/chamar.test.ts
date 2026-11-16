@@ -24,7 +24,7 @@ function setup(respostas: unknown[], limitesPorTeste = {}) {
   const telemetry = createMemoryTelemetry()
   const router = createModelRouter({ ledger, clock, telemetry })
   const client = createFakeLlm(respostas)
-  return { ledger, telemetry, client, deps: { router, client, telemetry } }
+  return { ledger, telemetry, client, clock, deps: { router, client, telemetry, clock } }
 }
 
 describe("chamarComPapel", () => {
@@ -105,5 +105,17 @@ describe("chamarComPapel", () => {
       "llm.troca_de_modelo": false,
     })
     expect(JSON.stringify(telemetry)).not.toContain("SEGREDO")
+  })
+
+  it("grava ritu_llm_duracao_ms com o tempo medido pelo Clock", async () => {
+    const { deps, telemetry, clock, client } = setup([{ ok: true }])
+    const gerar = client.gerar.bind(client)
+    client.gerar = async (p) => {
+      clock.advance(120)
+      return gerar(p)
+    }
+    await chamarComPapel(deps, pedido)
+    const h = telemetry.metricas.find((x) => x.nome === "ritu_llm_duracao_ms")
+    expect(h).toMatchObject({ valor: 120, rotulos: { modelo: decisao0, papel: "decisao" } })
   })
 })

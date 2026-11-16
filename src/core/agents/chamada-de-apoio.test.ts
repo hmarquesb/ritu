@@ -16,7 +16,7 @@ function setup(respostas: unknown[], limites = {}) {
   const telemetry = createMemoryTelemetry()
   const router = createModelRouter({ ledger, clock, telemetry })
   const client = createFakeLlm(respostas)
-  return { deps: { router, client, telemetry }, telemetry, client }
+  return { deps: { router, client, telemetry, clock }, telemetry, client }
 }
 
 function rodar(deps: ReturnType<typeof setup>["deps"]) {

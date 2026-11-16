@@ -176,7 +176,7 @@ O validador recebe o clima só se `clima.agora` devolveu `ok` no run.
 | `memoria.propor` | Anotar o fato de rotina que o Intérprete apontou. O agente decide se propõe; o texto é a frase do Intérprete |
 | `lista.propor` | Pôr na lista "Para ter em casa" um alimento que a pessoa respondeu que não tem e que faltou para uma sugestão. No máximo um por resposta, e nunca quando há candidato a "vale ter em casa" |
 
-As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3) e devolvem `proposto: true` com a proposta ou `proposto: false` com um código de recusa, que não pausa o run e conta no teto de recusas do loop. `finalizar` recolhe as aceitas. O prompt `acompanhante.v4` diz quando propor e manda não falar do bloco no texto.
+As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3) e devolvem `proposto: true` com a proposta ou `proposto: false` com um código de recusa, que não pausa o run e conta no teto de recusas do loop. `finalizar` recolhe as aceitas. O prompt `acompanhante.v5` diz quando propor, manda não falar do bloco no texto e diz quando registrar um retorno (`resultado.registrar`).
 
 - `memoria.propor` (só `tipo: rotina`) recusa com `com_incomodo`, `sem_fato` (o Intérprete não apontou fato de rotina), `fato_com_incomodo` (o fato traz palavra de incômodo da base) e `ja_anotado` (já é uma nota ativa).
 - `lista.propor` recusa com `com_incomodo`, `fora_da_base`, `sem_nao_tenho` (a pessoa não respondeu que não tem), `com_para_ter` (já há candidato a "vale ter em casa"), `fora_do_candidato` (o alimento não está no candidato indicado), `ja_na_lista`, `ja_recusado` e `filtrado` (o filtro da pessoa barra o alimento).
@@ -184,7 +184,7 @@ As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3)
 
 **Propostas montadas por código**, sem o agente: o que a mensagem diz sobre a casa (tem, acabou), "evitar sempre", restrição, "não como" e "gosto" apontados pelo Intérprete, e a lista do `para_ter`. Todas entram no mesmo bloco.
 
-**Gravação sem proposta:** `resultado.registrar`, usada quando a pessoa conta um retorno na conversa e o Intérprete não soube ligá-lo a uma sugestão. O agente só escolhe a sugestão; o resultado é o que o Intérprete apontou. A própria fala é o consentimento. Os toques da tela (Ajudou, Não gosto, Não tenho, Trocar, confirmar em "Ainda tem?") são gravados por rotas próprias, sem agente. As **faltas** (§6) também são gravadas por código, quando a resposta é entregue.
+**Gravação sem proposta:** `resultado.registrar`, usada quando a pessoa conta um retorno na conversa e o Intérprete apontou o resultado, mas não soube ligá-lo a uma sugestão. O prompt recebe os `retornos_pendentes` numerados (tipo, título e há quantos dias) e o agente passa só o número do pendente: `{ pendente }`. O resultado é sempre o que o Intérprete apontou; o modelo não o informa. A própria fala é o consentimento. A tool devolve `{ registrado: true, titulo }` ou `{ registrado: false, motivo }`, com `sem_retorno` (a mensagem não traz retorno), `fora_dos_pendentes` (o número não existe) ou `ja_registrado` (o retorno já foi fechado, no run, por toque ou pela limpeza). O texto só diz que anotou quando a tool devolveu `registrado: true`. O registro soma o contador uma vez, mesmo que um toque chegue ao mesmo tempo. Os toques da tela (Ajudou, Não gosto, Não tenho, Trocar, confirmar em "Ainda tem?") são gravados por rotas próprias, sem agente. As **faltas** (§6) também são gravadas por código, quando a resposta é entregue. Os toques são funções do core (`ARCHITECTURE.md` §3), sem modelo.
 
 ## 5. Aprovação (plano → aprovação → ação)
 
@@ -214,6 +214,12 @@ As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3)
 | **Faltas** | Por alimento: os dias em que teria entrado numa resposta e não estava em casa | 30 dias | Contadas no preparo; no máximo **um** candidato a "vale ter em casa" vai para o prompt |
 | **Rotina** | Notas curtas e datadas sobre a vida da pessoa (até 30 ativas) | Até a pessoa apagar | **Resumo de rotina** compactado (até 1200 caracteres) no prompt, sempre |
 | **Padrões** | Regularidades confirmadas pela pessoa | Até a pessoa apagar | No prompt, sempre (até 10) |
+
+### Entrega e gosto da mensagem (código)
+
+- **Entrega gravada:** quando um trecho termina com resposta do agente (ou o texto de código por falta de modelo), `registrarEntrega` grava numa transação, antes de fechar o run: um retorno aguardando por sugestão (a sugestão ganha o `retorno_id`), a marca "já sugerido" do item e dos alimentos e as faltas `teria_entrado`. Resposta segura (limite de recusas) não grava nada.
+- **Gosto da mensagem:** "adoro gengibre" vale **no mesmo run**: o preparo trata o alimento como "gosta" na ordenação e o tira de "não gosto". Nada é gravado até a aprovação; os sinais lidos pelas tools continuam sendo os do banco.
+- **Troca:** o ingrediente trocado grava a sugestão nova na saída do run e no retorno; as marcas de "já sugerido" acompanham o substituto.
 
 ### Ordenação (código)
 
@@ -248,7 +254,7 @@ Depois dos filtros, cada candidato recebe uma nota e é ordenado dentro do seu t
 - Em todo run em que o preparo monta candidatos (§3), ele separa, entre os que passaram no filtro e antes do corte para o contexto, os **5 mais adequados** só pela nota de adequação, sem os sinais de casa, gosto e resultado. Uma prática conta pelos seus ingredientes. Uma refeição conta pelo alimento mais adequado de cada vaga obrigatória.
 - Cada alimento desse grupo que **não está em casa** (nunca registrado, ou marcado como acabou) é uma falta `teria_entrado`. Item incerto não gera falta.
 - O toque "Não tenho", num ingrediente sugerido ou em resposta a `ask_user`, é uma falta `nao_tenho`, gravada pela rota de toque.
-- Uma falta por alimento por dia. As faltas `teria_entrado` são gravadas quando a resposta é entregue; run que falha não grava.
+- Uma falta por alimento por dia. As faltas `teria_entrado` são gravadas quando a resposta é entregue, na mesma transação que cria os retornos e marca o "já sugerido" (ADR 0036); run que falha não grava. Se essa gravação falha, o run segue com a etapa `erro` `registro_da_entrega` e a saída sai sem `retorno_id`.
 - **Candidato:** o alimento com faltas em pelo menos **3 dias diferentes** nos últimos **30**, contando hoje. Precisa passar pelos filtros de hoje ("evitar sempre", restrições, "não como", "não gosto"), não estar na lista "Para ter em casa" e não ter tido a indicação recusada. Com mais de um, vale o de mais dias; no empate, o de falta mais recente e depois o de nome menor na ordem alfabética.
 - O candidato só vai para o contexto em run com intenção `momento` **e sem incômodo**. O preparo entrega no máximo um, com `alimento_id`, `nome`, `vezes`, `contribui` (as qualidades buscadas que o alimento tem) e `linha_base`.
 - **O Acompanhante decide se a indicação cabe na resposta.** Se cabe, fecha o texto com uma frase sobre ela e preenche `para_ter`. O código escreve a linha de motivo ("fez falta N vezes nos últimos 30 dias") e gera a proposta de lista.

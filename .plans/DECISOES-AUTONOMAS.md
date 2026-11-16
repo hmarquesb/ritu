@@ -78,3 +78,24 @@
 
 ## 009 · fechamento · Risco da 005 · T5 resolvido
 - O risco anotado na 005 · T5 (`continuarRun` lia e atualizava o run sem condição) foi resolvido na 009 · T3 (D3): `RunRepository.mudarStatusSe` e `continuarRun` com troca condicional. A conferência contra o Postgres (`test:db`) segue pendente por falta de docker neste ambiente.
+
+## 011 · T8 · Frase da troca e par canela → cardamomo (2026-11-16)
+
+- **Faltava:** o bloco da T8 pede o texto "Troquei canela por cardamomo: os dois aquecem." e manda parar se a base der outra frase. Na mini-base, `fraseDaTroca` dá "Troquei canela por cardamomo: os dois aquecem e aliviam o peso."; na base real, cardamomo (virya frio) nem entra como substituto da canela.
+- **Decidido:** o teste confere a frase que a base produz (D8: a frase vem dos `verbos` das gunas em comum e do `motivo` de `substitutos`); o exemplo da spec é ilustrativo. O teste usa a mini-base mais 6 especiarias, porque R1 proíbe a base real num teste do core.
+- **Por quê:** mudar `fraseDaTroca` ou a base para caber num exemplo seria inventar regra; a frase real segue o contrato.
+- **Desfazer:** se a dona quiser a frase curta, ajustar `fraseDaTroca` (só o primeiro verbo) e o teste.
+
+## 011 · T16 · Cenário `troca-por-toque` com cravo no lugar do cardamomo (2026-11-16)
+
+- **Faltava:** a spec pede o cenário com "cardamomo confirmado em casa" e a frase "Troquei canela por cardamomo: os dois aquecem.". Na base real, cardamomo tem virya frio e canela quente, então `substitutos` nunca o oferece e o toque cai em "perguntar".
+- **Decidido:** o cenário confirma **cravo** em casa (virya quente, gunas [quente, leve], em comum com a canela) e confere a frase exata que `fraseDaTroca` produz para canela → cravo. Se cravo não couber no preparo do chá, noz-moscada.
+- **Por quê:** a base não muda para caber num exemplo (agentes não alteram dados com fonte); mesma linha da decisão da 011 · T8.
+- **Desfazer:** se a dona revisar o virya do cardamomo na base, voltar o cenário para cardamomo.
+
+## 011 · fechamento · Rodada do `c2-conversa` repetida só nos casos com erro (2026-11-16)
+
+- **Faltava:** a rodada ⚠️ do `c2-conversa` deu erro nos 20 casos de intérprete (o runner usava o registro de uso do Postgres, fora do ar) e em `c1-08`/`c1-11`. A regra é não rodar duas rodadas completas no mesmo dia, e não existia `--retomar`.
+- **Decidido:** correção C1 no runner (intérprete com registro em memória, como os outros tipos; causa de c1-08/c1-11) e a opção `--casos` para repetir só os 22 casos com erro, com o relatório em `evals/resultados/c2-conversa-parcial.md`. O resultado do checkpoint é a rodada completa (32 casos válidos) mais a parcial (22).
+- **Por quê:** fecha o checkpoint hoje com ~22 chamadas a mais, em vez de uma segunda rodada completa (~100 chamadas).
+- **Desfazer:** rodar a rodada completa de novo noutro dia e apagar o parcial.

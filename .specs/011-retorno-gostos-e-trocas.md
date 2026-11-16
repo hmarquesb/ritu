@@ -1,6 +1,7 @@
 ---
 title: Retorno, gostos e trocas
-status: approved
+status: implemented
+implemented: f770592
 entrega: 2
 created: 2026-11-15
 ---
@@ -43,26 +44,26 @@ A razão para usar o Ritu e não uma IA genérica é ele acertar mais a cada uso
 
 ## Critérios de aceite
 
-- [ ] **Retornos:** resposta entregue com 3 sugestões cria 3 retornos `aguardando`, na ordem, e cada `SugestaoEntregue` da saída gravada leva o `retorno_id`. Saída `segura`, saída de `codigo` e run `failed` não criam retorno.
-- [ ] **Já sugerido:** depois da entrega, a prática ou o preparo e cada alimento das sugestões têm `ultima_sugestao_em` preenchido.
-- [ ] **Faltas:** cada alimento de `faltas_do_run` vira uma falta `teria_entrado` com o `run_id`; alimento que a pessoa respondeu "Tenho" durante o run não é gravado; rodar duas vezes no mesmo dia conta um dia só; run que falha não grava.
-- [ ] **Ordem dos registros:** retornos, "já sugerido" e faltas são gravados numa transação só; se uma parte falha, nenhuma fica.
-- [ ] **Toque de retorno:** `tocarRetorno` fecha o retorno com origem `toque` e soma os contadores da sugestão e dos alimentos; tocar de novo não soma outra vez; retorno de outra conta devolve `toque_invalido`.
-- [ ] **Aprendizado:** com dois "não ajudou" seguidos no mesmo item, o preparo seguinte o põe no fim do seu tipo; um "ajudou" depois o traz de volta. Vale por toque e pela conversa.
-- [ ] **Toque de gosto:** `tocarGosto` grava `gosta`, `nao_gosta` ou limpa; alimento com `nao_gosta` sai dos candidatos do run seguinte; alimento com `gosta` sobe.
-- [ ] **Troca:** `trocarIngrediente` com motivo `trocar` substitui o ingrediente pelo primeiro substituto confirmado em casa, devolve a sugestão com `troca` e a frase de `fraseDaTroca`, atualiza `runs.saida` e os alimentos do retorno aguardando. Nenhuma chamada de modelo.
-- [ ] **Troca respeita os filtros:** o substituto nunca está em "evitar sempre", restrição, "não como" ou "não gosto", nunca é item a evitar agora (`saida.evitar`) e nunca forma combinação incompatível com os outros itens da sugestão.
-- [ ] **Não tenho:** o toque marca o alimento como acabou, grava a falta `nao_tenho` e faz a troca no mesmo pedido.
-- [ ] **Não gosto:** o toque grava `nao_gosta` e faz a troca no mesmo pedido.
-- [ ] **Pergunta da troca:** sem substituto confirmado, e havendo um substituto incerto ou nunca registrado, `trocarIngrediente` devolve `perguntar`. "Tenho" registra em casa e troca; "Não tenho" marca acabou, grava a falta `nao_tenho` e devolve `sem_substituto`. No máximo uma pergunta por toque.
-- [ ] **Sem substituto:** sem nenhum candidato, ou depois de `maxTrocasPorItem` trocas no mesmo ingrediente, devolve `sem_substituto` com o texto fixo; a sugestão não muda.
-- [ ] **`resultado.registrar`:** com retorno na mensagem ainda não registrado, a tool fecha o retorno do número pedido com o resultado que o Intérprete apontou; sem retorno na mensagem, já registrado neste run ou número fora dos pendentes, recusa com o código.
-- [ ] **Gosto escrito:** "adoro gengibre, o que tomo agora?" faz o gengibre contar como "gosta" na ordenação do mesmo run e põe a linha "Você gosta de gengibre" no bloco; aprovada, grava `gosta`; recusada ou expirada, não grava. "Não gosto de quiabo" vira "não como" (010).
-- [ ] **Para ter em casa:** saída com `para_ter` gera a linha de lista (`fez_falta`) no bloco; aprovada, o item entra na lista com o motivo e soma `ritu_para_ter_total{etapa: "aprovada"}`; recusada, soma `recusada` e o alimento não volta a ser candidato; expirada, pode voltar.
-- [ ] **Privacidade:** nenhum span, métrica, log ou `resumo` de etapa leva nome de alimento, título de sugestão ou texto da pessoa.
-- [ ] `npm run demo` roda os seis cenários novos sem rede, com código 0.
-- [ ] ⚠️ `npm run eval:llm -- --checkpoint c2-conversa` roda uma vez no fechamento e grava `evals/resultados/c2-conversa.md` e a coluna em `evals/COMPARACAO.md`.
-- [ ] Gates: `lint`, `typecheck`, `test`, `eval:det`, `dup`, `build`, `test:db`.
+- [x] **Retornos:** resposta entregue com 3 sugestões cria 3 retornos `aguardando`, na ordem, e cada `SugestaoEntregue` da saída gravada leva o `retorno_id`. Saída `segura`, saída de `codigo` e run `failed` não criam retorno.
+- [x] **Já sugerido:** depois da entrega, a prática ou o preparo e cada alimento das sugestões têm `ultima_sugestao_em` preenchido.
+- [x] **Faltas:** cada alimento de `faltas_do_run` vira uma falta `teria_entrado` com o `run_id`; alimento que a pessoa respondeu "Tenho" durante o run não é gravado; rodar duas vezes no mesmo dia conta um dia só; run que falha não grava.
+- [x] **Ordem dos registros:** retornos, "já sugerido" e faltas são gravados numa transação só; se uma parte falha, nenhuma fica.
+- [x] **Toque de retorno:** `tocarRetorno` fecha o retorno com origem `toque` e soma os contadores da sugestão e dos alimentos; tocar de novo não soma outra vez; retorno de outra conta devolve `toque_invalido`.
+- [x] **Aprendizado:** com dois "não ajudou" seguidos no mesmo item, o preparo seguinte o põe no fim do seu tipo; um "ajudou" depois o traz de volta. Vale por toque e pela conversa.
+- [x] **Toque de gosto:** `tocarGosto` grava `gosta`, `nao_gosta` ou limpa; alimento com `nao_gosta` sai dos candidatos do run seguinte; alimento com `gosta` sobe.
+- [x] **Troca:** `trocarIngrediente` com motivo `trocar` substitui o ingrediente pelo primeiro substituto confirmado em casa, devolve a sugestão com `troca` e a frase de `fraseDaTroca`, atualiza `runs.saida` e os alimentos do retorno aguardando. Nenhuma chamada de modelo.
+- [x] **Troca respeita os filtros:** o substituto nunca está em "evitar sempre", restrição, "não como" ou "não gosto", nunca é item a evitar agora (`saida.evitar`) e nunca forma combinação incompatível com os outros itens da sugestão.
+- [x] **Não tenho:** o toque marca o alimento como acabou, grava a falta `nao_tenho` e faz a troca no mesmo pedido.
+- [x] **Não gosto:** o toque grava `nao_gosta` e faz a troca no mesmo pedido.
+- [x] **Pergunta da troca:** sem substituto confirmado, e havendo um substituto incerto ou nunca registrado, `trocarIngrediente` devolve `perguntar`. "Tenho" registra em casa e troca; "Não tenho" marca acabou, grava a falta `nao_tenho` e devolve `sem_substituto`. No máximo uma pergunta por toque.
+- [x] **Sem substituto:** sem nenhum candidato, ou depois de `maxTrocasPorItem` trocas no mesmo ingrediente, devolve `sem_substituto` com o texto fixo; a sugestão não muda.
+- [x] **`resultado.registrar`:** com retorno na mensagem ainda não registrado, a tool fecha o retorno do número pedido com o resultado que o Intérprete apontou; sem retorno na mensagem, já registrado neste run ou número fora dos pendentes, recusa com o código.
+- [x] **Gosto escrito:** "adoro gengibre, o que tomo agora?" faz o gengibre contar como "gosta" na ordenação do mesmo run e põe a linha "Você gosta de gengibre" no bloco; aprovada, grava `gosta`; recusada ou expirada, não grava. "Não gosto de quiabo" vira "não como" (010).
+- [x] **Para ter em casa:** saída com `para_ter` gera a linha de lista (`fez_falta`) no bloco; aprovada, o item entra na lista com o motivo e soma `ritu_para_ter_total{etapa: "aprovada"}`; recusada, soma `recusada` e o alimento não volta a ser candidato; expirada, pode voltar.
+- [x] **Privacidade:** nenhum span, métrica, log ou `resumo` de etapa leva nome de alimento, título de sugestão ou texto da pessoa.
+- [x] `npm run demo` roda os seis cenários novos sem rede, com código 0.
+- [x] ⚠️ `npm run eval:llm -- --checkpoint c2-conversa` roda uma vez no fechamento e grava `evals/resultados/c2-conversa.md` e a coluna em `evals/COMPARACAO.md`.
+- [x] Gates: `lint`, `typecheck`, `test`, `eval:det`, `dup`, `build`, `test:db`.
 
 ## O que fazer
 

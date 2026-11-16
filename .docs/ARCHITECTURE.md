@@ -91,12 +91,23 @@ running → waiting_for_input → running → … → done
 | Ação | Rota | O que grava |
 |---|---|---|
 | Retorno com um toque | `POST /api/retornos/:id` | `retornos` e o contador em `preferencias` |
-| Trocar ingrediente | `POST /api/sugestoes/:id/trocar` | A sugestão do run, com o substituto e o motivo; roda o validador de novo |
+| Trocar ingrediente | `POST /api/sugestoes/:id/trocar` | A sugestão do run e o retorno dela, com o substituto e o motivo; confere as combinações com os outros itens. "Não tenho" e "Não gosto" também gravam a falta e o gosto |
 | Não gosto · Gosto | `POST /api/preferencias` | `preferencias` |
 | Não tenho · Ainda tenho · Sempre tenho · adicionar · tirar | `POST /api/casa` | `casa`. "Não tenho" também grava uma falta em `faltas`. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa` |
 | Tirar um item da lista "Para ter em casa" | `POST /api/lista` | `lista_ter_em_casa` |
 | 👍 / 👎 na resposta | `POST /api/feedback` | `feedback` |
 | Confirmar ou recusar um padrão | `POST /api/padroes/:id` | `padroes` |
+
+As rotas só autenticam, validam a entrada e chamam funções do core, em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
+
+| Função | Rota | O que faz |
+|---|---|---|
+| `tocarRetorno(deps, contaId, retornoId, resultado)` | `/api/retornos/:id` | Fecha o retorno com origem `toque`. Retorno que não existe, é de outra conta ou já foi respondido: `toque_invalido` |
+| `tocarGosto(deps, contaId, item, gosto)` | `/api/preferencias` | Grava `gosta`, `nao_gosta` ou limpa (`null`). Item fora da base: `toque_invalido` |
+| `trocarIngrediente(deps, contaId, { runId, sugestao, alimento_id, motivo })` | `/api/sugestoes/:id/trocar` | Com motivo `trocar`, `nao_tenho` ou `nao_gosto`: anota o que o motivo pede e devolve `trocou` (com a sugestão nova), `perguntar` (com a pergunta sobre o substituto mais próximo) ou `sem_substituto` |
+| `responderTroca(deps, contaId, { runId, sugestao, alimento_id, candidato, resposta })` | `/api/sugestoes/:id/trocar` | Resposta `tenho` (registra em casa e troca) ou `nao_tenho` (anota a falta e devolve `sem_substituto`) |
+
+`sugestao` é a posição na saída do run, a partir de 0; `alimento_id` é o ingrediente tocado, pelo id efetivo. A troca só usa substituto confirmado em casa, com teto de três por item. A transação da troca começa travando a linha do run, então dois toques seguidos esperam um pelo outro. O erro `toque_invalido` é lançado fora da transação, e as métricas só somam depois do commit.
 
 ## 4. Autenticação e demonstração
 

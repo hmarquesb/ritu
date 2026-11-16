@@ -226,11 +226,11 @@ Como a casa é atualizada:
 
 ### Trocar um ingrediente
 
-Cada ingrediente de uma sugestão pode ser trocado sem refazer a resposta. O substituto é o alimento com as qualidades mais próximas, na mesma função do preparo, que passe por "evitar sempre", pelas restrições e pelas combinações. A ordem de preferência é: tem em casa, gosta, já funcionou. A troca mostra o motivo: *"Troquei canela por cardamomo: os dois aquecem."* Se não houver substituto, a tela diz isso.
+Cada ingrediente de uma sugestão pode ser trocado sem refazer a resposta. O substituto é o alimento com as qualidades mais próximas, na mesma função do preparo, que passe por "evitar sempre", pelas restrições e pelas combinações. A ordem de preferência é: tem em casa, gosta, já funcionou. A troca mostra o motivo: *"Troquei canela por cravo: os dois aquecem."* Se não houver substituto, a tela diz isso: *"Não achei uma troca para canela com o que você tem em casa."*
 
-O substituto é sempre algo que está confirmado em casa. Quando não há, o Ritu pergunta se a pessoa tem o substituto mais próximo: com "Tenho", registra em casa e faz a troca; com "Não tenho", anota a falta, que conta para o "vale ter em casa". É no máximo uma pergunta por troca.
+O substituto é sempre algo que está confirmado em casa. Quando não há, o Ritu pergunta se a pessoa tem o substituto mais próximo: com "Tenho", registra em casa e faz a troca; com "Não tenho", anota a falta, que conta para o "vale ter em casa". É no máximo uma pergunta por troca. Um alimento que a pessoa já disse que acabou não é oferecido. Cada ingrediente aceita até **três trocas**, sem repetir um que já saiu; depois disso, a tela diz que não há troca. "Não tenho" para um alimento que nunca foi registrado anota só a falta, e ele pode ser perguntado de novo numa troca seguinte.
 
-Tocar em "Não tenho" ou em "Não gosto" num ingrediente anota e já faz a troca, no mesmo toque.
+Tocar em "Não tenho" ou em "Não gosto" num ingrediente anota e já faz a troca, no mesmo toque. O que foi anotado fica anotado mesmo quando não há substituto. O retorno da sugestão guarda o ingrediente que ficou.
 
 A troca é feita por código, com a base de alimentos. Não chama o modelo.
 
@@ -241,7 +241,7 @@ Três informações diferentes por alimento ou prática, guardadas separadas:
 | Informação | De onde vem | Efeito |
 |---|---|---|
 | **Tem em casa** | Minha casa | Decide se pode entrar agora |
-| **Gosta / não gosta** | Toque em "Não gosto" num ingrediente, resposta a uma pergunta do agente ("Tenho" · "Não tenho" · "Não gosto"), marcação em Minha casa, ou o que a pessoa escreve ("adoro gengibre" vale na mesma resposta e é guardado com aprovação; "não gosto de quiabo" entra como "não como") | Quem ela gosta sobe na ordem; quem ela não gosta deixa de ser sugerido |
+| **Gosta / não gosta** | Toque em "Não gosto" num ingrediente, resposta a uma pergunta do agente ("Tenho" · "Não tenho" · "Não gosto"), marcação em Minha casa, ou o que a pessoa escreve ("adoro gengibre" vale na mesma resposta, sobe na ordem das opções, e só é guardado com aprovação; "não gosto de quiabo" entra como "não como") | Quem ela gosta sobe na ordem; quem ela não gosta deixa de ser sugerido |
 | **Funcionou** | Retornos de "Como ficou?" | O que ajudou sobe; o que não ajudou nas duas últimas vezes vai para o fim |
 
 Regra: **a adequação ayurvédica, "evitar sempre" e as restrições filtram; gosto e resultado só ordenam o que passou no filtro.** Gostar de um alimento nunca faz o agente sugeri-lo quando ele não serve para o momento.
@@ -259,6 +259,7 @@ Uma **falta** é anotada em dois casos:
 | **Teria entrado** | O alimento estava entre os mais adequados para o momento e não estava em casa (nunca foi registrado, ou acabou) |
 | **Não tenho** | A pessoa tocou em "Não tenho" num ingrediente sugerido, ou respondeu "Não tenho" a uma pergunta do agente ou de uma troca |
 
+- A falta "teria entrado" é gravada quando a resposta é entregue; resposta que não chega à pessoa não grava falta.
 - Cada alimento conta no máximo **uma vez por dia**.
 - Item incerto não conta como falta: a pessoa talvez ainda tenha.
 - As faltas valem por **30 dias**. Depois disso, são apagadas.
@@ -292,7 +293,8 @@ Os dois caminhos passam pela aprovação da pessoa. Recusada a proposta (linha d
 - Toda sugestão entregue entra nesta área, da mais recente para a mais antiga.
 - A pessoa responde **se quiser**, com um toque: **Ajudou · Não ajudou · Não fiz**. O toque é gravado na hora, por código.
 - Quem quiser pode escrever mais ("ajudou, mas achei forte"). Aí o agente lê, registra e pode ajustar as próximas sugestões.
-- O retorno também pode vir pela conversa ("tomei o chá e melhorei"): o agente liga o comentário à sugestão certa.
+- O retorno também pode vir pela conversa ("tomei o chá e melhorei"): o agente liga o comentário à sugestão certa e o registro vale como a resposta da pessoa. Se não dá para saber de qual sugestão ela fala, o Ritu diz que ela pode marcar em "Como ficou?" e não anota nada. O resultado ("ajudou", "não ajudou", "não fiz") é o que a pessoa disse, nunca uma dedução.
+- Cada retorno vale uma vez. Se o toque e a conversa chegam ao mesmo tempo, só o primeiro conta.
 - Sugestão sem retorno sai da área depois de **7 dias**, sem contar como "não fiz".
 - O produto não cobra. A tela Conversa só mostra um indicador discreto: *"3 sugestões esperando seu retorno"*.
 - O texto da área explica para que serve: *"Seu retorno me ajuda a acertar mais nas próximas vezes."*

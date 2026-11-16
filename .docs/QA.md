@@ -40,6 +40,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - O estado "incerto" aparece na data certa para cada durabilidade; "sempre tenho" nunca fica incerto.
 - Alimento que a base não conhece é guardado, não entra em sugestão nem em troca.
 - Toques (retorno, gosto, casa, troca) gravam o esperado sem chamar modelo.
+- Gosto dito pela pessoa (toque) vale no preparo seguinte; o gosto escrito na mensagem vale no próprio run, não entra nos sinais do banco e só é gravado com aprovação (recusado ou expirado não grava).
 
 **Faltas e "vale ter em casa"**
 - Alimento entre os mais adequados que não está em casa gera uma falta; alimento em casa ou incerto não gera; o mesmo alimento no mesmo dia conta uma vez.
@@ -49,6 +50,16 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 - Run com incômodo não recebe candidato; `para_ter` sem candidato, ou diferente dele, é apontado pelo validador.
 - `para_ter` na saída gera a proposta de lista; aprovada, grava o item com o motivo; recusada, o alimento não volta; expirada, pode voltar.
 - Registrar o alimento em casa apaga as faltas dele e o tira da lista.
+
+**Aprendizado** (`evals/det/aprendizado/`: entrega, retorno, resultado-registrar, gosto, troca, troca-pergunta, nao-tenho, para-ter, privacidade)
+- **Entrega:** cada sugestão entregue cria um retorno aguardando e leva o `retorno_id`; o já sugerido é marcado só para o que foi entregue; as faltas do run entram uma por alimento por dia e somam `ritu_faltas_total`; resposta segura não grava nada.
+- **Retorno:** a conversa e o toque somam os mesmos contadores e cada um soma a sua origem; só o primeiro fecha o retorno; retorno de outra conta é `toque_invalido`; dois "não ajudou" seguidos mandam o item para o fim e um "ajudou" o traz de volta.
+- **`resultado.registrar`:** fecha o pendente com o resultado do Intérprete, nunca o da chamada; recusa com `sem_retorno`, `ja_registrado` e `fora_dos_pendentes`.
+- **Troca:** só entra substituto confirmado em casa, da mesma função, que passe pelo filtro, pelas combinações e por "evitar agora"; não repete o que já saiu; no teto de três, devolve `sem_substituto` sem mudar a saída.
+- **Pergunta da troca:** substituto incerto ou nunca registrado gera uma pergunta; o que acabou não é perguntado; "Tenho" registra e troca; "Não tenho" anota a falta e encerra; candidato fora da pergunta devolve `sem_substituto`.
+- **Não tenho:** o toque marca que acabou, anota a falta `nao_tenho` e troca no mesmo toque; com a falta, o alimento pode chegar ao `para_ter` do preparo seguinte.
+- **Para ter em casa:** a linha do bloco vem da saída; aprovada, grava com motivo e número de vezes; recusada, bloqueia o alimento; expirada, não bloqueia.
+- **Privacidade:** os seis cenários de aprendizado não vazam texto da pessoa, alimento nem sugestão; o span `toque` só leva `tipo`, `motivo` e `resultado`.
 
 **Caminhos por intenção** (`evals/det/conversa/`: caminhos, interpretação, casa da mensagem, evitar, retorno, alerta, ofensa e fora, degradação, mensagens, privacidade)
 - Casa sozinha, retorno sozinho, "evitar sempre" sozinho e pergunta sobre o próprio Ritu não chamam o Acompanhante nem o Juiz.
@@ -131,7 +142,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
 
-76 casos (12 no `c1`, 34 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
+84 casos (12 no `c1`, 42 no `c2`, 30 no `c3`). Cada caso traz a mensagem, o perfil, o clima, a casa, os gostos, os resultados e a conversa anterior.
 
 | Família | O que mede | Métrica |
 |---|---|---|
@@ -145,7 +156,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas.
 | **Casa** | Usa o que está confirmado; pergunta ou oferece troca para o incerto; não usa o que acabou | Acerto |
 | **Propostas** | Propôs o que fazia sentido (casa, rotina, lista) e nada além; não propôs nada com o que a restrição barra; o texto da resposta não diz que anotou nem fala do bloco; o run termina no bloco, sem aprovar | Propostas corretas; média de propostas recusadas pelo código por run |
 | **Para ter em casa** | Indica o candidato quando ele cabe na resposta; não indica sem candidato; fala como algo para as próximas vezes, sem marca, loja ou preço | Acerto |
-| **Aprendizado** | Dois "não ajudou" seguidos tiram a prioridade; "não gosto de X" tira X; o que a pessoa gosta aparece primeiro | Acerto |
+| **Aprendizado** | Dois "não ajudou" seguidos tiram a prioridade; "não gosto de X" tira X; o que a pessoa gosta aparece primeiro; o retorno de ontem contado na conversa é fechado; sem pista da sugestão, o texto manda para "Como ficou?" e não diz que anotou | Acerto, por caso e no total |
 | **Memória** | O resumo de rotina junta repetidas, fica com a nota mais recente na contradição, respeita o teto e não inventa; a resposta usa o resumo e o padrão confirmado, sem sair dos candidatos | Acerto |
 | **Conversa** | Relato da vida é acolhido sem conselho fora do papel; pergunta simples é respondida em até 2 passos | Acerto; passos |
 | **Segurança** | Injection no texto livre e em resposta de pergunta; pedido de dosagem ou de cura; conteúdo sexual ou de ódio vai para `fora` | Taxa de bloqueio |
@@ -161,7 +172,7 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 | Checkpoint | Quando | O que já dá para medir |
 |---|---|---|
 | `c1-base` | Fim da entrega 1 | Conteúdo, fidelidade, explicação, trajetória, autocorreção, custo |
-| `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 34 do `c2` (20 de intérprete e 14 de conversa: 8 de perguntas e 6 de propostas), 46 no total. Mede Intenção (acerto e falsos alertas), Perguntas (necessárias feitas, desnecessárias evitadas e recusas de `ask_user` por run), Propostas (acerto da proposta e média de recusas do código por run), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1`. Nos casos de pergunta, o runner responde às pausas (até 3 por run) |
+| `c2-conversa` | Depois da spec 011 | Roda os 12 casos do `c1` e os 42 do `c2` (20 de intérprete e 22 de conversa: 8 de perguntas, 6 de propostas, 5 de aprendizado e 3 de para ter em casa), 54 no total. Mede Intenção (acerto e falsos alertas), Perguntas (necessárias feitas, desnecessárias evitadas e recusas de `ask_user` por run), Propostas (acerto da proposta e média de recusas do código por run), Aprendizado e Para ter em casa (acerto, por caso e no total), custo do papel `apoio` (chamadas, tokens, p50 e p95) e violações da 1ª entrega por código, além das famílias do `c1`. Nos casos de pergunta, o runner responde às pausas (até 3 por run) |
 | `c3-confiavel` | Fim da entrega 2 | Todas as famílias |
 | `c4-site` | Fim da entrega 3 | Todas, pelas rotas reais do site |
 | `c5-publico` | Fim da entrega 4 | Todas, com os prompts e a configuração de produção |

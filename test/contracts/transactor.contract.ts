@@ -76,5 +76,23 @@ export function transactorContract(make: () => Promise<ContractEnv> | ContractEn
       expect(await env.stores.runs.aberto(a)).toMatchObject({ id: existente.id })
       expect(await env.stores.messages.doDia(a, DIA)).toEqual([])
     })
+
+    it("duas transações simultâneas com mudarStatusSe: só uma grava", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const run = await env.stores.runs.criar(a, { caminho: "casa", intencoes: [], dia: DIA })
+      await env.stores.runs.mudarStatusSe(a, run.id, "running", "waiting_for_approval")
+
+      const aprovar = () =>
+        env.tx.emTransacao(async (s) => {
+          if (!(await s.runs.mudarStatusSe(a, run.id, "waiting_for_approval", "done"))) return false
+          await s.routine.anotar(a, "nota")
+          return true
+        })
+      const resultados = await Promise.all([aprovar(), aprovar()])
+
+      expect(resultados.filter(Boolean)).toHaveLength(1)
+      expect((await env.stores.runs.buscar(a, run.id))?.status).toBe("done")
+      expect(await env.stores.routine.notasAtivas(a)).toHaveLength(1)
+    })
   })
 }

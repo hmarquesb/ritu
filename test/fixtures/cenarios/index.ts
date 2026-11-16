@@ -5,6 +5,7 @@ import { autocorrecao } from "./autocorrecao"
 import { casaIncerta } from "./casa-incerta"
 import { casaSozinha } from "./casa-sozinha"
 import { casaVazia } from "./casa-vazia"
+import { climaForaDoAr } from "./clima-fora-do-ar"
 import { doisNaoAjudou } from "./dois-nao-ajudou"
 import { dorDeCabeca } from "./dor-de-cabeca"
 import { duasIntencoes } from "./duas-intencoes"
@@ -19,6 +20,7 @@ import { injectionPorCodigo } from "./injection-por-codigo"
 import { juizBarra } from "./juiz-barra"
 import { juizCorrige } from "./juiz-corrige"
 import { juizForaDoAr } from "./juiz-fora-do-ar"
+import { llmErro } from "./llm-erro"
 import { naoTenhoComPergunta } from "./nao-tenho-com-pergunta"
 import { notaComSaude } from "./nota-com-saude"
 import { ofensa } from "./ofensa"
@@ -116,6 +118,12 @@ export const cenariosDeGuardrails: Record<string, CenarioDeConversa> = {
   "juiz-barra": comMensagem(juizBarra),
   "juiz-fora-do-ar": comMensagem(juizForaDoAr),
   "nota-com-saude": comMensagem(notaComSaude),
+}
+
+// Os cenários da telemetria (015 T19, D10): só para o eval de cobertura; fora do `demo` e das travas de `montar.test.ts`.
+export const cenariosDeTelemetria: Record<string, CenarioDeConversa> = {
+  "clima-fora-do-ar": comMensagem(climaForaDoAr),
+  "llm-erro": comMensagem(llmErro),
 }
 
 export { type DepsDoCenario, montarCenario, type OpcoesDoCenario } from "./montar"

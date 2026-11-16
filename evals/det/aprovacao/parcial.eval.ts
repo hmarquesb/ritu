@@ -39,7 +39,9 @@ const MINUTOS_DA_ESPERA = 31
 
 // Abre o bloco de três linhas, sem decidir.
 async function abrirTres() {
-  const llm = createFakeLlm(tresLinhas.interpretacao ? [tresLinhas.interpretacao] : [])
+  const llm = createFakeLlm(
+    tresLinhas.interpretacao ? [tresLinhas.interpretacao, { apontamentos: [] }] : [],
+  )
   const { contaId, deps } = await montarCenario(tresLinhas, { llm })
   const rodada = await rodarCenario(deps, contaId, tresLinhas)
   return { contaId, deps, rodada }
@@ -142,7 +144,9 @@ describe("aprovação parcial: nenhuma linha escolhida é igual a Agora não", (
     const agora = await montarCenario(
       { ...tresLinhas, aprovacao: "agora_nao" },
       {
-        llm: createFakeLlm(tresLinhas.interpretacao ? [tresLinhas.interpretacao] : []),
+        llm: createFakeLlm(
+          tresLinhas.interpretacao ? [tresLinhas.interpretacao, { apontamentos: [] }] : [],
+        ),
       },
     )
     const rodada = await rodarCenario(agora.deps, agora.contaId, {

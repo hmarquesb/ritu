@@ -137,7 +137,8 @@ function entradaDoAcompanhante(
 
 function modelosComApoio(atual: unknown, apoio: Apoio): Record<string, unknown> {
   const base = typeof atual === "object" && atual !== null ? atual : {}
-  return { ...base, apoio: [apoio.modelo] }
+  const anteriores = (base as { apoio?: string[] }).apoio ?? []
+  return { ...base, apoio: [...new Set([...anteriores, apoio.modelo])] }
 }
 
 export function createConversation(deps: Deps) {

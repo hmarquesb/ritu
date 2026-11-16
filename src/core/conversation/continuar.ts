@@ -116,15 +116,19 @@ export function criarContinuar(deps: Deps) {
     })
   }
 
-  // Total determinístico: tokens de todas as etapas do run (loop e Intérprete, cada uma uma vez).
+  // Total determinístico: tokens de todas as etapas do run (loop, Intérprete e Juiz, cada uma uma vez).
   async function fixarTotais(contaId: string, runId: string): Promise<void> {
     const atual = await stores.runs.buscar(contaId, runId)
     const etapas = await stores.runs.etapas(contaId, runId)
     if (!atual) return
-    const apoio = etapas.find((e) => e.tipo === "interprete" && e.status === "ok")
     const modelos = typeof atual.modelos === "object" && atual.modelos !== null ? atual.modelos : {}
+    const anteriores = (modelos as { apoio?: string[] }).apoio ?? []
+    const doApoio = etapas
+      .filter((e) => (e.tipo === "interprete" || e.tipo === "juiz") && e.modelo)
+      .map((e) => e.modelo as string)
+    const apoio = [...new Set([...anteriores, ...doApoio])]
     await stores.runs.atualizar(contaId, runId, {
-      modelos: { ...modelos, ...(apoio?.modelo ? { apoio: [apoio.modelo] } : {}) },
+      modelos: { ...modelos, ...(apoio.length > 0 ? { apoio } : {}) },
       tokens_entrada: etapas.reduce((t, e) => t + e.tokens_entrada, 0),
       tokens_saida: etapas.reduce((t, e) => t + e.tokens_saida, 0),
     })

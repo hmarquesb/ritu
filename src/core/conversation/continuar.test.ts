@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
+import type { Judge } from "@/core/agents/judge/julgar"
 import { createMemoryAgent } from "@/core/agents/memory/memoria"
 import { RituError } from "@/core/errors"
 import { createModelRouter } from "@/core/llm/router"
 import { RunNaoContinuavelError } from "@/core/runs/errors"
 import type { RespostaDaPessoa } from "@/core/runs/pergunta"
 import { createRunService } from "@/core/runs/run-service"
+import { createApprovingJudge, createScriptedJudge } from "@/infra/fakes/fake-judge"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
@@ -54,7 +56,7 @@ const tenhoNaoTenho: RespostaDaPessoa = {
   ],
 }
 
-async function montar(o: { llm?: unknown[]; roteiro: PassoRoteirizado[] }) {
+async function montar(o: { llm?: unknown[]; roteiro: PassoRoteirizado[]; judge?: Judge }) {
   const clock = createFixedClock("2026-11-15T18:00:00.000Z")
   const stores = createMemoryStores(clock)
   const telemetry = createMemoryTelemetry()
@@ -86,6 +88,7 @@ async function montar(o: { llm?: unknown[]; roteiro: PassoRoteirizado[] }) {
     router: routerDaDecisao,
     runs,
     telemetry,
+    judge: o.judge ?? createApprovingJudge(),
   })
   const memory = createMemoryAgent({ router, client: createFakeLlm([]), kb, telemetry, clock })
   const deps = { memory, stores, tx: stores, kb, clock, telemetry, runs, interpreter, companion }
@@ -242,6 +245,32 @@ describe("continuar: totais do run", () => {
     await continuar(m, p.run_id, tenhoNaoTenho)
     const run = await estado(m, p.run_id)
     expect([run.tokens_entrada, run.tokens_saida]).toEqual([10 + 200, 5 + 40])
+  })
+
+  it("com o Juiz: tentativa 1, juiz_aprovado no run, apoio com Intérprete e Juiz, tokens somados", async () => {
+    const judge = createScriptedJudge([
+      {
+        ok: true,
+        aprovado: true,
+        graves: [],
+        registros: [],
+        saude_na_proposta: false,
+        apontamentos: [],
+        modelo: "modelo-do-juiz",
+        tokens: { entrada: 7, saida: 3 },
+        trocas: 0,
+        duracao_ms: 5,
+      },
+    ])
+    const m = await montar({ roteiro: [askCasa, fim()], judge })
+    const p = await pausar(m)
+    await continuar(m, p.run_id, tenhoNaoTenho)
+    const run = await estado(m, p.run_id)
+    expect(judge.pedidos.map((x) => x.tentativa)).toEqual([1])
+    expect(run).toMatchObject({ juiz_tentativas: 1, juiz_aprovado: true })
+    expect((run.modelos as { apoio: string[] }).apoio).toHaveLength(2)
+    expect((run.modelos as { apoio: string[] }).apoio).toContain("modelo-do-juiz")
+    expect([run.tokens_entrada, run.tokens_saida]).toEqual([10 + 200 + 7, 5 + 40 + 3])
   })
 
   it("sem modelo de decisão na retomada: loop + Intérprete, uma vez", async () => {

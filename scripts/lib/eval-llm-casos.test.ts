@@ -409,7 +409,7 @@ describe("runner da conversa com LLM falso", () => {
     const roteiro = soAtalhos.roteiro
     const r = await rodarConversa(casoConversa, {
       runtime: createScriptedRuntime(roteiro),
-      llm: createFakeLlm([]),
+      llm: createFakeLlm([{ apontamentos: [] }]), // a única chamada é a do Juiz
     })
 
     expect(r.tipo).toBe("conversa")

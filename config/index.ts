@@ -5,6 +5,7 @@ import { base } from "./base"
 import { casa } from "./casa"
 import { clima } from "./clima"
 import { conversa } from "./conversa"
+import { evals } from "./evals"
 import { juiz } from "./juiz"
 import { llmCotas } from "./llm-cotas"
 import { loop } from "./loop"
@@ -32,6 +33,7 @@ export const config = {
   aprovacao,
   casa,
   conversa,
+  evals,
   juiz,
   loop,
   llmCotas,

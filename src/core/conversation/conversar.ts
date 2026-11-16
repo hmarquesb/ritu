@@ -21,6 +21,7 @@ import type { Caminho, NovaEtapa, Run, RunEtapa } from "@/core/runs/ports"
 import type { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
+import { criarAprovar } from "./aprovar"
 import {
   anotacoesDaMensagem,
   type CaminhoDeCodigo,
@@ -139,6 +140,7 @@ function modelosComApoio(atual: unknown, apoio: Apoio): Record<string, unknown> 
 export function createConversation(deps: Deps) {
   const { stores, tx, kb, clock, telemetry, runs, interpreter, companion } = deps
   const continuar = criarContinuar(deps)
+  const aprovar = criarAprovar(deps)
 
   async function etapaAoVivo(x: Execucao, etapa: NovaEtapa): Promise<RunEtapa> {
     x.aoVivo?.({ tipo: "etapa_iniciada", etapa: { tipo: etapa.tipo, nome: etapa.nome } })
@@ -409,6 +411,7 @@ export function createConversation(deps: Deps) {
 
   return {
     continuar,
+    aprovar,
     async conversar(
       contaId: string,
       mensagem: MensagemRecebida,

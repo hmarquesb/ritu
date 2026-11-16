@@ -12,6 +12,7 @@ import { momentoDoDia } from "./momento-do-dia"
 import { pausas } from "./pausas"
 import { ranking } from "./ranking"
 import { resposta } from "./resposta"
+import { toques } from "./toques"
 
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
@@ -31,6 +32,7 @@ export const config = {
   llmCotas,
   ranking,
   resposta,
+  toques,
 } as const
 
 export type AppConfig = typeof config

@@ -5,7 +5,8 @@ describe("nomes da telemetria", () => {
   it("SPANS contém os nomes da árvore do run", () => {
     expect(SPANS).toContain("agente.passo")
     expect(SPANS).toContain("aprovacao.execucao")
-    expect(SPANS).toHaveLength(10)
+    expect(SPANS).toContain("toque")
+    expect(SPANS).toHaveLength(11)
   })
 
   it("toda métrica começa com ritu_", () => {

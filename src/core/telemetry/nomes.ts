@@ -12,6 +12,7 @@ export const SPANS = [
   "validacao",
   "juiz",
   "aprovacao.execucao",
+  "toque",
 ] as const
 
 export type NomeDeSpan = (typeof SPANS)[number]

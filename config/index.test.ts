@@ -70,4 +70,8 @@ describe("config", () => {
     expect(config.casa.validadeDias).toEqual({ curta: 5, media: 14, longa: 90 })
     expect(config.casa.durabilidadeDesconhecido).toBe("media")
   })
+
+  it("expõe os limites dos toques com os valores da spec", () => {
+    expect(config.toques).toEqual({ maxTrocasPorItem: 3, substitutosAvaliados: 8 })
+  })
 })

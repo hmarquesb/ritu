@@ -136,3 +136,11 @@
 - **O que decidi:** uma tarefa de correção C1 (nível tela), com os arquivos que tiverem defeito em `src/components/` e `src/app/marca/_secoes/`, executada pelo mesmo implementador da T16 na mesma rodada, com verificador e commit próprios (C1 antes da T16).
 - **Por quê:** evita um vai e volta por defeito entre duas tarefas que só ficam verdes juntas; os arquivos não se cruzam com os da T16.
 - **Como desfazer:** reverter o commit da C1 e reabrir cada correção como tarefa separada.
+
+## 017 · Entrada e contas (plano)
+
+- **A1 · Mapa dos evals.** Faltava: `evals/det/mapa.ts` (da 014, ainda não implementada). Decidi: não criar o mapa; os três evals de `evals/det/seguranca/` entram nas linhas "Rota sem sessão", "Duas demonstrações", "POST com `Origin`" e "31ª demonstração" quando a 014 chegar. Por quê: criar o mapa seria construir parte da 014. Desfazer: acrescentar as linhas no mapa na junção.
+- **A2 · Log `erro_inesperado`.** Faltava: a lista `LOGS` (da 015). Decidi: `criarRota` chama `telemetry.log("error", "erro_inesperado")` sem campos. Desfazer: incluir o código em `LOGS` quando a 015 chegar.
+- **A3 · Rótulos de `ritu_entrada_total`.** Faltava: nomes de atributo. Decidi: `conta.tipo` (existente) e `entrada.resultado` (novo). Desfazer: renomear em `nomes.ts`.
+- **A4 · Handlers das rotas.** Faltava: onde ficam os handlers que os evals chamam com stores em memória. Decidi: `src/app/_rotas/` (funções que recebem `DepsDaRota`); os `route.ts` só ligam às dependências reais (`src/app/_lib/deps.ts`). Desfazer: mover os handlers para dentro dos `route.ts`.
+- **A5 · Conta nova no E2E.** A spec cita o header `x-ritu-e2e-conta: nova`; decidi passar isso a `criarDemonstracao` como `semSeed` (só no modo e2e), para o core não ler header. Desfazer: tirar o parâmetro e tratar no provedor.

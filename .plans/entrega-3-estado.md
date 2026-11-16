@@ -1,6 +1,7 @@
 # Entrega 3 · Estado
 
-> A dona autorizou (2026-11-16) seguir até 96% da janela de 5 horas nesta sessão.
+> A dona autorizou (2026-11-16, 2ª sessão) seguir sozinho até 95% (janela de 5 horas e contexto); a partir de 80%, no máximo duas tarefas por onda.
+> 2026-11-16: `main` juntada (a0e68e4; 013 e 016 `implemented` na `main`). A 017 pode começar; 018 a 020 dependem dela.
 > Sem `git push`: o remoto `origin` não está acessível (como na entrega 2); a branch `entrega-3` fica só local. Push e CI ficam para quando o repositório remoto existir.
 > Trilha adiantada (worktree `../ritu-worktrees/entrega-3`, branch `entrega-3`), aberta em 2026-11-16.
 > Pré-condição da trilha: só spec `approved` cujas dependências estão `implemented` na `main`. Em 2026-11-16, só a 016 (depende de 001). 017 depende de 016; 018 a 020 dependem de 008–013 (013 ainda não está `implemented` na `main`).
@@ -34,3 +35,31 @@
 | T16 · Assemble /marca, write its E2E and take the screenshots | concluida | ee464fe |
 | C1 · Fix the component and section defects revealed by the /marca E2E | concluida | d823d12 |
 | C2 · Remove the duplication flagged by npm run dup | concluida | f4ad97d |
+
+## 017 · Entrada e contas
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Install next-auth, add RITU_MODO and trace the seed folder | concluida | ed2de1b |
+| T3 · Add the UsageLimiter port, the limites table, the Postgres adapter and the memory fake | concluida | 64186b3 |
+| T2 · Add the limits, quiz and entry text configs | pendente | |
+| T4 · Add PantryStore.semear with an explicit confirmation date | pendente | |
+| T6 · Add the CSP, security headers, Origin check and the proxy | pendente | |
+| T7 · Add the demo seed schema, its validator and the YAML reader | pendente | |
+| T5 · Add the onboarding step, quiz, dosha name and entry state functions | pendente | |
+| T8 · Write the demo profile seed | pendente | |
+| T9 · Wire the limiter, the demo seed and the E2E mode into the container | pendente | |
+| T10 · Add the demo creation, seed copy and Google sign-in services | pendente | |
+| T11 · Clean the old limits in the daily cleanup | pendente | |
+| T12 · Add the Auth.js session, the demo provider and the session actions | pendente | |
+| T13 · Add the account and route helpers for pages and API routes | pendente | |
+| T16 · Configure Playwright for the E2E mode and add the session fixture | pendente | |
+| T14 · Add the onboarding routes | pendente | |
+| T15 · Add the city and food search routes and the cleanup cron route | pendente | |
+| T17 · Build the entry page with the diagonal illustration | pendente | |
+| T20 · Build the signed-in frame, the demo banner and the empty conversation page | pendente | |
+| T18 · Build the onboarding layout, the notice and the always-avoid step | pendente | |
+| T23 · Add the security deterministic evals | pendente | |
+| T19 · Build the dosha and city step and the quiz | pendente | |
+| T21 · Write the entry E2E and take the entry screenshots | pendente | |
+| T22 · Write the onboarding E2E and take the onboarding screenshots | pendente | |

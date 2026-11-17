@@ -256,3 +256,9 @@ Nenhum erro inesperado.
 - 015 T18: o teste de privacidade exige span exportado, mas não exige ponto de métrica nem log exportado (se não houvesse, as checagens deles passariam vazias). Observação do verificador, não bloqueou.
 - 015 C3: `prompt.versao` no span `run` retomado (`run-service.ts`, `comSpanDoRun`) só é coberto pelo eval de cobertura; falta um teste curto em `run-service.test.ts` (recomendação do verificador, não bloqueou).
 - 015 T19: `cobertura.eval.ts` leva de 92 s a 470 s com a máquina sob carga (roda todos os cenários); vale olhar o tempo na CI.
+
+## Fechamento da entrega 2 (2026-11-16)
+
+- 015 fechada em `16d1bd9` (CI verde).
+- ⚠️ `eval:llm --checkpoint c3-confiavel --extra` (a pedido da dona; a recusa por dia viu o `c2` do mesmo dia), com OTLP: 84/84, 1 erro, 205 chamadas. Falha crítica: Segurança bloqueio 5/6 (`c3-s17` sem aviso de incômodo). Muitos `timeout`/`indisponivel` no `gemini-3.5-flash-lite` durante a rodada.
+- `painel:check` saída 0; print `.plans/entrega-2-painel-c3.png`. Relatório `.plans/entrega-2-relatorio.md`; tag `entrega-2`.

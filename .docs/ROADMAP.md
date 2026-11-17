@@ -4,12 +4,12 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 em construção: specs 008 a 013 implementadas (com a correção C13 da 002); 014 e 015 aprovadas; 016 a 020 aprovadas (entrega 3 toda especificada), com a 016 implementada na trilha adiantada e juntada na `main` antes do portão 2; 021 a 024 aprovadas (entrega 4 toda especificada).
+Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 (specs 008 a 015, com a correção C13 da 002) construída, com a tag `entrega-2`, aguardando o portão 2. O relatório está em `.plans/entrega-2-relatorio.md`; o checkpoint `c3-confiavel` está em `evals/resultados/c3-confiavel.md`. Entrega 3: 016 a 020 aprovadas; 016 implementada e juntada na `main` antes do portão 2; 017 implementada na branch `entrega-3`; 018 em construção na trilha adiantada. 021 a 024 aprovadas (entrega 4 toda especificada).
 
 **Próximos passos, na ordem:**
-1. `/construir-entrega 2`: continuar pela 013.
-2. Em paralelo, num worktree: `/construir-entrega 3 adiantada`, para a 016 e a 017 (`RULES.md` §3).
-3. Fechamento da entrega 2: rodada do `c3-confiavel` com o OTLP ligado e o painel no relatório do portão 2.
+1. Portão 2: a dona confere o roteiro de `.plans/entrega-2-relatorio.md` §5 e aprova ou lista os ajustes.
+2. Em paralelo, no worktree: `/construir-entrega 3 adiantada`, seguindo pela 018.
+3. Depois do portão 2: `/construir-entrega 3`, que junta a branch `entrega-3` na `main` (skill §0.6) e segue.
 
 ## 1. Entregas
 

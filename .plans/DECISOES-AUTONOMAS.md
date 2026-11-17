@@ -266,3 +266,33 @@
 - **Decidido:** `lerEventos` (e os testes dele) passa para `src/components/ritu/conversa/ler-eventos.ts`; `EventoDaTela` e `codificarEvento` ficam no core, e a tela importa o tipo com `import type`.
 - **Por quê:** quem lê o fluxo é só o navegador; mudar a regra de camada pediria ADR e abriria exceção para um caso que não precisa dela.
 - **Como desfazer:** voltar a função ao core e acrescentar uma exceção à R4 (com ADR).
+
+## 021 · A1 · 019 e 020 ausentes na branch
+- **Faltava:** a spec põe o `toast` de toque em `useCasa`, no hook de Como ficou? e em `useVoce`, e o E2E de toques em Minha casa; a 019 e a 020 não estão na `entrega-4` (que saiu da `entrega-3` só com 016 a 018).
+- **Decidido:** o limite de toque fica em `criarRota`/`criarRotaDeFluxo` pelo método, então as rotas da 019 e da 020 o herdam ao chegar. O `toast` vai para a Conversa e o onboarding; o E2E de toques usa o voto da Conversa.
+- **Por quê:** a dona mandou construir só a 021 nesta branch; a regra pelo método não depende de lista de rotas.
+- **Como desfazer:** na junção com a 019/020, uma tarefa de correção põe `textoDoLimite` + `toast` nos hooks delas e o caso de Minha casa no `e2e/limites.spec.ts`.
+
+## 021 · A2 · IP, escopo e teto nas rotas
+- **Faltava:** como `criarRota` obtém `ipHash`, `escopo` e `teto` sem importar adaptador em `src/app/`.
+- **Decidido:** `DepsDaRota.quemPede(request)`, implementado em `depsReais()` com `ipDoPedido`, `hashDoIp` e `RITU_MODO`; os testes passam um fake.
+- **Por quê:** mantém as rotas testáveis com stores em memória, como o resto de `DepsDaRota`.
+- **Como desfazer:** calcular no `criarRota` direto e ajustar os testes.
+
+## 021 · A3 · Fuso dos limites
+- **Faltava:** `QuemPede.fuso` pede o fuso da cidade do perfil, mas `criarRota` não lê o perfil.
+- **Decidido:** toques e `retryAfterS` usam `config.clima.fusoPadrao` (como a spec manda para as chaves); só `estadoDosLimites` (hora da virada) usa `perfil.cidade_fuso ?? fusoPadrao`.
+- **Por quê:** evita uma leitura de perfil em todo `POST`; a spec só usa o fuso da pessoa para a hora da virada.
+- **Como desfazer:** ler o perfil em `prepararContexto`.
+
+## 021 · A4 · `test:db` fora da trilha adiantada
+- **Faltava:** a spec pede `test:db` verde com o contrato estendido; `test:db` é ⚠️.
+- **Decidido:** o contrato roda contra o fake no `npm test`; o Postgres fica para a junção, como na 017 e na 018.
+- **Por quê:** a trilha adiantada não roda nada com ⚠️ (skill §7.6).
+- **Como desfazer:** rodar `npm run test:db` na junção.
+
+## 021 · A5 · Cota esgotada por pedido no modo e2e
+- **Faltava:** onde ligar `x-ritu-e2e-cota`.
+- **Decidido:** `createRouterE2e` em `src/infra/e2e/cota.ts`, embrulhando o router no container só com `RITU_MODO=e2e`, como o ledger por escopo.
+- **Por quê:** o modo e2e já lê headers do pedido por esse módulo.
+- **Como desfazer:** apagar o embrulho e a ligação no container.

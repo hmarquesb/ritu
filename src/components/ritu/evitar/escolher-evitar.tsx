@@ -27,6 +27,8 @@ type Props = {
   maxItens: number
   maxTexto: number
   minBusca: number
+  /** Omite "Nenhum" e "Pular", que só fazem sentido no onboarding. */
+  semAlternativas?: boolean
 }
 
 const chave = (item: Pick<Item, "tipo" | "valor">) => `${item.tipo}:${item.valor}`
@@ -45,7 +47,15 @@ async function buscarAlimentos(termo: string, signal: AbortSignal): Promise<Alim
   }
 }
 
-export function EscolherEvitar({ gravar, grupos, botoes, maxItens, maxTexto, minBusca }: Props) {
+export function EscolherEvitar({
+  gravar,
+  grupos,
+  botoes,
+  maxItens,
+  maxTexto,
+  minBusca,
+  semAlternativas = false,
+}: Props) {
   const [itens, setItens] = useState<Item[]>([])
   const [busca, setBusca] = useState("")
   const [achados, setAchados] = useState<Alimento[]>([])
@@ -219,25 +229,27 @@ export function EscolherEvitar({ gravar, grupos, botoes, maxItens, maxTexto, min
         >
           {botoes.pronto}
         </Button>
-        <div className="flex gap-3">
-          <Button
-            fullWidth
-            isPending={enviando === "nenhum"}
-            isDisabled={enviando !== null && enviando !== "nenhum"}
-            onPress={() => enviar("nenhum")}
-          >
-            {botoes.nenhum}
-          </Button>
-          <Button
-            variant="quiet"
-            fullWidth
-            isPending={enviando === "pulou"}
-            isDisabled={enviando !== null && enviando !== "pulou"}
-            onPress={() => enviar("pulou")}
-          >
-            {botoes.pular}
-          </Button>
-        </div>
+        {semAlternativas ? null : (
+          <div className="flex gap-3">
+            <Button
+              fullWidth
+              isPending={enviando === "nenhum"}
+              isDisabled={enviando !== null && enviando !== "nenhum"}
+              onPress={() => enviar("nenhum")}
+            >
+              {botoes.nenhum}
+            </Button>
+            <Button
+              variant="quiet"
+              fullWidth
+              isPending={enviando === "pulou"}
+              isDisabled={enviando !== null && enviando !== "pulou"}
+              onPress={() => enviar("pulou")}
+            >
+              {botoes.pular}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

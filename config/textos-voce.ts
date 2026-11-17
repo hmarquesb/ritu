@@ -85,6 +85,12 @@ export const textosVoce = {
     adicionar: "Adicionar",
     mudar: "Mudar",
     tirarCidade: "Tirar a cidade",
+    restricao: {
+      vegetariana: "vegetariana",
+      vegana: "vegana",
+      sem_lactose: "sem lactose",
+      sem_gluten: "sem glúten",
+    },
   },
   evitar: {
     confirmaTitulo: "Tirar {item} de Evitar sempre?",

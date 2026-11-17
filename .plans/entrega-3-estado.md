@@ -159,3 +159,49 @@
 > 019 T11: E2E escrito (`e2e/como-ficou.spec.ts`, sem commit), 18/20; falha só "Ontem": os retornos da semente nascem com `criado_em = agora` (`copiar-seed.ts` → `outcomes.criar`) → C4 (núcleo; muda a porta). As 8 screenshots precisam ser regravadas depois da C4.
 > 019 fechada (2026-11-17) em 8ffd611: gates 1 a 6 verdes (test 3092, eval:det 1366, E2E 201 + 45 pulados) e `npm run dup` 0 clones. ADR 0045. Docs vivos: ARCHITECTURE §3 (rotas de toque revisadas; `/api/padroes/:id` fica para a 020), §6, §7; BUSINESS §7, §9, §10; DESIGN §4; QA (E2E); linha 019 do backlog; `test:e2e` no AGENTS. Screenshots em `.plans/019-*.png` (20).
 > Para o relatório (019): não conferidos sem Postgres: `test:db` (motivo `pessoa` na migração 0004, `outcomes.criar` com `criadoEm`; não há suíte de contrato de `outcomes`). Na tela vazia do E2E, a "conta nova" é demonstração sem semente e mostra a faixa da demonstração (como na 018).
+
+## 020 · Você, memória e Como pensei
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Add the day count and day deletion to messages and runs | concluida | 9265d6a |
+| C5 · Cover criadoEm in the outcomes contract suite | concluida | 1608921 |
+| T2 · Add the Você and Como pensei texts | concluida | 4260411 |
+| T3 · Record the validation violation codes in the run trace | concluida | 1d6062b |
+| T4 · Write the dosha panel | concluida | dfb0b43 |
+| T5 · Add the memory edit and account deletion metrics | concluida | b86d22e |
+| T6 · Write the memory view | concluida | 65d08a6 |
+| T7 · Write the timeline of a run | concluida | 3f02bf6 |
+| T8 · Add the profile touches | concluida | f6611a2 |
+| T9 · Add the memory touches and the conversa_em_andamento error | concluida | 3a90706 |
+| T10 · Add the account deletion | concluida | d6eed8c |
+| T11 · Write the Você reader | concluida | 3616feb |
+| T12 · Write the Como pensei reader | concluida | 9e4e798 |
+| T13 · Wire the Você readers and touches into the container and add the routes | concluida | df0d31e |
+| T14 · Add the delete-my-data server action | concluida | 8318e69 |
+| T15 · Add the deterministic evals for Você and Como pensei | concluida | c9a2c08 |
+| T16 · Extract the quiz, the always-avoid choice and the city search from onboarding | concluida | 849a068 |
+| T17 · Show the data deleted notice on the entry page | concluida | 50ff5fd |
+| T18 · Build the memory levels of Você | concluida | 6475128 |
+| T19 · Build the dosha card, the account and the Você page | concluida | 654e7c0 |
+| T20 · Build the quiz retake page | concluida | f837465 |
+| T21 · Build the Como pensei page | concluida | 98ddf9a |
+| C6 · Remove the rule copies left by the touches and the timeline | concluida | 194438f |
+| C7 · Show the memory dates in the person's time zone and finish the item labels and pending chips | concluida | 433830d |
+| C8 · Give the toggle chip a real pending state | concluida | 7b89bee |
+| T22 · Write the Você E2E and take its screenshots | concluida | c6eb08a |
+| T23 · Write the Como pensei E2E and take its screenshots | concluida | ced91d7 |
+> C5 (cobertura de `criadoEm` em `test/contracts/outcomes.contract.ts`) é resto da 019 C4: a suíte existe, ao contrário do que a C4 relatou.
+> 2026-11-17 (7ª sessão): passagem com 5 h em 92%, depois de 020 T3. Próximo: T4, T5, C5.
+> 020, ajustes nos blocos vindos da passagem (8ª sessão): T17 também acrescenta `"dados_apagados"` à lista `AVISOS` de `src/core/accounts/entrada.ts` (a T2 só pôs o tipo). T7: o `resumo` da validação é cortado em 80 caracteres pelo loop (`RESUMO_MAX`); o último código pode vir partido e deve ser ignorado; "Você estava {estados}" usa as frases de estado da 012 (a T2 só deixou o modelo).
+> 2026-11-17 (8ª sessão): retomada da passagem, uso 5 h em 2%. Próximo: T4, T5, C5.
+> 020 T4: `listaEmPalavras` fica em `src/core/accounts/painel.ts`; a tela só importa tipos do core (R4), a T11 manteve o contrato (listas), e a carta da T19 une em texto (nota no bloco da T19).
+> 020 onda 3: T8 com duas devoluções (2 clones do `dup` com a rota de onboarding → `cidadeSchema`, `fusoValido` e `quizCompleto` foram para `src/core/accounts/`; depois lint). Uma falha de carga no `eval:det` sem dono (passou em 2 rodadas seguidas). O E2E regravou `.plans/017-*.png` (revertidos).
+> 020 onda 4: T7 travada no R9 (ciclo `runs` ↔ `proposals`) → A9 (módulo `src/core/como-pensei/`, gunas pela `kb`, `dia.data` = "{data}"). Para o fechamento da 020: duas cópias de regra sem acusação do `dup` — `nomeDoItem` (`touches/memoria.ts`) repete `estaNaBase` (`touches/gosto.ts`); as frases de estado da 012 em `linha-do-tempo.ts` refazem `NA_FRASE` (não exportada, `patterns/textos.ts`) a partir de `kb.estados`. Docs: a spec cita `src/core/runs/linha-do-tempo.ts` e `ler-como-pensei.ts` (A9 moveu).
+> 020 onda 7: T14, T15, T21 commitadas; T18 e T20 devolvidas por clones do `dup` (fixos.tsx × casa/adicionar.tsx; voce/quiz/page.tsx × comecar/quiz/page.tsx). `npm test` com 3 falhas numa rodada carregada (uma: `expect(anteriores).toHaveLength(7)` sobre `cenariosDeConversa`), verdes em 2 rodadas seguidas. Para o fechamento: as 3 linhas novas do mapa de evals (T15) vão para `.docs/QA.md`.
+> 020 onda 8: C6 e C7 commitadas. T19 devolvida: axe `color-contrast` no tema escuro nas abas do dosha misto (`e2e/conversa.spec.ts:466` visita `/voce`), mais o mapa de nomes dos doshas fixo e duplicado, rótulo repetido na folha e id solto na conta. Flakes de carga: `cenarios.test.ts:492` (timeout, 46/46 isolado) e um arquivo do `eval:det` (120/120 na 2ª). C8 aberta (chip base com `isPending`), recomendação do verificador da C7.
+> 020 C8: uma reprovação (pulso `animate-pulse` sem token e contra "Nada pisca"); o pendente do chip ficou estático (borda tracejada, `sunken`, `cursor-progress`).
+> 020 T22: uma reprovação (trocar a cidade só tirava a cidade); o E2E revelou que a troca de cidade em Você era recusada (`cidadeSchema` estrito × campos extras da busca) → `fixos.tsx` recorta os 4 campos, como o onboarding. `e2e/voce.spec.ts` 68 passam com `comecar` (20 screenshots puladas sem `SCREENSHOTS`). Servidor órfão PID 11746 (deste worktree) encerrado pelo verificador. Screenshots em `.plans/020-*.png` (20): a dona deve olhar.
+> 2026-11-17 (8ª sessão): passagem a pedido da dona depois da T22; 5 h em 94%.
+> 2026-11-17 (9ª sessão): 020 T23 aprovada de primeira (A11). Ressalvas do verificador: `npm test` completo com 2 a 5 timeouts de 20 s por carga (load 59–86; arquivos variando, fora do diff); implementador-tela carregou só `web-design-guidelines` (tarefa só de E2E, sem mudança de tela).
+> 020 fechada: gates 1 a 6 e dup verdes (com timeouts de carga repetidos: `npm test` com `--testTimeout=120000` 3249/3249; `eval:det` sozinho 1490/1490; E2E 266 + `conversa.spec.ts:327` [desktop] verde na repetição, corrida possível se a resposta termina antes do reload). ADR 0046. `test:db` não rodado (⚠️, fora da trilha adiantada). Spec `implemented (ced91d7)`.

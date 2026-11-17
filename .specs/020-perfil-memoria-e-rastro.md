@@ -1,6 +1,6 @@
 ---
 title: Você, memória e Como pensei
-status: approved
+status: implemented (ced91d7)
 entrega: 3
 created: 2026-11-15
 ---

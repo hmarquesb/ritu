@@ -28,7 +28,7 @@ Cada passo do run grava uma linha em `run_etapas`:
 
 O run guarda os totais: intenções, passos, tokens, latência, `prompt_versao`, modelo usado em cada papel, trocas de modelo, `trace_id`, resultado do juiz e número de tentativas.
 
-**Tela Como pensei:** linha do tempo dessas etapas, em linguagem de gente ("Entendi que você está com frio e quer saber o que comer", "Vi o clima: 19 °C e úmido", "Conferi a resposta: 1 problema, o chá pedia canela e você não tem", "Corrigi e conferi de novo", "Propus pôr cardamomo na lista: já fez falta 4 vezes"). É a observabilidade que a pessoa enxerga.
+**Tela Como pensei:** linha do tempo dessas etapas, em linguagem de gente. As frases saem por código, a partir do tipo e do nome de cada etapa e dos campos estruturados dela, com os textos em `config/textos-como-pensei.ts`; nada é o `resumo` cru e nenhum modelo escreve a frase. Os detalhes técnicos (modelo, tokens, tempo) ficam recolhidos em cada passo, e os totais do run (passos, tempo, modelo por papel, trocas, versão do prompt, tentativas da revisão), recolhidos no fim. No passo de validação, o `resumo` guarda os códigos das violações, e é por eles que a frase diz o que foi corrigido. Exemplos ("Entendi que você está com frio e quer saber o que comer", "Vi o clima: 19 °C e úmido", "Conferi a resposta: 1 problema, o chá pedia canela e você não tem", "Corrigi e conferi de novo", "Propus pôr cardamomo na lista: já fez falta 4 vezes"). É a observabilidade que a pessoa enxerga.
 
 ## 3. Camada 2: OpenTelemetry
 
@@ -58,7 +58,7 @@ Etapa `juiz` (uma por leitura): `resumo` é `aprovado`, `reprovado: <motivos>` o
 
 Aprovação (`AI.md` §5): cada linha do bloco grava uma etapa `proposta`, com `nome` igual à tool (`casa.propor`, `memoria.propor`, `lista.propor`) e `resumo` só de tipo e contagem (`casa: 2 itens`, `evitar_sempre: 1 item`, `rotina`, `lista`, `padrao`), nunca o texto da linha, o alimento nem a nota. A decisão grava uma etapa `aprovacao` com `resumo` `N de M` (linhas gravadas de linhas pendentes). Linha que o executor recusa por conteúdo que a base não conhece grava a etapa `erro` `proposta_invalida`, com status `falhou` e sem resumo. Aprovada uma nota de rotina, o resumo refeito grava a etapa `memoria` de nome `resumo_de_rotina`, com `resumo` igual à origem (`vazio`, `direto`, `modelo` ou `codigo`), mais modelo e tokens quando houve chamada; a etapa fica no run mesmo quando o resumo não mudou. Se o resumo falha, a aprovação segue e o run grava a etapa `erro` `resumo_de_rotina`, com status `falhou` e sem resumo. A gravação da entrega (`AI.md` §6) que falha grava a etapa `erro` `registro_da_entrega`, com status `falhou` e sem resumo; o run segue e a resposta sai. A pausa para aprovação emite o evento `pausa` com `pausa.tipo = aprovacao` e soma `ritu_pausas_total{tipo: "aprovacao"}`. As métricas da decisão (`ritu_propostas_total`, `ritu_para_ter_total`, `ritu_gosto_total`) só somam depois que a transação termina, para uma decisão desfeita não contar.
 
-Spans fora de um run: `toque` (`tipo`: `retorno`, `gosto`, `troca` ou `voto`; na troca, `motivo`: `trocar`, `nao_tenho` ou `nao_gosto`, e `resultado`: `trocou`, `perguntar` ou `sem_substituto`; nunca o alimento nem a sugestão), `memoria.resumo` (`resumo.origem`: `modelo` ou `codigo`; só abre quando o agente de Memória é chamado, com duas notas ou mais, e dentro do run da aprovação ele fica no trace do run) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`, a detecção diária; erro numa conta vira log `error` com o código do erro e não para o job).
+Spans fora de um run: `toque` (`tipo`: `retorno`, `gosto`, `troca`, `voto`, `perfil` ou `memoria` (com `acao`, o nome da ação); na troca, `motivo`: `trocar`, `nao_tenho` ou `nao_gosto`, e `resultado`: `trocou`, `perguntar` ou `sem_substituto`; nunca o alimento nem a sugestão), `memoria.resumo` (`resumo.origem`: `modelo` ou `codigo`; só abre quando o agente de Memória é chamado, com duas notas ou mais, e dentro do run da aprovação ele fica no trace do run) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`, a detecção diária; erro numa conta vira log `error` com o código do erro e não para o job).
 
 Spans, métricas, atributos e códigos de log são uma lista fechada em `src/core/telemetry/nomes.ts`, com os atributos obrigatórios de cada span, o tipo e os rótulos de cada métrica e o nível de cada log. Nome novo entra lá primeiro.
 
@@ -93,6 +93,8 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_troca_ingrediente_total` | contador | `resultado` (trocou, sem_substituto) |
 | `ritu_gosto_total` | contador | `gosto` (gosta, nao_gosta, limpou) |
 | `ritu_faltas_total` | contador | `origem` (teria_entrado, nao_tenho) |
+| `ritu_memoria_edicoes_total` | contador | `nivel` (fixos, gostos, faltas, rotina, padroes, conversa), `acao`: uma por edição da pessoa em Você |
+| `ritu_conta_apagada_total` | contador | `tipo` (google, demo): uma por "Apagar meus dados" |
 | `ritu_para_ter_total` | contador | `etapa` (candidato, indicada, aprovada, recusada) |
 
 Rótulo nunca leva id de run, de conta, `trace_id`, nome de alimento ou cidade. Os limites dos histogramas ficam em `config/telemetria.ts`.
@@ -114,7 +116,7 @@ Os dois saem de uma definição em TypeScript (`scripts/lib/painel.ts`) por `npm
 Linhas do painel:
 
 1. **Saúde:** runs por hora, espera por resposta (p50 e p95), runs que falharam, 429 do modelo, latência do modelo e das tools.
-2. **Agente:** intenções, caminhos, passos por run, tools, violações do validador, juiz, guardrail, pausas, memória.
+2. **Agente:** intenções, caminhos, passos por run, tools, violações do validador, juiz, guardrail, pausas, memória (propostas, padrões, edições da pessoa e contas apagadas).
 3. **Modelos e cota:** chamadas e tokens por modelo e por papel; cota do dia e do minuto por modelo; trocas de modelo; respostas sem modelo; erros do modelo.
 4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, gostos, faltas, propostas, indicações de "vale ter em casa", entradas por tipo de conta e resultado.
 5. **Rastro:** runs recentes (Tempo, com `run.caminho`, `run.status`, `run.passos` e a duração de cada um) e avisos e erros (Loki).

@@ -257,7 +257,7 @@ Depois dos filtros, cada candidato recebe uma nota e é ordenado dentro do seu t
 - O Intérprete aponta `evitar_sempre[]` quando a pessoa diz que não pode comer algo ("sou alérgica a camarão", "não posso comer amendoim"). O código traduz cada item para um grupo de `data/grupos_evitar.yaml` ou um id de alimento; o que não está na base fica como texto e vai para o prompt.
 - Vale **no mesmo run**: entra no filtro do preparo antes do Acompanhante. Fica em `evitar_temporario` até o fim do dia, aprovado ou não.
 - O código gera a proposta de fixo para o bloco de aprovação. Aprovada, vai para `perfis.evitar_sempre`.
-- Remover é só pela rota do Perfil, com confirmação. Nenhuma tool do agente remove item de "evitar sempre"; o executor recusa.
+- Remover é só pela rota de perfil ("O que sei sobre você"), com confirmação. Nenhuma tool do agente remove item de "evitar sempre"; o executor recusa.
 - O motivo não é gravado: o Intérprete devolve só o alimento.
 - **Restrição e "não como"** ditos na conversa ("sou vegetariana", "não como coentro") seguem a mesma regra: o Intérprete aponta, valem no mesmo run e até o fim do dia, e o código gera a proposta de fixo. A diferença é que saem do perfil sem confirmação especial.
 - O temporário do dia (`evitar_temporario`) guarda itens com tipo: alimento, grupo, restrição, "não como" de alimento da base ou `nao_come_texto`, para o nome que a base não conhece. Esse último não filtra candidato: vai ao prompt como texto (`evitar_textos`) e, aprovado, fica no perfil como texto. A resposta "Não como" a uma pergunta (§4) também vai para o temporário. Restrição sem item marcado na base (hoje, "vegetariana") passa pelo filtro sem barrar nada. O temporário é limpo na virada do dia.

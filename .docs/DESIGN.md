@@ -110,13 +110,14 @@ Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e ace
 | Seção "Ainda tem?" (superfície `sunken` sem sombra, Ainda tenho · Acabou por item) e folha "Adicionar à casa" (busca e texto livre) | Minha casa |
 | Item da lista "Para ter em casa" (com o motivo e o botão de tirar) | Minha casa |
 | Item de retorno (ícone do tipo, título em Cormorant, ingredientes, Ajudou · Não ajudou · Não fiz; depois do toque, "Anotado") | Como ficou? |
-| Item de memória, por nível, com corrigir e apagar | O que sei sobre você |
-| Busca de cidade | Aviso inicial, Perfil |
-| Linha do tempo | Como pensei |
+| Carta de dosha (superfície de papel com a mancha do dosha; abas para dosha misto, proporção só com o quiz; sem dosha, o convite ao quiz) | Você |
+| Item de memória, por nível, com a margem (rótulo, texto e data) e as ações de corrigir e apagar; apagar pede confirmação | Você |
+| Busca de cidade | Aviso inicial, Você |
+| Linha do tempo (fio vertical ligando os passos, ícone por tipo, detalhes recolhidos) | Como pensei |
 | Gráfico de evolução dos evals | Bastidores |
 | Faixa de demonstração | Todas as telas, na demonstração |
 
-Os componentes da conversa ficam em `src/components/ritu/conversa/`, com o estado da tela em `estado.ts` e `use-conversa.ts`. Os de Minha casa ficam em `src/components/ritu/casa/`, com o estado em `use-casa.ts`; os de Como ficou?, em `src/components/ritu/como-ficou/`. Nas duas telas, cada toque troca o estado pela visão que a rota devolve, e o item que muda de seção só aparece no lugar novo com opacidade.
+Os componentes da conversa ficam em `src/components/ritu/conversa/`, com o estado da tela em `estado.ts` e `use-conversa.ts`. Os de Minha casa ficam em `src/components/ritu/casa/`, com o estado em `use-casa.ts`; os de Como ficou?, em `src/components/ritu/como-ficou/`. Os de Você ficam em `src/components/ritu/voce/` e os de Como pensei, em `src/components/ritu/como-pensei/`. O `ToggleChip` tem o estado `isPending`: durante o toque o chip segue focável, não alterna de novo e se anuncia como ocupado (`aria-busy`). Nas telas de Minha casa e Como ficou?, cada toque troca o estado pela visão que a rota devolve, e o item que muda de seção só aparece no lugar novo com opacidade.
 
 ## 5. Arquivos
 

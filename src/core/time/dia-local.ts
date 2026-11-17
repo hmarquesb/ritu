@@ -13,6 +13,10 @@ export function diasAtras(dia: string, n: number): string {
   return new Date(base - n * DIA_EM_MS).toISOString().slice(0, 10)
 }
 
+export function diasEntre(de: string, ate: string): number {
+  return Math.round((Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de}T00:00:00Z`)) / DIA_EM_MS)
+}
+
 function formatoDoDia(fuso: string): Intl.DateTimeFormat {
   try {
     return criarFormato(fuso)

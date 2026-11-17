@@ -1,7 +1,7 @@
 import { config, textosComoFicou } from "@config/index"
 import { formatar } from "@config/textos-conversa"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
-import { diaLocal } from "@/core/time/dia-local"
+import { diaLocal, diasEntre } from "@/core/time/dia-local"
 import type { Resultado, Retorno } from "./ports"
 
 const DIA_MS = 86_400_000
@@ -67,8 +67,4 @@ function nomeDoDia(dia: string, hoje: string): string {
   if (n === 0) return textosComoFicou.dia.hoje
   if (n === 1) return textosComoFicou.dia.ontem
   return formatar(textosComoFicou.dia.dias, { n })
-}
-
-function diasEntre(de: string, ate: string): number {
-  return Math.round((Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de}T00:00:00Z`)) / DIA_MS)
 }

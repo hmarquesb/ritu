@@ -224,3 +224,45 @@
 - **Por quê:** correção mínima, sem mudar configuração fora de uma tarefa verificada.
 - **Pendente (volta a cada checkpoint):** tirar `evals/resultados/*.json` do Biome, como o `historico.json`, ou fazer o runner formatar a saída. Vale uma tarefa de correção.
 - **Desfazer:** regravar o arquivo pelo runner.
+
+## 018 · A1 · RadioGroup e ToggleButton na base
+
+- **Faltava:** a spec usa `RadioGroup` (pergunta de casa) e `ToggleButton` (👍/👎), que a 016 não criou.
+- **Decidido:** a T5 cria `src/components/base/radio-group.tsx` e `toggle-button.tsx` sobre o React Aria, com tokens, e os mostra na `/marca`.
+- **Por quê:** React Aria só em `src/components/` (R5); componente base novo vai para a vitrine, cujo E2E é o gate de acessibilidade.
+- **Como desfazer:** trocar os usos por `Checkbox`/`ToggleChip` e apagar os dois arquivos.
+
+## 018 · A2 · handlers em `src/app/_rotas/`
+
+- **Faltava:** onde ficam os handlers das rotas da conversa.
+- **Decidido:** como na 017 A4: `src/app/_rotas/conversa.ts` e `fluxo-de-run.ts`, testados com os stores em memória; `route.ts` só liga a `depsReais()`.
+- **Por quê:** mesmo padrão já em uso; evals chamam os handlers sem servidor.
+- **Como desfazer:** mover o corpo para cada `route.ts`.
+
+## 018 · A3 · status HTTP por código de erro
+
+- **Faltava:** `criarRota` responde `400` para todo `RituError`; a spec pede `409` para `run_aberto`, `run_nao_continuavel`, `pergunta_expirada`, `aprovacao_expirada` e `404` para `run_nao_encontrado`.
+- **Decidido:** `statusDoErro(code)` em `src/app/_lib/rota.ts` (T12), usado por `criarRota` e `criarRotaDeFluxo`; `run_pausado` também → 409; o resto continua 400.
+- **Por quê:** um mapa só para as duas rotas; nenhuma rota da 017 lança esses códigos.
+- **Como desfazer:** voltar `criarRota` a 400 fixo e mapear nos handlers.
+
+## 018 · A4 · estado da tela em redutor puro
+
+- **Faltava:** como testar `useConversa` sem teste de componente.
+- **Decidido:** o estado fica em `src/components/ritu/conversa/estado.ts` (redutor puro, Vitest); `use-conversa.ts` só liga o redutor ao `fetch` e ao fluxo.
+- **Por quê:** a lógica de estado fica testada sem DOM; o E2E cobre a ligação.
+- **Como desfazer:** juntar o redutor no hook.
+
+## 018 · A5 · roteiros do modo e2e ajustados à base e ao validador (T4)
+
+- **Faltava:** a spec pede o roteiro `pergunta-casa` sobre `couve` e `banana` e o `troca` com `cardamomo` como substituto possível; com a base e o seed reais, `banana` nunca entra nos candidatos do `ask_user` (`fora_dos_candidatos`) e o validador recusa `cardamomo` não confirmado em casa.
+- **Decidido:** `pergunta-casa` pergunta sobre `couve` e `leite` (ambos incertos no seed); `troca` entrega `cha-canela` só com `canela`, e o E2E troca a `canela`. O fake de LLM também responde ao Juiz (aprova) e à Memória (resumo vazio); mensagem sem roteiro cai em `sem_modelo`.
+- **Por quê:** os roteiros precisam passar no validador real; mudar a base ou o seed para caber no roteiro inverteria a regra.
+- **Como desfazer:** trocar os ids em `e2e/roteiros/pergunta-casa.ts` e `troca.ts` quando a base ou o seed mudarem.
+
+## 018 · A6 · `lerEventos` sai do core e vai para a tela (T13)
+
+- **Faltava:** a spec põe `lerEventos` em `src/core/conversation/eventos.ts` ("usado pela tela"), mas a regra R4 do teste de arquitetura só deixa `src/components/` importar tipos do core.
+- **Decidido:** `lerEventos` (e os testes dele) passa para `src/components/ritu/conversa/ler-eventos.ts`; `EventoDaTela` e `codificarEvento` ficam no core, e a tela importa o tipo com `import type`.
+- **Por quê:** quem lê o fluxo é só o navegador; mudar a regra de camada pediria ADR e abriria exceção para um caso que não precisa dela.
+- **Como desfazer:** voltar a função ao core e acrescentar uma exceção à R4 (com ADR).

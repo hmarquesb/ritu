@@ -37,7 +37,7 @@ O teste de arquitetura garante a tabela.
 - **Identificador de modelo não é segredo:** fica em `config/llm-cotas.ts`, versionado (`AI.md` §10), nunca em variável de ambiente.
 - **Agentes de código não leem `.env.local`.** Para saber se uma variável existe, usam `npm run env:check`, que só diz presente ou ausente.
 - **Idioma:** código e identificadores em inglês; mensagens à pessoa, docs, specs e ADRs em português. Nomes de tools, spans e métricas ficam em português, como em `AI.md` e `OBSERVABILITY.md`.
-- **Erros:** tipados no core; a borda converte em mensagem amigável.
+- **Erros:** tipados no core; a borda converte em mensagem amigável. A borda reconhece os erros do Ritu pela marca `Symbol.for("ritu.error")` (`ehRituError` em `src/app/_lib/rota.ts`), porque o Next carrega cópias separadas dos módulos; erro sem a marca vira `500` `erro_inesperado`.
 
 ## UI
 
@@ -60,6 +60,7 @@ O teste de arquitetura garante a tabela.
 - **TDD** nas funções puras, nas tools e no loop (com o `AgentRuntime` roteirizado).
 - Telas com interação: **E2E (Playwright)** com rotas simuladas.
 - **E2E com o servidor no modo e2e:** o Playwright sobe `npm run start` com `RITU_MODO=e2e` (stores, limitador e cidades em memória, sem banco nem rede; `x-ritu-e2e` separa os cenários). Com `CI=1` ele não reaproveita um servidor já no ar, que poderia ser de outra pasta.
+- **Roteiros do modo e2e** (`e2e/roteiros/`): o Intérprete roteirizado escolhe o roteiro pelo texto exato da mensagem. Mensagem sem roteiro cai no caminho `sem_modelo`. Os roteiros são escritos contra o seed, e `src/infra/e2e/roteiros.test.ts` roda cada um pela conversa inteira. A cota de modelo é separada por `x-ritu-e2e`.
 - O que toca serviço real (LLM, banco na nuvem, Open-Meteo) é script opt-in, marcado com ⚠️.
 - Cada bug corrigido ganha um teste; cada 👎 relevante pode virar caso de eval.
 - Evals com LLM não fazem parte do ciclo de uma tarefa: só rodam nos checkpoints (`QA.md`).

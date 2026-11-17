@@ -17,13 +17,17 @@ import { pausas } from "./pausas"
 import { quiz } from "./quiz"
 import { ranking } from "./ranking"
 import { resposta } from "./resposta"
+import { telaConversa } from "./tela-conversa"
 import { telemetria } from "./telemetria"
+import { textosConversa } from "./textos-conversa"
 import { textosEntrada } from "./textos-entrada"
 import { toques } from "./toques"
 import { ui } from "./ui"
 
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
+export { telaConversa } from "./tela-conversa"
+export { textosConversa } from "./textos-conversa"
 
 export const config = {
   app,
@@ -45,7 +49,9 @@ export const config = {
   quiz,
   ranking,
   resposta,
+  telaConversa,
   telemetria,
+  textosConversa,
   textosEntrada,
   toques,
   ui,

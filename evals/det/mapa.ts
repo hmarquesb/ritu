@@ -653,7 +653,14 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Rota sem sessão → `401`; uma conta não lê run, proposta, cas",
-    arquivos: ["evals/det/seguranca/sessao.eval.ts"],
+    arquivos: ["evals/det/seguranca/sessao.eval.ts", "evals/det/seguranca/conversa.eval.ts"],
+    desde: 3,
+  },
+  {
+    grupo: "Segurança e privacidade",
+    linha:
+      "Visão do run sem campo interno: passa no tipo e não traz linha_base, citados, checkpoint, tokens, modelo nem clima_usado",
+    arquivos: ["evals/det/conversa/visao.eval.ts"],
     desde: 3,
   },
   {
@@ -743,7 +750,7 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Telas (E2E)",
     linha: "Resposta do agente com `<script>` aparece como texto.",
-    arquivos: [],
+    arquivos: ["e2e/conversa.spec.ts"],
     desde: 3,
   },
   {

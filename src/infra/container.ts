@@ -31,7 +31,7 @@ import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
-import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createGeminiClient } from "@/infra/gemini/client"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { loadDemoSeed } from "@/infra/knowledge/yaml-seed"
@@ -76,6 +76,56 @@ let banco: DbClient | undefined
 function bancoPreguicoso(): DbClient {
   banco ??= createDbClient()
   return banco
+}
+
+// Modo e2e: clima fixo, Intérprete e Acompanhante roteirizados. Os módulos entram por import dinâmico,
+// na primeira chamada, para ficarem fora do caminho de produção.
+function climaFixoE2e(): WeatherSource {
+  return {
+    async buscar(coordenadas) {
+      const { createClimaFixo } = await import("@/infra/e2e/clima")
+      return createClimaFixo().buscar(coordenadas)
+    },
+  }
+}
+
+// Um ledger por `x-ritu-e2e`, como os dados de cada teste.
+function ledgerE2e(clock: Clock): UsageLedger {
+  const porEscopo = new Map<string, UsageLedger>()
+  const atual = async (): Promise<UsageLedger> => {
+    const { createLedgerE2e, escopoDoPedidoNext } = await import("@/infra/e2e/cota")
+    let ledger = porEscopo.get("e2e")
+    if (!ledger) {
+      ledger = createLedgerE2e(clock, escopoDoPedidoNext)
+      porEscopo.set("e2e", ledger)
+    }
+    return ledger
+  }
+  return {
+    reservar: async (m, l) => (await atual()).reservar(m, l),
+    registrarTokens: async (m, t) => (await atual()).registrarTokens(m, t),
+    registrarRateLimit: async (m) => (await atual()).registrarRateLimit(m),
+    uso: async () => (await atual()).uso(),
+    apagarAntigas: async () => (await atual()).apagarAntigas(),
+  }
+}
+
+function llmE2e(): LlmClient {
+  return {
+    async gerar(pedido) {
+      const { createLlmDeRoteiros } = await import("@/infra/e2e/roteiros")
+      return createLlmDeRoteiros().gerar(pedido)
+    },
+  }
+}
+
+function runtimeE2e(): AgentRuntime {
+  return {
+    async passo(pedido) {
+      const { createRuntimeDeRoteiros } = await import("@/infra/e2e/roteiros")
+      return createRuntimeDeRoteiros().passo(pedido)
+    },
+  }
 }
 
 // Leitura crua de data/ para scripts (sem validar): o script valida com validarBase.
@@ -132,7 +182,11 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // Criadas na primeira leitura: criar o container não abre rede.
     get weather() {
-      weather ??= createCachedWeatherSource(createOpenMeteoWeather(), clock, container.telemetry)
+      weather ??= createCachedWeatherSource(
+        e2e ? climaFixoE2e() : createOpenMeteoWeather(),
+        clock,
+        container.telemetry,
+      )
       return weather
     },
     get cities() {
@@ -155,7 +209,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return tx
     },
     get ledger() {
-      ledger ??= e2e ? createMemoryLedger(clock) : createPgUsageLedger(bancoPreguicoso().sql, clock)
+      ledger ??= e2e ? ledgerE2e(clock) : createPgUsageLedger(bancoPreguicoso().sql, clock)
       return ledger
     },
     get limiter() {
@@ -177,7 +231,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // A chave do Gemini só é lida na primeira chamada.
     get llm() {
-      llm ??= createGeminiClient({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      llm ??= e2e ? llmE2e() : createGeminiClient({ apiKey: () => requireEnv("GEMINI_API_KEY") })
       return llm
     },
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
@@ -190,7 +244,9 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // A chave do modelo só é lida na primeira chamada de passo.
     get runtime() {
-      runtime ??= createMastraRuntime({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      runtime ??= e2e
+        ? runtimeE2e()
+        : createMastraRuntime({ apiKey: () => requireEnv("GEMINI_API_KEY") })
       return runtime
     },
     get runs() {

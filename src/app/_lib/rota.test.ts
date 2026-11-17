@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
-import { RituError } from "@/core/errors"
+import { MARCA_RITU, RituError } from "@/core/errors"
 import { createContainer } from "@/infra/container"
-import { criarRota } from "./rota"
+import { criarRota, statusDoErro } from "./rota"
 
 // Modo de E2E: o container usa stores em memória, sem banco.
 function montar() {
@@ -23,6 +23,34 @@ const schema = z.object({ n: z.number() })
 
 describe("criarRota", () => {
   afterEach(() => vi.unstubAllEnvs())
+
+  it("erro de outra cópia de RituError vira o status do código; Error sem code é 500", async () => {
+    const { deps } = await comConta()
+    class OutraCopia extends Error {
+      readonly code = "run_nao_continuavel"
+      readonly [MARCA_RITU] = true
+    }
+    class ErroDeDriver extends Error {
+      readonly code = "ECONNREFUSED"
+    }
+    const a = await criarRota(deps, {}, async () => {
+      throw new OutraCopia("d")
+    })(pedido())
+    expect(a.status).toBe(409)
+    expect(await a.json()).toEqual({ erro: "run_nao_continuavel" })
+    const b = await criarRota(deps, {}, async () => {
+      throw new Error("x")
+    })(pedido())
+    expect(b.status).toBe(500)
+    expect(await b.json()).toEqual({ erro: "erro_inesperado" })
+    const log = vi.spyOn(deps.container.telemetry, "log")
+    const c = await criarRota(deps, {}, async () => {
+      throw new ErroDeDriver("x")
+    })(pedido())
+    expect(c.status).toBe(500)
+    expect(await c.json()).toEqual({ erro: "erro_inesperado" })
+    expect(log).toHaveBeenCalledWith("erro_inesperado")
+  })
 
   it("401 sem sessão", async () => {
     const { container } = montar()
@@ -113,5 +141,38 @@ describe("criarRota", () => {
     const r = await rota(new Request("http://x/api"))
     expect(r.status).toBe(200)
     expect(await r.json()).toEqual({ corpo: null })
+  })
+})
+
+describe("statusDoErro", () => {
+  it("mapeia os códigos para o status", () => {
+    expect(statusDoErro("run_nao_encontrado")).toBe(404)
+    for (const c of [
+      "run_aberto",
+      "run_nao_continuavel",
+      "pergunta_expirada",
+      "aprovacao_expirada",
+      "run_pausado",
+    ]) {
+      expect(statusDoErro(c)).toBe(409)
+    }
+    expect(statusDoErro("qualquer_outro")).toBe(400)
+  })
+
+  it("criarRota responde 409 com run_aberto", async () => {
+    vi.stubEnv("RITU_MODO", "e2e")
+    const container = createContainer()
+    const conta = await container.stores.accounts.criar({
+      tipo: "google",
+      google_sub: "s",
+      email: "a@b.c",
+    })
+    const rota = criarRota({ contaDaSessao: async () => conta.id, container }, {}, async () => {
+      throw new RituError("run_aberto", "d")
+    })
+    const r = await rota(new Request("http://x/api"))
+    expect(r.status).toBe(409)
+    expect(await r.json()).toEqual({ erro: "run_aberto" })
+    vi.unstubAllEnvs()
   })
 })

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { config } from "./index"
+import { config, telaConversa, textosConversa } from "./index"
+import { formatar } from "./textos-conversa"
 
 function textosDe(valor: unknown): string[] {
   if (typeof valor === "string") return [valor]
@@ -175,5 +176,35 @@ describe("config", () => {
       runsPorConta: 400,
       bloco: { vezesSemResposta: 3 },
     })
+  })
+
+  it("expõe a configuração da tela de conversa com os valores da spec", () => {
+    expect(telaConversa).toEqual({
+      consultaDoRun: { intervaloMs: 2000, maximoMs: 90_000 },
+      rotaMaxDurationS: 60,
+      contadorAPartirDe: 800,
+    })
+  })
+
+  it("expõe os textos da tela de conversa com as chaves e os textos da spec", () => {
+    expect(textosConversa.caixa.rotulo).toBe("Sua mensagem")
+    expect(textosConversa.caixa.longa).toBe("{n} de 1000 caracteres")
+    expect(textosConversa.etapas.passos).toBe("Pensei em {n} passos")
+    expect(textosConversa.etapas.passo).toBe("Pensei em 1 passo")
+    expect(textosConversa.bloco.anotei).toBe("Anotei {n} de {m}.")
+    expect(textosConversa.pergunta.opcoesCasa).toBe("Tenho · Não tenho · Não gosto")
+    expect(textosConversa.sugestao.menuItens).toBe("Trocar · Não tenho · Não gosto")
+    expect(textosConversa.abas.voce).toBe("Você")
+    expect(textosConversa.emBreve).toBe("Esta parte chega em breve.")
+    expect(textosConversa.erro.rede).toBe(
+      "Não consegui falar com o Ritu agora. Sua mensagem continua aqui.",
+    )
+    expect(textosConversa.rodape.aviso).toBe("Não é orientação médica.")
+  })
+
+  it("formata os placeholders e deixa literal a chave ausente", () => {
+    expect(formatar("Anotei {n} de {m}.", { n: 2, m: 3 })).toBe("Anotei 2 de 3.")
+    expect(formatar("Opções para {item}", {})).toBe("Opções para {item}")
+    expect(formatar("Oi {nome}, {n} itens", { n: 4 })).toBe("Oi {nome}, 4 itens")
   })
 })

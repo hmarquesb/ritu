@@ -1,6 +1,6 @@
 import type { z } from "zod"
 import type { Conta } from "@/core/accounts/types"
-import { RituError } from "@/core/errors"
+import { MARCA_RITU, RituError } from "@/core/errors"
 import type { Container } from "@/infra/container"
 
 export type DepsDaRota = {
@@ -8,9 +8,9 @@ export type DepsDaRota = {
   container: Container
 }
 
-type Contexto<B> = { conta: Conta; corpo: B; request: Request; container: Container }
+export type Contexto<B> = { conta: Conta; corpo: B; request: Request; container: Container }
 
-function resposta(status: number, corpo: unknown): Response {
+export function resposta(status: number, corpo: unknown): Response {
   return Response.json(corpo, { status })
 }
 
@@ -44,6 +44,50 @@ async function lerValidado<B>(
   return { ok: true, valor: validado.data }
 }
 
+const STATUS_409 = new Set([
+  "run_aberto",
+  "run_nao_continuavel",
+  "pergunta_expirada",
+  "aprovacao_expirada",
+  "run_pausado",
+])
+
+// O Next carrega os módulos em cópias separadas: o erro lançado pelo container (que vive no
+// globalThis) pode ser de outra cópia de `RituError`, e `instanceof` falha. Vale a marca global.
+export function ehRituError(e: unknown): e is RituError {
+  if (e instanceof RituError) return true
+  if (!(e instanceof Error)) return false
+  const { code, [MARCA_RITU]: marca } = e as { code?: unknown; [MARCA_RITU]?: unknown }
+  return marca === true && typeof code === "string"
+}
+
+export function statusDoErro(code: string): number {
+  if (code === "run_nao_encontrado") return 404
+  if (STATUS_409.has(code)) return 409
+  return 400
+}
+
+type Preparado<B> = { ok: true; ctx: Contexto<B> } | { ok: false; resposta: Response }
+
+// Checagens comuns às rotas JSON e às de fluxo: sessão, conta, tamanho e corpo.
+export async function prepararContexto<B>(
+  deps: DepsDaRota,
+  opts: { corpo?: z.ZodType<B> },
+  request: Request,
+): Promise<Preparado<B>> {
+  const { container } = deps
+  const contaId = await deps.contaDaSessao()
+  const conta = contaId ? await container.stores.accounts.buscar(contaId) : undefined
+  if (!conta) return { ok: false, resposta: resposta(401, { erro: "sem_sessao" }) }
+  let corpo = undefined as B
+  if (opts.corpo) {
+    const lido = await lerValidado(request, opts.corpo, container.config.limites.corpoMaximoBytes)
+    if (!lido.ok) return lido
+    corpo = lido.valor
+  }
+  return { ok: true, ctx: { conta, corpo, request, container } }
+}
+
 export function criarRota<B, R>(
   deps: DepsDaRota,
   opts: { corpo?: z.ZodType<B> },
@@ -52,22 +96,11 @@ export function criarRota<B, R>(
   const { container } = deps
   return async (request) => {
     try {
-      const contaId = await deps.contaDaSessao()
-      const conta = contaId ? await container.stores.accounts.buscar(contaId) : undefined
-      if (!conta) return resposta(401, { erro: "sem_sessao" })
-      let corpo = undefined as B
-      if (opts.corpo) {
-        const lido = await lerValidado(
-          request,
-          opts.corpo,
-          container.config.limites.corpoMaximoBytes,
-        )
-        if (!lido.ok) return lido.resposta
-        corpo = lido.valor
-      }
-      return resposta(200, await fn({ conta, corpo, request, container }))
+      const preparado = await prepararContexto(deps, opts, request)
+      if (!preparado.ok) return preparado.resposta
+      return resposta(200, await fn(preparado.ctx))
     } catch (erro) {
-      if (erro instanceof RituError) return resposta(400, { erro: erro.code })
+      if (ehRituError(erro)) return resposta(statusDoErro(erro.code), { erro: erro.code })
       container.telemetry.log("erro_inesperado")
       return resposta(500, { erro: "erro_inesperado" })
     }

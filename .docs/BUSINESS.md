@@ -97,14 +97,16 @@ Meta: **primeira resposta em menos de 1 minuto, sem preencher nenhum campo.**
 | **Conversa** (tela inicial depois de entrar) | Mensagens do dia; caixa de texto; atalhos de check-in; etapas do agente ao vivo; pergunta do agente; resposta em texto com sugestões de apoio; indicação de "vale ter em casa"; o que o agente propõe anotar; indicador discreto de "Como ficou?" |
 | **Minha casa** (aba) | O que a pessoa tem, por grupo; itens "sempre tenho"; seção **"Ainda tem?"** com o que ficou incerto; gosto por item; lista **"Para ter em casa"**, com o motivo de cada item |
 | **Como ficou?** | Sugestões recebidas que ainda não têm retorno. Um toque em cada: Ajudou · Não ajudou · Não fiz |
-| **Painel do dosha** (aba lateral) | Dosha, características, o que desequilibra e o que equilibra. Sem dosha: "Descubra seu dosha" |
+| **Painel do dosha** (em Você) | Dosha, características, o que desequilibra e o que equilibra. Sem dosha: "Descubra seu dosha" |
 | **Evitar sempre** (passo do onboarding) | "Tem algum alimento que você nunca pode comer?" Grupos para tocar, busca de alimento, Nenhum · Pular (§13) |
 | **Quiz** | As 8 perguntas do dosha |
 | **Como pensei** | Linha do tempo do rastro: o que o agente entendeu, consultou, corrigiu, perguntou e propôs, e o que o juiz disse |
-| **O que sei sobre você** | Tudo o que o Ritu guarda, por nível (§11), editável e apagável item por item |
-| **Perfil** | Conta, dosha, cidade, **evitar sempre**, restrições, "não como", **apagar meus dados** |
+| **O que sei sobre você** (em Você) | Tudo o que o Ritu guarda, por nível (§11), editável e apagável item por item |
+| **Perfil** (em Você) | Conta, dosha, cidade, **evitar sempre**, restrições, "não como", **apagar meus dados** |
 | **Bastidores** (pública) | Números agregados do agente e a evolução dos evals (`OBSERVABILITY.md` §4) |
 | **Sobre** | O projeto, privacidade, link do repositório |
+
+Quem entrou navega por quatro destinos: **Conversa**, **Minha casa**, **Como ficou?** e **Você**. A barra fica embaixo no celular e na lateral no desktop. **Você** junta o Perfil, o que o Ritu sabe sobre a pessoa e o painel do dosha.
 
 ## 8. A conversa
 
@@ -129,20 +131,20 @@ Qualquer coisa. O agente entende a intenção de cada mensagem, e uma mensagem p
 
 ### Atalhos de check-in
 
-Ficam acima da caixa de texto e são opcionais. Marcar um atalho equivale a dizer aquilo por escrito, e pode ser combinado com texto.
+Ficam acima da caixa de texto, com ícone de traço fino, e são opcionais. Marcar um atalho equivale a dizer aquilo por escrito, e pode ser combinado com texto.
 
 | Eixo | Opções |
 |---|---|
-| Temperatura | 🥶 Com frio · 🥵 Com calor |
-| Corpo | 🪨 Pesada, inchada · 🍂 Seca, ressecada |
-| Mente | ⚡ Agitada, ansiosa · 🔥 Irritada · 😴 Sem energia |
+| Temperatura | Com frio · Com calor |
+| Corpo | Pesada, inchada · Seca, ressecada |
+| Mente | Agitada, ansiosa · Irritada · Sem energia |
 
 ### Fluxo de uma mensagem
 
-1. A pessoa escreve (ou marca atalhos) e envia.
-2. A tela mostra as **etapas ao vivo**: "entendendo sua mensagem… vendo o clima… olhando sua casa… conferindo a resposta…".
+1. A pessoa escreve (ou marca atalhos) e envia. Na demonstração, a caixa vem com uma mensagem sugerida, só enquanto não há mensagem no dia. Na conta Google, ela começa vazia.
+2. A tela mostra as **etapas ao vivo**, com frases do produto: "entendendo sua mensagem… vendo o clima… olhando sua casa… conferindo a resposta…". Etapas sem frase não aparecem.
 3. Se faltar algo que muda a resposta, o agente **pergunta na própria tela**, com botões. No máximo duas perguntas por mensagem. Perguntas sobre a casa vêm agrupadas: *"Ainda tem abóbora, couve e ovos?"*, com Tenho · Não tenho · Não gosto em cada item. Toda pergunta tem **Pular**. A pergunta vale por 30 minutos; escrever outra mensagem a deixa de lado.
-4. A resposta chega como **texto do agente**, com as sugestões logo abaixo:
+4. A resposta aparece inteira, como **texto do agente**, com as sugestões logo abaixo. As etapas recolhem em **"Pensei em N passos"**, e "Como pensei" leva ao rastro:
 
 ```
 Com esse frio úmido de hoje e a agitação que você contou, o seu corpo

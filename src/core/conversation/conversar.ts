@@ -450,7 +450,7 @@ export function createConversation(deps: Deps) {
     async conversar(
       contaId: string,
       mensagem: MensagemRecebida,
-      opts?: { aoVivo?: AoVivo },
+      opts?: { aoVivo?: AoVivo; aoCriar?: (runId: string) => void },
     ): Promise<RespostaDaConversa> {
       const m = validar(mensagem)
       const perfil = await stores.profiles.ler(contaId)
@@ -459,6 +459,11 @@ export function createConversation(deps: Deps) {
         intencoes: [],
         fuso: perfil.cidade_fuso ?? undefined,
       })
+      try {
+        opts?.aoCriar?.(run.id)
+      } catch {
+        // quem chamou falhou ao ser avisado; o run segue
+      }
       const x: Execucao = { contaId, run, perfil, m, aoVivo: opts?.aoVivo }
       return runs.comSpanDoRun(contaId, run.id, () => rodar(x))
     },

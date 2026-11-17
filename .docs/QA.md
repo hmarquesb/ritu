@@ -20,7 +20,7 @@ Junto do gate 4, ao fim de cada spec e na CI, roda `npm run dup` (duplicação d
 
 ## Evals determinísticos (sem LLM)
 
-Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seção aponta para os arquivos que a conferem em `evals/det/mapa.ts`, e `evals/det/mapa.eval.ts` acusa linha sem arquivo e arquivo sem linha. Quem muda uma linha desta seção atualiza `evals/det/mapa.ts`. `npm run eval:det:resumo` imprime o resultado por grupo.
+Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seção aponta para os arquivos que a conferem em `evals/det/mapa.ts`, e `evals/det/mapa.eval.ts` acusa linha sem arquivo e arquivo sem linha. Quem muda uma linha desta seção atualiza `evals/det/mapa.ts`. `npm run eval:det:resumo` imprime, por pasta de `evals/det/`, os arquivos, os casos e as falhas do último `.vitest/eval-det.json` (gravado pela CI).
 
 **Base e tools**
 - A base passa na validação (schema, ids, referências, cobertura mínima).
@@ -140,6 +140,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 **Segurança e privacidade**
 - O guardrail de entrada neutraliza as mensagens de injection do conjunto de testes.
 - Rota sem sessão → `401`; uma conta não lê run, proposta, casa, preferência, rotina nem retorno de outra.
+- Visão do run sem campo interno: passa no tipo e não traz linha_base, citados, checkpoint, tokens, modelo nem clima_usado.
 - Nenhum span, métrica, log, `resumo` ou saída de console contém texto da pessoa, nome de alimento ou valor fora do formato de identificador, no fake e no adaptador OTel.
 - Duas demonstrações não se enxergam; demonstração vencida é apagada.
 - Nota de rotina, mensagem anterior e "evitar sempre" em texto livre com instrução embutida chegam ao prompt delimitados e com `<` e `>` neutralizados.
@@ -156,6 +157,9 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - O registro dos casos com LLM tem ids únicos, famílias e marcas.
 
 **Telas (E2E)**
+
+Os cenários da Conversa estão em `e2e/conversa.spec.ts`.
+
 - Caminho da demonstração: da Entrada à primeira resposta só com cliques.
 - Mensagem livre → pergunta do agente → resposta em texto com sugestões.
 - Trocar um ingrediente mostra o substituto e o motivo.

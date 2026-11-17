@@ -281,5 +281,51 @@ export function runsContract(make: () => Promise<ContractEnv> | ContractEnv): vo
 
       expect(await runs.contasComRunDesde(desde)).toEqual([a])
     })
+
+    it("doDia devolve só os runs do dia pedido, na ordem de criação, e não traz run de outra conta", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { runs } = env.stores
+      const encerrar = async (contaId: string, dia: string) => {
+        const run = await runs.criar(contaId, { caminho: "casa", intencoes: [], dia })
+        await runs.atualizar(contaId, run.id, { status: "done" })
+        env.clock.advance(UMA_HORA)
+        return run
+      }
+      const primeiro = await encerrar(a, DIA)
+      const segundo = await encerrar(a, DIA)
+      const outroDia = await encerrar(a, "2026-01-14")
+      const deB = await encerrar(b, DIA)
+
+      expect((await runs.doDia(a, DIA)).map((r) => r.id)).toEqual([primeiro.id, segundo.id])
+      expect((await runs.doDia(a, "2026-01-14")).map((r) => r.id)).toEqual([outroDia.id])
+      expect((await runs.doDia(b, DIA)).map((r) => r.id)).toEqual([deB.id])
+      expect(await runs.doDia(a, "2026-01-16")).toEqual([])
+    })
+
+    it("votos traz o voto gravado (o último, se trocou), omite run sem voto e run de outra conta", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { runs } = env.stores
+      const r1 = await abrir(env.stores, a)
+      await runs.atualizar(a, r1.id, { status: "done" })
+      env.clock.advance(UMA_HORA)
+      const r2 = await abrir(env.stores, a)
+      await runs.atualizar(a, r2.id, { status: "done" })
+      const r3 = await abrir(env.stores, a)
+      await runs.atualizar(a, r3.id, { status: "done" })
+      const rb = await abrir(env.stores, b)
+
+      await runs.votar(a, r1.id, "up")
+      await runs.votar(a, r2.id, "down")
+      await runs.votar(a, r2.id, "up")
+      await runs.votar(b, rb.id, "down")
+
+      expect(await runs.votos(a, [r1.id, r2.id, r3.id, rb.id])).toEqual({
+        [r1.id]: "up",
+        [r2.id]: "up",
+      })
+      expect(await runs.votos(a, [rb.id])).toEqual({})
+      expect(await runs.votos(b, [rb.id])).toEqual({ [rb.id]: "down" })
+      expect(await runs.votos(a, [])).toEqual({})
+    })
   })
 }

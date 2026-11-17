@@ -366,7 +366,8 @@ function situacaoDaRefeicao(
 
 // Candidato de refeição sem opção de vaga obrigatória em casa nem perguntável não vai ao modelo
 // nem ao validador. Refeição que só fica por causa de uma opção perguntável sai com
-// depende_de_pergunta, e só as primeiras maxRefeicoesAPerguntar delas. Chá, óleo e prática passam.
+// depende_de_pergunta, e só as primeiras maxRefeicoesAPerguntar delas. Chá, óleo e prática passam,
+// a não ser que algum ingrediente tenha acabado.
 export function entregaveis(
   candidatos: Candidato[],
   p: { casa: Casa; acabou: string[]; perguntasRestantes: number },
@@ -379,7 +380,8 @@ export function entregaveis(
   const saida: Candidato[] = []
   for (const candidato of candidatos) {
     if (candidato.tipo !== "refeicao") {
-      saida.push(candidato)
+      const acabou = candidato.itens.some((item) => p.acabou.includes(item.alimento_id))
+      if (!acabou) saida.push(candidato)
       continue
     }
     const preparo = kb.preparo(candidato.id)

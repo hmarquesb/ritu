@@ -12,6 +12,8 @@ import { dadosDoPreparoSchema, entregaveis, preparar } from "./preparo"
 const CONTA = "conta-1"
 const HOJE = "2026-11-15"
 const kb = createMiniKnowledge()
+// 09:00 em São Paulo: a manhã libera o chá de canela e cardamomo.
+const MANHA = "2026-11-15T12:00:00.000Z"
 
 function montar(iso = "2026-11-15T18:00:00.000Z") {
   const clock = createFixedClock(iso)
@@ -223,6 +225,29 @@ describe("entregaveis", () => {
     expect(entregaveis([cha], com(0), kb)).toEqual([cha])
   })
 
+  it("chá, óleo ou prática com ingrediente em acabou sai; sem o ingrediente, segue", () => {
+    const cha = (id: string, itens: string[]) => ({
+      ...refeicao({}),
+      tipo: "cha" as const,
+      id,
+      itens: itens.map((alimento) => item(alimento, "ausente")),
+    })
+    const comCanela = cha("cha-canela-cardamomo", ["canela", "cardamomo"])
+    const semCanela = cha("cha-gengibre", ["gengibre"])
+    const saida = entregaveis([comCanela, semCanela], com(0, vazia, ["canela"]), kb)
+    expect(saida).toEqual([semCanela])
+  })
+
+  it("ingrediente só ausente (nunca registrado) não tira a prática", () => {
+    const comCanela = {
+      ...refeicao({}),
+      tipo: "cha" as const,
+      id: "cha-canela-cardamomo",
+      itens: [item("canela", "ausente"), item("cardamomo", "ausente")],
+    }
+    expect(entregaveis([comCanela], com(0), kb)).toEqual([comCanela])
+  })
+
   it("rodar de novo dá o mesmo resultado e descarta a marca anterior", () => {
     const c = refeicao({
       base: [item("abobora", "ausente")],
@@ -270,6 +295,38 @@ describe("preparar: casa, mensagem e perguntas", () => {
     expect(dados.casa.confirmados).not.toContain("canela")
     expect(dados.casa.incertos).not.toContain("canela")
     expect(dados.casa.confirmados).not.toContain("gengibre")
+  })
+
+  it("canela em Minha casa como acabou tira a prática com canela, e a falta continua", async () => {
+    const { run, stores } = montar(MANHA)
+    await stores.pantry.registrar(CONTA, [{ alimento_id: "canela" }], "conversa")
+    await stores.pantry.marcarAcabou(CONTA, [{ alimento_id: "canela" }])
+    const dados = await run({ estados: ["com_frio"] })
+    const comCanela = dados.candidatos.filter((c) =>
+      c.itens.some((i) => i.alimento_id === "canela"),
+    )
+    expect(comCanela).toEqual([])
+    expect(dados.candidatos.some((c) => c.id === "cha-gengibre")).toBe(true)
+    expect(dados.faltas_do_run).toContain("canela")
+  })
+
+  it("acabou canela na mensagem tira a prática com canela", async () => {
+    const { run } = montar()
+    const dados = await run({
+      estados: ["com_frio"],
+      casa_da_mensagem: { tem: [], acabou: ["canela"] },
+    })
+    const comCanela = dados.candidatos.filter((c) =>
+      c.itens.some((i) => i.alimento_id === "canela"),
+    )
+    expect(comCanela).toEqual([])
+    expect(dados.candidatos.some((c) => c.id === "cha-gengibre")).toBe(true)
+  })
+
+  it("canela só ausente (nunca registrada) não tira a prática com canela", async () => {
+    const { run } = montar(MANHA)
+    const dados = await run({ estados: ["com_frio"] })
+    expect(dados.candidatos.some((c) => c.id === "cha-canela-cardamomo")).toBe(true)
   })
 
   it("não como e restrição da mensagem filtram no run e ficam no temporário do dia", async () => {

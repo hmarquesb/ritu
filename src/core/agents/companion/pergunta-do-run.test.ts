@@ -307,6 +307,40 @@ describe("conteudoDaPendenciaSchema", () => {
   })
 })
 
+describe("aplicarResposta · casa com Não tenho e prática", () => {
+  it("Não tenho em canela tira a prática com canela dos candidatos e mantém a prática sem canela", () => {
+    const chaCanela: Candidato = {
+      ...cha(),
+      id: "cha-canela-cardamomo",
+      nome: "Chá de canela e cardamomo",
+      itens: [item("canela", "incerto"), item("cardamomo", "confirmado")],
+      linha_base: "praticas:cha-canela-cardamomo",
+    }
+    const perguntaDeCanela: Pergunta = montarPergunta(
+      { tipo: "casa", alimentos: ["canela"], incertos: ["canela"] },
+      kb,
+    )
+    const antes = dados({
+      casa: { confirmados: ["ghee", "gengibre"], incertos: ["canela"] },
+      candidatos: [purê(), cha(), chaCanela],
+    })
+    const depois = aplicarResposta(
+      antes,
+      perguntaDeCanela,
+      respostaDeCasa("canela", "nao_tenho"),
+      kb,
+    )
+    const ids = depois.candidatos.map((c) => c.id)
+    expect(ids).not.toContain("cha-canela-cardamomo")
+    expect(ids).toContain("cha-gengibre")
+    expect(
+      depois.candidatos
+        .filter((c) => c.tipo !== "refeicao")
+        .some((c) => c.itens.some((i) => i.alimento_id === "canela")),
+    ).toBe(false)
+  })
+})
+
 describe("aplicarResposta · nao_tem_do_run", () => {
   it("Não tenho põe o id em nao_tem_do_run, sem repetir em duas respostas", () => {
     const uma = aplicarResposta(

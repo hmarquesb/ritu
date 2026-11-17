@@ -69,8 +69,18 @@ describe("gerarPainel", () => {
 
   it("conta os painéis de cada linha", () => {
     const contagem = PAINEL.linhas.map((l) => l.paineis.length)
-    expect(contagem).toEqual([6, 9, 7, 8, 2])
-    expect(paineisComuns()).toHaveLength(32)
+    expect(contagem).toEqual([7, 9, 7, 8, 2])
+    expect(paineisComuns()).toHaveLength(33)
+  })
+
+  it("põe o stat Limites atingidos na linha 1, somando ritu_limite_total por resultado", () => {
+    const linha1 = PAINEL.linhas[0]?.paineis ?? []
+    const stat = linha1.find((p) => p.titulo === "Limites atingidos")
+    expect(stat?.tipo).toBe("stat")
+    expect(stat?.consultas[0]?.expr).toBe(
+      "sum by (resultado) (max_over_time(ritu_limite_total[$__range]))",
+    )
+    expect(porTitulo("Limites atingidos").type).toBe("stat")
   })
 
   it("dá largura 12 aos painéis e 6 aos stat, com altura 8", () => {

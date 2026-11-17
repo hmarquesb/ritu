@@ -106,6 +106,14 @@ export const PAINEL: { uid: string; titulo: "Ritu"; linhas: Linha[] } = {
             },
           ],
         },
+        {
+          titulo: "Limites atingidos",
+          descricao:
+            "Quantas vezes um limite barrou a conversa, deixou só atalhos ou gerou alerta?",
+          tipo: "stat",
+          fonte: "metricas",
+          consultas: [{ expr: TOTAL("ritu_limite_total", "resultado") }],
+        },
       ],
     },
     {

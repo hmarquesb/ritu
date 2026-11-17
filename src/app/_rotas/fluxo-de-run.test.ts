@@ -4,6 +4,8 @@ import type { EventoDaTela } from "@/core/conversation/eventos"
 import { type Container, createContainer } from "@/infra/container"
 import { rotasDeFluxoDeRun } from "./fluxo-de-run"
 
+const quemPede = () => ({ ipHash: "h" })
+
 const PERGUNTA_DE_CASA = "fui à feira ontem, o que faço pro jantar?"
 
 async function montar() {
@@ -15,7 +17,7 @@ async function montar() {
     kb: container.knowledge,
   })
   const outra = await container.stores.accounts.criar({ tipo: "demo" })
-  const deps = (contaId?: string) => ({ contaDaSessao: async () => contaId, container })
+  const deps = (contaId?: string) => ({ contaDaSessao: async () => contaId, container, quemPede })
   return { container, conta, outra, deps }
 }
 

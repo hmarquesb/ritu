@@ -4,6 +4,8 @@ import { MARCA_RITU, RituError } from "@/core/errors"
 import { createContainer } from "@/infra/container"
 import { criarRotaDeFluxo } from "./fluxo"
 
+const quemPede = () => ({ ipHash: "h" })
+
 function montar() {
   vi.stubEnv("RITU_MODO", "e2e")
   return createContainer()
@@ -16,7 +18,7 @@ async function comConta() {
     google_sub: "s",
     email: "a@b.c",
   })
-  return { container, deps: { contaDaSessao: async () => conta.id, container } }
+  return { container, deps: { contaDaSessao: async () => conta.id, container, quemPede } }
 }
 
 const pedido = (corpo?: string, h: Record<string, string> = {}) =>
@@ -37,7 +39,7 @@ describe("criarRotaDeFluxo", () => {
   it("401 sem sessão", async () => {
     const container = montar()
     const rota = criarRotaDeFluxo(
-      { contaDaSessao: async () => undefined, container },
+      { contaDaSessao: async () => undefined, container, quemPede },
       {},
       async () => {},
     )
@@ -156,5 +158,16 @@ describe("criarRotaDeFluxo", () => {
     await leitor.cancel()
     liberar()
     await vi.waitFor(() => expect(terminou).toBe(true))
+  })
+
+  it("toque barrado responde 429 JSON antes de abrir o fluxo", async () => {
+    const { deps } = await comConta()
+    const fn = vi.fn(async () => {})
+    const rota = criarRotaDeFluxo({ ...deps, quemPede: () => ({ ipHash: "h", teto: 0 }) }, {}, fn)
+    const r = await rota(pedido())
+    expect(r.status).toBe(429)
+    expect(r.headers.get("Retry-After")).not.toBeNull()
+    expect(await r.json()).toEqual({ erro: "limite_toques" })
+    expect(fn).not.toHaveBeenCalled()
   })
 })

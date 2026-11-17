@@ -128,4 +128,21 @@ export function codigoDoErroDeEntrada(erro: unknown): string | undefined {
   return alvo instanceof CredentialsSignin ? alvo.code : "erro_demo"
 }
 
+function tetoDoE2e(request: Request): number | undefined {
+  const n = Number(request.headers.get("x-ritu-e2e-teto"))
+  return Number.isInteger(n) && n >= 1 && n <= 100 ? n : undefined
+}
+
+// Quem faz o pedido, para os limites: só o hash do IP; escopo e teto só no modo e2e.
+export function quemPedeNext(request: Request): { ipHash: string; escopo?: string; teto?: number } {
+  const modoE2e = optionalEnv("RITU_MODO") === "e2e"
+  const ipHash = hashDoIp(ipDoPedido(request.headers, modoE2e), requireEnv("IP_HMAC_SECRET"))
+  if (!modoE2e) return { ipHash }
+  return {
+    ipHash,
+    escopo: request.headers.get("x-ritu-e2e")?.trim() || undefined,
+    teto: tetoDoE2e(request),
+  }
+}
+
 export type { TipoDeConta }

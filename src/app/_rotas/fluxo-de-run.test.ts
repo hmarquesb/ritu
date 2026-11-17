@@ -89,6 +89,34 @@ describe("rotasDeFluxoDeRun", () => {
     expect(await r.json()).toEqual({ erro: "run_aberto" })
   })
 
+  it("dois POST concorrentes: o segundo é 409 run_aberto e o primeiro termina sem perder o run", async () => {
+    const m = await montar()
+    const { iniciar } = rotasDeFluxoDeRun(m.deps(m.conta.id))
+    const primeiro = await iniciar(pedido(texto("demora um pouco")))
+    const leitor = primeiro.body?.getReader()
+    let visto = ""
+    while (!visto.includes('"tipo":"etapa"')) {
+      const parte = await leitor?.read()
+      if (!parte || parte.done) break
+      visto += new TextDecoder().decode(parte.value)
+    }
+    const segundo = await iniciar(pedido(texto("oi de novo")))
+    expect(segundo.status).toBe(409)
+    expect(await segundo.json()).toEqual({ erro: "run_aberto" })
+    const resto: string[] = [visto]
+    for (;;) {
+      const parte = await leitor?.read()
+      if (!parte || parte.done) break
+      resto.push(new TextDecoder().decode(parte.value))
+    }
+    const ev = resto
+      .join("")
+      .split("\n")
+      .filter(Boolean)
+      .map((l) => JSON.parse(l) as EventoDaTela)
+    expect(ev.at(-1)?.tipo).toBe("fim")
+  })
+
   it("/resposta com run de outra conta é 404", async () => {
     const m = await montar()
     const run = await m.container.stores.runs.criar(m.outra.id, {

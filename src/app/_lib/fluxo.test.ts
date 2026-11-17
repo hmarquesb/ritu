@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
-import { RituError } from "@/core/errors"
+import { MARCA_RITU, RituError } from "@/core/errors"
 import { createContainer } from "@/infra/container"
 import { criarRotaDeFluxo } from "./fluxo"
 
@@ -67,6 +67,30 @@ describe("criarRotaDeFluxo", () => {
       throw new RituError("outro", "d")
     })
     expect((await outra(pedido())).status).toBe(400)
+  })
+
+  it("erro de outra cópia de RituError (módulo duplicado) também vira JSON com status", async () => {
+    const { deps } = await comConta()
+    class OutraCopia extends Error {
+      readonly code = "run_aberto"
+      readonly [MARCA_RITU] = true
+    }
+    class ErroDeDriver extends Error {
+      readonly code = "ECONNREFUSED"
+    }
+    const rota = criarRotaDeFluxo(deps, {}, async () => {
+      throw new OutraCopia("d")
+    })
+    const r = await rota(pedido())
+    expect(r.status).toBe(409)
+    expect(await r.json()).toEqual({ erro: "run_aberto" })
+    const log = vi.spyOn(deps.container.telemetry, "log")
+    const d = await criarRotaDeFluxo(deps, {}, async () => {
+      throw new ErroDeDriver("x")
+    })(pedido())
+    expect(d.status).toBe(500)
+    expect(await d.json()).toEqual({ erro: "erro_inesperado" })
+    expect(log).toHaveBeenCalledWith("erro_inesperado")
   })
 
   it("emite os eventos em ordem, uma linha cada, com os cabeçalhos", async () => {

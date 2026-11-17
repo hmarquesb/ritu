@@ -1,9 +1,8 @@
 import type { z } from "zod"
 import type { Conta } from "@/core/accounts/types"
 import { codificarEvento, type EventoDaTela } from "@/core/conversation/eventos"
-import { RituError } from "@/core/errors"
 import type { Container } from "@/infra/container"
-import { type DepsDaRota, prepararContexto, resposta, statusDoErro } from "./rota"
+import { type DepsDaRota, ehRituError, prepararContexto, resposta, statusDoErro } from "./rota"
 
 // Rota de fluxo NDJSON. Os `route.ts` que a usam exportam
 // `export const maxDuration = 60` (valor de `telaConversa.rotaMaxDurationS`): o Next
@@ -20,7 +19,7 @@ const CABECALHOS = {
 }
 
 function descreverErro(erro: unknown, container: Container) {
-  if (erro instanceof RituError) return { code: erro.code, status: statusDoErro(erro.code) }
+  if (ehRituError(erro)) return { code: erro.code, status: statusDoErro(erro.code) }
   container.telemetry.log("erro_inesperado")
   return { code: "erro_inesperado", status: 500 }
 }

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
-import { RituError } from "@/core/errors"
+import { MARCA_RITU, RituError } from "@/core/errors"
 import { createContainer } from "@/infra/container"
 import { criarRota, statusDoErro } from "./rota"
 
@@ -23,6 +23,34 @@ const schema = z.object({ n: z.number() })
 
 describe("criarRota", () => {
   afterEach(() => vi.unstubAllEnvs())
+
+  it("erro de outra cópia de RituError vira o status do código; Error sem code é 500", async () => {
+    const { deps } = await comConta()
+    class OutraCopia extends Error {
+      readonly code = "run_nao_continuavel"
+      readonly [MARCA_RITU] = true
+    }
+    class ErroDeDriver extends Error {
+      readonly code = "ECONNREFUSED"
+    }
+    const a = await criarRota(deps, {}, async () => {
+      throw new OutraCopia("d")
+    })(pedido())
+    expect(a.status).toBe(409)
+    expect(await a.json()).toEqual({ erro: "run_nao_continuavel" })
+    const b = await criarRota(deps, {}, async () => {
+      throw new Error("x")
+    })(pedido())
+    expect(b.status).toBe(500)
+    expect(await b.json()).toEqual({ erro: "erro_inesperado" })
+    const log = vi.spyOn(deps.container.telemetry, "log")
+    const c = await criarRota(deps, {}, async () => {
+      throw new ErroDeDriver("x")
+    })(pedido())
+    expect(c.status).toBe(500)
+    expect(await c.json()).toEqual({ erro: "erro_inesperado" })
+    expect(log).toHaveBeenCalledWith("erro_inesperado")
+  })
 
   it("401 sem sessão", async () => {
     const { container } = montar()

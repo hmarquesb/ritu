@@ -76,7 +76,8 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_llm_cota_usada` | medidor | `modelo`, `janela` (minuto, dia); fração de 0 a 1 |
 | `ritu_llm_troca_de_modelo_total` | contador | `papel`, `de`, `para`, `motivo` (cota, 429) |
 | `ritu_llm_erros_total` | contador | `modelo`, `papel`, `codigo` (rate_limit, timeout…) |
-| `ritu_fallback_sem_llm_total` | contador | — |
+| `ritu_fallback_sem_llm_total` | contador | — (só a falta de modelo; o modo `limite` não soma) |
+| `ritu_limite_total` | contador | `tipo` (mensagem, toque), `motivo` (conta, demo, ip, minuto, dia), `resultado` (barrado, so_atalhos, alerta): uma por decisão de limite que barra ou desvia a mensagem, ou por toque barrado; nunca chave, IP, hash ou conta |
 | `ritu_tool_chamadas_total` | contador | `tool`, `status` |
 | `ritu_tool_duracao_ms` | histograma | `tool` |
 | `ritu_validacao_violacoes_total` | contador | `violacao` |
@@ -113,7 +114,7 @@ Os dois saem de uma definição em TypeScript (`scripts/lib/painel.ts`) por `npm
 
 Linhas do painel:
 
-1. **Saúde:** runs por hora, espera por resposta (p50 e p95), runs que falharam, 429 do modelo, latência do modelo e das tools.
+1. **Saúde:** runs por hora, espera por resposta (p50 e p95), runs que falharam, 429 do modelo, limites atingidos (`ritu_limite_total` por `resultado`), latência do modelo e das tools.
 2. **Agente:** intenções, caminhos, passos por run, tools, violações do validador, juiz, guardrail, pausas, memória.
 3. **Modelos e cota:** chamadas e tokens por modelo e por papel; cota do dia e do minuto por modelo; trocas de modelo; respostas sem modelo; erros do modelo.
 4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, gostos, faltas, propostas, indicações de "vale ter em casa", entradas por tipo de conta e resultado.

@@ -31,8 +31,14 @@
 | T14 · Show the limits in the conversation screen | concluida | cf7ab9d |
 | T17 · Cover the limit screens end to end | concluida | 6ab1d13 |
 | T21 · Give the conversation log room above the sticky panel (correção) | concluida | dbe381e |
+| T20 · (revertida na junção com a entrega-3, que traz o relógio noturno) | revertida | 438479b |
+| T22 · Pass quemPede in the house route tests and evals (correção) | concluida (no merge) | 6660c47 |
+| T23 · Show the touch limit in Minha casa and Como ficou? (correção) | concluida (no merge) | 6660c47 |
+| T24 · Document the limits and write the ADR (fechamento) | concluida | (commit de docs) |
 | T18 · Make the privacy leak evals deterministic (correção) | concluida | 21d5dbd |
 | T19 · Fix the time-dependent house question tests (correção) | concluida | 575bab4 |
 | T20 · Let E2E tests pin the hour per request (correção) | concluida | a91d363 |
 
 > Retomada em 2026-11-17 (05:20 -03). Pendências da passagem: T18 aprovada, diff em `.local/patches/021-T18.patch` (causa: UUIDs aleatórios contendo "cafe"). T17 reprovada 1x: o spec excluía `[role="log"]` do axe; sem a exclusão, `target-size` (desktop, intermitente) num botão do log parcialmente coberto pelo painel sticky (`conversa.tsx:283`). Pedido: esperar a rolagem parar antes do axe e rodar sem exclusão; se persistir, correção de layout na tela. Conferir também `e2e/conversa.spec.ts` "axe … pergunta" no desktop (possível regressão da T14). Fechamento: `dup` em `quemDe`/fuso repetidos; ação `desfez` sem teste; `limites` do 429 lido sem zod em `use-conversa.ts`.
+
+> 021 fechada em 2026-11-17: gates 1 a 6 e `dup` verdes na junção (6660c47); spec `implemented`; ADR 0045. Trilha adiantada sem outra spec liberada: a 022 em diante fica para depois (autorização da dona). Pendências para a junção na `main`: `test:db` do `UsageLimiter` (021 A4); toast de toque em `useVoce` quando a 020 chegar (021 A1); número da ADR 0045 pode colidir com ADR nova da trilha principal.

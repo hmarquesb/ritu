@@ -462,3 +462,41 @@ Chaves da tabela `limites` (o `escopo` do modo e2e entra como prefixo `${escopo}
 - fora: `e2e/` (o spec é da T17), lógica de hooks.
 
 | 11 | T21 | Correção de tela; depois dela a T17 é reverificada |
+
+## Junção com a entrega-3 (019)
+
+A `entrega-3` trouxe a 019 (Minha casa, Como ficou?) e o relógio noturno do modo e2e (019 C3), que cobre a T20 (revertida, 438479b). Merge em curso, conflitos resolvidos; `npm run typecheck` vermelho em 3 arquivos da 019, que não conhecem o `quemPede` da 021. Fecha o pendente da decisão 021 A1.
+
+### T22 · Pass quemPede in the house route tests and evals (correção)
+- nivel: nucleo
+- objetivo: `DepsDaRota` (`src/app/_lib/rota.ts`) exige `quemPede` desde a 021 (T9); os testes e evals da 019 montam as deps sem ele. Pôr `quemPede` como os testes da 021 fazem (veja `src/app/_rotas/conversa.test.ts` ou `src/app/_lib/rota.test.ts`), sem mudar asserção. Conferir também que as rotas POST da 019 (toques de casa e de lista, Como ficou?) contam toque e respondem 429 pelo `criarRota`, com um caso de teste por rota em `casa.test.ts` (ou no teste da rota de Como ficou?, se houver).
+- arquivos: `src/app/_rotas/casa.test.ts`, `evals/det/seguranca/toques-casa.eval.ts`, `evals/det/casa/efeito.eval.ts`, e o teste da rota de Como ficou? se existir
+- depende de: nenhuma
+- leitura: nenhuma
+- comandos: `npm run typecheck`, `npm test`, `npm run eval:det`, `rtk bypass npm run lint`
+- pronto quando: gates verdes.
+- fora: `src/` fora de testes; `src/components/`; `e2e/`.
+
+### T23 · Show the touch limit in Minha casa and Como ficou? (correção)
+- nivel: tela
+- objetivo: o 429 de toque (`erro: "limite_toques"`, com `retryAfterS`) vira `toast(textoDoLimite(erro, retryAfterS))` nas telas da 019, como já faz a Conversa (`src/components/ritu/conversa/use-conversa.ts`, função que trata o 429, linhas ~59 a 67; `textoDoLimite` em `src/components/ritu/limites.ts`, `toast` em `@/components/base/toast`). Hoje `use-casa.ts`, `adicionar.tsx` e `como-ficou.tsx` não tratam o 429. O estado otimista volta atrás como num erro comum. E acrescentar em `e2e/limites.spec.ts` um caso: Minha casa com teto de toque reduzido (`x-ritu-e2e-teto`), o toque além do teto mostra o aviso e não muda a tela.
+- arquivos: `src/components/ritu/casa/use-casa.ts`, `src/components/ritu/casa/adicionar.tsx`, `src/components/ritu/como-ficou/como-ficou.tsx`, `e2e/limites.spec.ts`; um ajudante comum em `src/components/ritu/limites.ts` (+ teste) se evitar repetir o mesmo trecho três vezes
+- depende de: nenhuma
+- leitura: `DESIGN.md` só a seção de toast/feedback, se houver
+- skills: `frontend-design`, `web-design-guidelines`
+- comandos: `npm run typecheck` (pode estar vermelho só nos 3 arquivos da T22, em onda), `npm test`, `rtk bypass npm run lint`, `npm run build`, `CI=1 npm run test:e2e -- e2e/limites.spec.ts`
+- pronto quando: gates verdes; o caso novo verde em celular e desktop.
+- fora: rotas e `src/core/`; os arquivos da T22.
+
+| 12 | T22, T23 | Correções da junção; arquivos separados. Commit junto com o merge (o merge não fecha com gate vermelho) |
+
+### T24 · Document the limits and write the ADR (fechamento)
+- nivel: nucleo
+- objetivo: documentação viva da 021 e a ADR, descrevendo o produto como ele é (sem histórico, sem "por enquanto").
+- arquivos: `.docs/BUSINESS.md` §14, `.docs/ARCHITECTURE.md` §3 e §4, `.docs/AI.md` §3, `.docs/OBSERVABILITY.md` (métrica e painel), `.docs/QA.md` ("Segurança e privacidade" e "Telas (E2E)"), `.docs/DEVELOPMENT.md` (`TESTER_IDS`), `.adrs/0045-limites-de-uso-decididos-na-borda.md` (nova, pelo `_template.md`), `.adrs/README.md` (índice), `AGENTS.md` só a tabela de comandos se algum comando mudou (não a linha de status do topo).
+- depende de: todas
+- leitura: a spec `.specs/021-limites-e-degradacao.md` (seções de contrato, "Docs a atualizar" e o parágrafo da ADR, ~linha 338, e a lista ~linha 411); `.plans/DECISOES-AUTONOMAS.md` seções "021 · A1" a "021 · A10"; as seções de `.docs/` acima, só elas.
+- contratos: ADR "Limites de uso decididos na borda": a ordem de `decidirMensagem`, o alerta antes do limite, por que `conversar` não conhece conta comum, tester nem IP; cite as decisões A7 (consumo atômico em transação), A8 (conta estrutural em `limits`), A9 (`quemPede` em `src/infra/auth/next.ts`). Inclua no QA/DEVELOPMENT o modo e2e: `x-ritu-e2e-teto`, `x-ritu-e2e-cota: esgotada` e o relógio do modo e2e deslocado para a noite (`src/infra/e2e/relogio.ts`), e o toast de limite de toque também em Minha casa e Como ficou?. Confira cada afirmação contra o código antes de escrever.
+- comandos: `rtk bypass npm run lint`, `npm test` (o teste de arquitetura e os que leem docs, se houver)
+- pronto quando: cada item da lista da spec (~linha 411) tem texto no doc certo; a ADR segue o template; índice atualizado.
+- fora: código; `.docs/ROADMAP.md`; `.specs/README.md`; a linha de status do `AGENTS.md`.

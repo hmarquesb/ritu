@@ -52,6 +52,7 @@
 | [0042](0042-telemetria-com-lista-fechada-tipada-e-painel-gerado.md) | Telemetria com lista fechada tipada e painel gerado | Aceito |
 | [0043](0043-sessao-jwt-demonstracao-por-credenciais-limitador-e-modo-e2e.md) | Sessão em JWT, demonstração como provedor de credenciais, limitador em tabela e modo de E2E em memória | Aceito |
 | [0044](0044-etapas-por-fluxo-ndjson-run-independente-da-conexao-e-visao-por-projecao.md) | Etapas por fluxo NDJSON no POST, run independente da conexão e visão do run por projeção | Aceito |
+| [0045](0045-limites-de-uso-decididos-na-borda.md) | Limites de uso decididos na borda | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

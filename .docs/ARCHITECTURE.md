@@ -64,7 +64,7 @@ Os padrões de fundação seguem as referências locais (`.local/REFERENCIAS.md`
 
 1. A tela envia a mensagem (`POST /api/runs`), com texto, atalhos de check-in ou os dois.
 2. Sessão → conta. Sem sessão: `401`. A rota confirma no banco que a conta existe e não venceu.
-3. Limite de uso (por conta e por IP) e tamanho da mensagem.
+3. Tamanho da mensagem e limite de mensagens, decididos na rota, antes de `conversar` (ADR 0045). Com um run em `running` na conta: `409 run_aberto`, sem consumir. Senão `decidirMensagem`, nesta ordem: tester segue sem contar; cota de IA do dia esgotada em todos os modelos de `decisao` segue sem contar; consome, de uma vez, a chave da conta (ou da demonstração) e a do IP. Se passou, segue. Se barrou: mensagem só com atalhos vai a `conversar` com `semModelo: "limite"` (práticas por código, sem modelo, sem contar); mensagem com sinal de alerta reconhecido por `conferirEntrada` segue normal, sem contar, e o guardrail por código responde; o resto recebe `429` com o código (`limite_mensagens`, `limite_demo` ou `limite_ip`), `Retry-After` e o estado dos limites no corpo. O fim da leitura e todo evento `fim` levam o estado dos limites (`mensagens` e `cota_ia`).
 4. `conversar` cria o run (caminho provisório, `trace_id`) e abre o span `run`, que cobre tudo até a resposta. A barreira de run aberto é conferida antes de gastar modelo (ADR 0029). A mensagem da pessoa é gravada com o `run_id`.
 5. Com texto: o guardrail de entrada (`src/core/guardrails/`) confere em código as frases claras de alerta e de injection, antes de qualquer modelo; se casa, o run segue para o caminho de alerta ou de `fora`, sem Intérprete. Se não, o Intérprete devolve as intenções e os campos (`AI.md` §3). Só com atalhos: os dois passos são pulados. Se o Intérprete falha, o run segue com a resposta montada por código.
 6. O código escolhe o caminho pela intenção. Casa, retorno ou "evitar sempre" sozinhos, ajuda, ofensa, alerta e fora do assunto são resolvidos aqui, sem o agente. O que a mensagem traz (itens de casa, "evitar sempre", "não como", restrição) vale no mesmo run sem gravar a casa nem o perfil (ADR 0028).
@@ -115,7 +115,7 @@ O run segue até o fim mesmo que a pessoa saia da tela: a rota não liga o `requ
 | 👍 / 👎 na resposta | `POST /api/runs/:id/voto` | `feedback` |
 | Confirmar ou recusar um padrão · apagar um padrão | `POST /api/padroes/:id` | `padroes` |
 
-As rotas só autenticam, validam a entrada e chamam funções do core, em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
+Todo `POST` com conta, exceto `POST /api/runs`, é um toque e passa pelo limite de toques dentro de `criarRota` e `criarRotaDeFluxo`, pelo método e não por uma lista de rotas: depois da sessão, da conta e do corpo válidos, e antes de a função da rota rodar. Os `GET`, a limpeza e `/api/auth/*` não contam. Barrado: `429 { erro: "limite_toques" }` com `Retry-After` em segundos (até o próximo minuto ou até a meia-noite local) e nada gravado. Quem decide é `consumirToque`: tester segue; o minuto da conta é consumido antes do dia da conta e do IP, e cada consumo é atômico. As rotas só autenticam, validam a entrada e chamam funções do core, em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
 
 | Função | Rota | O que faz |
 |---|---|---|
@@ -150,7 +150,7 @@ Rotina e padrões têm funções do core que as rotas de "O que sei sobre você"
 - **Origem:** o `src/proxy.ts` confere o header `Origin` em todo pedido cujo método não é `GET`, `HEAD` nem `OPTIONS`: o host do `Origin` tem que ser igual ao host do pedido (`x-forwarded-host` ou `host`); senão (diferente, ausente ou inválido), `403`. Soma-se ao `SameSite=Lax`.
 - **Nonce da CSP:** o proxy gera um nonce por pedido, põe na CSP e o repassa à página, que o lê do header e o expõe também em `<meta name="csp-nonce">`.
 - **Entrada das rotas:** corpo validado em zod, com tamanho máximo. Erro para fora nunca mostra stack nem detalhe interno.
-- **Limites:** mensagens, toques e demonstrações têm limites próprios (`BUSINESS.md` §14), contados por conta e por IP em HMAC.
+- **Limites:** mensagens, toques e demonstrações têm limites próprios (`BUSINESS.md` §14), contados por conta e por IP em HMAC, na tabela `limites`. Cada pedido de consumo leva o próprio início de janela, e o adaptador do banco confere todos os tetos sob trava, numa transação, e só então soma: se um barra, nenhum sobe. A limpeza diária apaga as janelas de dia anteriores a ontem e as de minuto anteriores a hoje. No modo e2e (`RITU_MODO=e2e`), o header `x-ritu-e2e-teto` (1 a 100) substitui os tetos daquele pedido e o `x-ritu-e2e-cota: esgotada` tira a cota do dia do modelo `decisao`; fora do modo e2e os dois são ignorados.
 - **Cron:** só com `CRON_SECRET`.
 - **Servidor MCP:** público e sem login, com limite por IP. Só expõe as tools de leitura da base e do clima; nunca dado de conta.
 - **Dependências:** Dependabot semanal e `npm audit --omit=dev --audit-level=high` na CI.

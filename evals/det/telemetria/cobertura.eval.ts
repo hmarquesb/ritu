@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
+import { apagarConta } from "@/core/accounts/apagar"
 import { criarDemonstracao, entrarComGoogle } from "@/core/accounts/entrar"
 import {
   type AtributoPermitido,
@@ -37,12 +38,6 @@ import type { Cenario } from "../../../test/fixtures/cenarios/tipos"
 // com os atributos e rótulos declarados. Roda uma vez; cada `it` confere uma parte.
 
 const CLIMA = ["clima.agora", "clima.proximas_horas"]
-
-// Métricas da 020 ainda sem quem as emita (tocarMemoria e apagarConta). A 020 T15 tira esta lista e as emite aqui.
-const SEM_EMISSOR_AINDA: NomeDeMetrica[] = [
-  "ritu_memoria_edicoes_total",
-  "ritu_conta_apagada_total",
-]
 
 const LOGS_DA_LISTA: CodigoDeLog[] = [
   "run_inicio",
@@ -133,6 +128,24 @@ async function detectarComHistorico(coleta: Coleta): Promise<void> {
   juntar(coleta, deps)
 }
 
+// Os toques de memória (tocarMemoria soma `ritu_memoria_edicoes_total`) e a conta apagada (apagarConta soma
+// `ritu_conta_apagada_total`): os dois emissores da 020.
+async function tocarMemoriaEApagar(coleta: Coleta): Promise<void> {
+  const c = cenarios["frio-agitada"]
+  if (!c) throw new Error("cenário frio-agitada ausente")
+  const { contaId, deps } = await montarCenario(c)
+  await deps.touches.tocarMemoria(contaId, {
+    acao: "gosto",
+    item_tipo: "alimento",
+    item_id: "gengibre",
+    gosto: "gosta",
+  })
+  const conta = await deps.stores.accounts.buscar(contaId)
+  if (!conta) throw new Error("conta do cenário ausente")
+  await apagarConta({ stores: deps.stores, telemetry: deps.telemetry }, conta)
+  juntar(coleta, deps)
+}
+
 // Entrada: a demonstração e a conta Google, pelo caminho real, com stores e limitador em memória.
 async function entrar(coleta: Coleta): Promise<void> {
   vi.stubEnv("RITU_MODO", "e2e")
@@ -201,6 +214,7 @@ describe("cobertura da telemetria pelos cenários", () => {
     await rodarComErroDoModelo(coleta)
     await tocarRunEntregue(coleta)
     await detectarComHistorico(coleta)
+    await tocarMemoriaEApagar(coleta)
     await entrar(coleta)
   }, 180_000)
 
@@ -216,9 +230,7 @@ describe("cobertura da telemetria pelos cenários", () => {
 
   it("toda métrica de METRICAS é emitida pelo menos uma vez", () => {
     const emitidas = new Set(coleta.metricas.map((m) => m.nome))
-    const esperadas = (Object.keys(METRICAS) as NomeDeMetrica[]).filter(
-      (n) => !SEM_EMISSOR_AINDA.includes(n),
-    )
+    const esperadas = Object.keys(METRICAS) as NomeDeMetrica[]
     expect(esperadas.filter((n) => !emitidas.has(n))).toEqual([])
   })
 

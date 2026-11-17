@@ -646,6 +646,13 @@ export const mapa: LinhaDoMapa[] = [
     desde: 2,
   },
   {
+    grupo: "Retorno e memória",
+    linha:
+      "Memória no preparo seguinte: evitar sempre, não como e restrição tiram alimentos; nota apagada sai; padrão confirmado entra e recusado não volta; esquecer e apagar a conversa de hoje valem",
+    arquivos: ["evals/det/memoria/efeito.eval.ts"],
+    desde: 3,
+  },
+  {
     grupo: "Segurança e privacidade",
     linha: "O guardrail de entrada neutraliza as mensagens de injection",
     arquivos: ["evals/det/guardrails/injection.eval.ts"],
@@ -695,6 +702,13 @@ export const mapa: LinhaDoMapa[] = [
     grupo: "Segurança e privacidade",
     linha: "POST com `Origin` de outro site → `403`; toda resposta tem a",
     arquivos: ["evals/det/seguranca/origem-e-headers.eval.ts"],
+    desde: 3,
+  },
+  {
+    grupo: "Segurança e privacidade",
+    linha:
+      "Você: rota sem sessão → `401`; nota, padrão e conversa de outra conta → recusa e nada gravado; `apagarConta` não deixa nada da conta",
+    arquivos: ["evals/det/seguranca/voce.eval.ts"],
     desde: 3,
   },
   {
@@ -781,6 +795,13 @@ export const mapa: LinhaDoMapa[] = [
     linha: "Todo span, métrica e log da lista fechada é emitido por algu",
     arquivos: ["evals/det/telemetria/cobertura.eval.ts"],
     desde: 2,
+  },
+  {
+    grupo: "Telemetria",
+    linha:
+      "Como pensei: cada run dos cenários 008 a 013 vira linha do tempo sem passo vazio, com `fim` por último; nenhuma frase é o `resumo` cru",
+    arquivos: ["evals/det/conversa/como-pensei.eval.ts"],
+    desde: 3,
   },
   {
     grupo: "Telemetria",

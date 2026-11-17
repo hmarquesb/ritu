@@ -3,12 +3,13 @@ import { copiarSeed } from "@/core/accounts/copiar-seed"
 import { createContainer } from "@/infra/container"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 
-// O momento do dia vem do relógio: fixo, o candidato da pergunta de casa não muda com a hora da rodada.
-const AGORA = "2026-11-17T20:30:00Z"
+// O momento do dia muda os candidatos do agente (de manhã e ao almoço a couve não entra). O roteiro da pergunta de
+// casa conta com a couve, então o relógio fica fixo à noite (21h em São Paulo), salvo pedido.
+const NOITE_SP = "2026-11-18T00:00:00Z"
 
-async function novoContainer() {
+async function novoContainer(agora = NOITE_SP) {
   vi.stubEnv("RITU_MODO", "e2e")
-  const container = createContainer({ clock: createFixedClock(AGORA) })
+  const container = createContainer({ clock: createFixedClock(agora) })
   const conta = await container.stores.accounts.criar({ tipo: "demo" })
   await copiarSeed(container.stores, conta.id, container.demoSeed, {
     clock: container.clock,
@@ -41,8 +42,13 @@ describe("modo e2e: roteiros", () => {
     ])
   })
 
-  it("pergunta-casa: pergunta de couve e leite e, com a resposta, entrega", async () => {
-    const { container, contaId } = await novoContainer()
+  it.each([
+    "2026-11-17T06:00:00Z",
+    "2026-11-18T01:00:00Z",
+    "2026-11-18T00:00:00Z",
+    "2026-11-18T02:30:00Z",
+  ])("pergunta-casa: pergunta de couve e leite e, com a resposta, entrega (%s)", async (agora) => {
+    const { container, contaId } = await novoContainer(agora)
 
     const r = await container.conversation.conversar(contaId, {
       texto: "fui à feira ontem, o que faço pro jantar?",
@@ -51,11 +57,15 @@ describe("modo e2e: roteiros", () => {
 
     expect(r.status).toBe("waiting_for_input")
     expect(r.pergunta?.tipo).toBe("casa")
-    expect(JSON.stringify(r.pergunta)).toContain("banana")
+    expect(JSON.stringify(r.pergunta)).toContain("couve")
+    expect(JSON.stringify(r.pergunta)).toContain("leite")
 
     const depois = await container.conversation.continuar(contaId, r.run_id, {
       tipo: "casa",
-      itens: [{ alimento_id: "banana", resposta: "tenho" }],
+      itens: [
+        { alimento_id: "couve", resposta: "tenho" },
+        { alimento_id: "leite", resposta: "nao_tenho" },
+      ],
     })
 
     expect(depois.status).not.toBe("waiting_for_input")

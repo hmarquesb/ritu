@@ -1,8 +1,17 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { MissingEnvError, RituError } from "@/core/errors"
 import { createDbClient, isConnectionError, toDbError } from "./client"
+
+const chamadas = vi.hoisted(() => [] as Array<{ url: string; opcoes: Record<string, unknown> }>)
+
+vi.mock("postgres", () => ({
+  default: (url: string, opcoes: Record<string, unknown>) => {
+    chamadas.push({ url, opcoes })
+    return Object.assign(() => undefined, { end: async () => undefined })
+  },
+}))
 
 const TABELAS = [
   "contas",
@@ -58,6 +67,34 @@ describe("cliente preguiçoso", () => {
 
     expect(() => db.sql`select 1`).toThrow(MissingEnvError)
     return db.close()
+  })
+})
+
+describe("opções do postgres", () => {
+  it("a URL do pooler do Neon liga prepare: false e mantém as opções de sempre", async () => {
+    chamadas.length = 0
+    const db = createDbClient({
+      url: "postgresql://u:p@ep-x-pooler.sa-east-1.aws.neon.tech/db?sslmode=require",
+    })
+    db.sql`select 1`
+    await db.close()
+
+    expect(chamadas[0]?.opcoes).toMatchObject({
+      prepare: false,
+      max: 3,
+      idle_timeout: 20,
+      connect_timeout: 10,
+    })
+  })
+
+  it("a URL local não define prepare", async () => {
+    chamadas.length = 0
+    const db = createDbClient({ url: URL_DO_BANCO })
+    db.sql`select 1`
+    await db.close()
+
+    expect(chamadas[0]?.opcoes).not.toHaveProperty("prepare")
+    expect(chamadas[0]?.opcoes).toMatchObject({ max: 3 })
   })
 })
 

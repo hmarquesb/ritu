@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { config, telaConversa, textosConversa } from "./index"
+import { GRUPOS } from "../src/core/knowledge/vocab"
+import { config, telaConversa, textosConversa, textosLimites } from "./index"
 import { formatar } from "./textos-conversa"
 
 function textosDe(valor: unknown): string[] {
@@ -35,6 +36,49 @@ describe("config", () => {
     for (const texto of textos) {
       expect(texto).not.toMatch(/[<>]/)
       expect(texto.toLowerCase()).not.toContain("alergia")
+    }
+  })
+
+  it("expõe os limites de mensagem e de toque com os valores da spec 021", () => {
+    expect(config.limites.mensagens).toEqual({
+      googlePorDia: 30,
+      demoPorConta: 12,
+      porIpPorDia: 60,
+      avisarComRestantes: 3,
+    })
+    expect(config.limites.toques).toEqual({
+      porContaPorMinuto: 60,
+      porContaPorDia: 300,
+      porIpPorDia: 1500,
+    })
+  })
+
+  it("expõe os textos de limite com as chaves e os textos da spec 021", () => {
+    expect(textosLimites.cota.faixa).toContain("{hora}")
+    expect(textosLimites.cota.rotulo).toBe("Aviso")
+    expect(textosLimites.restam.varias).toBe("Restam {n} mensagens hoje.")
+    expect(textosLimites.restam.uma).toBe("Resta 1 mensagem hoje.")
+    expect(textosLimites.restam.variasDemo).toBe("Restam {n} mensagens na demonstração.")
+    expect(textosLimites.restam.umaDemo).toBe("Resta 1 mensagem na demonstração.")
+    expect(textosLimites.esgotadas.conta.titulo).toBe("Suas mensagens de hoje acabaram")
+    expect(textosLimites.esgotadas.demo.google).toBe("Entrar com Google")
+    expect(textosLimites.esgotadas.textoGuardado).toBe("O que você escreveu:")
+    expect(textosLimites.atalhos.enviar).toBe("Ver práticas")
+    expect(textosLimites.toques.minuto).toBe(
+      "Muitos toques seguidos. Espere um minuto e tente de novo.",
+    )
+    expect(textosLimites.toques.dia).toBe(
+      "Você chegou ao limite de toques de hoje. Amanhã tem mais.",
+    )
+  })
+
+  it("mantém os textos de limite com placeholders e sem texto vazio", () => {
+    expect(textosLimites.restam.varias).toContain("{n}")
+    expect(textosLimites.restam.variasDemo).toContain("{n}")
+    const textos = textosDe(config.textosLimites)
+    expect(textos.length).toBeGreaterThan(15)
+    for (const texto of textos) {
+      expect(texto.trim().length).toBeGreaterThan(0)
     }
   })
 
@@ -200,6 +244,17 @@ describe("config", () => {
       "Não consegui falar com o Ritu agora. Sua mensagem continua aqui.",
     )
     expect(textosConversa.rodape.aviso).toBe("Não é orientação médica.")
+  })
+
+  it("expõe os textos de Minha casa com os grupos de GRUPOS e os placeholders da spec", () => {
+    expect(Object.keys(config.textosCasa.grupos).sort()).toEqual([...GRUPOS].sort())
+    expect(config.textosCasa.aindaTem.rotuloTenho).toContain("{item}")
+    expect(config.textosCasa.adicionado).toBe("{Item} está na sua casa.")
+  })
+
+  it("expõe os textos de Como ficou? com o placeholder de dias da spec", () => {
+    expect(config.textosComoFicou.dia.dias).toContain("{n}")
+    expect(config.textosComoFicou.titulo).toBe("Como ficou?")
   })
 
   it("formata os placeholders e deixa literal a chave ausente", () => {

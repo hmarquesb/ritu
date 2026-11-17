@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { conversaDoDia, visaoDoRunDaConta } from "@/core/conversation/do-dia"
 import type { VisaoDoRun } from "@/core/conversation/visao"
+import type { ModelRouter } from "@/core/llm/router"
 import { CAMINHOS, STATUS_RUN } from "@/core/runs/ports"
 import { getContainer } from "@/infra/container"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import {
   cenariosComAprovacao,
   cenariosComPausa,
@@ -148,9 +151,17 @@ describe.each(Object.entries(TODOS))("visão do cenário %s", (nome, c) => {
     const perfil = await deps.stores.profiles.ler(contaId)
 
     const dia = await conversaDoDia(
-      { stores: deps.stores, clock: deps.clock, seed: getContainer().demoSeed },
+      {
+        stores: deps.stores,
+        clock: deps.clock,
+        seed: getContainer().demoSeed,
+        limiter: createMemoryLimiter(),
+        router: { cotaDoDiaEsgotada: async () => false } as unknown as ModelRouter,
+        telemetry: createMemoryTelemetry(),
+      },
       conta,
       perfil,
+      { ipHash: "h" },
     )
     for (const visao of Object.values(dia.runs)) conferir(visao)
   })

@@ -8,6 +8,7 @@ import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import { diaLocal } from "@/core/time/dia-local"
 import { copiarSeed } from "./copiar-seed"
+import { normalizarEmail } from "./email"
 import type { Conta } from "./types"
 
 const HORA_EM_MS = 3_600_000
@@ -25,19 +26,26 @@ export class LimiteDeDemonstracaoError extends RituError {
 }
 
 export async function entrarComGoogle(
-  deps: { stores: Stores; telemetry: Telemetry },
+  deps: { stores: Stores; telemetry: Telemetry; testers: string[] },
   dados: { sub: string; email: string },
 ): Promise<Conta> {
-  const { stores, telemetry } = deps
+  const { stores, telemetry, testers } = deps
   const contar = (resultado: "nova" | "retorno") =>
     telemetry.contador("ritu_entrada_total", {
       "conta.tipo": "google",
       "entrada.resultado": resultado,
     })
+  // Confere a situação de tester a cada entrada: quem sai da lista perde o limite ampliado.
+  const comTester = async (conta: Conta): Promise<Conta> => {
+    const tester = testers.includes(normalizarEmail(dados.email))
+    if (tester === conta.tester) return conta
+    await stores.accounts.marcar(conta.id, { tester })
+    return { ...conta, tester }
+  }
   const existente = await stores.accounts.buscarPorGoogleSub(dados.sub)
   if (existente) {
     contar("retorno")
-    return existente
+    return comTester(existente)
   }
   try {
     const nova = await stores.accounts.criar({
@@ -46,13 +54,13 @@ export async function entrarComGoogle(
       email: dados.email,
     })
     contar("nova")
-    return nova
+    return comTester(nova)
   } catch (erro) {
     // Corrida: outra entrada criou a conta entre a busca e a criação.
     const achada = await stores.accounts.buscarPorGoogleSub(dados.sub)
     if (!achada) throw erro
     contar("retorno")
-    return achada
+    return comTester(achada)
   }
 }
 

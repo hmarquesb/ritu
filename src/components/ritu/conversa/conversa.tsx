@@ -12,6 +12,7 @@ import type { ResultadoDaTroca } from "@/core/touches/troca"
 import { BlocoDeAprovacao } from "./bloco-aprovacao"
 import { type Atalho, CaixaDeMensagem } from "./caixa"
 import { EtapasAoVivo, EtapasRecolhidas } from "./etapas"
+import { FaixaDeCota } from "./faixa-cota"
 import { FalaDaPessoa, FalaDoAgente } from "./fala"
 import { LinhaParaTer } from "./para-ter"
 import { PerguntaDoAgente } from "./pergunta"
@@ -21,12 +22,15 @@ import { BlocoDeSugestao } from "./sugestao"
 import { useConversa } from "./use-conversa"
 
 const T = config.textosConversa
+const T_LIMITES = config.textosLimites
 
 export type ConversaProps = {
   inicial: ConversaDoDia
   atalhos: Atalho[]
   rotulos?: Record<string, string>
   vazio?: ReactNode
+  googleDisponivel?: boolean
+  entrarComGoogleAcao?: () => Promise<void>
 }
 
 type Troca = { alimento_id: string; resultado: ResultadoDaTroca }
@@ -137,25 +141,72 @@ function ondeFicamOsExtras(falas: FalaNaTela[]): Map<string, string> {
   return onde
 }
 
-export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProps) {
+function falaAltaDemais(fala: Element, painel: HTMLElement | null): boolean {
+  return fala.getBoundingClientRect().height > window.innerHeight - (painel?.offsetHeight ?? 0)
+}
+
+function rolarAteFala(fala: Element, painel: HTMLElement | null, behavior: ScrollBehavior) {
+  fala.scrollIntoView({ block: falaAltaDemais(fala, painel) ? "end" : "start", behavior })
+}
+
+export function Conversa({
+  inicial,
+  atalhos,
+  rotulos = {},
+  vazio,
+  googleDisponivel = false,
+  entrarComGoogleAcao,
+}: ConversaProps) {
   const conversa = useConversa(inicial, rotulos)
-  const { estado, tentarDeNovo, enviar, digitar, marcar } = conversa
+  const { limites, textoGuardado, estado, tentarDeNovo, enviar, digitar, marcar } = conversa
   const [trocas, setTrocas] = useState<Record<string, Troca>>({})
   const listaRef = useRef<HTMLDivElement>(null)
   const raizRef = useRef<HTMLDivElement>(null)
   const painelRef = useRef<HTMLDivElement>(null)
+  // Fala para onde a rolagem foi; vale até a pessoa rolar por conta própria.
+  const alvoRef = useRef<Element | null>(null)
 
   // Mede o painel fixo e guarda a altura numa variável CSS: a rolagem até a resposta a leva em conta.
   useEffect(() => {
     const painel = painelRef.current
     const raiz = raizRef.current
     if (!painel || !raiz) return
-    const medir = () => raiz.style.setProperty("--painel-h", `${painel.offsetHeight}px`)
+    const medir = () => {
+      raiz.style.setProperty("--painel-h", `${painel.offsetHeight}px`)
+      const alvo = alvoRef.current
+      // O painel cresceu (bloco de limite, por exemplo): a fala alta passa a ir pelo pé.
+      if (alvo && falaAltaDemais(alvo, painel)) alvo.scrollIntoView({ block: "end" })
+    }
+    const soltar = () => {
+      alvoRef.current = null
+    }
     medir()
     const observador = new ResizeObserver(medir)
     observador.observe(painel)
-    return () => observador.disconnect()
+    window.addEventListener("wheel", soltar, { passive: true })
+    window.addEventListener("touchstart", soltar, { passive: true })
+    window.addEventListener("keydown", soltar)
+    return () => {
+      observador.disconnect()
+      window.removeEventListener("wheel", soltar)
+      window.removeEventListener("touchstart", soltar)
+      window.removeEventListener("keydown", soltar)
+    }
   }, [])
+
+  const cotaEsgotada = limites.cota_ia.esgotada
+  const voltaAs = limites.cota_ia.esgotada ? limites.cota_ia.volta_as : ""
+  const cotaAntes = useRef(cotaEsgotada)
+  const [anuncioDaCota, setAnuncioDaCota] = useState("")
+
+  // A faixa que aparece depois do carregamento é anunciada uma vez; a que já veio na página, não.
+  useEffect(() => {
+    if (cotaEsgotada && !cotaAntes.current) {
+      setAnuncioDaCota(T_LIMITES.cota.faixa.replace("{hora}", voltaAs))
+    }
+    if (!cotaEsgotada) setAnuncioDaCota("")
+    cotaAntes.current = cotaEsgotada
+  }, [cotaEsgotada, voltaAs])
 
   const statusAberto = estado.aberto?.status
   const statusAnterior = useRef(statusAberto)
@@ -170,9 +221,12 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
     const ultima = respostas?.item(respostas.length - 1)
     const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const behavior = reduzido ? "auto" : "smooth"
-    // Com fala do agente, ela vai para o alto; sem fala (só pergunta ou bloco), o fim da lista
-    // fica logo acima do painel, que não cobre nada da conversa.
-    if (ultima && !virouPausa) ultima.scrollIntoView({ block: "start", behavior })
+    // Com fala do agente, ela vai para o alto (ou pelo pé, se for alta demais); sem fala (só
+    // pergunta ou bloco), o fim da lista fica logo acima do painel, que não cobre nada da conversa.
+    // A fala vem com os cartões dela no mesmo bloco: é o bloco que precisa caber acima do painel.
+    const fala = ultima && !virouPausa ? (ultima.parentElement ?? ultima) : null
+    alvoRef.current = fala
+    if (fala) rolarAteFala(fala, painelRef.current, behavior)
     else listaRef.current?.lastElementChild?.scrollIntoView({ block: "end", behavior })
   }, [estado.anuncio, statusAberto])
 
@@ -190,11 +244,12 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
 
   return (
     <div ref={raizRef} className="flex min-h-[60dvh] flex-col gap-4">
+      {limites.cota_ia.esgotada ? <FaixaDeCota voltaAs={limites.cota_ia.volta_as} /> : null}
       <div
         ref={listaRef}
         role="log"
         aria-label={T.abas.conversa}
-        className="flex flex-1 flex-col [&>*]:scroll-mb-[var(--painel-h,0px)] gap-5"
+        className="flex flex-1 flex-col pb-[var(--painel-h,0px)] [&>*]:scroll-mb-[var(--painel-h,0px)] gap-5"
       >
         {semNada ? vazio : null}
         {estado.falas.map((fala) => {
@@ -247,6 +302,9 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
         {estado.anuncio}
       </div>
       <div className="sr-only" aria-live="polite">
+        {anuncioDaCota}
+      </div>
+      <div className="sr-only" aria-live="polite">
         {ultimaFrase}
       </div>
       <div
@@ -264,6 +322,10 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
             else marcar(v.atalhos)
           }}
           aoEnviar={() => void enviar()}
+          limites={limites}
+          textoGuardado={textoGuardado}
+          googleDisponivel={googleDisponivel}
+          entrarComGoogleAcao={entrarComGoogleAcao}
         />
       </div>
     </div>

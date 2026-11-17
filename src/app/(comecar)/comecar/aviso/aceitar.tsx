@@ -14,7 +14,9 @@ export function AceitarAviso({ rotulo }: { rotulo: string }) {
     setEnviando(true)
     setErro(false)
     try {
-      router.push(await enviarPasso("/api/onboarding/aviso", {}))
+      const proximo = await enviarPasso("/api/onboarding/aviso", {})
+      if (proximo) router.push(proximo)
+      else setEnviando(false)
     } catch {
       setErro(true)
       setEnviando(false)

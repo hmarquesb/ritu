@@ -1,5 +1,6 @@
 import postgres, { type Sql } from "postgres"
 import { requireEnv } from "@/infra/env"
+import { opcoesDoPostgres } from "./opcoes"
 
 export { isConnectionError, toDbError } from "./errors"
 
@@ -23,12 +24,14 @@ function preguica(obter: () => Sql): Sql {
 export function createDbClient(opcoes: DbClientOptions = {}): DbClient {
   let real: Sql | undefined
   const obter = (): Sql => {
-    real ??= postgres(opcoes.url ?? requireEnv("DATABASE_URL"), {
+    const url = opcoes.url ?? requireEnv("DATABASE_URL")
+    real ??= postgres(url, {
       max: 3,
       idle_timeout: 20,
       connect_timeout: 10,
       onnotice: () => undefined, // NOTICE do Postgres (ex.: "already exists, skipping") não vai para o log
       ...(opcoes.schema ? { connection: { search_path: opcoes.schema } } : {}),
+      ...opcoesDoPostgres(url),
     })
     return real
   }

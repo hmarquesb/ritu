@@ -120,7 +120,9 @@ export function EscolherEvitar({ grupos, botoes, maxItens, maxTexto, minBusca }:
         ? { passo, itens: itens.map(({ tipo, valor }) => ({ tipo, valor })) }
         : { passo }
     try {
-      router.push(await enviarPasso("/api/onboarding/evitar", corpo))
+      const proximo = await enviarPasso("/api/onboarding/evitar", corpo)
+      if (proximo) router.push(proximo)
+      else setEnviando(null)
     } catch {
       setErro(true)
       setEnviando(null)

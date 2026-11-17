@@ -1,8 +1,18 @@
+import { config } from "@config/index"
 import { describe, expect, it, vi } from "vitest"
+import type { DepsDaRota } from "@/app/_lib/rota"
+import { rotasDaConversa } from "@/app/_rotas/conversa"
+import { rotasDeFluxoDeRun } from "@/app/_rotas/fluxo-de-run"
+import type { Conta } from "@/core/accounts/types"
 import { normalizar } from "@/core/knowledge/identificar"
-import { getContainer } from "@/infra/container"
+import { decidirMensagem } from "@/core/limits/mensagens"
+import { diaLocal } from "@/core/time/dia-local"
+import { createContainer, getContainer } from "@/infra/container"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
-import type { MemoryTelemetry } from "@/infra/fakes/memory-telemetry"
+import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
+import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry, type MemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import {
   cenarios,
   cenariosComAprovacao,
@@ -20,7 +30,7 @@ import {
 import type { Cenario } from "../../../test/fixtures/cenarios/tipos"
 
 // Privacidade da telemetria: nada da pessoa, nome de alimento da base, canário ou valor fora do formato de identificador
-// sai em span, evento, métrica, log, resumo de etapa ou console. Roda todos os cenários, os quatro toques, a detecção de
+// sai em span, evento, métrica, log, resumo de etapa ou console. Roda todos os cenários, os quatro toques e os da casa e da lista, a detecção de
 // padrões e os dois caminhos de erro do modelo (troca de modelo e erro na chamada).
 
 // Canários: texto que o código nunca deve emitir. Entram nos campos do cenário, ou pelos stores quando não há campo.
@@ -180,7 +190,7 @@ function cenarioBase(nome: string): Cenario {
   return c
 }
 
-// Os quatro toques sobre um run entregue (chá do frio-agitada), como na cobertura.
+// Os quatro toques sobre um run entregue (chá do frio-agitada), mais os da casa e da lista, como na cobertura.
 async function preparadaDosToques(): Promise<Preparada> {
   const c = plantar(cenarioBase("frio-agitada"))
   if (!c.entrada) throw new Error("frio-agitada sem entrada")
@@ -199,6 +209,9 @@ async function preparadaDosToques(): Promise<Preparada> {
     motivo: "trocar",
   })
   await deps.touches.tocarRetorno(contaId, retornoId, "ajudou")
+  await deps.touches.tocarCasa(contaId, { acao: "adicionar_texto", texto: CANARIO_TEXTO })
+  await deps.touches.tocarLista(contaId, { acao: "por", alimento_id: "gengibre" })
+  await deps.touches.tocarLista(contaId, { acao: "tirar", alimento_id: "gengibre" })
   const respostas = [normalizar(r.saida.resposta ?? "")].filter((t) => t !== "")
   return { contaId, deps, textos: { entradas: textosDaEntrada(c), respostas } }
 }
@@ -270,6 +283,150 @@ const NOMES = [...FLUXOS.keys()]
 function nomesDeAlimentoDoEmitido(emitido: string): string[] {
   return nomesVazados(emitido, NOMES_DA_BASE)
 }
+
+// Caminhos de limite (021): a mensagem depois do limite (só atalhos e alerta) e o toque barrado. Conta, IP, chave do
+// contador, e-mail e texto da pessoa não podem sair em span, evento, métrica, log ou console.
+const IP_CANARIO = "ip-canario-zeta"
+const EMAIL_DE_LIMITE = "canario-zeta@limites.test"
+
+type MontagemDoLimite = ReturnType<typeof montarDoLimite>
+
+function montarDoLimite() {
+  vi.stubEnv("RITU_MODO", "e2e")
+  const clock = createFixedClock("2026-06-15T19:00:00.000Z") // 16h em São Paulo
+  const stores = createMemoryStores(clock)
+  const telemetry = createMemoryTelemetry()
+  const limiter = createMemoryLimiter()
+  const container = createContainer({ clock, stores, tx: stores, limiter, telemetry })
+  return { container, stores, clock, telemetry, limiter }
+}
+
+function depsDoLimite(m: MontagemDoLimite, contaId: string, teto?: number): DepsDaRota {
+  return {
+    contaDaSessao: async () => contaId,
+    quemPede: () => ({ ipHash: IP_CANARIO, ...(teto !== undefined ? { teto } : {}) }),
+    container: m.container,
+  }
+}
+
+// Conta com a primeira mensagem já gasta (teto 1), pela mesma decisão da rota.
+async function gastarOLimite(m: MontagemDoLimite, conta: Conta) {
+  await decidirMensagem(
+    { limiter: m.limiter, router: m.container.router, clock: m.clock, telemetry: m.telemetry },
+    { conta, fuso: config.clima.fusoPadrao, ipHash: IP_CANARIO, teto: 1 },
+    { texto: "quero um chá", atalhos: [] },
+  )
+}
+
+async function contaDeLimite(m: MontagemDoLimite): Promise<Conta> {
+  return m.stores.accounts.criar({
+    tipo: "google",
+    google_sub: "priv-limite",
+    email: EMAIL_DE_LIMITE,
+  })
+}
+
+async function mensagemDeLimite(m: MontagemDoLimite, contaId: string, corpo: unknown) {
+  const r = await rotasDeFluxoDeRun(depsDoLimite(m, contaId, 1)).iniciar(
+    new Request("http://x/api/runs", { method: "POST", body: JSON.stringify(corpo) }),
+  )
+  await r.text()
+}
+
+type CaminhoDeLimite = {
+  nome: string
+  // Roda o caminho e devolve a conta e os textos da pessoa que não podem sair.
+  rodar: (m: MontagemDoLimite) => Promise<{ contaId: string; textos: string[] }>
+}
+
+const SO_ATALHOS: CaminhoDeLimite = {
+  nome: "só atalhos depois do limite",
+  rodar: async (m) => {
+    const conta = await contaDeLimite(m)
+    await gastarOLimite(m, conta)
+    await mensagemDeLimite(m, conta.id, { atalhos: ["com_frio"] })
+    return { contaId: conta.id, textos: [] }
+  },
+}
+
+const ALERTA: CaminhoDeLimite = {
+  nome: "alerta emocional depois do limite",
+  rodar: async (m) => {
+    const conta = await contaDeLimite(m)
+    await gastarOLimite(m, conta)
+    const texto = "quero morrer"
+    await mensagemDeLimite(m, conta.id, { texto, atalhos: [] })
+    return { contaId: conta.id, textos: [texto] }
+  },
+}
+
+const VOTO_BARRADO: CaminhoDeLimite = {
+  nome: "voto barrado pelo limite de toque",
+  rodar: async (m) => {
+    const conta = await contaDeLimite(m)
+    const run = await m.stores.runs.criar(conta.id, {
+      caminho: "acompanhante",
+      intencoes: [],
+      dia: diaLocal(m.clock.now()),
+    })
+    await m.stores.runs.atualizar(conta.id, run.id, { status: "done", saida: { resposta: "ok" } })
+    await rotasDaConversa(depsDoLimite(m, conta.id, 0)).voto(
+      new Request(`http://x/api/runs/${run.id}/voto`, {
+        method: "POST",
+        body: JSON.stringify({ voto: "up" }),
+      }),
+      { params: Promise.resolve({ id: run.id }) },
+    )
+    return { contaId: conta.id, textos: [] }
+  },
+}
+
+const CAMINHOS_DE_LIMITE: CaminhoDeLimite[] = [SO_ATALHOS, ALERTA, VOTO_BARRADO]
+
+// Roda um caminho de limite com o console espionado e junta a telemetria e o console num texto só.
+async function medirDoLimite(caminho: CaminhoDeLimite) {
+  const chamadas: unknown[][] = []
+  const espioes = METODOS_DE_CONSOLE.map((metodo) =>
+    vi.spyOn(console, metodo).mockImplementation((...args: unknown[]) => {
+      chamadas.push(args)
+    }),
+  )
+  try {
+    const m = montarDoLimite()
+    const { contaId, textos } = await caminho.rodar(m)
+    const t = m.telemetry
+    // `bruto` guarda chaves e underscores (`msg:`, `ritu_limite_total`); `emitido` é o texto normalizado para os textos da pessoa.
+    const bruto = [
+      JSON.stringify({ spans: t.spans, eventos: t.eventos, metricas: t.metricas, logs: t.logs }),
+      textoDoConsole(chamadas),
+    ].join("\n")
+    return { m, contaId, textos, bruto, emitido: normalizar(bruto) }
+  } finally {
+    for (const e of espioes) e.mockRestore()
+  }
+}
+
+describe("privacidade da telemetria: os caminhos de limite", () => {
+  it.each(CAMINHOS_DE_LIMITE)(
+    "$nome: conta, IP, chave do contador, e-mail e texto não saem",
+    async (caminho) => {
+      const { m, contaId, textos, bruto, emitido } = await medirDoLimite(caminho)
+      const vazados = textos.filter((t) => emitido.includes(normalizar(t)))
+      expect(vazados).toEqual([])
+      const proibidos = [contaId, IP_CANARIO, "msg:", "toque:", EMAIL_DE_LIMITE]
+      expect(proibidos.filter((p) => bruto.includes(p))).toEqual([])
+      // Lista vazia sai como "" (ex.: `run.intencoes` de um run só de atalhos): não é texto da pessoa.
+      const formas = formasDe(m.telemetry).filter((v) => v !== "")
+      expect(formas.filter((v) => !FORMA_DE_IDENTIFICADOR.test(v))).toEqual([])
+    },
+  )
+
+  it("controle: o limite de mensagem de fato emite a métrica, sem o que a pessoa escreveu", async () => {
+    const { m, bruto } = await medirDoLimite(SO_ATALHOS)
+    expect(m.telemetry.metricas.some((x) => x.nome === "ritu_limite_total")).toBe(true)
+    expect(bruto.includes("ritu_limite_total")).toBe(true)
+  })
+})
 
 describe("privacidade da telemetria: os cenários, os toques, a detecção e os erros", () => {
   it.each(NOMES)("%s: a telemetria tem spans, sem o que isso prova nada", async (nome) => {

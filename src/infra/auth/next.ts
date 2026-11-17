@@ -8,7 +8,7 @@ import {
   LimiteDeDemonstracaoError,
 } from "@/core/accounts/entrar"
 import { getContainer } from "@/infra/container"
-import { optionalEnv, requireEnv } from "@/infra/env"
+import { optionalEnv, requireEnv, testers } from "@/infra/env"
 import { type LoginDaConta, montarSessao, montarToken, type TipoDeConta } from "./callbacks"
 import { hashDoIp, ipDoPedido } from "./ip"
 
@@ -88,7 +88,11 @@ async function loginDoJwt(
 ): Promise<LoginDaConta | undefined> {
   if (account?.provider === "google") {
     if (!perfilValido(profile)) return undefined
-    const conta = await entrarComGoogle(getContainer(), { sub: profile.sub, email: profile.email })
+    const container = getContainer()
+    const conta = await entrarComGoogle(
+      { stores: container.stores, telemetry: container.telemetry, testers: testers() },
+      { sub: profile.sub, email: profile.email },
+    )
     return { contaId: conta.id, tipo: conta.tipo }
   }
   const usuario = user as Partial<UsuarioDaConta> | undefined
@@ -122,6 +126,31 @@ export function codigoDoErroDeEntrada(erro: unknown): string | undefined {
   if (!(erro instanceof AuthError)) return undefined
   const alvo = erro.cause?.err ?? erro
   return alvo instanceof CredentialsSignin ? alvo.code : "erro_demo"
+}
+
+function tetoDoE2e(headers: Headers): number | undefined {
+  const n = Number(headers.get("x-ritu-e2e-teto"))
+  return Number.isInteger(n) && n >= 1 && n <= 100 ? n : undefined
+}
+
+// Quem faz o pedido, para os limites: só o hash do IP; escopo e teto só no modo e2e.
+export function quemPedeDosHeaders(headers: Headers): {
+  ipHash: string
+  escopo?: string
+  teto?: number
+} {
+  const modoE2e = optionalEnv("RITU_MODO") === "e2e"
+  const ipHash = hashDoIp(ipDoPedido(headers, modoE2e), requireEnv("IP_HMAC_SECRET"))
+  if (!modoE2e) return { ipHash }
+  return {
+    ipHash,
+    escopo: headers.get("x-ritu-e2e")?.trim() || undefined,
+    teto: tetoDoE2e(headers),
+  }
+}
+
+export function quemPedeNext(request: Request): { ipHash: string; escopo?: string; teto?: number } {
+  return quemPedeDosHeaders(request.headers)
 }
 
 export type { TipoDeConta }

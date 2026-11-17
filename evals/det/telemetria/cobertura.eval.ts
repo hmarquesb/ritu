@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { criarDemonstracao, entrarComGoogle } from "@/core/accounts/entrar"
+import type { Conta } from "@/core/accounts/types"
+import { consumirToque } from "@/core/limits/toques"
+import type { ModelRouter } from "@/core/llm/router"
 import {
   type AtributoPermitido,
   type CodigoDeLog,
@@ -145,7 +148,35 @@ async function entrar(coleta: Coleta): Promise<void> {
     },
     { ipHash: "cobertura", semSeed: true },
   )
-  await entrarComGoogle({ stores, telemetry }, { sub: "sub-cobertura", email: "a@b.c" })
+  await entrarComGoogle(
+    { stores, telemetry, testers: [] },
+    { sub: "sub-cobertura", email: "a@b.c" },
+  )
+  coleta.metricas.push(...telemetry.metricas)
+}
+
+// Toque barrado: com teto 1, o segundo toque no mesmo minuto é barrado e soma ritu_limite_total.
+async function barrarToque(coleta: Coleta): Promise<void> {
+  const clock = { now: () => new Date("2026-01-15T15:00:00Z") }
+  const telemetry = createMemoryTelemetry()
+  const conta: Conta = {
+    id: "cobertura-toque",
+    tipo: "google",
+    google_sub: null,
+    email: null,
+    expira_em: null,
+    tester: false,
+    aviso_aceito_em: null,
+    evitar_passo: null,
+    evitar_lembrete_em: null,
+    dosha_adiado_em: null,
+    criado_em: "2026-01-10T12:00:00Z",
+  }
+  // O consumo de toque não usa o roteador de modelos.
+  const deps = { limiter: createMemoryLimiter(), router: {} as ModelRouter, clock, telemetry }
+  const quem = { conta, ipHash: "cobertura", fuso: "America/Sao_Paulo", teto: 1 }
+  await consumirToque(deps, quem)
+  await consumirToque(deps, quem)
   coleta.metricas.push(...telemetry.metricas)
 }
 
@@ -196,6 +227,7 @@ describe("cobertura da telemetria pelos cenários", () => {
     await tocarRunEntregue(coleta)
     await detectarComHistorico(coleta)
     await entrar(coleta)
+    await barrarToque(coleta)
   }, 180_000)
 
   afterAll(() => {

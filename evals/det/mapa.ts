@@ -116,6 +116,7 @@ export const mapa: LinhaDoMapa[] = [
       "evals/det/aprendizado/nao-tenho.eval.ts",
       "evals/det/aprendizado/toques-sem-modelo.eval.ts",
       "evals/det/telemetria/voto.eval.ts",
+      "evals/det/casa/efeito.eval.ts",
     ],
     desde: 2,
   },
@@ -659,7 +660,11 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Rota sem sessão → `401`; uma conta não lê run, proposta, cas",
-    arquivos: ["evals/det/seguranca/sessao.eval.ts", "evals/det/seguranca/conversa.eval.ts"],
+    arquivos: [
+      "evals/det/seguranca/sessao.eval.ts",
+      "evals/det/seguranca/conversa.eval.ts",
+      "evals/det/seguranca/toques-casa.eval.ts",
+    ],
     desde: 3,
   },
   {
@@ -701,7 +706,19 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Rotas de toque respeitam o limite próprio; a 31ª demonstraçã",
-    arquivos: [],
+    arquivos: ["evals/det/seguranca/limites.eval.ts"],
+    desde: 4,
+  },
+  {
+    grupo: "Segurança e privacidade",
+    linha: "Cron sem segredo: /api/cron/* responde 401 sem o bearer e 503 sem CRON_SECRET",
+    arquivos: ["evals/det/seguranca/cron-e-saude.eval.ts"],
+    desde: 4,
+  },
+  {
+    grupo: "Segurança e privacidade",
+    linha: "Saúde sem segredo: /api/saude pede o bearer e não devolve valor de variável",
+    arquivos: ["evals/det/seguranca/cron-e-saude.eval.ts"],
     desde: 4,
   },
   {

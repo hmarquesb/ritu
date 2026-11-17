@@ -13,6 +13,7 @@ function montar(container?: Container) {
   const base = container ?? createContainer({ clock: { now: () => new Date(AGORA) } })
   const deps = (contaId?: string, c: Container = base): DepsDaRota => ({
     contaDaSessao: async () => contaId,
+    quemPede: () => ({ ipHash: "h" }),
     container: c,
   })
   return { container: base, stores: base.stores, deps }
@@ -70,6 +71,8 @@ describe("rotasDaConversa", () => {
       const corpo = await r.json()
       expect(corpo.falas).toEqual([])
       expect(corpo.pendentes).toBe(0)
+      expect(corpo.limites.mensagens.tipo).toBe("contando")
+      expect(corpo.limites.cota_ia).toEqual({ esgotada: false })
     })
   })
 

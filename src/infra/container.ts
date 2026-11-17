@@ -13,6 +13,9 @@ import type { UsageLimiter } from "@/core/limits/ports"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
+import { type ComoFicouNaTela, visaoComoFicou } from "@/core/outcomes/visao"
+import { lerCasa as lerCasaDoCore } from "@/core/pantry/ler"
+import type { CasaNaTela } from "@/core/pantry/visao"
 import { createPatterns } from "@/core/patterns"
 import { createRoutine } from "@/core/routine"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
@@ -28,7 +31,7 @@ import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
-import { createRelogioDoE2e } from "@/infra/e2e/relogio"
+import { createRelogioE2e } from "@/infra/e2e/relogio"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
@@ -41,6 +44,7 @@ import { createOpenMeteoCities } from "@/infra/open-meteo/cities"
 import { createOpenMeteoWeather } from "@/infra/open-meteo/weather"
 import { createNullTelemetry } from "@/infra/otel/null-telemetry"
 import { createOtelTelemetry } from "@/infra/otel/telemetry"
+import { type DepsDaSaude, lerSaude, type Saude } from "@/infra/saude"
 import { systemClock } from "@/infra/system-clock"
 
 export type Container = {
@@ -67,6 +71,10 @@ export type Container = {
   touches: ReturnType<typeof createTouches>
   routine: ReturnType<typeof createRoutine>
   patterns: ReturnType<typeof createPatterns>
+  lerCasa(contaId: string): Promise<CasaNaTela>
+  lerComoFicou(contaId: string): Promise<ComoFicouNaTela>
+  telemetriaLigada: boolean
+  saude(): Promise<Saude>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -111,6 +119,23 @@ function ledgerE2e(clock: Clock): UsageLedger {
   }
 }
 
+// O header `x-ritu-e2e-cota: esgotada` tira a cota do dia daquele pedido. Só no modo e2e.
+function routerE2e(puro: ModelRouter): ModelRouter {
+  const embrulhado = async (): Promise<ModelRouter> => {
+    const { createRouterE2e, cotaEsgotadaNoPedidoNext } = await import("@/infra/e2e/cota")
+    return createRouterE2e(puro, cotaEsgotadaNoPedidoNext)
+  }
+  return {
+    paraPapel: (papel, opts) => puro.paraPapel(papel, opts),
+    temModelo: async (papel) => (await embrulhado()).temModelo(papel),
+    cotaDoDiaEsgotada: async (papel) => (await embrulhado()).cotaDoDiaEsgotada(papel),
+  }
+}
+
+function routerDoModo(puro: ModelRouter, e2e: boolean): ModelRouter {
+  return e2e ? routerE2e(puro) : puro
+}
+
 function llmE2e(): LlmClient {
   return {
     async gerar(pedido) {
@@ -138,16 +163,10 @@ export function readDemoSeed(dir?: string): DemoSeed {
   return loadDemoSeed(dir)
 }
 
-// Um relógio por processo: o container pode ser montado mais de uma vez.
-let relogioE2e: Clock | undefined
-function relogioDoE2e(): Clock {
-  relogioE2e ??= createRelogioDoE2e()
-  return relogioE2e
-}
-
 export function createContainer(overrides?: Partial<Container>): Container {
   const e2e = optionalEnv("RITU_MODO") === "e2e"
-  const clock = overrides?.clock ?? (e2e ? relogioDoE2e() : systemClock)
+  // No modo e2e, a hora local fica à noite, para o E2E não depender da hora em que roda.
+  const clock = overrides?.clock ?? (e2e ? createRelogioE2e(systemClock) : systemClock)
   if (e2e && optionalEnv("VERCEL_ENV") === "production") {
     throw new RituError("modo_e2e_em_producao", "RITU_MODO=e2e não pode rodar em produção")
   }
@@ -230,11 +249,10 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return demoSeed
     },
     get router() {
-      router ??= createModelRouter({
-        ledger: container.ledger,
-        clock,
-        telemetry: container.telemetry,
-      })
+      router ??= routerDoModo(
+        createModelRouter({ ledger: container.ledger, clock, telemetry: container.telemetry }),
+        e2e,
+      )
       return router
     },
     // A chave do Gemini só é lida na primeira chamada.
@@ -244,11 +262,15 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
     get telemetry() {
-      telemetry ??=
-        e2e || optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined
-          ? createNullTelemetry()
-          : createOtelTelemetry()
+      telemetry ??= semTelemetria(e2e) ? createNullTelemetry() : createOtelTelemetry()
       return telemetry
+    },
+    get telemetriaLigada() {
+      return !semTelemetria(e2e)
+    },
+    // Sem DATABASE_URL (ou no e2e) o banco é em memória e responde ok.
+    async saude() {
+      return lerSaude(depsDaSaude(container, e2e))
     },
     // A chave do modelo só é lida na primeira chamada de passo.
     get runtime() {
@@ -357,6 +379,23 @@ export function createContainer(overrides?: Partial<Container>): Container {
       })
       return patterns
     },
+    // Telas de Minha casa e Como ficou: o fuso vem do perfil, com o padrão quando a pessoa não escolheu cidade.
+    async lerCasa(contaId) {
+      return lerCasaDoCore(
+        { stores: container.stores, kb: container.knowledge, clock },
+        contaId,
+        await fusoDaConta(container, contaId),
+      )
+    },
+    async lerComoFicou(contaId) {
+      const retornos = await container.stores.outcomes.pendentes(contaId)
+      return visaoComoFicou({
+        retornos,
+        kb: container.knowledge,
+        agora: clock.now(),
+        fuso: await fusoDaConta(container, contaId),
+      })
+    },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {
       if (telemetriaIniciada) return
@@ -375,6 +414,42 @@ export function createContainer(overrides?: Partial<Container>): Container {
     ...overrides,
   }
   return container
+}
+
+function semTelemetria(e2e: boolean): boolean {
+  return e2e || optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined
+}
+
+function depsDaSaude(container: Container, e2e: boolean): DepsDaSaude {
+  return {
+    env: process.env,
+    emMemoria: e2e || optionalEnv("DATABASE_URL") === undefined,
+    consultarBanco: async () => {
+      await bancoPreguicoso().sql`select 1`
+    },
+    ultimaMigracao: async () => {
+      const linhas = await bancoPreguicoso().sql<{ nome: string }[]>`
+        select nome from _migracoes order by aplicada_em desc, nome desc limit 1`
+      return linhas[0]?.nome ?? null
+    },
+    contagensDaBase: () => ({
+      alimentos: container.knowledge.alimentos.length,
+      preparos: container.knowledge.preparos.length,
+      praticas: container.knowledge.praticas.length,
+    }),
+    lerSeed: () => {
+      loadDemoSeed()
+    },
+    // Mesma regra de googleDisponivel() (auth/next.ts), sem importá-lo: ele importa o container.
+    google: () =>
+      optionalEnv("AUTH_GOOGLE_ID") !== undefined &&
+      optionalEnv("AUTH_GOOGLE_SECRET") !== undefined,
+  }
+}
+
+async function fusoDaConta(container: Container, contaId: string): Promise<string> {
+  const perfil = await container.stores.profiles.ler(contaId)
+  return perfil?.cidade_fuso ?? config.clima.fusoPadrao
 }
 
 let instance: Container | undefined

@@ -65,12 +65,20 @@ function rotaDoRun<B, R>(
 }
 
 export function rotasDaConversa(deps: DepsDaRota) {
-  const conversa = criarRota(deps, {}, async ({ conta, container }) => {
+  const conversa = criarRota(deps, {}, async ({ conta, container, ipHash, escopo, teto }) => {
     const perfil = await container.stores.profiles.ler(conta.id)
     return conversaDoDia(
-      { stores: container.stores, clock: container.clock, seed: container.demoSeed },
+      {
+        stores: container.stores,
+        clock: container.clock,
+        seed: container.demoSeed,
+        limiter: container.limiter,
+        router: container.router,
+        telemetry: container.telemetry,
+      },
       conta,
       perfil,
+      { ipHash, ...(escopo ? { escopo } : {}), ...(teto !== undefined ? { teto } : {}) },
     )
   })
 

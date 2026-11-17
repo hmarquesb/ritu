@@ -49,7 +49,12 @@ function termosProibidos(c: CenarioDeConversa, titulosDaSaida: string[]): Termos
   }
 }
 
-function vazamentos(valores: string[], termos: Termos): string[] {
+// UUIDs gerados pelos stores em memória são identificadores aleatórios, nunca texto da pessoa; sem tirá-los,
+// um termo de quatro letras hexadecimais (como "cafe") casa por acaso dentro de um deles e o eval oscila.
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g
+
+function vazamentos(entradas: string[], termos: Termos): string[] {
+  const valores = entradas.map((v) => v.replace(UUID, "<id>"))
   return [
     ...termos.trechos.filter((t) => valores.some((v) => trechoVaza(v, t))),
     ...termos.palavras.filter((p) => valores.some((v) => tokens(v).includes(p))),

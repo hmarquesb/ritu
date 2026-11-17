@@ -64,9 +64,11 @@ export function saidaSemModeloDe(
   kb: KnowledgeBase,
   dados: DadosDoPreparo,
   perfil: Perfil,
+  motivo: "cota" | "limite" = "cota",
 ): SaidaDoAcompanhante {
   const resposta = respostaSemModelo(
     {
+      motivo,
       estados: dados.estados,
       momento_do_dia: dados.momento_do_dia,
       filtro: dados.filtro,
@@ -220,6 +222,7 @@ export function criarFimDoRun(deps: DepsDoFim) {
       campos(dados, { ...extra, saida }),
       manterAberto,
     )
+    // O fim "sem_modelo" do loop é sempre de cota; o de limite não passa por aqui.
     if (resultado.fim.tipo === "sem_modelo") telemetry.contador("ritu_fallback_sem_llm_total")
     medirParaTer(dados, saida)
     return {

@@ -2,8 +2,11 @@
 
 import { config } from "@config/index"
 import { useCallback, useEffect, useReducer, useRef } from "react"
+import { toast } from "@/components/base/toast"
+import { textoDoLimite } from "@/components/ritu/limites"
 import type { ConversaDoDia } from "@/core/conversation/do-dia"
 import type { VisaoDoRun } from "@/core/conversation/visao"
+import type { EstadoDosLimites } from "@/core/limits/estado"
 import { type AcaoDaConversa, inicial, reduzir, textoOtimista, visaoValida } from "./estado"
 import { lerEventos } from "./ler-eventos"
 
@@ -34,6 +37,45 @@ async function codigoDoErro(resposta: Response): Promise<string> {
     // corpo que não é JSON: cai no código genérico
   }
   return "inesperado"
+}
+
+type Barrado = { erro: string; limites?: EstadoDosLimites; retryAfterS?: number }
+
+async function lerBarrado(resposta: Response): Promise<Barrado> {
+  const retry = Number(resposta.headers.get("Retry-After"))
+  const retryAfterS = resposta.headers.get("Retry-After") === null ? undefined : retry
+  try {
+    const corpo: unknown = await resposta.json()
+    if (ehObjeto(corpo) && typeof corpo.erro === "string") {
+      const limites = ehObjeto(corpo.limites) ? (corpo.limites as EstadoDosLimites) : undefined
+      return { erro: corpo.erro, limites, retryAfterS }
+    }
+  } catch {
+    // corpo que não é JSON: cai no código genérico
+  }
+  return { erro: "inesperado", retryAfterS }
+}
+
+// Trata o 429: limites novos vão para o estado; texto de toque vira toast. `true` se tratou.
+function tratarBarrado(barrado: Barrado, despachar: (acao: AcaoDaConversa) => void): boolean {
+  if (barrado.limites) {
+    despachar({ tipo: "barrou", limites: barrado.limites })
+    return true
+  }
+  const texto = textoDoLimite(barrado.erro, barrado.retryAfterS)
+  if (texto === undefined) return false
+  toast(texto)
+  despachar({ tipo: "desfez" })
+  return true
+}
+
+async function falharResposta(
+  resposta: Response,
+  despachar: (acao: AcaoDaConversa) => void,
+): Promise<void> {
+  if (resposta.status === 429 && tratarBarrado(await lerBarrado(resposta), despachar)) return
+  const codigo = resposta.ok ? "inesperado" : await codigoDoErro(resposta)
+  despachar({ tipo: "evento", evento: { tipo: "erro", erro: codigo } })
 }
 
 function abertosParaSeguir(runs: Record<string, VisaoDoRun>): string[] {
@@ -124,8 +166,7 @@ export function useConversa(conversa: ConversaDoDia, rotulos: Record<string, str
   const lerFluxo = useCallback(
     async (resposta: Response, seguir: string[]) => {
       if (!resposta.ok || !resposta.body) {
-        const codigo = resposta.ok ? "inesperado" : await codigoDoErro(resposta)
-        despachar({ tipo: "evento", evento: { tipo: "erro", erro: codigo } })
+        await falharResposta(resposta, despachar)
         return
       }
       const { runId, terminou } = await percorrer(resposta.body, despachar)
@@ -171,6 +212,9 @@ export function useConversa(conversa: ConversaDoDia, rotulos: Record<string, str
       try {
         const resposta = await mandar(caminho, corpo)
         if (!resposta.ok) {
+          if (resposta.status === 429 && tratarBarrado(await lerBarrado(resposta), despachar)) {
+            return undefined
+          }
           despachar({ tipo: "falhou", codigo: await codigoDoErro(resposta) })
           return undefined
         }
@@ -224,6 +268,8 @@ export function useConversa(conversa: ConversaDoDia, rotulos: Record<string, str
 
   return {
     estado,
+    limites: estado.limites,
+    textoGuardado: estado.textoGuardado,
     enviar,
     responder,
     aprovar,

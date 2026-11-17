@@ -5,4 +5,6 @@ export const limites = {
   corpoMaximoBytes: 16_384,
   evitar: { maxItens: 20, textoLivreCaracteres: 40 },
   buscaDeAlimento: { minimoCaracteres: 2, maximoResultados: 8 },
+  mensagens: { googlePorDia: 30, demoPorConta: 12, porIpPorDia: 60, avisarComRestantes: 3 },
+  toques: { porContaPorMinuto: 60, porContaPorDia: 300, porIpPorDia: 1500 },
 } as const

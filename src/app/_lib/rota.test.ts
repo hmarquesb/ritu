@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
 import { MARCA_RITU, RituError } from "@/core/errors"
+import { LimiteError } from "@/core/limits/erros"
 import { createContainer } from "@/infra/container"
 import { criarRota, statusDoErro } from "./rota"
+
+const agendados = vi.hoisted(() => [] as Array<() => Promise<void>>)
+vi.mock("next/server", () => ({ after: (f: () => Promise<void>) => void agendados.push(f) }))
+
+const quemPede = () => ({ ipHash: "h" })
 
 // Modo de E2E: o container usa stores em memória, sem banco.
 function montar() {
@@ -54,7 +60,11 @@ describe("criarRota", () => {
 
   it("401 sem sessão", async () => {
     const { container } = montar()
-    const rota = criarRota({ contaDaSessao: async () => undefined, container }, {}, async () => 1)
+    const rota = criarRota(
+      { contaDaSessao: async () => undefined, container, quemPede },
+      {},
+      async () => 1,
+    )
     const r = await rota(pedido())
     expect(r.status).toBe(401)
     expect(await r.json()).toEqual({ erro: "sem_sessao" })
@@ -66,7 +76,11 @@ describe("criarRota", () => {
       tipo: "demo",
       expira_em: new Date(Date.now() - 1000),
     })
-    const rota = criarRota({ contaDaSessao: async () => conta.id, container }, {}, async () => 1)
+    const rota = criarRota(
+      { contaDaSessao: async () => conta.id, container, quemPede },
+      {},
+      async () => 1,
+    )
     const r = await rota(pedido())
     expect(r.status).toBe(401)
     expect(await r.json()).toEqual({ erro: "sem_sessao" })
@@ -75,7 +89,7 @@ describe("criarRota", () => {
   async function comConta() {
     const m = montar()
     const conta = await m.stores.accounts.criar({ tipo: "google", google_sub: "s", email: "a@b.c" })
-    const deps = { contaDaSessao: async () => conta.id, container: m.container }
+    const deps = { contaDaSessao: async () => conta.id, container: m.container, quemPede }
     return { ...m, conta, deps }
   }
 
@@ -167,12 +181,137 @@ describe("statusDoErro", () => {
       google_sub: "s",
       email: "a@b.c",
     })
-    const rota = criarRota({ contaDaSessao: async () => conta.id, container }, {}, async () => {
-      throw new RituError("run_aberto", "d")
-    })
+    const rota = criarRota(
+      { contaDaSessao: async () => conta.id, container, quemPede },
+      {},
+      async () => {
+        throw new RituError("run_aberto", "d")
+      },
+    )
     const r = await rota(new Request("http://x/api"))
     expect(r.status).toBe(409)
     expect(await r.json()).toEqual({ erro: "run_aberto" })
     vi.unstubAllEnvs()
+  })
+})
+
+describe("limite de toques", () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  async function preparar(tester = false) {
+    vi.stubEnv("RITU_MODO", "e2e")
+    const container = createContainer()
+    const conta = await container.stores.accounts.criar({
+      tipo: "google",
+      google_sub: "s",
+      email: "a@b.c",
+    })
+    if (tester) await container.stores.accounts.marcar(conta.id, { tester: true })
+    const deps = {
+      contaDaSessao: async () => conta.id,
+      container,
+      quemPede: () => ({ ipHash: "h", teto: 0 }),
+    }
+    return { deps }
+  }
+
+  it("POST com teto 0 responde 429 limite_toques com Retry-After e não roda fn", async () => {
+    const { deps } = await preparar()
+    const fn = vi.fn(async () => 1)
+    const r = await criarRota(deps, {}, fn)(pedido())
+    expect(r.status).toBe(429)
+    expect(await r.json()).toEqual({ erro: "limite_toques" })
+    expect(Number(r.headers.get("Retry-After"))).toBeGreaterThanOrEqual(1)
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it("tester não consome", async () => {
+    const { deps } = await preparar(true)
+    const fn = vi.fn(async () => 1)
+    const r = await criarRota(deps, {}, fn)(pedido())
+    expect(r.status).toBe(200)
+    expect(fn).toHaveBeenCalled()
+  })
+
+  it("GET e limite nenhum não consomem", async () => {
+    const { deps } = await preparar()
+    const a = await criarRota(deps, {}, async () => 1)(new Request("http://x/api"))
+    expect(a.status).toBe(200)
+    const b = await criarRota(deps, { limite: "nenhum" }, async () => 1)(pedido())
+    expect(b.status).toBe(200)
+  })
+
+  it("corpo inválido responde 400 sem consumir", async () => {
+    const { deps } = await preparar()
+    const r = await criarRota(deps, { corpo: schema }, async () => 1)(pedido("{quebrado"))
+    expect(r.status).toBe(400)
+  })
+
+  it("LimiteError lançado por fn vira 429 com Retry-After", async () => {
+    const { deps } = await preparar()
+    const rota = criarRota(deps, { limite: "nenhum" }, async () => {
+      throw new LimiteError("limite_ip", 30)
+    })
+    const r = await rota(pedido())
+    expect(r.status).toBe(429)
+    expect(r.headers.get("Retry-After")).toBe("30")
+    expect(await r.json()).toEqual({ erro: "limite_ip" })
+  })
+
+  it("statusDoErro dá 429 aos quatro códigos de limite", () => {
+    for (const c of ["limite_mensagens", "limite_demo", "limite_ip", "limite_toques"]) {
+      expect(statusDoErro(c)).toBe(429)
+    }
+  })
+})
+
+describe("criarRota: descarga da telemetria", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    agendados.length = 0
+  })
+
+  async function ligada() {
+    vi.stubEnv("RITU_MODO", "e2e")
+    const container = createContainer()
+    const conta = await container.stores.accounts.criar({
+      tipo: "google",
+      google_sub: "s",
+      email: "a@b.c",
+    })
+    const encerrar = vi.fn(async () => {})
+    const falso = Object.create(container, {
+      telemetriaLigada: { value: true },
+      telemetry: { value: { ...container.telemetry, log: () => {}, encerrar } },
+    }) as typeof container
+    return { deps: { contaDaSessao: async () => conta.id, container: falso, quemPede }, encerrar }
+  }
+
+  it("agenda uma vez e o agendado chama encerrar uma vez", async () => {
+    const { deps, encerrar } = await ligada()
+    await criarRota(deps, {}, async () => ({ ok: true }))(pedido())
+    expect(agendados).toHaveLength(1)
+    await agendados[0]?.()
+    expect(encerrar).toHaveBeenCalledTimes(1)
+  })
+
+  it("erro dentro da rota ainda agenda", async () => {
+    const { deps } = await ligada()
+    const r = await criarRota(deps, {}, async () => {
+      throw new Error("x")
+    })(pedido())
+    expect(r.status).toBe(500)
+    expect(agendados).toHaveLength(1)
+  })
+
+  it("com a telemetria nula, nada é agendado", async () => {
+    const { container, stores } = montar()
+    const conta = await stores.accounts.criar({ tipo: "google", google_sub: "s", email: "a@b.c" })
+    await criarRota(
+      { contaDaSessao: async () => conta.id, container, quemPede },
+      {},
+      async () => 1,
+    )(pedido())
+    expect(agendados).toHaveLength(0)
   })
 })

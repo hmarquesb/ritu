@@ -1,6 +1,7 @@
 ---
 title: Limites e degradação
-status: approved
+status: implemented
+implemented: 6660c47
 entrega: 4
 created: 2026-11-15
 ---

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
+import { avisarLimite } from "@/app/(comecar)/_lib/enviar-passo"
 import { Button } from "@/components/base/button"
 import { Surface } from "@/components/base/surface"
 import { DoshaBlot } from "@/components/brand/dosha-blot"
@@ -50,6 +51,10 @@ export function Quiz({ perguntas, doshas, textos }: Props) {
       })
       if (resposta.status === 401) {
         window.location.href = "/"
+        return
+      }
+      if (await avisarLimite(resposta)) {
+        setEnviando(false)
         return
       }
       if (!resposta.ok) throw new Error("falhou")

@@ -4,7 +4,7 @@ import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { Pratica } from "@/core/knowledge/schemas"
 import { verbosDasGunas } from "@/core/knowledge/verbos"
 import type { Estado, Guna, MomentoDoDia } from "@/core/knowledge/vocab"
-import { TEXTO_COM_ATALHOS, TEXTO_SO_TEXTO } from "./textos"
+import { TEXTO_COM_ATALHOS, TEXTO_LIMITE_COM_ATALHOS, TEXTO_SO_TEXTO } from "./textos"
 
 export type RespostaSemModelo = {
   resposta: string
@@ -16,6 +16,7 @@ type Entrada = {
   momento_do_dia: MomentoDoDia
   filtro: FiltroPessoa
   prakriti?: Prakriti
+  motivo?: "cota" | "limite"
 }
 
 const MAXIMO_DE_PRATICAS = 3
@@ -69,8 +70,9 @@ function praticasParaEstados(p: Entrada, kb: KnowledgeBase): RespostaSemModelo["
 // Resposta montada por código, sem modelo: texto aprovado e práticas gerais da base.
 export function respostaSemModelo(p: Entrada, kb: KnowledgeBase): RespostaSemModelo {
   if (p.estados.length === 0) return { resposta: TEXTO_SO_TEXTO, praticas: [] }
+  const abertura = p.motivo === "limite" ? TEXTO_LIMITE_COM_ATALHOS : TEXTO_COM_ATALHOS
   return {
-    resposta: TEXTO_COM_ATALHOS.replace("{estados}", rotulosDos(p.estados, kb)),
+    resposta: abertura.replace("{estados}", rotulosDos(p.estados, kb)),
     praticas: praticasParaEstados(p, kb),
   }
 }

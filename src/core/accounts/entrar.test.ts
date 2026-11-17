@@ -140,7 +140,7 @@ describe("criarDemonstracao", () => {
 describe("entrarComGoogle", () => {
   it("cria na primeira entrada e acha a mesma na segunda", async () => {
     const { stores, telemetry } = montar()
-    const deps = { stores, telemetry }
+    const deps = { stores, telemetry, testers: [] }
     const a = await entrarComGoogle(deps, { sub: "s1", email: "a@x.com" })
     const b = await entrarComGoogle(deps, { sub: "s1", email: "a@x.com" })
     expect(b.id).toBe(a.id)
@@ -167,7 +167,69 @@ describe("entrarComGoogle", () => {
     stores.accounts.criar = async () => {
       throw new Error("duplicate key google_sub")
     }
-    const conta = await entrarComGoogle({ stores, telemetry }, { sub: "s2", email: "a@x.com" })
+    const conta = await entrarComGoogle(
+      { stores, telemetry, testers: [] },
+      { sub: "s2", email: "a@x.com" },
+    )
     expect(conta.id).toBe(existente.id)
+  })
+
+  it("e-mail na lista de testers (com maiúsculas e espaços) grava tester: true", async () => {
+    const { stores, telemetry } = montar()
+    const conta = await entrarComGoogle(
+      { stores, telemetry, testers: ["ana@x.com"] },
+      { sub: "s3", email: "  Ana@X.com " },
+    )
+    expect(conta.tester).toBe(true)
+    expect((await stores.accounts.buscar(conta.id))?.tester).toBe(true)
+  })
+
+  it("conta tester que sai da lista volta a tester: false na próxima entrada", async () => {
+    const { stores, telemetry } = montar()
+    const dados = { sub: "s4", email: "ana@x.com" }
+    const primeira = await entrarComGoogle({ stores, telemetry, testers: ["ana@x.com"] }, dados)
+    expect(primeira.tester).toBe(true)
+    const depois = await entrarComGoogle({ stores, telemetry, testers: [] }, dados)
+    expect(depois.id).toBe(primeira.id)
+    expect(depois.tester).toBe(false)
+    expect((await stores.accounts.buscar(primeira.id))?.tester).toBe(false)
+  })
+
+  it("sem mudança de situação, não chama marcar", async () => {
+    const { stores, telemetry } = montar()
+    const dados = { sub: "s5", email: "b@x.com" }
+    await entrarComGoogle({ stores, telemetry, testers: [] }, dados)
+    let marcacoes = 0
+    const original = stores.accounts.marcar
+    stores.accounts.marcar = async (...args) => {
+      marcacoes++
+      return original(...args)
+    }
+    await entrarComGoogle({ stores, telemetry, testers: [] }, dados)
+    expect(marcacoes).toBe(0)
+  })
+
+  it("na corrida, também marca o tester da conta encontrada", async () => {
+    const { stores, telemetry } = montar()
+    const existente = await stores.accounts.criar({
+      tipo: "google",
+      google_sub: "s6",
+      email: "ana@x.com",
+    })
+    let buscas = 0
+    const original = stores.accounts.buscarPorGoogleSub
+    stores.accounts.buscarPorGoogleSub = async (sub) => {
+      buscas++
+      return buscas === 1 ? undefined : original(sub)
+    }
+    stores.accounts.criar = async () => {
+      throw new Error("duplicate key google_sub")
+    }
+    const conta = await entrarComGoogle(
+      { stores, telemetry, testers: ["ana@x.com"] },
+      { sub: "s6", email: "ana@x.com" },
+    )
+    expect(conta.id).toBe(existente.id)
+    expect(conta.tester).toBe(true)
   })
 })

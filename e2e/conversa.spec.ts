@@ -14,7 +14,7 @@ const MSG_LENTO = "demora um pouco"
 const FRASE_DA_TROCA = /Troquei canela por cominho/
 
 const RESPOSTA_DEMO = "Para uma manhã fria e agitada"
-const RESPOSTA_PERGUNTA_CASA = "uma pausa em silêncio, antes de comer"
+const RESPOSTA_PERGUNTA_CASA = "uma refeição morna de abóbora cozida no vapor"
 const RESPOSTA_TROCA = "Um chá quente de canela aquece sem pesar"
 const RESPOSTA_LENTO = "Um chá quente de gengibre com canela ajuda a aquecer"
 
@@ -196,21 +196,24 @@ test.describe("pergunta de casa", () => {
     await entrarNaDemo(page)
     await caixaDe(page).fill(MSG_PERGUNTA_CASA)
     await enviarDe(page).click()
-    const banana = page.getByRole("radiogroup", { name: "Banana" })
-    await expect(banana).toBeVisible()
-    await banana.getByText("Tenho", { exact: true }).click()
+    const couve = page.getByRole("radiogroup", { name: "Couve" })
+    const leite = page.getByRole("radiogroup", { name: "Leite" })
+    await expect(couve).toBeVisible()
+    await expect(leite).toBeVisible()
+    await couve.getByText("Tenho", { exact: true }).click()
+    await leite.getByText("Não tenho", { exact: true }).click()
     await page.getByRole("button", { name: T.pergunta.responder }).click()
     await expect(noLog(page).getByText(RESPOSTA_PERGUNTA_CASA)).toBeVisible()
-    await expect(banana).toHaveCount(0)
+    await expect(couve).toHaveCount(0)
   })
 
   test("pular também retoma", async ({ page }) => {
     await entrarNaDemo(page)
     await enviarTexto(page, MSG_PERGUNTA_CASA)
-    await expect(page.getByRole("radiogroup", { name: "Banana" })).toBeVisible()
+    await expect(page.getByRole("radiogroup", { name: "Couve" })).toBeVisible()
     await page.getByRole("button", { name: T.pergunta.pular }).click()
     await expect(noLog(page).getByText(RESPOSTA_PERGUNTA_CASA)).toBeVisible()
-    await expect(page.getByRole("radiogroup", { name: "Banana" })).toHaveCount(0)
+    await expect(page.getByRole("radiogroup", { name: "Couve" })).toHaveCount(0)
   })
 })
 
@@ -456,7 +459,7 @@ for (const tema of TEMAS) {
       await usarTema(context, tema)
       await entrarNaDemo(page)
       await enviarTexto(page, MSG_PERGUNTA_CASA)
-      await expect(page.getByRole("radiogroup", { name: "Banana" })).toBeVisible()
+      await expect(page.getByRole("radiogroup", { name: "Couve" })).toBeVisible()
       await expectSemViolacoes(page)
     })
 
@@ -508,7 +511,7 @@ test.describe("screenshots da Conversa", () => {
       await usarTema(context, tema)
       await entrarNaDemo(page)
       await enviarTexto(page, MSG_PERGUNTA_CASA)
-      await expect(page.getByRole("radiogroup", { name: "Banana" })).toBeVisible()
+      await expect(page.getByRole("radiogroup", { name: "Couve" })).toBeVisible()
       await rolarParaAcimaDoPainel(page, page.getByRole("button", { name: T.pergunta.responder }))
       await page.evaluate(() => document.fonts.ready)
       await page.screenshot({ path: caminho("pergunta", tema, info.project.name) })

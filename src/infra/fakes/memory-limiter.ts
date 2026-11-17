@@ -7,10 +7,13 @@ export function createMemoryLimiter(): UsageLimiter {
 
   return {
     async consumir(pedidos, janela, inicio) {
-      const barrou = pedidos.find((p) => (totais.get(k(p.chave, janela, inicio)) ?? 0) >= p.teto)
+      const inicioDaChave = (p: { inicio?: string }) => p.inicio ?? inicio
+      const barrou = pedidos.find(
+        (p) => (totais.get(k(p.chave, janela, inicioDaChave(p))) ?? 0) >= p.teto,
+      )
       if (barrou) return { ok: false, chave: barrou.chave }
       for (const p of pedidos) {
-        const id = k(p.chave, janela, inicio)
+        const id = k(p.chave, janela, inicioDaChave(p))
         totais.set(id, (totais.get(id) ?? 0) + 1)
       }
       return { ok: true }
@@ -22,7 +25,8 @@ export function createMemoryLimiter(): UsageLimiter {
       let apagadas = 0
       for (const id of [...totais.keys()]) {
         const [, janela, ini] = JSON.parse(id) as [string, Janela, string]
-        if (janela === "dia" && ini < inicio) {
+        const antes = janela === "dia" ? ini < inicio : ini.slice(0, 10) < inicio
+        if (antes) {
           totais.delete(id)
           apagadas++
         }

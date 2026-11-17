@@ -74,6 +74,7 @@ type Execucao = {
   perfil: Perfil
   m: MensagemRecebida
   aoVivo?: AoVivo
+  semModelo?: "limite"
 }
 
 function mensagemInvalida(): RituError {
@@ -232,6 +233,7 @@ export function createConversation(deps: Deps) {
     const r = await companion.responder(x.contaId, entrada, {
       run: x.run,
       semModelo: true,
+      ...(x.semModelo ? { motivo: x.semModelo } : {}),
       manterAberto: true,
       aoVivo: x.aoVivo,
     })
@@ -377,7 +379,9 @@ export function createConversation(deps: Deps) {
   }
 
   async function responderMensagem(x: Execucao, estado: { gravada: boolean }) {
-    const { interpretacao, apoio, guardrail } = await interpretar(x)
+    const { interpretacao, apoio, guardrail } = x.semModelo
+      ? ({} as Interpretado)
+      : await interpretar(x)
     const r = interpretacao
       ? await seguirCaminho(x, interpretacao, apoio, guardrail)
       : await semModelo(x)
@@ -462,9 +466,10 @@ export function createConversation(deps: Deps) {
     async conversar(
       contaId: string,
       mensagem: MensagemRecebida,
-      opts?: { aoVivo?: AoVivo; aoCriar?: (runId: string) => void },
+      opts?: { aoVivo?: AoVivo; aoCriar?: (runId: string) => void; semModelo?: "limite" },
     ): Promise<RespostaDaConversa> {
       const m = validar(mensagem)
+      if (opts?.semModelo && m.texto) throw mensagemInvalida()
       const perfil = await stores.profiles.ler(contaId)
       const run = await runs.iniciarRun(contaId, {
         caminho: "acompanhante",
@@ -476,7 +481,14 @@ export function createConversation(deps: Deps) {
       } catch {
         // quem chamou falhou ao ser avisado; o run segue
       }
-      const x: Execucao = { contaId, run, perfil, m, aoVivo: opts?.aoVivo }
+      const x: Execucao = {
+        contaId,
+        run,
+        perfil,
+        m,
+        aoVivo: opts?.aoVivo,
+        ...(opts?.semModelo ? { semModelo: opts.semModelo } : {}),
+      }
       return runs.comSpanDoRun(contaId, run.id, () => rodar(x))
     },
   }

@@ -29,7 +29,7 @@ describe("formatEnvStatus", () => {
     )
     const linhasDeVariavel = lines.filter((linha) => /presente|ausente/.test(linha))
 
-    expect(linhasDeVariavel).toHaveLength(12)
+    expect(linhasDeVariavel).toHaveLength(20)
     const gemini = linhasDeVariavel.find((linha) => linha.includes("GEMINI_API_KEY"))
     const auth = linhasDeVariavel.find((linha) => linha.includes("AUTH_SECRET"))
     expect(gemini).toMatch(/GEMINI_API_KEY\s+presente\s+entrega 1\s+obrigatória/)

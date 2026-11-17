@@ -28,7 +28,7 @@ export default async function MolduraDeQuemEntrou({ children }: { children: Reac
           textoDoBotao={config.textosEntrada.faixa.botao}
         />
       ) : null}
-      <div className="mx-auto flex max-w-content flex-col px-6 lg:flex-row lg:gap-8">
+      <div className="mx-auto flex max-w-[59rem] flex-col px-6 lg:flex-row lg:gap-8">
         <AbasPrincipais
           rotulo={abas.rotulo}
           conversa={abas.conversa}
@@ -36,7 +36,7 @@ export default async function MolduraDeQuemEntrou({ children }: { children: Reac
           comoFicou={abas.comoFicou}
           voce={abas.voce}
         />
-        <main id="conteudo" className="min-w-0 flex-1 py-8 pb-28 lg:pb-8">
+        <main id="conteudo" className="min-w-0 max-w-content flex-1 py-8 pb-28 lg:pb-8">
           {children}
         </main>
       </div>

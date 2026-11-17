@@ -68,6 +68,8 @@ export function Ingrediente({
   aoTrocar,
   aoResponderTroca,
 }: IngredienteProps) {
+  const nomeAcessivel = formatar(T.menu, { item: item.nome })
+  const rotuloDoMenu = item.incerto ? `${nomeAcessivel}, ${T.incerto}` : nomeAcessivel
   const nome = (
     <>
       {item.nome}
@@ -80,10 +82,10 @@ export function Ingrediente({
     <li className="flex flex-col gap-1.5 font-body">
       {podeTrocar ? (
         <Menu
-          label={formatar(T.menu, { item: item.nome })}
+          label={rotuloDoMenu}
           onAction={(id) => aoTrocar(item.alimento_id, id as MotivoDaTroca)}
           trigger={
-            <Chip aria-label={formatar(T.menu, { item: item.nome })} className="self-start">
+            <Chip aria-label={rotuloDoMenu} className="self-start">
               {nome}
               <CaretDown weight="light" size={ICON.sm} aria-hidden="true" />
             </Chip>

@@ -6,7 +6,7 @@ import type { ModelRouter } from "@/core/llm/router"
 import type { Retorno } from "@/core/outcomes/ports"
 import type { Telemetry } from "@/core/telemetry/ports"
 import { chamarApoio } from "../chamada-de-apoio"
-import { interpreteV1 } from "../prompts/interprete.v1"
+import { interpreteV2 } from "../prompts/interprete.v2"
 import { type MensagemNoPrompt, montarEntradaDoInterprete } from "./entrada"
 import { type Interpretacao, normalizarInterpretacao } from "./interpretacao"
 import { saidaDoInterpreteSchema } from "./saida"
@@ -46,7 +46,7 @@ export function createInterpreter(deps: Deps) {
         const inicio = clock.now().getTime()
         const duracao = () => clock.now().getTime() - inicio
         const r = await chamarApoio({ router, client, telemetry, clock }, span, {
-          instrucoes: interpreteV1.instrucoes,
+          instrucoes: interpreteV2.instrucoes,
           entrada: montarEntradaDoInterprete({ ...p, kb }),
           schema: saidaDoInterpreteSchema,
         })

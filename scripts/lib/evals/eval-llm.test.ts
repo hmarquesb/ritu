@@ -15,7 +15,7 @@ const HOJE = "2026-11-16"
 const ONTEM = "2026-11-15"
 const PROMPTS = {
   acompanhante: "acompanhante.v6",
-  interprete: "interprete.v1",
+  interprete: "interprete.v2",
   memoria: "memoria.v1",
   juiz: "juiz.v1",
   avaliador: "avaliador.v1",

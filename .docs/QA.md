@@ -158,15 +158,15 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 
 **Telas (E2E)**
 
-Os cenários da Conversa estão em `e2e/conversa.spec.ts`.
+Os cenários da Conversa estão em `e2e/conversa.spec.ts`; os de Minha casa, em `e2e/casa.spec.ts`; os de Como ficou?, em `e2e/como-ficou.spec.ts`. O servidor do E2E roda com o relógio às 01h do fuso padrão, e os testes de unidade que dependem do momento do dia fixam o relógio.
 
 - Caminho da demonstração: da Entrada à primeira resposta só com cliques.
 - Mensagem livre → pergunta do agente → resposta em texto com sugestões.
 - Trocar um ingrediente mostra o substituto e o motivo.
 - Bloco de aprovação: aprovar um item e recusar outro.
 - Resposta com "vale ter em casa": aprovar a proposta e ver o item, com o motivo, na lista de Minha casa.
-- Minha casa: resolver um item de "Ainda tem?" e marcar um "sempre tenho".
-- Como ficou?: responder um retorno com um toque.
+- Minha casa: resolver os itens de "Ainda tem?"; na folha do item, marcar "sempre tenho" e gosto e tirar da casa; adicionar pela busca e por texto livre; "Comprei" num item da lista o põe na prateleira; "Pôr na lista" num item que acabou; toque com `Origin` de outro site recusado; caminho só com teclado; 200% de zoom sem rolagem horizontal.
+- Como ficou?: as sugestões da demonstração aparecem sob "Ontem"; responder com um toque mostra "Anotado"; recarregar mostra a área vazia; o indicador da Conversa some.
 - O que sei sobre você: apagar um item de cada nível.
 - Como pensei mostra as etapas na ordem.
 - Resposta do agente com `<script>` aparece como texto.

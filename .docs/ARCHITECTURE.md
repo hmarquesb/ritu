@@ -107,20 +107,23 @@ O run segue até o fim mesmo que a pessoa saia da tela: a rota não liga o `requ
 
 | Ação | Rota | O que grava |
 |---|---|---|
-| Retorno com um toque | `POST /api/retornos/:id` | `retornos` e o contador em `preferencias` |
+| Retorno com um toque | `POST /api/retornos/:id` | `retornos` e o contador em `preferencias`. Devolve o retorno e quantos ainda esperam; retorno já respondido volta como está |
 | Trocar ingrediente | `POST /api/runs/:id/troca` | A sugestão do run e o retorno dela, com o substituto e o motivo; confere as combinações com os outros itens. "Não tenho" e "Não gosto" também gravam a falta e o gosto |
 | Não gosto · Gosto | `POST /api/preferencias` | `preferencias` |
-| Não tenho · Ainda tenho · Sempre tenho · adicionar · tirar | `POST /api/casa` | `casa`. "Não tenho" também grava uma falta em `faltas`. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa` |
-| Tirar um item da lista "Para ter em casa" | `POST /api/lista` | `lista_ter_em_casa` |
+| Minha casa: adicionar (da base ou texto livre) · Ainda tenho · Acabou · Sempre tenho · tirar | `POST /api/casa` (`acao` em união discriminada) | `casa`. "Acabou" pela tela não grava falta. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa`. Devolve a casa inteira (`CasaNaTela`) |
+| Pôr na lista ou tirar da lista "Para ter em casa" | `POST /api/lista` (`acao`: `por` ou `tirar`) | `lista_ter_em_casa`; `por` grava o motivo `pessoa`; `tirar` também apaga as faltas do alimento. Devolve a casa inteira |
+| Ler a casa · ler o que espera retorno | `GET /api/casa` · `GET /api/retornos` | Nada; devolvem `CasaNaTela` e `ComoFicouNaTela` |
 | 👍 / 👎 na resposta | `POST /api/runs/:id/voto` | `feedback` |
 | Confirmar ou recusar um padrão · apagar um padrão | `POST /api/padroes/:id` | `padroes` |
 
-As rotas só autenticam, validam a entrada e chamam funções do core, em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
+As rotas só autenticam, validam a entrada e chamam funções do core (a lógica de cada rota fica em `src/app/_rotas/`, e cada `route.ts` só liga as dependências reais), em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
 
 | Função | Rota | O que faz |
 |---|---|---|
 | `tocarRetorno(deps, contaId, retornoId, resultado)` | `/api/retornos/:id` | Fecha o retorno com origem `toque`. Retorno que não existe, é de outra conta ou já foi respondido: `toque_invalido` |
 | `tocarGosto(deps, contaId, item, gosto)` | `/api/preferencias` | Grava `gosta`, `nao_gosta` ou limpa (`null`). Item fora da base: `toque_invalido` |
+| `tocarCasa(deps, contaId, acao)` | `/api/casa` | Aplica a ação na casa. Item que não é da conta ou alimento fora da base: `toque_invalido`. Texto livre passa antes por `identificarAlimento` |
+| `tocarLista(deps, contaId, acao)` | `/api/lista` | Põe na lista com motivo `pessoa` (já na lista: não muda) ou tira e apaga as faltas. Alimento fora da base: `toque_invalido` |
 | `trocarIngrediente(deps, contaId, { runId, sugestao, alimento_id, motivo })` | `/api/runs/:id/troca` | Com motivo `trocar`, `nao_tenho` ou `nao_gosto`: anota o que o motivo pede e devolve `trocou` (com a sugestão nova), `perguntar` (com a pergunta sobre o substituto mais próximo) ou `sem_substituto` |
 | `responderTroca(deps, contaId, { runId, sugestao, alimento_id, candidato, resposta })` | `/api/runs/:id/troca/resposta` | Resposta `tenho` (registra em casa e troca) ou `nao_tenho` (anota a falta e devolve `sem_substituto`) |
 
@@ -194,7 +197,7 @@ A montagem acontece num único composition root (`src/infra/container.ts`). O te
 | `run_etapas` | `run_id`, `ordem`, `tipo`, `nome`, `resumo`, `status`, `duracao_ms`, `modelo`, `tokens_entrada`, `tokens_saida` |
 | `propostas` | `id`, `run_id`, `conta_id`, `tool`, `conteudo`, `decisao` (pendente, aprovada, recusada, expirada), `decidida_em` |
 | `faltas` | `conta_id`, `alimento_id`, `dia`, `origem` (teria_entrado, nao_tenho), `run_id`. Uma linha por conta, alimento e dia; apagadas depois de 30 dias |
-| `lista_ter_em_casa` | `conta_id`, `alimento_id`, `motivo` (faltou_hoje, fez_falta), `detalhe` (a sugestão de hoje, ou o número de faltas), `criado_em` |
+| `lista_ter_em_casa` | `conta_id`, `alimento_id`, `motivo` (faltou_hoje, fez_falta, pessoa), `detalhe` (a sugestão de hoje, ou o número de faltas), `criado_em` |
 | `feedback` | `run_id`, `conta_id`, `voto` (up, down), `criado_em`. Um voto por run |
 | `alimentos_desconhecidos` | `nome`, `vezes` (sem `conta_id`; candidatos a entrar na base) |
 | `llm_uso` | `modelo`, `janela` (minuto ou dia), `inicio`, `pedidos`, `tokens` |
@@ -245,7 +248,7 @@ src/
     theme/                   # cookie ritu_theme e seletor de tema
     base/                    # componentes base sobre React Aria
     brand/                   # Logo e DoshaBlot
-    ritu/                    # telas do Ritu: abas.tsx (barra de navegação) e conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts)
+    ritu/                    # telas do Ritu: abas.tsx (barra de navegação), conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts), casa/ (Minha casa, use-casa.ts) e como-ficou/
 config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas)
 public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
 scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts

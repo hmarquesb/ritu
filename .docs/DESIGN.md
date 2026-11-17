@@ -105,16 +105,18 @@ Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e ace
 | Menu do ingrediente (Trocar · Não tenho · Não gosto) | Conversa |
 | Bloco de aprovação | Conversa |
 | Indicador de retornos pendentes | Conversa |
-| Item da casa (estado, data, sempre tenho, gosto) e seção "Ainda tem?" | Minha casa |
+| Prateleira (título do grupo em Cormorant com o número ao lado; rótulos sobre uma tábua: linha de 1px em `line` com faixa `sunken`) | Minha casa |
+| Item da casa: rótulo com o nome e os ícones de sempre tenho e gosto; abre a folha do item (estado, Sempre tenho, Gosto · Não gosto, Acabou, Tenho de novo, Pôr na lista, Tirar da casa) | Minha casa |
+| Seção "Ainda tem?" (superfície `sunken` sem sombra, Ainda tenho · Acabou por item) e folha "Adicionar à casa" (busca e texto livre) | Minha casa |
 | Item da lista "Para ter em casa" (com o motivo e o botão de tirar) | Minha casa |
-| Item de retorno (Ajudou · Não ajudou · Não fiz) | Como ficou? |
+| Item de retorno (ícone do tipo, título em Cormorant, ingredientes, Ajudou · Não ajudou · Não fiz; depois do toque, "Anotado") | Como ficou? |
 | Item de memória, por nível, com corrigir e apagar | O que sei sobre você |
 | Busca de cidade | Aviso inicial, Perfil |
 | Linha do tempo | Como pensei |
 | Gráfico de evolução dos evals | Bastidores |
 | Faixa de demonstração | Todas as telas, na demonstração |
 
-Os componentes da conversa ficam em `src/components/ritu/conversa/`, com o estado da tela em `estado.ts` e `use-conversa.ts`.
+Os componentes da conversa ficam em `src/components/ritu/conversa/`, com o estado da tela em `estado.ts` e `use-conversa.ts`. Os de Minha casa ficam em `src/components/ritu/casa/`, com o estado em `use-casa.ts`; os de Como ficou?, em `src/components/ritu/como-ficou/`. Nas duas telas, cada toque troca o estado pela visão que a rota devolve, e o item que muda de seção só aparece no lugar novo com opacidade.
 
 ## 5. Arquivos
 

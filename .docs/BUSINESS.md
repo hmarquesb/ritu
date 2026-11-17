@@ -95,7 +95,7 @@ Meta: **primeira resposta em menos de 1 minuto, sem preencher nenhum campo.**
 | **Entrada** | O que é, aviso de que não é orientação médica, demonstração em destaque e Google |
 | **Aviso inicial** | O aviso de §12 e, para conta nova, a pergunta do dosha e da cidade. Uma vez só |
 | **Conversa** (tela inicial depois de entrar) | Mensagens do dia; caixa de texto; atalhos de check-in; etapas do agente ao vivo; pergunta do agente; resposta em texto com sugestões de apoio; indicação de "vale ter em casa"; o que o agente propõe anotar; indicador discreto de "Como ficou?" |
-| **Minha casa** (aba) | O que a pessoa tem, por grupo; itens "sempre tenho"; seção **"Ainda tem?"** com o que ficou incerto; gosto por item; lista **"Para ter em casa"**, com o motivo de cada item |
+| **Minha casa** (aba) | Uma página: seção **"Ainda tem?"** no topo, com o que ficou incerto; o que a pessoa tem em **prateleiras** por grupo, com os itens como rótulos ("sempre tenho" e gosto marcados no rótulo; um toque abre as opções); prateleira **"Acabou"**; lista **"Para ter em casa"**, com o motivo de cada item |
 | **Como ficou?** | Sugestões recebidas que ainda não têm retorno. Um toque em cada: Ajudou · Não ajudou · Não fiz |
 | **Painel do dosha** (em Você) | Dosha, características, o que desequilibra e o que equilibra. Sem dosha: "Descubra seu dosha" |
 | **Evitar sempre** (passo do onboarding) | "Tem algum alimento que você nunca pode comer?" Grupos para tocar, busca de alimento, Nenhum · Pular (§13) |
@@ -224,7 +224,7 @@ Como a casa é atualizada:
 
 - **Pela conversa:** "comprei…", "acabou…". O agente propõe e a pessoa aprova.
 - **Respondendo a uma pergunta do agente:** Tenho, Não tenho e Não gosto são gravados na hora, antes de o agente retomar; o toque é o consentimento. "Não como", na pergunta sobre um alimento, vale no mesmo run e vira proposta de anotação.
-- **Pela aba Minha casa:** a pessoa adiciona, tira, marca "sempre tenho" e resolve a seção "Ainda tem?" com um toque por item.
+- **Pela aba Minha casa:** a pessoa adiciona (pela busca ou por texto livre), tira, marca "sempre tenho", marca "acabou" e resolve a seção "Ainda tem?" com um toque por item. **"Acabou" pela aba não é falta:** o item vai para a prateleira "Acabou", de onde a pessoa marca "Tenho de novo" ou o põe na lista. Falta é só o que fez falta para uma sugestão.
 - **Alimento que a base não conhece:** fica guardado na casa com a marca *"ainda não conheço este alimento"*. O agente não o usa em sugestões e diz isso quando for o caso.
 
 ### Trocar um ingrediente
@@ -288,16 +288,18 @@ Fica na aba Minha casa. É um lembrete para a pessoa. Cada item mostra por que e
 |---|---|
 | Faltou para uma sugestão de hoje, e a pessoa respondeu "Não tenho" quando o Ritu perguntou | "Faltou para o chá de gengibre com canela" |
 | Fez falta várias vezes (indicação de "vale ter em casa") | "Fez falta 4 vezes nos últimos 30 dias" |
+| A pessoa pôs na lista por conta própria | "Você pôs na lista" |
 
-Os dois caminhos passam pela aprovação da pessoa. Recusada a proposta (linha desligada ou "Agora não"), o Ritu não propõe nem indica esse alimento de novo, **para sempre**; ela pode pôr na lista por conta própria. Proposta que expira sem resposta não conta como recusa, e o alimento pode voltar. Ela pode tirar um item da lista quando quiser. Quando registra o alimento em casa, ele sai da lista.
+Os dois caminhos passam pela aprovação da pessoa. Recusada a proposta (linha desligada ou "Agora não"), o Ritu não propõe nem indica esse alimento de novo, **para sempre**; ela pode pôr na lista por conta própria. Proposta que expira sem resposta não conta como recusa, e o alimento pode voltar. Ela pode tirar um item da lista quando quiser; tirar também apaga as faltas daquele alimento, para o Ritu não indicá-lo de novo na resposta seguinte. Quando registra o alimento em casa ("Comprei"), ele sai da lista.
 
 ## 10. Como ficou?
 
-- Toda sugestão entregue entra nesta área, da mais recente para a mais antiga.
+- Toda sugestão entregue entra nesta área enquanto espera retorno, agrupada por dia (Hoje, Ontem, Há 3 dias), da mais recente para a mais antiga.
 - A pessoa responde **se quiser**, com um toque: **Ajudou · Não ajudou · Não fiz**. O toque é gravado na hora, por código.
 - Quem quiser pode escrever mais ("ajudou, mas achei forte"). Aí o agente lê, registra e pode ajustar as próximas sugestões.
 - O retorno também pode vir pela conversa ("tomei o chá e melhorei"): o agente liga o comentário à sugestão certa e o registro vale como a resposta da pessoa. Se não dá para saber de qual sugestão ela fala, o Ritu diz que ela pode marcar em "Como ficou?" e não anota nada. O resultado ("ajudou", "não ajudou", "não fiz") é o que a pessoa disse, nunca uma dedução.
 - Cada retorno vale uma vez. Se o toque e a conversa chegam ao mesmo tempo, só o primeiro conta.
+- Depois do toque, a sugestão mostra "Anotado: ajudou." e fica na tela até a pessoa sair; na visita seguinte ela já não aparece. A área não vira histórico: o que funcionou aparece no efeito das sugestões.
 - Sugestão sem retorno sai da área depois de **7 dias**, sem contar como "não fiz".
 - O produto não cobra. A tela Conversa só mostra um indicador discreto: *"3 sugestões esperando seu retorno"*.
 - O texto da área explica para que serve: *"Seu retorno me ajuda a acertar mais nas próximas vezes."*

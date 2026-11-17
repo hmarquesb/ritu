@@ -1,5 +1,6 @@
 # Entrega 3 · Estado
 
+> A dona autorizou (2026-11-17, 6ª sessão): juntar a `entrega-3` (018) na `main` (feito em 418af28, com push) e seguir sozinho até 95% de uso; a partir de 85%, no máximo duas tarefas por onda.
 > A dona autorizou (2026-11-16, 5ª sessão): seguir sozinho até 95% de uso; a partir de 85%, no máximo duas tarefas por onda. Autorizou também juntar a `entrega-3` (017) na `main` antes do portão 2 e começar a 018.
 > A dona autorizou (2026-11-16, 2ª sessão) seguir sozinho até 95% (janela de 5 horas e contexto); a partir de 80%, no máximo duas tarefas por onda.
 > 2026-11-16: `main` juntada (a0e68e4; 013 e 016 `implemented` na `main`). A 017 pode começar; 018 a 020 dependem dela.
@@ -128,3 +129,33 @@
 > Para o relatório (018 T19): no desktop, a borda direita do cabeçalho (menu em x≈1100) e a do corpo da conversa (x≈1064) não coincidem (borda esquerda alinhada). No celular, o cabeçalho não é fixo e sai de vista ao rolar. No desktop e no celular, a parte de baixo de um cartão de sugestão fica sob o painel fixo até a pessoa rolar.
 > 018 fechada (2026-11-17) em 9b018b4: gates 1 a 6 verdes depois da junção da `main` (05da929, fechamento da entrega 2): test 3007, eval:det 1347, E2E 163 + 25 pulados (screenshots), dup 0 clones. ADR 0044. Docs vivos (ARCHITECTURE §3 e §7, BUSINESS §7 e §8, DESIGN §2 a §4, QA, DEVELOPMENT, tabela da entrega 3 em `.specs/README.md`, Comandos do AGENTS); linhas de status ficam com a sessão principal. Screenshots em `.plans/018-*.png`.
 > Para o relatório (018): não conferidos sem Postgres/rede/chave: `test:db` (`RunRepository.doDia` e `votos`), mensagem de verdade pela tela com banco e chave. Na tabela "Rotas de toque" do ARCHITECTURE §3 ficam rotas que a 019 cria (`/api/retornos/:id`, `/api/preferencias`, `/api/casa`, `/api/lista`, `/api/padroes/:id`) e assinaturas do core com `deps`: revisar na 019. O E2E da 017 regrava `.plans/017-*.png` a cada rodada (screenshots sem condição): vale pôr atrás de `SCREENSHOTS=1` numa correção.
+
+## 019 · Minha casa e Como ficou?
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Add the "pessoa" reason to the to-have list | concluida | 0c54390 |
+| T2 · Add the Minha casa and Como ficou texts | concluida | de2a761 |
+| T5 · Add the house and list touches | concluida | 0812b05 |
+| T3 · Write the house view, the list reason text and the house reader | concluida | e862446 |
+| T4 · Write the Como ficou view | concluida | 683234e |
+| T6 · Wire the readers into the container and add the touch routes | concluida | 68be47f |
+| T7 · Add the deterministic evals for the house touches | concluida | 55b8ddd |
+| T8 · Build the Minha casa screen | concluida | 9f97bf7 |
+| T9 · Build the Como ficou screen | concluida | 56507f4 |
+| T10 · Write the Minha casa E2E and take its screenshots | concluida | 1ec1b2b |
+| T11 · Write the Como ficou E2E and take its screenshots | concluida | 8ffd611 |
+| C4 · Date the seeded returns on the day of the seeded conversation | concluida | cc0d90a |
+| C1 · Share diasEntre next to diaLocal | concluida | 9a7c928 |
+| C3 · Make the E2E server independent of the hour of the day | concluida | 737a62b |
+| C2 · Make the house question scripts independent of the wall clock | concluida | c83b5dd |
+> 019 onda 3: `diasEntre` (dias entre dias locais) ficou em 3 cópias curtas: `src/core/pantry/visao.ts`, `src/core/outcomes/visao.ts` e `src/core/agents/companion/preparo.ts`. O `dup` não acusa; vale uma correção C1 (extrair para junto de `diaLocal`) antes de fechar a 019.
+> 2026-11-17 (7ª sessão): T4 achada pronta sem commit; verificada sem reimplementar (precedente da 3ª sessão) e aprovada. `npm test` com 2 falhas fora da 019 (roteiro `pergunta-casa`: `waiting_for_approval` em vez de `waiting_for_input`), reproduzidas em 418af28: dependem do relógio → C2 (núcleo, sozinha).
+> 019 C2: causa é a hora real (`momentoDoDiaDaHora`, `preparo.ts`): os preparos com couve e leite só são candidatos à noite (00h–04h59 de Brasília passa). Correção só nos testes (relógio fixo 01h de Brasília). Pendente: o E2E do Playwright (`e2e/conversa.spec.ts`, pergunta de casa) usa o servidor e2e com relógio real e deve falhar fora da noite → C3 (relógio do modo e2e com hora fixa), antes da T10.
+> Para o relatório (019 C3): o relógio do modo e2e recalcula o deslocamento quando sai da noite; depois de ~4 h contínuas do mesmo servidor e2e ele pode recuar 4 h (ou avançar 20 h). Numa rodada de E2E não acontece. Se incomodar: recalcular só somando 24 h, ou exigir leitura monotônica.
+> Para o relatório (019 T8/T9): `web-design-guidelines` carregada sem as regras (sem fetch no subagente); revisão por axe e à mão. `next-best-practices` não foi carregada nas telas. T9: `loading.tsx` usa `textosConversa.abas.comoFicou` (mesmo texto de `textosComoFicou.titulo`); `ICONES` repetido de `sugestao.tsx`.
+> 019 T8: uma reprovação (texto solto em `adicionar.tsx`); corrigida pelo mesmo implementador, com os `aria-label` de `lista.tsx` também na config.
+> 019 T10: `folha-item.tsx` corrigido no E2E (Switch e ToggleChip sem `isDisabled` durante o pedido: o foco saía da folha). `conversa.spec.ts` 64/16 de dia: C3 confirmada. Esperas fixas de 500/400 ms no spec (animação da folha, toast).
+> 019 T11: E2E escrito (`e2e/como-ficou.spec.ts`, sem commit), 18/20; falha só "Ontem": os retornos da semente nascem com `criado_em = agora` (`copiar-seed.ts` → `outcomes.criar`) → C4 (núcleo; muda a porta). As 8 screenshots precisam ser regravadas depois da C4.
+> 019 fechada (2026-11-17) em 8ffd611: gates 1 a 6 verdes (test 3092, eval:det 1366, E2E 201 + 45 pulados) e `npm run dup` 0 clones. ADR 0045. Docs vivos: ARCHITECTURE §3 (rotas de toque revisadas; `/api/padroes/:id` fica para a 020), §6, §7; BUSINESS §7, §9, §10; DESIGN §4; QA (E2E); linha 019 do backlog; `test:e2e` no AGENTS. Screenshots em `.plans/019-*.png` (20).
+> Para o relatório (019): não conferidos sem Postgres: `test:db` (motivo `pessoa` na migração 0004, `outcomes.criar` com `criadoEm`; não há suíte de contrato de `outcomes`). Na tela vazia do E2E, a "conta nova" é demonstração sem semente e mostra a faixa da demonstração (como na 018).

@@ -1,6 +1,6 @@
 ---
 title: Minha casa e Como ficou?
-status: approved
+status: implemented (8ffd611)
 entrega: 3
 created: 2026-11-15
 ---

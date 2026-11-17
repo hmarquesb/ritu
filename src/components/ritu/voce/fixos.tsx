@@ -44,7 +44,14 @@ function FolhaDaCidade({
 }) {
   const [escolhida, setEscolhida] = useState<Cidade | null>(null)
   async function gravar(cidade: Cidade | null) {
-    if (await em.perfil({ acao: "cidade", cidade })) fechar()
+    // A rota recebe só os quatro campos do schema; a busca traz também o id, a região e o país.
+    const corpo = cidade && {
+      nome: cidade.nome,
+      lat: cidade.lat,
+      lon: cidade.lon,
+      fuso: cidade.fuso,
+    }
+    if (await em.perfil({ acao: "cidade", cidade: corpo })) fechar()
   }
   return (
     <div className="flex flex-col gap-4">

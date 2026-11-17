@@ -20,12 +20,24 @@ type Props = {
   destino: string
   /** Chamado quando a pessoa toca em "Continuar" depois do resultado. */
   aoContinuar: () => void
+  /** Campos extras mesclados ao corpo (a rota de Você pede `{ acao: "quiz" }`). */
+  acao?: "quiz"
+  /** Texto do botão depois do resultado; o padrão é "Continuar". */
+  rotuloContinuar?: string
   perguntas: Pergunta[]
   doshas: { id: Dosha; nome: string; resumo: string }[]
   textos: { progresso: string; resultado: string }
 }
 
-export function Quiz({ destino, aoContinuar, perguntas, doshas, textos }: Props) {
+export function Quiz({
+  destino,
+  aoContinuar,
+  perguntas,
+  doshas,
+  textos,
+  acao,
+  rotuloContinuar,
+}: Props) {
   const [indice, setIndice] = useState(0)
   const [respostas, setRespostas] = useState<Record<string, Dosha>>({})
   const [enviando, setEnviando] = useState(false)
@@ -47,6 +59,7 @@ export function Quiz({ destino, aoContinuar, perguntas, doshas, textos }: Props)
     setEnviando(true)
     setErro(false)
     const corpo = {
+      ...(acao ? { acao } : {}),
       respostas: perguntas.map((p) => ({ pergunta_id: p.id, dosha: respostas[p.id] })),
     }
     try {
@@ -60,7 +73,8 @@ export function Quiz({ destino, aoContinuar, perguntas, doshas, textos }: Props)
         return
       }
       if (!resposta.ok) throw new Error("falhou")
-      setResultado((await resposta.json()) as Resultado)
+      const json = (await resposta.json()) as Resultado & { resultado?: Resultado }
+      setResultado(json.resultado ?? json)
     } catch {
       setErro(true)
     }
@@ -94,7 +108,7 @@ export function Quiz({ destino, aoContinuar, perguntas, doshas, textos }: Props)
           })}
         </div>
         <Button variant="primary" fullWidth onPress={aoContinuar}>
-          {rotulos.continuar}
+          {rotuloContinuar ?? rotulos.continuar}
         </Button>
       </div>
     )

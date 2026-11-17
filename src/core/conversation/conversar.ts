@@ -13,6 +13,7 @@ import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import { conferirEntrada } from "@/core/guardrails/entrada"
+import { falaDeSaude } from "@/core/guardrails/saude"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { ESTADOS } from "@/core/knowledge/vocab"
 import { lerConversaDoDia } from "@/core/messages/para-o-prompt"
@@ -25,6 +26,7 @@ import type { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import { criarAprovar } from "./aprovar"
+import { comAvisoDeIncomodo } from "./aviso-de-incomodo"
 import {
   anotacoesDaMensagem,
   type CaminhoDeCodigo,
@@ -295,7 +297,7 @@ export function createConversation(deps: Deps) {
     await registrarRetornoDaConversa(ctx)
     await gravarItensDoDia(ctx)
     const entrada = entradaDoAcompanhante(x.m.texto, ctx.interpretacao, intencoes)
-    const incomodo = Boolean(ctx.interpretacao.incomodo)
+    const incomodo = Boolean(ctx.interpretacao.incomodo) || falaDeSaude(x.m.texto ?? "")
     const variante = perguntaDaVariantePendente(entrada, kb)
     if (variante) return pausarNaVariante(x, ctx, entrada, variante, apoio)
     const r = await companion.responder(x.contaId, entrada, {
@@ -306,11 +308,14 @@ export function createConversation(deps: Deps) {
     const anotacoes = await anotacoesDaMensagem(ctx)
     if (r.pergunta) {
       await anotarPendencia(stores, x.contaId, x.run.id, anotacoes)
-      await stores.runs.atualizar(x.contaId, x.run.id, await somarApoio(x, apoio))
+      await stores.runs.atualizar(x.contaId, x.run.id, {
+        ...(incomodo ? { com_incomodo: true } : {}),
+        ...(await somarApoio(x, apoio)),
+      })
       return { pergunta: r.pergunta, incomodo }
     }
     if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
-    const saida = { ...r.saida, anotacoes }
+    const saida = { ...comAvisoDeIncomodo(r.saida, incomodo), anotacoes }
     await stores.runs.atualizar(x.contaId, x.run.id, { saida, ...(await somarApoio(x, apoio)) })
     return { saida, incomodo }
   }

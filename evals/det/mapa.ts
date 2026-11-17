@@ -529,6 +529,12 @@ export const mapa: LinhaDoMapa[] = [
   },
   {
     grupo: "Guardrails e Juiz",
+    linha: "`aviso-de-saude`: falar de saúde leva o aviso de incômodo",
+    arquivos: ["evals/det/guardrails/aviso-de-saude.eval.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Guardrails e Juiz",
     linha: "`nota-com-saude`: a linha de rotina com assunto de saúde sai",
     arquivos: ["evals/det/guardrails/nota-com-saude.eval.ts"],
     desde: 2,

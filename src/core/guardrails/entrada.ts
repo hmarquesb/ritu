@@ -7,7 +7,7 @@ export type ResultadoDaEntrada =
 
 // Normalização própria do guardrail: a pontuação fica, porque os padrões de
 // alerta dependem dela (ex.: "não aguento mais." contra "não aguento mais, ...").
-function normalizarParaPadroes(texto: string): string {
+export function normalizarParaPadroes(texto: string): string {
   return texto.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim()
 }
 

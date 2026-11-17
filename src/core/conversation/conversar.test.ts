@@ -285,6 +285,56 @@ describe("conversar: atalhos e acompanhante", () => {
   })
 })
 
+describe("conversar: aviso de incômodo pela fala de saúde", () => {
+  const avisosDeIncomodo = (avisos: { tipo: string }[] | undefined) =>
+    (avisos ?? []).filter((a) => a.tipo === "incomodo")
+
+  it("sem incômodo na interpretação, a fala de saúde leva o aviso e marca a mensagem", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "esse chá cura gastrite?")
+    expect(avisosDeIncomodo(r.saida?.avisos)).toHaveLength(1)
+    const gravada = (await runDe(m, r.run_id)).saida as { avisos: { tipo: string }[] }
+    expect(avisosDeIncomodo(gravada.avisos)).toHaveLength(1)
+  })
+
+  it("fala de saúde com pausa do agente deixa o run com incômodo", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio", "agitada"] })],
+      roteiro: [
+        { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+        {
+          chamadas: [
+            { nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["abobora", "cenoura"] } },
+          ],
+        },
+      ],
+    })
+    m.clock.set("2026-09-16T22:00:00.000Z")
+    await m.stores.pantry.registrar(
+      m.conta.id,
+      [{ alimento_id: "abobora" }, { alimento_id: "cenoura" }],
+      "tela",
+    )
+    m.clock.set("2026-11-15T22:00:00.000Z")
+    await m.stores.pantry.registrar(m.conta.id, [{ alimento_id: "arroz-branco" }], "tela")
+    const r = await dizer(m, "esse chá cura gastrite? o que como?")
+    expect(r.status).toBe("waiting_for_input")
+    expect((await runDe(m, r.run_id)).com_incomodo).toBe(true)
+  })
+
+  it("com o aviso já na saída, ele não se repete", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], incomodo: { id: "estomago-pesado" } })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "tenho refluxo, o que tomo?")
+    expect(avisosDeIncomodo(r.saida?.avisos)).toHaveLength(1)
+  })
+})
+
 describe("conversar: alertas", () => {
   for (const alerta of ["fisico", "emocional"] as const) {
     it(`alerta ${alerta}: texto fixo, sem anotação, mensagens com incômodo e apagadas no dia seguinte`, async () => {

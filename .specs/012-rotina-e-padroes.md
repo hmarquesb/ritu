@@ -503,6 +503,25 @@ Os textos e os prompts são copiados desta spec; não há parte `conteudo`.
 - Linha do padrão cortada pelo teto de 6 linhas: nenhuma proposta é criada para ele; não conta como aparição.
 - Duas detecções ao mesmo tempo para a mesma conta: `patterns.propor` é único por conta, tipo e chave; a segunda recebe `undefined`.
 
+## Correção do portão 2
+
+Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T4). Desfaz a decisão D19 do plano da 012.
+
+### P2-3 · A casa tira prática dos candidatos
+
+Chá, óleo ou prática com algum ingrediente que acabou **sai dos candidatos entregáveis**, como a refeição sem opção em casa. "Acabou" aqui é a união de:
+
+- os itens de Minha casa com estado `acabou`;
+- o que a mensagem disse que acabou (`casa_da_mensagem.acabou`);
+- o que a pessoa respondeu "Não tenho" neste run (`nao_tem_do_run`).
+
+Ingrediente só **ausente** (nunca registrado) não tira a prática; ela continua perdendo nota, como hoje.
+
+- O corte fica em `entregaveis` (`src/core/agents/companion/preparo.ts`), que recebe a união acima em `acabou`. `montarCandidatos` não muda.
+- A falta conta para o "vale ter em casa" como nas refeições: `faltasDoRun` continua lendo **todos** os candidatos (antes de `entregaveis`), então o ingrediente que acabou de uma prática entre as mais adequadas vira falta do run.
+- Padrão de chá confirmado cuja prática saiu dos entregáveis não vira sugestão (regra que já vale para item fora dos candidatos).
+- Nível: `mecanica`.
+
 ## Resultado (definição de pronto)
 
 - Critérios de aceite marcados; gates verdes.

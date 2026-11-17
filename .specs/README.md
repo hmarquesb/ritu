@@ -9,7 +9,7 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 - Marque na spec o **nível** de cada parte: `mecanica` (Haiku), `nucleo` (Sonnet), `tela` (Sonnet) ou `conteudo` (Opus). Regras em `RULES.md` §1.
 - Liste em "Leitura para a construção" só as seções de `.docs/` que a construção precisa abrir.
 - As specs de uma entrega são todas aprovadas antes de ela começar. As das entregas seguintes podem ser escritas durante a construção, a partir do código já commitado.
-- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 a 015 implementadas (entrega 2); 016 a 020 aprovadas (entrega 3 toda especificada), 016 e 017 implementadas; 021 a 024 aprovadas (entrega 4 toda especificada). Antes da 008: correção C13 da 002 (alimentos aceitos por vaga).
+- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 a 015 implementadas (entrega 2, aprovada com correções no portão 2 em 2026-11-17); 016 a 020 aprovadas (entrega 3 toda especificada), 016 a 018 implementadas na `main`, 019 implementada e 020 em construção na `entrega-3`; 021 a 024 aprovadas (entrega 4 toda especificada). Antes da 008: correção C13 da 002 (alimentos aceitos por vaga). Depois do portão 2: as seções "Correção do portão 2" das specs 008, 010, 012, 013 e 014 (plano em `.plans/portao-2-correcoes-plan.md`). Antes da 022: a spec nova dos chás híbridos, que a dona escreve com a revisão da base.
 
 ## Pendências da dona
 

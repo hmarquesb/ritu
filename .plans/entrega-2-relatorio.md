@@ -2,6 +2,8 @@
 
 Data: 2026-11-17 · Tag: `entrega-2` (`c9ccf6d`) · Com `git push`. A CI do commit da tag ficou vermelha (formatação do `c3-confiavel.json` e o teste que travava o histórico em duas entradas); as duas correções vieram logo depois (`0a8444b` e a C1). A tag não foi movida (sem `--force`).
 
+**Portão 2: aprovado com correções pela dona em 2026-11-17.** As decisões sobre a seção 3 e as tarefas que saem delas estão em `.plans/portao-2-correcoes-plan.md`.
+
 ## 1. O que foi construído
 
 | Spec | O que entrega | Último código | Fechamento |

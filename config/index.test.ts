@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { GRUPOS } from "../src/core/knowledge/vocab"
 import { config, telaConversa, textosConversa } from "./index"
 import { formatar } from "./textos-conversa"
 
@@ -200,6 +201,17 @@ describe("config", () => {
       "Não consegui falar com o Ritu agora. Sua mensagem continua aqui.",
     )
     expect(textosConversa.rodape.aviso).toBe("Não é orientação médica.")
+  })
+
+  it("expõe os textos de Minha casa com os grupos de GRUPOS e os placeholders da spec", () => {
+    expect(Object.keys(config.textosCasa.grupos).sort()).toEqual([...GRUPOS].sort())
+    expect(config.textosCasa.aindaTem.rotuloTenho).toContain("{item}")
+    expect(config.textosCasa.adicionado).toBe("{Item} está na sua casa.")
+  })
+
+  it("expõe os textos de Como ficou? com o placeholder de dias da spec", () => {
+    expect(config.textosComoFicou.dia.dias).toContain("{n}")
+    expect(config.textosComoFicou.titulo).toBe("Como ficou?")
   })
 
   it("formata os placeholders e deixa literal a chave ausente", () => {

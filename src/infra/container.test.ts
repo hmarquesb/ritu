@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryLedger } from "@/infra/fakes/memory-stores"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 
 // Conta só leituras feitas pelo código do Ritu (src/ ou config/), não pelas bibliotecas.
@@ -457,6 +458,50 @@ describe("container", () => {
       vi.doUnmock("@/infra/knowledge/yaml-seed")
       if (url !== undefined) process.env.DATABASE_URL = url
     }
+  })
+
+  describe("router e o header x-ritu-e2e-cota", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.doUnmock("next/headers")
+    })
+
+    function comHeaderDeCota() {
+      vi.doMock("next/headers", () => ({
+        headers: async () => new Headers({ "x-ritu-e2e-cota": "esgotada" }),
+      }))
+    }
+
+    it("com RITU_MODO=e2e, o header esgota a cota do dia de decisao", async () => {
+      vi.stubEnv("RITU_MODO", "e2e")
+      vi.stubEnv("VERCEL_ENV", "")
+      comHeaderDeCota()
+      const { createContainer } = await import("./container")
+      const { router } = createContainer()
+
+      expect(await router.cotaDoDiaEsgotada("decisao")).toBe(true)
+      expect(await router.temModelo("decisao")).toBe(false)
+    })
+
+    it("com RITU_MODO=e2e, fora de pedido vale o router puro", async () => {
+      vi.stubEnv("RITU_MODO", "e2e")
+      vi.stubEnv("VERCEL_ENV", "")
+      const { createContainer } = await import("./container")
+
+      expect(await createContainer().router.cotaDoDiaEsgotada("decisao")).toBe(false)
+    })
+
+    it("fora do e2e o header é ignorado: router puro", async () => {
+      vi.stubEnv("RITU_MODO", "")
+      vi.stubEnv("DATABASE_URL", "")
+      comHeaderDeCota()
+      const { createContainer } = await import("./container")
+      const container = createContainer({
+        ledger: createMemoryLedger(createFixedClock("2026-01-15T12:00:00Z")),
+      })
+
+      expect(await container.router.cotaDoDiaEsgotada("decisao")).toBe(false)
+    })
   })
 
   describe("modo e2e", () => {

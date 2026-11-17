@@ -110,6 +110,23 @@ function ledgerE2e(clock: Clock): UsageLedger {
   }
 }
 
+// O header `x-ritu-e2e-cota: esgotada` tira a cota do dia daquele pedido. Só no modo e2e.
+function routerE2e(puro: ModelRouter): ModelRouter {
+  const embrulhado = async (): Promise<ModelRouter> => {
+    const { createRouterE2e, cotaEsgotadaNoPedidoNext } = await import("@/infra/e2e/cota")
+    return createRouterE2e(puro, cotaEsgotadaNoPedidoNext)
+  }
+  return {
+    paraPapel: (papel, opts) => puro.paraPapel(papel, opts),
+    temModelo: async (papel) => (await embrulhado()).temModelo(papel),
+    cotaDoDiaEsgotada: async (papel) => (await embrulhado()).cotaDoDiaEsgotada(papel),
+  }
+}
+
+function routerDoModo(puro: ModelRouter, e2e: boolean): ModelRouter {
+  return e2e ? routerE2e(puro) : puro
+}
+
 function llmE2e(): LlmClient {
   return {
     async gerar(pedido) {
@@ -222,11 +239,10 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return demoSeed
     },
     get router() {
-      router ??= createModelRouter({
-        ledger: container.ledger,
-        clock,
-        telemetry: container.telemetry,
-      })
+      router ??= routerDoModo(
+        createModelRouter({ ledger: container.ledger, clock, telemetry: container.telemetry }),
+        e2e,
+      )
       return router
     },
     // A chave do Gemini só é lida na primeira chamada.

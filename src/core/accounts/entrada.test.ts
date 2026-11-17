@@ -22,6 +22,10 @@ describe("estadoDaEntrada", () => {
     )
   })
 
+  it("dados_apagados é um aviso conhecido", () => {
+    expect(estadoDaEntrada({ ...base, aviso: "dados_apagados" }).aviso).toBe("dados_apagados")
+  })
+
   it("aviso conhecido passa adiante", () => {
     expect(estadoDaEntrada({ ...base, aviso: "demo_expirou" })).toEqual({
       demo: true,

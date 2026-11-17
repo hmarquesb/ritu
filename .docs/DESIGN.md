@@ -29,6 +29,7 @@ Os valores abaixo são os de `src/components/tokens/tokens.css` (claro · escuro
 | Títulos | Serifada elegante, de traço fino | Cormorant Garamond, peso 600 (500 no `display`), só de `title-sm` (1.375rem) para cima |
 | Texto corrido | Sem serifa, legível no celular | Figtree; `body` 1rem / 1.6; fala do agente em `prose` 1.0625rem / 1.7, largura `prose` 34rem |
 | Movimento | Curto e discreto | `ease-ritu`; 120, 200 e 320 ms; animações `rise`, `fade` e `sheet` |
+| Layout | Coluna da conversa e altura da barra de navegação | `--container-shell` 62rem (`max-w-shell`), a largura do cabeçalho, da faixa de demonstração e do corpo do app; `--ritu-bar-h` 3.5rem, a barra embaixo no celular e o espaço que ela ocupa |
 | Fotos | Ervas, especiarias, óleo, luz quente | Só a imagem da Entrada |
 
 Todo par de texto e fundo previsto passa em AA nos dois temas, conferido por `src/components/tokens/tokens.test.ts`.
@@ -41,8 +42,9 @@ Todo par de texto e fundo previsto passa em AA nos dois temas, conferido por `sr
 - Cada dosha tem a sua cor de mancha; a cor nunca é o único sinal.
 - A fala do agente é texto corrido, com boa leitura no celular: largura confortável, entrelinha generosa, sem moldura pesada.
 - As sugestões aparecem abaixo da fala, em blocos leves e compactos. Ingredientes são pequenos rótulos tocáveis.
-- Animação curta e discreta: etapas do agente aparecendo, texto chegando. Respeitar `prefers-reduced-motion`.
-- Emojis dos atalhos de check-in podem dar lugar a ícones de traço fino.
+- Animação curta e discreta: etapas do agente aparecendo. A resposta aparece inteira, numa transição de opacidade; com `prefers-reduced-motion`, sem transição.
+- Os atalhos de check-in são ícones de traço fino.
+- No celular, o painel fixo da conversa (retornos, atalhos e caixa) fica acima da barra de navegação. Nada da conversa fica escondido atrás dele.
 - Nada que lembre marca existente de bem-estar ou de aplicativo de meditação.
 - Nada com cara de kit de componentes pronto: forma, raio, sombra, foco e movimento de cada componente são do Ritu.
 
@@ -73,6 +75,8 @@ Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e ace
 | Botão, botão de ícone | `Button` | `button.tsx`, `icon-button.tsx` |
 | Campo de texto, área de texto | `TextField` | `text-field.tsx` |
 | Rótulo tocável (ingrediente, atalho) | `ToggleButton`, `TagGroup` | `chip.tsx` |
+| Botão de dois estados (👍 e 👎 na resposta) | `ToggleButton` | `toggle-button.tsx` |
+| Escolha entre opções (pergunta do agente) | `RadioGroup`, `Radio` | `radio-group.tsx` |
 | Menu | `MenuTrigger`, `Menu` | `menu.tsx` |
 | Diálogo e folha que sobe de baixo | `DialogTrigger`, `Modal` | `dialog.tsx` |
 | Abas | `Tabs` | `tabs.tsx` |
@@ -90,9 +94,11 @@ Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e ace
 | Componente | Onde |
 |---|---|
 | Carta de dosha | Painel do dosha, resultado do quiz |
+| Barra de navegação (Conversa · Minha casa · Como ficou? · Você), embaixo no celular e na lateral no desktop | Todas as telas de quem entrou (`src/components/ritu/abas.tsx`) |
 | Fala do agente e fala da pessoa | Conversa |
 | Caixa de mensagem com atalhos de check-in | Conversa |
 | Etapas ao vivo | Conversa, enquanto o agente trabalha |
+| Etapas recolhidas ("Pensei em N passos" e "Como pensei") | Conversa, depois da resposta |
 | Pergunta do agente (com Tenho · Não tenho · Não gosto por item) | Conversa |
 | Bloco de sugestão (ingredientes tocáveis, qualidades em verbos, "por quê?", marca de novidade) | Conversa |
 | Linha "Vale ter em casa" (alimento, número de faltas, o que ele traz, "por quê?") | Conversa |
@@ -107,6 +113,8 @@ Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e ace
 | Linha do tempo | Como pensei |
 | Gráfico de evolução dos evals | Bastidores |
 | Faixa de demonstração | Todas as telas, na demonstração |
+
+Os componentes da conversa ficam em `src/components/ritu/conversa/`, com o estado da tela em `estado.ts` e `use-conversa.ts`.
 
 ## 5. Arquivos
 

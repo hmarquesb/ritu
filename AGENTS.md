@@ -58,10 +58,10 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest, sem rede, banco nem chave; inclui o teste de arquitetura (R1 a R10) |
 | `npm run eval:det` | Evals determinísticos em `evals/det/**/*.eval.ts` |
-| `npm run eval:det:resumo` | Roda os evals determinísticos e imprime o resultado por grupo de `QA.md`, pelo mapa `evals/det/mapa.ts` |
+| `npm run eval:det:resumo` | Não roda os evals. Lê `.vitest/eval-det.json`, que a CI grava com `npm run eval:det -- --reporter=default --reporter=json --outputFile.json=.vitest/eval-det.json` (o `npm run eval:det` local não grava), e imprime uma tabela por pasta de `evals/det/`: arquivos, casos e falhas. Sem o arquivo, diz `Sem resultado dos evals determinísticos.` |
 | `npm run dup` | Duplicação em `src/` (jscpd); no fechamento de spec e na CI |
 | `npm run build` | `next build` |
-| `npm run test:e2e` | Playwright (celular e desktop); precisa do build; o servidor sobe em modo e2e (`RITU_MODO=e2e`, tudo em memória) |
+| `npm run test:e2e` | Playwright (celular e desktop); precisa do build; o servidor sobe em modo e2e (`RITU_MODO=e2e`, tudo em memória). As screenshots da Conversa (`e2e/conversa.spec.ts`) só saem com `SCREENSHOTS=1`, em `.plans/018-<estado>-<tema>-<projeto>.png` |
 | `npm run base:check` | Valida `data/` (schema, referências, cobertura) e imprime as contagens e as linhas `a_confirmar`. `-- --producao` falha com `a_confirmar` ou fonte não aprovada |
 | ⚠️ `npm run clima:real -- "<cidade>"` | Busca a cidade e o clima de verdade na Open-Meteo e imprime faixas, gunas e tendência. Chama a rede; fora dos gates |
 | `npm run db:migrate` | Aplica as migrações pendentes de `db/migrations/` no banco do `DATABASE_URL`. Precisa do Postgres no ar |

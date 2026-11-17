@@ -86,16 +86,33 @@ running → waiting_for_input → running → … → done
 - A decisão do bloco entra por `aprovar(conta, run, aprovadas)`, da conversa, sem LLM: confere conta, estado e prazo e, numa transação, troca `waiting_for_approval` por `done` (condicional, a primeira operação), grava só as linhas aprovadas pelo executor e registra as etapas. Quem chega depois da primeira decisão recebe `RunNaoContinuavelError`. Passados 30 min, `aprovar` expira o run e as propostas. A rota que expõe `aprovar` é da camada de tela.
 - Um run aberto por conta. Espera de mais de 30 min → `expired`.
 
+### Rotas de run
+
+| Ação | Rota | Resposta |
+|---|---|---|
+| Conversa do dia | `GET /api/conversa` | JSON |
+| Mensagem nova | `POST /api/runs` | Fluxo NDJSON |
+| Resposta a uma pergunta do agente | `POST /api/runs/:id/resposta` | Fluxo NDJSON |
+| Visão de um run | `GET /api/runs/:id` | JSON |
+| Decisão do bloco de aprovação | `POST /api/runs/:id/aprovacao` | JSON |
+| Trocar ingrediente | `POST /api/runs/:id/troca` | JSON |
+| Resposta à troca (tenho, não tenho) | `POST /api/runs/:id/troca/resposta` | JSON |
+| 👍 / 👎 na resposta | `POST /api/runs/:id/voto` | JSON |
+
+As rotas de mensagem e de resposta devolvem `application/x-ndjson`, uma linha por evento: `inicio` (com o `run_id`), `etapa` (uma frase do produto), `fim` (com a visão do run e o número de pendentes) e `erro` (com o código). Erro conhecido antes do fluxo abrir sai em JSON, com o status do código: `404` para `run_nao_encontrado`; `409` para `run_aberto`, `run_nao_continuavel`, `pergunta_expirada`, `aprovacao_expirada` e `run_pausado`; `400` para o resto. Erro depois de aberto vira evento `erro`; erro sem marca do Ritu vira `500` `erro_inesperado`.
+
+O run segue até o fim mesmo que a pessoa saia da tela: a rota não liga o `request.signal`, e o resultado fica no banco. A tela recarregada no meio de um run consulta `GET /api/runs/:id` a cada 2 s, por até 90 s (`config/tela-conversa.ts`). A rota devolve só a visão do run (`visaoDoRun`, em `src/core/conversation/visao.ts`), sem campo interno. Decisões em ADR 0044.
+
 ### Rotas de toque (sem LLM)
 
 | Ação | Rota | O que grava |
 |---|---|---|
 | Retorno com um toque | `POST /api/retornos/:id` | `retornos` e o contador em `preferencias` |
-| Trocar ingrediente | `POST /api/sugestoes/:id/trocar` | A sugestão do run e o retorno dela, com o substituto e o motivo; confere as combinações com os outros itens. "Não tenho" e "Não gosto" também gravam a falta e o gosto |
+| Trocar ingrediente | `POST /api/runs/:id/troca` | A sugestão do run e o retorno dela, com o substituto e o motivo; confere as combinações com os outros itens. "Não tenho" e "Não gosto" também gravam a falta e o gosto |
 | Não gosto · Gosto | `POST /api/preferencias` | `preferencias` |
 | Não tenho · Ainda tenho · Sempre tenho · adicionar · tirar | `POST /api/casa` | `casa`. "Não tenho" também grava uma falta em `faltas`. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa` |
 | Tirar um item da lista "Para ter em casa" | `POST /api/lista` | `lista_ter_em_casa` |
-| 👍 / 👎 na resposta | `POST /api/feedback` | `feedback` |
+| 👍 / 👎 na resposta | `POST /api/runs/:id/voto` | `feedback` |
 | Confirmar ou recusar um padrão · apagar um padrão | `POST /api/padroes/:id` | `padroes` |
 
 As rotas só autenticam, validam a entrada e chamam funções do core, em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
@@ -104,8 +121,8 @@ As rotas só autenticam, validam a entrada e chamam funções do core, em `src/c
 |---|---|---|
 | `tocarRetorno(deps, contaId, retornoId, resultado)` | `/api/retornos/:id` | Fecha o retorno com origem `toque`. Retorno que não existe, é de outra conta ou já foi respondido: `toque_invalido` |
 | `tocarGosto(deps, contaId, item, gosto)` | `/api/preferencias` | Grava `gosta`, `nao_gosta` ou limpa (`null`). Item fora da base: `toque_invalido` |
-| `trocarIngrediente(deps, contaId, { runId, sugestao, alimento_id, motivo })` | `/api/sugestoes/:id/trocar` | Com motivo `trocar`, `nao_tenho` ou `nao_gosto`: anota o que o motivo pede e devolve `trocou` (com a sugestão nova), `perguntar` (com a pergunta sobre o substituto mais próximo) ou `sem_substituto` |
-| `responderTroca(deps, contaId, { runId, sugestao, alimento_id, candidato, resposta })` | `/api/sugestoes/:id/trocar` | Resposta `tenho` (registra em casa e troca) ou `nao_tenho` (anota a falta e devolve `sem_substituto`) |
+| `trocarIngrediente(deps, contaId, { runId, sugestao, alimento_id, motivo })` | `/api/runs/:id/troca` | Com motivo `trocar`, `nao_tenho` ou `nao_gosto`: anota o que o motivo pede e devolve `trocou` (com a sugestão nova), `perguntar` (com a pergunta sobre o substituto mais próximo) ou `sem_substituto` |
+| `responderTroca(deps, contaId, { runId, sugestao, alimento_id, candidato, resposta })` | `/api/runs/:id/troca/resposta` | Resposta `tenho` (registra em casa e troca) ou `nao_tenho` (anota a falta e devolve `sem_substituto`) |
 
 Rotina e padrões têm funções do core que as rotas de "O que sei sobre você" chamam, em `src/core/routine/` e `src/core/patterns/`. Também recebem a `contaId` da sessão e confirmam que o item é da conta; item que não existe ou não é dela: `nota_invalida` ou `padrao_invalido`.
 
@@ -217,7 +234,10 @@ src/
     telemetry/               # porta Telemetry e nomes de spans e métricas
   infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth (Auth.js, token, IP em HMAC), otel
     container.ts             # composition root
+    e2e/                     # modo e2e: roteiros, clima fixo e cota por x-ritu-e2e; só o container importa
   app/                       # Next.js: telas e rotas; marca/ é a vitrine do design system
+    _lib/                    # rota.ts (sessão, corpo e erros do Ritu viram status), fluxo.ts (rota de fluxo NDJSON)
+    _rotas/                  # corpo das rotas: conversa, fluxo-de-run (mensagem e resposta do run), cron, onboarding, busca
     fonts/                   # Cormorant Garamond e Figtree (woff2 variável, OFL)
   proxy.ts                   # headers de segurança (CSP com nonce) e checagem de Origin
   components/                # UI: só aqui se importa react-aria-components (R5)
@@ -225,6 +245,7 @@ src/
     theme/                   # cookie ritu_theme e seletor de tema
     base/                    # componentes base sobre React Aria
     brand/                   # Logo e DoshaBlot
+    ritu/                    # telas do Ritu: abas.tsx (barra de navegação) e conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts)
 config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas)
 public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
 scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts
@@ -243,7 +264,7 @@ observability/
   grafana/dashboards.yaml    # provedor do painel no LGTM, escrito à mão
 mcp/                         # servidor MCP
 test/fixtures/
-e2e/                         # Playwright; apoio/ com usarTema e expectSemViolacoes (axe)
+e2e/                         # Playwright; apoio/ com usarTema e expectSemViolacoes (axe); roteiros/ são os roteiros do modo e2e
 ```
 
 ## 8. Serviços e planos

@@ -1,6 +1,7 @@
 ---
 title: Tela Conversa
-status: approved
+status: implemented
+implemented: 9b018b4
 entrega: 3
 created: 2026-11-15
 ---

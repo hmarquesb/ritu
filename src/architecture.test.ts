@@ -285,6 +285,17 @@ const RULE_R10: Rule = {
       : [],
 }
 
+// R12: src/infra/e2e/ só é importado pelo composition root.
+const E2E_DIR = "@/infra/e2e"
+
+const RULE_R12: Rule = {
+  id: "R12",
+  check: (file) =>
+    file.path === "src/infra/container.ts" || inDir(file.path, "src/infra/e2e")
+      ? []
+      : importedBy(file, (ctx) => isUnder(ctx.spec, E2E_DIR)),
+}
+
 const RULES: Rule[] = [
   RULE_R1,
   RULE_R2,
@@ -297,6 +308,7 @@ const RULES: Rule[] = [
   RULE_R8,
   RULE_R10,
   RULE_R11,
+  RULE_R12,
 ]
 
 const formatViolation = (path: string, id: string, detail: string): string =>
@@ -514,6 +526,31 @@ describe("R11 · proxy só importa de core/security e next/server", () => {
 
   it("outros arquivos não são afetados", () => {
     expectClean("src/app/x.ts", `${IMPORT} { z } from "zod"`)
+  })
+})
+
+describe("R12 · src/infra/e2e só é importado pelo container", () => {
+  it("o container pode importar, até por import dinâmico", () => {
+    expectClean(
+      "src/infra/container.ts",
+      `const m = await import("@/infra/e2e/roteiros")\n${IMPORT} { createClimaFixo } from "@/infra/e2e/clima"`,
+    )
+  })
+
+  it("outro arquivo de infra é violação", () => {
+    expectOnly("src/infra/x.ts", `${IMPORT} { createClimaFixo } from "@/infra/e2e/clima"`, "R12")
+  })
+
+  it("import relativo de fora da pasta também é violação", () => {
+    expectOnly(
+      "src/instrumentation.ts",
+      `${IMPORT} { createClimaFixo } from "./infra/e2e/clima"`,
+      "R12",
+    )
+  })
+
+  it("os arquivos da própria pasta se importam", () => {
+    expectClean("src/infra/e2e/roteiros.ts", `${IMPORT} { createClimaFixo } from "./clima"`)
   })
 })
 

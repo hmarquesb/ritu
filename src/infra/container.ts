@@ -78,6 +78,35 @@ function bancoPreguicoso(): DbClient {
   return banco
 }
 
+// Modo e2e: clima fixo, Intérprete e Acompanhante roteirizados. Os módulos entram por import dinâmico,
+// na primeira chamada, para ficarem fora do caminho de produção.
+function climaFixoE2e(): WeatherSource {
+  return {
+    async buscar(coordenadas) {
+      const { createClimaFixo } = await import("@/infra/e2e/clima")
+      return createClimaFixo().buscar(coordenadas)
+    },
+  }
+}
+
+function llmE2e(): LlmClient {
+  return {
+    async gerar(pedido) {
+      const { createLlmDeRoteiros } = await import("@/infra/e2e/roteiros")
+      return createLlmDeRoteiros().gerar(pedido)
+    },
+  }
+}
+
+function runtimeE2e(): AgentRuntime {
+  return {
+    async passo(pedido) {
+      const { createRuntimeDeRoteiros } = await import("@/infra/e2e/roteiros")
+      return createRuntimeDeRoteiros().passo(pedido)
+    },
+  }
+}
+
 // Leitura crua de data/ para scripts (sem validar): o script valida com validarBase.
 export function readKnowledgeData(dir?: string): DadosDaBase {
   return readDadosDaBase(dir)
@@ -132,7 +161,11 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // Criadas na primeira leitura: criar o container não abre rede.
     get weather() {
-      weather ??= createCachedWeatherSource(createOpenMeteoWeather(), clock, container.telemetry)
+      weather ??= createCachedWeatherSource(
+        e2e ? climaFixoE2e() : createOpenMeteoWeather(),
+        clock,
+        container.telemetry,
+      )
       return weather
     },
     get cities() {
@@ -177,7 +210,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // A chave do Gemini só é lida na primeira chamada.
     get llm() {
-      llm ??= createGeminiClient({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      llm ??= e2e ? llmE2e() : createGeminiClient({ apiKey: () => requireEnv("GEMINI_API_KEY") })
       return llm
     },
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
@@ -190,7 +223,9 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // A chave do modelo só é lida na primeira chamada de passo.
     get runtime() {
-      runtime ??= createMastraRuntime({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      runtime ??= e2e
+        ? runtimeE2e()
+        : createMastraRuntime({ apiKey: () => requireEnv("GEMINI_API_KEY") })
       return runtime
     },
     get runs() {

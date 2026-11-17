@@ -75,13 +75,16 @@ export function RotinaNaMemoria({ rotina, em }: Props) {
             <ItemDeMemoria
               key={nota.id}
               principal={nota.texto}
-              complemento={formatar(T.rotina.data, { data: dataCurta(nota.criado_em) })}
+              complemento={formatar(T.rotina.data, {
+                data: dataCurta(nota.criado_em, em.voce.fuso),
+              })}
               acoes={
                 <>
                   <Button
                     variant="quiet"
                     size="sm"
                     icon={PencilSimple}
+                    aria-label={formatar(T.rotina.corrigirNota, { nome: nota.texto })}
                     onPress={() => setCorrigindo(nota)}
                   >
                     {T.rotina.corrigir}
@@ -90,6 +93,7 @@ export function RotinaNaMemoria({ rotina, em }: Props) {
                     variant="quiet"
                     size="sm"
                     icon={Trash}
+                    aria-label={formatar(T.rotina.apagarNota, { nome: nota.texto })}
                     isPending={em.pendente === chaveDoToque(apagar)}
                     onPress={async () => {
                       if (await em.memoria(apagar)) focarNivel("rotina")

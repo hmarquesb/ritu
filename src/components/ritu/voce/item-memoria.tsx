@@ -22,10 +22,10 @@ const MESES = [
   "dez.",
 ]
 
-// "3 nov.", no fuso padrão, igual no servidor e no navegador.
-export function dataCurta(iso: string): string {
+// "3 nov.", no fuso da pessoa, igual no servidor e no navegador.
+export function dataCurta(iso: string, fuso: string): string {
   const partes = new Intl.DateTimeFormat("pt-BR", {
-    timeZone: config.clima.fusoPadrao,
+    timeZone: fuso,
     day: "numeric",
     month: "numeric",
   }).formatToParts(new Date(iso))

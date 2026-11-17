@@ -15,6 +15,8 @@ export type VoceNaTela = {
   painel: PainelDoDosha
   memoria: MemoriaNaTela
   conta: { tipo: "google" | "demo"; horas_restantes: number | null }
+  /** O fuso da pessoa: as datas da tela saem nele. */
+  fuso: string
 }
 
 const HORA_EM_MS = 3_600_000
@@ -57,6 +59,7 @@ export async function lerVoce(deps: Deps, conta: Conta, fuso: string): Promise<V
       fuso,
     }),
     conta: { tipo: conta.tipo, horas_restantes: horasRestantes(conta, agora) },
+    fuso,
   }
 }
 

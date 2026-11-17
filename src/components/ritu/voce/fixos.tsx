@@ -225,6 +225,8 @@ export function Fixos({ fixos, em, grupos, aoMudarDosha }: Props) {
                   <ToggleChip
                     key={r}
                     isSelected={marcadas.has(r)}
+                    aria-busy={em.pendente === "restricoes" || undefined}
+                    className={em.pendente === "restricoes" ? "opacity-60" : undefined}
                     onChange={(ligada) => alternar(r, ligada)}
                   >
                     {T.fixos.restricao[r]}

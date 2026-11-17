@@ -32,6 +32,12 @@ function complemento(g: Linha): string {
   return partes.filter((p): p is string => p !== null).join(" · ")
 }
 
+// O toque do chip grava `gosto: <valor>` ao marcar e `gosto: null` ao desmarcar.
+function chaveGosto(g: Linha, valor: "gosta" | "nao_gosta"): string | null {
+  const gosto = g.gosto === valor ? null : valor
+  return chaveDoToque({ acao: "gosto", item_tipo: g.item_tipo, item_id: g.item_id, gosto })
+}
+
 type Props = { gostos: Linha[]; em: VoceEmUso }
 
 export function GostosNaMemoria({ gostos, em }: Props) {
@@ -57,6 +63,8 @@ export function GostosNaMemoria({ gostos, em }: Props) {
                   <ToggleChip
                     aria-label={`${C.gosto}: ${g.nome}`}
                     isSelected={g.gosto === "gosta"}
+                    aria-busy={pendente === chaveGosto(g, "gosta") || undefined}
+                    className={pendente === chaveGosto(g, "gosta") ? "opacity-60" : undefined}
                     onChange={(marcado) =>
                       memoria({ acao: "gosto", ...base(g), gosto: marcado ? "gosta" : null })
                     }
@@ -66,6 +74,8 @@ export function GostosNaMemoria({ gostos, em }: Props) {
                   <ToggleChip
                     aria-label={`${C.naoGosto}: ${g.nome}`}
                     isSelected={g.gosto === "nao_gosta"}
+                    aria-busy={pendente === chaveGosto(g, "nao_gosta") || undefined}
+                    className={pendente === chaveGosto(g, "nao_gosta") ? "opacity-60" : undefined}
                     onChange={(marcado) =>
                       memoria({ acao: "gosto", ...base(g), gosto: marcado ? "nao_gosta" : null })
                     }

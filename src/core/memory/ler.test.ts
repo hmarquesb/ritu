@@ -107,6 +107,7 @@ describe("lerVoce", () => {
     expect(voce.memoria.padroes).toHaveLength(1)
     expect(voce.memoria.conversa.map((dia) => dia.total)).toEqual([2, 2, 2])
     expect(voce.conta.tipo).toBe("demo")
+    expect(voce.fuso).toBe(FUSO)
   })
 
   it("horas_restantes só na demonstração, arredondado para baixo", async () => {

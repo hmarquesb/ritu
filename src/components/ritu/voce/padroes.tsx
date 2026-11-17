@@ -13,9 +13,11 @@ const T = config.textosVoce
 
 type Padrao = MemoriaNaTela["padroes"][number]
 
-function complemento(p: Padrao): string | null {
+function complemento(p: Padrao, fuso: string): string | null {
   if (p.status === "confirmado") {
-    return p.decidido_em ? formatar(T.padroes.confirmado, { data: dataCurta(p.decidido_em) }) : null
+    return p.decidido_em
+      ? formatar(T.padroes.confirmado, { data: dataCurta(p.decidido_em, fuso) })
+      : null
   }
   return p.status === "recusado" ? T.padroes.recusado : null
 }
@@ -31,6 +33,7 @@ function AcoesDoPadrao({ padrao, em }: { padrao: Padrao; em: VoceEmUso }) {
           variant="secondary"
           size="sm"
           icon={Check}
+          aria-label={formatar(T.padroes.certoPadrao, { nome: padrao.frase })}
           isPending={em.pendente === chaveDoToque(decidir("confirmado"))}
           onPress={async () => {
             if (await em.memoria(decidir("confirmado"))) focarNivel("padroes")
@@ -42,6 +45,7 @@ function AcoesDoPadrao({ padrao, em }: { padrao: Padrao; em: VoceEmUso }) {
           variant="quiet"
           size="sm"
           icon={X}
+          aria-label={formatar(T.padroes.naoEstaPadrao, { nome: padrao.frase })}
           isPending={em.pendente === chaveDoToque(decidir("recusado"))}
           onPress={async () => {
             if (await em.memoria(decidir("recusado"))) focarNivel("padroes")
@@ -57,6 +61,7 @@ function AcoesDoPadrao({ padrao, em }: { padrao: Padrao; em: VoceEmUso }) {
       variant="quiet"
       size="sm"
       icon={Trash}
+      aria-label={formatar(T.padroes.apagarPadrao, { nome: padrao.frase })}
       isPending={em.pendente === chaveDoToque(apagar)}
       onPress={async () => {
         const aviso = padrao.status === "recusado" ? T.padroes.apagadoRecusado : undefined
@@ -81,7 +86,7 @@ export function PadroesNaMemoria({ padroes, em }: { padroes: Padrao[]; em: VoceE
           <ItemDeMemoria
             key={p.id}
             principal={p.frase}
-            complemento={complemento(p)}
+            complemento={complemento(p, em.voce.fuso)}
             acoes={<AcoesDoPadrao padrao={p} em={em} />}
           />
         ))}

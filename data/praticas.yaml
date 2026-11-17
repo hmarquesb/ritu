@@ -75,25 +75,24 @@
   nome: Chá de canela com cardamomo
   ingredientes: [canela, cardamomo]
   preparo: "Ferva um pau de canela com bagas de cardamomo abertas por alguns minutos. Coe e beba morno."
-  gunas: [quente, leve]
-  favorece_estados: [com_frio, pesada, sem_energia]
+  gunas: [leve, seco]
+  favorece_estados: [pesada, sem_energia]
   efeito: { vata: 0, pitta: 0, kapha: -1 }
   momento: [manha, tarde]
-  contraindicacoes: [com_calor]
+  contraindicacoes: []
   nunca_sugerir_se: []
   aviso: ""
   fontes:
     - { ref: banyan-especiarias-outono-inverno, campos: [preparo] }
-    - { ref: banyan-cha-clareza, campos: [gunas, favorece_estados] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: ritu-regras-da-base, campos: [momento, contraindicacoes] }
+    - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados, momento, contraindicacoes] }
   confianca: media
 - id: cha-cardamomo
   tipo: cha
   nome: Chá de cardamomo
   ingredientes: [cardamomo]
   preparo: "Abra bagas de cardamomo e deixe em água quente, tampado, por alguns minutos. Coe e beba morno."
-  gunas: [leve, suave]
+  gunas: [frio, leve, seco]
   favorece_estados: [pesada, agitada]
   efeito: { vata: -1, pitta: 0, kapha: -1 }
   momento: [almoco, tarde, jantar]
@@ -111,17 +110,17 @@
   nome: Chá de cravo com canela
   ingredientes: [cravo, canela]
   preparo: "Ferva cravos com um pau de canela por alguns minutos. Coe e beba morno."
-  gunas: [quente, leve, movel]
-  favorece_estados: [com_frio, sem_energia, pesada]
+  gunas: [leve]
+  favorece_estados: [pesada, sem_energia]
   efeito: { vata: 0, pitta: 1, kapha: -1 }
   momento: [manha, tarde]
   contraindicacoes: [com_calor, irritada]
   nunca_sugerir_se: []
   aviso: ""
   fontes:
-    - { ref: banyan-especiarias-outono-inverno, campos: [preparo, gunas, favorece_estados] }
+    - { ref: banyan-especiarias-outono-inverno, campos: [preparo] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, contraindicacoes] }
-    - { ref: ritu-regras-da-base, campos: [momento] }
+    - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados, momento] }
   confianca: media
 - id: cha-erva-doce
   tipo: cha
@@ -218,7 +217,7 @@
   nome: Chá de camomila
   ingredientes: [camomila]
   preparo: "Deixe flores de camomila em água quente, tampado, por alguns minutos. Coe e beba morno, num momento de pausa."
-  gunas: [suave, estavel, brando]
+  gunas: [frio, leve, seco]
   favorece_estados: [agitada, irritada, com_calor]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   momento: [tarde, noite]
@@ -237,8 +236,8 @@
   nome: Chá de camomila com erva-doce
   ingredientes: [camomila, erva-doce]
   preparo: "Deixe flores de camomila e sementes de erva-doce em água quente, tampado, por alguns minutos. Coe e beba morno."
-  gunas: [suave, estavel, brando]
-  favorece_estados: [agitada, seca, irritada]
+  gunas: [frio, leve]
+  favorece_estados: [com_calor, pesada]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
   momento: [jantar, noite]
   contraindicacoes: []
@@ -246,7 +245,6 @@
   aviso: ""
   fontes:
     - { ref: banyan-sono-insuficiente, campos: [momento] }
-    - { ref: banyan-erva-doce, campos: [favorece_estados] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados] }
   confianca: media
@@ -255,8 +253,8 @@
   nome: Chá de capim-limão
   ingredientes: [capim-limao]
   preparo: "Corte folhas de capim-limão e deixe em água quente, tampado, por alguns minutos. Coe e beba morno ou fresco, sem gelo."
-  gunas: [quente, leve, seco]
-  favorece_estados: [com_frio, pesada]
+  gunas: [quente, leve, seco, intenso]
+  favorece_estados: [com_frio, pesada, sem_energia]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   momento: [almoco, tarde]
   contraindicacoes: [com_calor]
@@ -272,11 +270,11 @@
   nome: Chá de capim-limão com hortelã
   ingredientes: [capim-limao, hortela]
   preparo: "Corte folhas de capim-limão e junte folhas de hortelã em água quente, tampado, por alguns minutos. Coe e beba morno ou fresco, sem gelo."
-  gunas: [frio, leve]
+  gunas: [leve, seco, intenso]
   favorece_estados: [com_calor, irritada]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   momento: [tarde]
-  contraindicacoes: [com_frio]
+  contraindicacoes: []
   nunca_sugerir_se: []
   aviso: ""
   fontes:

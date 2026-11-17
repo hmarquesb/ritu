@@ -8,9 +8,9 @@ export type DepsDaRota = {
   container: Container
 }
 
-type Contexto<B> = { conta: Conta; corpo: B; request: Request; container: Container }
+export type Contexto<B> = { conta: Conta; corpo: B; request: Request; container: Container }
 
-function resposta(status: number, corpo: unknown): Response {
+export function resposta(status: number, corpo: unknown): Response {
   return Response.json(corpo, { status })
 }
 
@@ -44,6 +44,41 @@ async function lerValidado<B>(
   return { ok: true, valor: validado.data }
 }
 
+const STATUS_409 = new Set([
+  "run_aberto",
+  "run_nao_continuavel",
+  "pergunta_expirada",
+  "aprovacao_expirada",
+  "run_pausado",
+])
+
+export function statusDoErro(code: string): number {
+  if (code === "run_nao_encontrado") return 404
+  if (STATUS_409.has(code)) return 409
+  return 400
+}
+
+type Preparado<B> = { ok: true; ctx: Contexto<B> } | { ok: false; resposta: Response }
+
+// Checagens comuns às rotas JSON e às de fluxo: sessão, conta, tamanho e corpo.
+export async function prepararContexto<B>(
+  deps: DepsDaRota,
+  opts: { corpo?: z.ZodType<B> },
+  request: Request,
+): Promise<Preparado<B>> {
+  const { container } = deps
+  const contaId = await deps.contaDaSessao()
+  const conta = contaId ? await container.stores.accounts.buscar(contaId) : undefined
+  if (!conta) return { ok: false, resposta: resposta(401, { erro: "sem_sessao" }) }
+  let corpo = undefined as B
+  if (opts.corpo) {
+    const lido = await lerValidado(request, opts.corpo, container.config.limites.corpoMaximoBytes)
+    if (!lido.ok) return lido
+    corpo = lido.valor
+  }
+  return { ok: true, ctx: { conta, corpo, request, container } }
+}
+
 export function criarRota<B, R>(
   deps: DepsDaRota,
   opts: { corpo?: z.ZodType<B> },
@@ -52,22 +87,11 @@ export function criarRota<B, R>(
   const { container } = deps
   return async (request) => {
     try {
-      const contaId = await deps.contaDaSessao()
-      const conta = contaId ? await container.stores.accounts.buscar(contaId) : undefined
-      if (!conta) return resposta(401, { erro: "sem_sessao" })
-      let corpo = undefined as B
-      if (opts.corpo) {
-        const lido = await lerValidado(
-          request,
-          opts.corpo,
-          container.config.limites.corpoMaximoBytes,
-        )
-        if (!lido.ok) return lido.resposta
-        corpo = lido.valor
-      }
-      return resposta(200, await fn({ conta, corpo, request, container }))
+      const preparado = await prepararContexto(deps, opts, request)
+      if (!preparado.ok) return preparado.resposta
+      return resposta(200, await fn(preparado.ctx))
     } catch (erro) {
-      if (erro instanceof RituError) return resposta(400, { erro: erro.code })
+      if (erro instanceof RituError) return resposta(statusDoErro(erro.code), { erro: erro.code })
       container.telemetry.log("erro_inesperado")
       return resposta(500, { erro: "erro_inesperado" })
     }

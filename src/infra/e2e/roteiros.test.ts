@@ -2,9 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { copiarSeed } from "@/core/accounts/copiar-seed"
 import { createContainer } from "@/infra/container"
 
+// Relógio fixo: o roteiro `pergunta-casa` só tem couve e leite entre os candidatos de noite,
+// e o momento do dia sai da hora do relógio. 01h de Brasília é noite em qualquer data.
+const relogioDeNoite = { now: () => new Date("2026-11-17T04:00:00Z") }
+
 async function novoContainer() {
   vi.stubEnv("RITU_MODO", "e2e")
-  const container = createContainer()
+  const container = createContainer({ clock: relogioDeNoite })
   const conta = await container.stores.accounts.criar({ tipo: "demo" })
   await copiarSeed(container.stores, conta.id, container.demoSeed, {
     clock: container.clock,

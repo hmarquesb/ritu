@@ -6,9 +6,13 @@ import { rotasDeFluxoDeRun } from "./fluxo-de-run"
 
 const PERGUNTA_DE_CASA = "fui à feira ontem, o que faço pro jantar?"
 
+// Relógio fixo: o momento do dia sai da hora, e o roteiro `pergunta-casa` só pergunta de noite.
+// 01h de Brasília é noite em qualquer data.
+const relogioDeNoite = { now: () => new Date("2026-11-17T04:00:00Z") }
+
 async function montar() {
   vi.stubEnv("RITU_MODO", "e2e")
-  const container = createContainer()
+  const container = createContainer({ clock: relogioDeNoite })
   const conta = await container.stores.accounts.criar({ tipo: "demo" })
   await copiarSeed(container.stores, conta.id, container.demoSeed, {
     clock: container.clock,

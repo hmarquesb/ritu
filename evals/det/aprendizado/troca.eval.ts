@@ -58,19 +58,19 @@ const metricasDeTroca = (deps: DepsDoCenario, resultado: string) =>
   )
 
 describe("troca cai num substituto confirmado da mesma função", () => {
-  it("canela sai por cravo, que está confirmado em casa e é da mesma função", async () => {
+  it("canela sai por noz-moscada, que está confirmada em casa e é da mesma função", async () => {
     const { contaId, deps, runId } = await montarSemToque()
     const resultado = await trocarItem(deps, contaId, runId, "canela")
 
     expect(resultado.resultado).toBe("trocou")
     if (resultado.resultado !== "trocou") throw new Error("troca não aconteceu")
     const item = itemDoAlimento(await saidaDo(deps, contaId, runId), "canela")
-    expect(item?.troca?.alimento_id).toBe("cravo")
+    expect(item?.troca?.alimento_id).toBe("noz-moscada")
     expect(item?.troca?.anteriores).toEqual([])
     const casa = await deps.stores.pantry.listar(contaId)
-    expect(casa.find((i) => i.alimento_id === "cravo")?.estado).toBe("tem")
-    expect(kb.alimento("cravo")?.grupo).toBe(kb.alimento("canela")?.grupo)
-    expect(kb.alimento("cravo")?.funcoes).toEqual(kb.alimento("canela")?.funcoes)
+    expect(casa.find((i) => i.alimento_id === "noz-moscada")?.estado).toBe("tem")
+    expect(kb.alimento("noz-moscada")?.grupo).toBe(kb.alimento("canela")?.grupo)
+    expect(kb.alimento("noz-moscada")?.funcoes).toEqual(kb.alimento("canela")?.funcoes)
   })
 
   it("a combinação da sugestão depois da troca continua compatível", async () => {
@@ -79,15 +79,15 @@ describe("troca cai num substituto confirmado da mesma função", () => {
     const saida = await saidaDo(deps, contaId, runId)
     const ids = saida.sugestoes[0]?.itens.map((i) => i.troca?.alimento_id ?? i.alimento_id) ?? []
 
-    expect(ids).toEqual(["gengibre", "cravo"])
+    expect(ids).toEqual(["gengibre", "noz-moscada"])
     expect(checarCombinacao(ids, kb).compativel).toBe(true)
   })
 
-  it("filtro da pessoa: o cravo em evitar_sempre não entra, e a troca não sai com ele", async () => {
+  it("filtro da pessoa: a noz-moscada em evitar_sempre não entra, e a troca não sai com ela", async () => {
     const { contaId, deps, runId } = await montarSemToque({
       perfil: {
         ...cenario("troca-por-toque").perfil,
-        evitar_sempre: [{ tipo: "alimento", valor: "cravo" }],
+        evitar_sempre: [{ tipo: "alimento", valor: "noz-moscada" }],
       },
     })
     const resultado = await trocarItem(deps, contaId, runId, "canela")
@@ -99,11 +99,11 @@ describe("troca cai num substituto confirmado da mesma função", () => {
 })
 
 describe("item a evitar agora não entra na troca", () => {
-  it("o cravo em evitar do dia (saida.evitar) não é o substituto", async () => {
+  it("a noz-moscada em evitar do dia (saida.evitar) não é o substituto", async () => {
     const { contaId, deps, runId } = await montarSemToque()
     await alterarSaida(deps, contaId, runId, (s) => ({
       ...s,
-      evitar: [{ texto: "cravo", linha_base: "alimentos:cravo" }],
+      evitar: [{ texto: "noz-moscada", linha_base: "alimentos:noz-moscada" }],
     }))
     const resultado = await trocarItem(deps, contaId, runId, "canela")
 
@@ -113,23 +113,23 @@ describe("item a evitar agora não entra na troca", () => {
 })
 
 describe("trocar de novo não repete o que já saiu", () => {
-  it("depois de canela → cravo, uma nova troca do cravo não devolve a canela", async () => {
+  it("depois de canela → noz-moscada, uma nova troca da noz-moscada não devolve a canela", async () => {
     const { contaId, deps, runId } = await montarSemToque()
     await trocarItem(deps, contaId, runId, "canela")
-    // Anis-estrelado entra em casa depois da primeira troca: a segunda troca do cravo sai por ele, e a canela não volta.
+    // Anis-estrelado entra em casa depois da primeira troca: a segunda troca da noz-moscada sai por ele, e a canela não volta.
     await deps.stores.pantry.registrar(contaId, [{ alimento_id: "anis-estrelado" }], "conversa")
-    const segunda = await trocarItem(deps, contaId, runId, "cravo")
+    const segunda = await trocarItem(deps, contaId, runId, "noz-moscada")
     const item = itemDoAlimento(await saidaDo(deps, contaId, runId), "canela")
 
     expect(segunda.resultado).toBe("trocou")
     expect(item?.troca?.alimento_id).toBe("anis-estrelado")
-    expect(item?.troca?.anteriores).toEqual(["cravo"])
+    expect(item?.troca?.anteriores).toEqual(["noz-moscada"])
     expect(item?.troca?.anteriores).not.toContain("canela")
   })
 })
 
 describe("teto de trocas por item (três)", () => {
-  // Anis-estrelado confirmado em casa: sem o teto, a troca do cravo sairia por ele.
+  // Anis-estrelado confirmado em casa: sem o teto, a troca da noz-moscada sairia por ele.
   const montarComAnisEmCasa = () =>
     montarSemToque({
       casa: [...cenario("troca-por-toque").casa, { alimento_id: "anis-estrelado" }],
@@ -147,12 +147,12 @@ describe("teto de trocas por item (três)", () => {
                 ? {
                     ...it,
                     troca: {
-                      alimento_id: "cravo",
-                      nome: "Cravo",
+                      alimento_id: "noz-moscada",
+                      nome: "Noz-moscada",
                       contribui: ["quente"],
                       verbos: ["aquecem"],
-                      linha_base: "alimentos:cravo",
-                      frase: "Troquei canela por cravo.",
+                      linha_base: "alimentos:noz-moscada",
+                      frase: "Troquei canela por noz-moscada.",
                       anteriores: ["cardamomo", "louro"],
                     },
                   }
@@ -168,7 +168,7 @@ describe("teto de trocas por item (três)", () => {
     await alterarSaida(deps, contaId, runId, noTetoSemente)
     const antes = JSON.stringify(await saidaDo(deps, contaId, runId))
     const retornoAntes = (await deps.stores.outcomes.pendentes(contaId)).map((r) => r.sugestao)
-    const resultado = await trocarItem(deps, contaId, runId, "cravo")
+    const resultado = await trocarItem(deps, contaId, runId, "noz-moscada")
 
     expect(resultado.resultado).toBe("sem_substituto")
     expect(JSON.stringify(await saidaDo(deps, contaId, runId))).toBe(antes)
@@ -185,14 +185,14 @@ describe("teto de trocas por item (três)", () => {
     const resposta = await deps.touches.responderTroca(contaId, {
       runId,
       sugestao: 0,
-      alimento_id: "cravo",
-      candidato: "noz-moscada",
+      alimento_id: "noz-moscada",
+      candidato: "cominho",
       resposta: "tenho",
     })
 
     expect(resposta.resultado).toBe("sem_substituto")
     const casa = await deps.stores.pantry.listar(contaId)
-    expect(casa.some((i) => i.alimento_id === "noz-moscada")).toBe(false)
+    expect(casa.some((i) => i.alimento_id === "cominho")).toBe(false)
     expect(metricasDeTroca(deps, "sem_substituto")).toHaveLength(1)
   })
 })
@@ -205,7 +205,7 @@ describe("retorno e métricas da troca confirmada", () => {
     const retornoId = saida.sugestoes[0]?.retorno_id
     const retorno = (await deps.stores.outcomes.pendentes(contaId)).find((r) => r.id === retornoId)
 
-    expect(retorno?.sugestao.alimentos).toEqual(expect.arrayContaining(["cravo", "gengibre"]))
+    expect(retorno?.sugestao.alimentos).toEqual(expect.arrayContaining(["noz-moscada", "gengibre"]))
     expect(retorno?.sugestao.alimentos).not.toContain("canela")
     expect(retorno?.status).toBe("aguardando")
   })

@@ -252,16 +252,71 @@ Quando a pessoa registra em casa um alimento que não está em `alimentos.yaml`,
 | `lad-cooking` | Usha e Vasant Lad, *Ayurvedic Cooking for Self-Healing* | Propriedades, preparo, combinações |
 | `banyan-listas` | Listas de alimentos por dosha da Banyan Botanicals | Conferência cruzada |
 
-Na construção da base, as fontes são consultadas pela internet uma única vez, só nas páginas do Ayurvedic Institute e da Banyan Botanicals. Cada página aberta entra em `data/fontes.yaml` com a URL e a data de acesso. Livro sem página aberta fica como `a_confirmar`.
+As fontes têm pesos diferentes:
+
+| Peso | Fontes |
+|---|---|
+| Alto | Textos clássicos e suas traduções (Charaka Samhita, Ashtanga Hridaya, Madanapala Nighantu) e artigos revisados (JAIMS, WJPR) |
+| Médio-alto | Easy Ayurveda (Dr. J. V. Hebbar), que cita os clássicos; The Ayurvedic Institute |
+| Médio | Banyan Botanicals; Ask Ayurveda (só os artigos "X in Ayurveda"); AyurTimes; outras organizações que estudam Ayurveda (Maharishi Ayurveda, Kripalu, AyurVAID, The Ayurveda Experience, LifeSpa) |
+| Só apoio | Satyori e portais de saúde (1mg, PharmEasy, Apollo); nunca sustentam um campo sozinhos |
+
+Cada página aberta entra em `data/fontes.yaml` com a URL e a data de acesso. Livro sem página aberta fica como `a_confirmar`.
+
+Duas refs de `fontes.yaml` não são páginas: `ritu-regras-da-base` marca o campo derivado por uma regra de §8.1, e `ritu-textos-revisados` marca o texto que a pessoa lê (preparo, passos, aviso) lido e aprovado pela dona.
 
 ## 8. Curadoria
 
 - **Toda linha tem fonte.** Sem fonte, não entra.
-- **Divergência entre fontes** → `confianca: media` ou `baixa` e uma nota.
+- **Uma fonte que confirma** o valor da base basta: o campo fica com o valor e a fonte registrada, e a linha com `confianca: media`.
+- **Uma fonte que contradiz** a base corrige o campo para o valor da fonte.
+- **Fontes que divergem entre si:** vence a de mais peso (§7). Clássico e Easy Ayurveda vencem Ask Ayurveda e Banyan. A divergência fica na `nota` da linha.
+- **Parte de um campo sem fonte** (ex.: uma das gunas) sai do campo; fica só o que a fonte confirma.
+- **`confianca`:** `media` quando todo campo tem fonte ou regra; `baixa` enquanto algum campo seguir `a_confirmar`; `alta` só com duas fontes independentes em todos os campos.
 - **Validação automática:** schema zod, ids únicos, referências existentes (fontes, alimentos citados em práticas e combinações), toda vaga de preparo com pelo menos 3 alimentos possíveis (as exceções ficam listadas em `config/base.ts`, como a vaga de leite do `leite-morno-com-especiaria`, que aceita só o leite, e a base dos preparos em que pão, tapioca, cuscuz, macarrão ou fubá são a base de fato), cobertura mínima por grupo, por tipo de prática e por estado do momento.
 - **Crescimento guiado por dados:** os alimentos "ainda não conheço", os itens "incertos" e os 👎 indicam onde a base precisa crescer.
 - **Mudança na base = commit próprio.**
 - **Agentes de código não inventam fonte.** Se o agente não tem a fonte confirmada de uma linha, ela entra com `confianca: baixa` e `fontes: [{ ref: a_confirmar }]`, e a dona revisa no portão 1. Nenhum título, página ou URL é escrito de memória. Linha com `a_confirmar` vale em desenvolvimento e nos evals; `npm run base:check -- --producao` falha enquanto houver alguma, e é rodado antes de publicar.
+
+### 8.1 Regras de derivação
+
+Alguns campos não são fatos que uma fonte afirma item por item. Eles saem de uma regra, e a linha cita `ritu-regras-da-base` (ou a página da regra) nesses campos.
+
+**Vipaka pelo sabor.** Quando nenhuma fonte dá o vipaka de um alimento, ele sai da regra clássica do sabor ([Easy Ayurveda, Avastha paka](https://www.easyayurveda.com/avastha-paka/), ref `ea-avastha-paka`):
+
+| Rasa | Vipaka |
+|---|---|
+| doce, salgado | doce |
+| azedo | azedo |
+| picante, amargo, adstringente | picante |
+
+Com mais de um sabor, vale o sabor principal, o primeiro do `rasa`. Uma fonte que dê o vipaka vence a regra. O campo fica com `confianca: media` quando o rasa tem fonte; se o rasa ainda é `a_confirmar`, a linha segue `baixa`.
+
+**R1. Chás pelas ervas.** As gunas, os estados que um chá favorece e o efeito por dosha são a soma das ervas e especiarias dele, lidas em `alimentos.yaml`.
+
+**R2. Chás pelo virya.** Chá de virya quente não vai para quem está `com_calor`; chá de virya frio não vai para quem está `com_frio`. Chá com a marca `estimulante` só de manhã e à tarde.
+
+**R3. Preparos pelo modo de cozinhar.** O `gunas_do_preparo` sai do modo de preparo:
+
+| Modo | Acrescenta |
+|---|---|
+| Assar | quente, seco |
+| Refogar ou cozinhar com gordura | oleoso |
+| Vapor ou cozido em água | suave |
+| Com leite ou creme | pesado |
+
+**R4. Preparos pelo peso.** O momento de um preparo segue a leveza: preparo leve vai para a manhã e o jantar; preparo pesado, para o almoço, quando a digestão está mais forte.
+
+**Hábitos pelos doshas.** Um hábito (prática do tipo `pratica`) se lê pelo que ele faz com cada dosha. O `efeito` vem da fonte que trata do dosha. As `gunas` são as qualidades por trás desse efeito (o que sobe e o que desce), e os `favorece_estados` são os estados que pedem essas qualidades.
+
+- Água morna (ao acordar e ao longo do dia) acalma vata e kapha; água gelada agrava os dois.
+- Banho morno acalma vata e kapha, de manhã e à noite; a água na cabeça é morna ou fresca, nunca quente. Água fresca no rosto acalma pitta e não vai para quem está `com_frio`.
+- Exercício traz leveza, tira o peso e acalma kapha, mas em excesso agrava vata e pitta. Por isso a caminhada da manhã não acalma vata (vata 0), não vai para quem está `agitada` e leva óleo de gergelim no corpo antes e banho morno depois, na ordem clássica da manhã: óleo, exercício, banho. A manhã, hora de kapha, é a melhor hora para se mexer.
+- Caminhar devagar depois de comer não é exercício: ajuda a digestão (kapha −1) sem mexer em vata. Exercício logo depois de comer fica fora da base.
+- Dormir cedo acalma vata (ficar acordada à noite resseca e agrava vata) e pitta (das 22h às 2h é a hora de pitta).
+- Respiração lenta, pausa em silêncio e alongamento leve acalmam vata. Telas desligadas antes de dormir acalmam vata e pitta.
+- Almoço como refeição principal e jantar leve e cedo seguem o ritmo do dia: a refeição maior na hora de pitta.
+- Pés aquecidos, escalda-pés morno e bolsa morna acalmam vata pelo calor (vata é frio). Sem fonte própria de cada item, ficam com `confianca: baixa`.
 
 ## 9. Cuidados
 

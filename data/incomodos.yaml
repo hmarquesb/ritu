@@ -27,8 +27,8 @@
       evitar_marcas: []
       evitar_texto: "laticínios, doces e gelados"
   fontes:
-    - { ref: a_confirmar, campos: [variantes] }
-  confianca: baixa
+    - { ref: mapi-dor-de-cabeca, campos: [variantes] }
+  confianca: media
 - id: estomago-pesado
   nome: Estômago pesado
   palavras:
@@ -46,17 +46,17 @@
       opcao: "Estômago pesado"
       presentes: [pesado, frio]
       favorecer: [leve, quente]
-      evitar_gunas: [pesado, frio]
+      evitar_gunas: [pesado, frio, oleoso]
       evitar_marcas: []
-      evitar_texto: "pratos pesados, crus e gelados"
+      evitar_texto: "pratos pesados, gordurosos, crus e gelados"
   fontes:
     - { ref: ayurveda-com-guia-dieta, campos: [variantes.unica.favorecer] }
     - {
-        ref: a_confirmar,
+        ref: wjpr-ajirna,
         campos:
           [variantes.unica.presentes, variantes.unica.evitar_gunas, variantes.unica.evitar_texto],
       }
-  confianca: baixa
+  confianca: media
 - id: gases
   nome: Gases, estufamento
   palavras: [gases, gás, estufada, estufamento, barriga inchada, barriga estufada, flatulência]
@@ -178,7 +178,7 @@
       opcao: "Cólica leve"
       presentes: [movel, frio]
       favorecer: [quente, oleoso]
-      evitar_gunas: [frio]
+      evitar_gunas: [frio, seco, aspero]
       evitar_marcas: [estimulante]
       evitar_texto: "gelados, crus e café"
   fontes:
@@ -192,5 +192,5 @@
             variantes.unica.evitar_texto,
           ],
       }
-    - { ref: a_confirmar, campos: [variantes.unica.evitar_gunas] }
-  confianca: baixa
+    - { ref: ayurveda-com-ciclo, campos: [variantes.unica.favorecer, variantes.unica.evitar_gunas] }
+  confianca: media

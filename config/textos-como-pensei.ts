@@ -7,7 +7,7 @@ export const textosComoPensei = {
   dia: {
     hoje: "hoje",
     ontem: "ontem",
-    data: "em {data}",
+    data: "{data}",
   },
   voltar: "Voltar para a conversa",
   detalhes: "Detalhes",

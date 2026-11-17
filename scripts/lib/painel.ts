@@ -185,6 +185,20 @@ export const PAINEL: { uid: string; titulo: "Ritu"; linhas: Linha[] } = {
             { expr: TOTAL("ritu_padroes_total", "tipo", "etapa") },
           ],
         },
+        {
+          titulo: "Edições da memória pela pessoa",
+          descricao: "Em qual nível da memória a pessoa mexeu, e como?",
+          tipo: "barchart",
+          fonte: "metricas",
+          consultas: [{ expr: TOTAL("ritu_memoria_edicoes_total", "nivel") }],
+        },
+        {
+          titulo: "Contas apagadas",
+          descricao: "Quantas contas foram apagadas, por tipo?",
+          tipo: "barchart",
+          fonte: "metricas",
+          consultas: [{ expr: TOTAL("ritu_conta_apagada_total", "tipo") }],
+        },
       ],
     },
     {

@@ -38,6 +38,12 @@ import type { Cenario } from "../../../test/fixtures/cenarios/tipos"
 
 const CLIMA = ["clima.agora", "clima.proximas_horas"]
 
+// Métricas da 020 ainda sem quem as emita (tocarMemoria e apagarConta). A 020 T15 tira esta lista e as emite aqui.
+const SEM_EMISSOR_AINDA: NomeDeMetrica[] = [
+  "ritu_memoria_edicoes_total",
+  "ritu_conta_apagada_total",
+]
+
 const LOGS_DA_LISTA: CodigoDeLog[] = [
   "run_inicio",
   "run_fim",
@@ -210,7 +216,9 @@ describe("cobertura da telemetria pelos cenários", () => {
 
   it("toda métrica de METRICAS é emitida pelo menos uma vez", () => {
     const emitidas = new Set(coleta.metricas.map((m) => m.nome))
-    const esperadas = Object.keys(METRICAS) as NomeDeMetrica[]
+    const esperadas = (Object.keys(METRICAS) as NomeDeMetrica[]).filter(
+      (n) => !SEM_EMISSOR_AINDA.includes(n),
+    )
     expect(esperadas.filter((n) => !emitidas.has(n))).toEqual([])
   })
 

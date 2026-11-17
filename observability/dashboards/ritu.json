@@ -782,19 +782,105 @@
     },
     {
       "id": 18,
+      "type": "barchart",
+      "title": "Edições da memória pela pessoa",
+      "description": "Em qual nível da memória a pessoa mexeu, e como?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 58,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (nivel) (max_over_time(ritu_memoria_edicoes_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "type": "barchart",
+      "title": "Contas apagadas",
+      "description": "Quantas contas foram apagadas, por tipo?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 66,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (tipo) (max_over_time(ritu_conta_apagada_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 20,
       "type": "row",
       "title": "3. Modelos e cota",
       "collapsed": false,
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 66,
+        "y": 74,
         "w": 24,
         "h": 1
       }
     },
     {
-      "id": 19,
+      "id": 21,
       "type": "timeseries",
       "title": "Chamadas por modelo e papel",
       "description": "Quantas chamadas cada modelo recebeu em cada papel na última hora?",
@@ -804,7 +890,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 67,
+        "y": 75,
         "w": 12,
         "h": 8
       },
@@ -837,7 +923,7 @@
       ]
     },
     {
-      "id": 20,
+      "id": 22,
       "type": "barchart",
       "title": "Tokens",
       "description": "Quantos tokens de entrada e de saída cada modelo consumiu?",
@@ -847,7 +933,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 67,
+        "y": 75,
         "w": 12,
         "h": 8
       },
@@ -880,7 +966,7 @@
       ]
     },
     {
-      "id": 21,
+      "id": 23,
       "type": "bargauge",
       "title": "Cota do dia",
       "description": "Quanto da cota diária de cada modelo já foi usado?",
@@ -890,7 +976,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 75,
+        "y": 83,
         "w": 12,
         "h": 8
       },
@@ -932,7 +1018,7 @@
       ]
     },
     {
-      "id": 22,
+      "id": 24,
       "type": "timeseries",
       "title": "Cota do minuto",
       "description": "Como está a cota do minuto de cada modelo?",
@@ -942,7 +1028,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 75,
+        "y": 83,
         "w": 12,
         "h": 8
       },
@@ -976,7 +1062,7 @@
       ]
     },
     {
-      "id": 23,
+      "id": 25,
       "type": "table",
       "title": "Trocas de modelo",
       "description": "Quando e por que o roteador trocou de modelo?",
@@ -986,7 +1072,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 83,
+        "y": 91,
         "w": 12,
         "h": 8
       },
@@ -1019,7 +1105,7 @@
       ]
     },
     {
-      "id": 24,
+      "id": 26,
       "type": "stat",
       "title": "Respostas sem modelo",
       "description": "Quantas respostas foram montadas sem modelo?",
@@ -1029,7 +1115,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 83,
+        "y": 91,
         "w": 6,
         "h": 8
       },
@@ -1070,7 +1156,7 @@
       ]
     },
     {
-      "id": 25,
+      "id": 27,
       "type": "barchart",
       "title": "Erros do modelo",
       "description": "Quais erros os modelos devolveram, por modelo e código?",
@@ -1080,7 +1166,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 91,
+        "y": 99,
         "w": 12,
         "h": 8
       },
@@ -1113,20 +1199,20 @@
       ]
     },
     {
-      "id": 26,
+      "id": 28,
       "type": "row",
       "title": "4. Qualidade",
       "collapsed": false,
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 99,
+        "y": 107,
         "w": 24,
         "h": 1
       }
     },
     {
-      "id": 27,
+      "id": 29,
       "type": "barchart",
       "title": "👍/👎",
       "description": "Como a pessoa avaliou as respostas?",
@@ -1136,7 +1222,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 100,
+        "y": 108,
         "w": 12,
         "h": 8
       },
@@ -1169,7 +1255,7 @@
       ]
     },
     {
-      "id": 28,
+      "id": 30,
       "type": "barchart",
       "title": "Retornos",
       "description": "Como foram os retornos da pessoa sobre o que foi sugerido, e de onde vieram?",
@@ -1179,7 +1265,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 100,
+        "y": 108,
         "w": 12,
         "h": 8
       },
@@ -1212,7 +1298,7 @@
       ]
     },
     {
-      "id": 29,
+      "id": 31,
       "type": "barchart",
       "title": "Trocas de ingrediente",
       "description": "As trocas de ingrediente deram certo?",
@@ -1222,7 +1308,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 108,
+        "y": 116,
         "w": 12,
         "h": 8
       },
@@ -1255,7 +1341,7 @@
       ]
     },
     {
-      "id": 30,
+      "id": 32,
       "type": "barchart",
       "title": "Gostos",
       "description": "Quais gostos a pessoa registrou?",
@@ -1265,7 +1351,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 108,
+        "y": 116,
         "w": 12,
         "h": 8
       },
@@ -1298,7 +1384,7 @@
       ]
     },
     {
-      "id": 31,
+      "id": 33,
       "type": "barchart",
       "title": "Faltas",
       "description": "Que itens faltaram em casa, e de qual origem veio o aviso?",
@@ -1308,7 +1394,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 116,
+        "y": 124,
         "w": 12,
         "h": 8
       },
@@ -1341,7 +1427,7 @@
       ]
     },
     {
-      "id": 32,
+      "id": 34,
       "type": "barchart",
       "title": "Propostas",
       "description": "Quais propostas o agente fez, e o que a pessoa decidiu?",
@@ -1351,7 +1437,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 116,
+        "y": 124,
         "w": 12,
         "h": 8
       },
@@ -1384,7 +1470,7 @@
       ]
     },
     {
-      "id": 33,
+      "id": 35,
       "type": "barchart",
       "title": "Vale ter em casa",
       "description": "Em que etapa está a indicação de vale ter em casa?",
@@ -1394,7 +1480,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 124,
+        "y": 132,
         "w": 12,
         "h": 8
       },
@@ -1427,7 +1513,7 @@
       ]
     },
     {
-      "id": 34,
+      "id": 36,
       "type": "barchart",
       "title": "Entradas",
       "description": "Quantas entradas houve, por tipo de conta, e quantas o limite recusou?",
@@ -1437,7 +1523,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 124,
+        "y": 132,
         "w": 12,
         "h": 8
       },
@@ -1470,20 +1556,20 @@
       ]
     },
     {
-      "id": 35,
+      "id": 37,
       "type": "row",
       "title": "5. Rastro",
       "collapsed": false,
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 132,
+        "y": 140,
         "w": 24,
         "h": 1
       }
     },
     {
-      "id": 36,
+      "id": 38,
       "type": "table",
       "title": "Runs recentes",
       "description": "Quais foram os runs recentes, com caminho, status, passos e duração?",
@@ -1493,7 +1579,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 133,
+        "y": 141,
         "w": 12,
         "h": 8
       },
@@ -1542,7 +1628,7 @@
       ]
     },
     {
-      "id": 37,
+      "id": 39,
       "type": "logs",
       "title": "Avisos e erros",
       "description": "Quais avisos e erros aconteceram recentemente?",
@@ -1552,7 +1638,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 133,
+        "y": 141,
         "w": 12,
         "h": 8
       },

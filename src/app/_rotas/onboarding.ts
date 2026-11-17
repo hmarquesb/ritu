@@ -1,6 +1,8 @@
 import { z } from "zod"
+import { cidadeSchema } from "@/core/accounts/cidade"
 import { calcularQuiz, nomeDoDosha, prakritiDeclarada } from "@/core/accounts/dosha"
 import { proximoPasso, ROTA_DO_PASSO } from "@/core/accounts/onboarding"
+import { quizCompleto } from "@/core/accounts/quiz-completo"
 import { RituError } from "@/core/errors"
 import { doshaSchema } from "@/core/knowledge/vocab"
 import type { Container } from "@/infra/container"
@@ -41,22 +43,6 @@ function schemaDoEvitar(container: Container) {
   ])
 }
 
-const fusoValido = (fuso: string): boolean => {
-  try {
-    Intl.DateTimeFormat("pt-BR", { timeZone: fuso }).resolvedOptions()
-    return true
-  } catch {
-    return false
-  }
-}
-
-const cidadeSchema = z.strictObject({
-  nome: z.string().trim().min(1).max(80),
-  lat: z.number().min(-90).max(90),
-  lon: z.number().min(-180).max(180),
-  fuso: z.string().refine(fusoValido, "fuso_invalido"),
-})
-
 const perfilSchema = z.strictObject({
   dosha: z.union([z.literal("quiz"), z.literal("adiado"), z.array(doshaSchema)]),
   cidade: cidadeSchema.nullable(),
@@ -68,11 +54,8 @@ function schemaDoQuiz(container: Container) {
     respostas: z.array(itemDoQuiz).superRefine((respostas, ctx) => {
       const ids = container.knowledge.quiz.map((pergunta) => pergunta.id)
       const enviados = respostas.map((r) => r.pergunta_id)
-      const completo =
-        enviados.length === ids.length &&
-        new Set(enviados).size === enviados.length &&
-        enviados.every((id) => ids.includes(id))
-      if (!completo) ctx.addIssue({ code: "custom", message: "respostas_do_quiz_invalidas" })
+      if (!quizCompleto(ids, enviados))
+        ctx.addIssue({ code: "custom", message: "respostas_do_quiz_invalidas" })
     }),
   })
 }

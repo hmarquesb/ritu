@@ -9,6 +9,7 @@ import { executarLimpeza } from "@/core/cleanup"
 import { RituError } from "@/core/errors"
 import { resolverEvitar } from "@/core/knowledge/identificar"
 import { createModelRouter } from "@/core/llm/router"
+import { TEXTO_LIMITE_COM_ATALHOS } from "@/core/llm/textos"
 import { RunAbertoError } from "@/core/runs/errors"
 import { createRunService } from "@/core/runs/run-service"
 import { diaLocal } from "@/core/time/dia-local"
@@ -1168,5 +1169,36 @@ describe("conversar: o Juiz antes de entregar", () => {
     const r = await dizer(m, "acordo cedo, comprei abóbora, o que faço?")
     const linhas = await m.stores.proposals.doRun(m.conta.id, r.run_id)
     expect(linhas.map((l) => l.tool)).toEqual(["casa.propor"])
+  })
+})
+
+describe("conversar: semModelo limite", () => {
+  it("só atalhos: done, sem_modelo, sem chamar modelo, abertura do limite, sem fallback", async () => {
+    const m = await montar({ llm: [], roteiro: [] })
+    const r = await m.conversation.conversar(
+      m.conta.id,
+      { atalhos: ["com_frio"] },
+      { semModelo: "limite" },
+    )
+    expect(r).toMatchObject({ status: "done", caminho: "sem_modelo" })
+    expect(m.llm.pedidos).toHaveLength(0)
+    expect(m.runtime.pedidos).toHaveLength(0)
+    expect(r.saida?.resposta).toBe(TEXTO_LIMITE_COM_ATALHOS.replace("{estados}", "com frio"))
+    expect(r.saida?.sugestoes.length).toBeLessThanOrEqual(3)
+    const etapas = await etapasDe(m, r.run_id)
+    expect(etapas.some((e) => e.tipo === "interprete" || e.tipo === "guardrail")).toBe(false)
+    const soma = m.telemetry.metricas.filter((x) => x.nome === "ritu_fallback_sem_llm_total")
+    expect(soma).toHaveLength(0)
+  })
+
+  it("com texto: mensagem_invalida", async () => {
+    const m = await montar({ llm: [], roteiro: [] })
+    await expect(
+      m.conversation.conversar(
+        m.conta.id,
+        { texto: "oi", atalhos: ["com_frio"] },
+        { semModelo: "limite" },
+      ),
+    ).rejects.toMatchObject({ code: "mensagem_invalida" })
   })
 })

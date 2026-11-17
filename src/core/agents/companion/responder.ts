@@ -48,6 +48,7 @@ type OpcoesDoResponder = {
   aoVivo?: (e: EventoAoVivo) => void
   run?: Run
   semModelo?: boolean
+  motivo?: "cota" | "limite"
   perguntasFeitas?: number
   manterAberto?: true
 }
@@ -148,6 +149,7 @@ export function createCompanion(deps: Deps) {
     fuso: string | undefined,
     dado?: Run,
     manterAberto?: true,
+    motivo: "cota" | "limite" = "cota",
   ): Promise<RespostaDoRun> {
     const run =
       dado ??
@@ -159,10 +161,10 @@ export function createCompanion(deps: Deps) {
     const saida = await fimDoRun.entregar(
       contaId,
       run.id,
-      saidaSemModeloDe(kb, dados, perfil),
+      saidaSemModeloDe(kb, dados, perfil, motivo),
       dados,
     )
-    telemetry.contador("ritu_fallback_sem_llm_total")
+    if (motivo !== "limite") telemetry.contador("ritu_fallback_sem_llm_total")
     const gravar = campos(dados, {
       saida,
       modelos: { ...modelosDoRun(dado), decisao: [] },
@@ -293,6 +295,7 @@ export function createCompanion(deps: Deps) {
         perfil.cidade_fuso ?? undefined,
         opts?.run,
         opts?.manterAberto,
+        opts?.motivo,
       )
     }
     return comModelo(contaId, entrada, dados, perfil, opts)

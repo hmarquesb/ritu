@@ -6,7 +6,7 @@ import { verbosDasGunas } from "@/core/knowledge/verbos"
 import type { Estado, MomentoDoDia } from "@/core/knowledge/vocab"
 import { miniDados } from "@/infra/fakes/mini-knowledge"
 import { respostaSemModelo } from "./sem-modelo"
-import { TEXTO_COM_ATALHOS, TEXTO_SO_TEXTO } from "./textos"
+import { TEXTO_COM_ATALHOS, TEXTO_LIMITE_COM_ATALHOS, TEXTO_SO_TEXTO } from "./textos"
 
 const modeloBase = miniDados.praticas.find((p) => p.id === "respiracao-lenta") as Pratica
 
@@ -148,5 +148,23 @@ describe("respostaSemModelo", () => {
     const r = respostaSemModelo(pedido([]), baseCom(praticaTeste("liberada")))
     expect(r.resposta).toBe(TEXTO_SO_TEXTO)
     expect(r.praticas).toEqual([])
+  })
+})
+
+describe("respostaSemModelo com motivo limite", () => {
+  it("usa a abertura do limite com estados e as mesmas práticas", () => {
+    const kb = baseCom(praticaTeste("pratica-a"))
+    const r = respostaSemModelo({ ...pedido(["com_frio"]), motivo: "limite" }, kb)
+    expect(TEXTO_LIMITE_COM_ATALHOS).toBe(
+      "Suas mensagens de hoje acabaram, mas os atalhos continuam. Separei direto da base o que costuma ajudar quando a pessoa está {estados}:",
+    )
+    expect(r.resposta).toBe(TEXTO_LIMITE_COM_ATALHOS.replace("{estados}", "com frio"))
+    expect(r.praticas.length).toBeGreaterThan(0)
+    expect(r.praticas.length).toBeLessThanOrEqual(3)
+  })
+
+  it("sem estados, o texto é o mesmo de cota", () => {
+    const r = respostaSemModelo({ ...pedido([]), motivo: "limite" }, baseCom())
+    expect(r).toEqual({ resposta: TEXTO_SO_TEXTO, praticas: [] })
   })
 })

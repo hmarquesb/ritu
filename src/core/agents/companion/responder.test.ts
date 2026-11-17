@@ -280,6 +280,18 @@ describe("createCompanion.responder", () => {
       ).toHaveLength(1)
     })
 
+    it("semModelo com motivo limite não soma o fallback", async () => {
+      const m = await montar([])
+      const run = await iniciar(m)
+      const r = await m
+        .companion()
+        .responder(m.conta.id, entrada(), { run, semModelo: true, motivo: "limite" })
+      expect(r).toMatchObject({ status: "done", fim: "sem_modelo" })
+      expect(
+        m.telemetry.metricas.filter((x) => x.nome === "ritu_fallback_sem_llm_total"),
+      ).toHaveLength(0)
+    })
+
     it("sem opts.run, soma a intenção como antes", async () => {
       const m = await montar([finalizar(entregaOk)])
       await m.companion().responder(m.conta.id, entrada())

@@ -374,3 +374,31 @@
 - **Decidido:** manter o relógio que a `entrega-4` tem hoje (o noturno, `createRelogioE2e`) e adaptar a ele os roteiros e testes da P2-T9 da `main`.
 - **Por quê:** segue a intenção do pedido (vence o lado da `entrega-4`) sem ressuscitar um código que a trilha já tinha tirado.
 - **Como desfazer:** reaplicar a T20 (a91d363) e trocar o relógio do container.
+
+## 022 · A1 · 401 da limpeza
+
+- **Faltava:** a spec manda a limpeza usar `autorizarCron` (que responde `401 nao_autorizado`) e, ao mesmo tempo, não mudar o 401 dela, que hoje responde `{ erro: "sem_autorizacao" }`.
+- **Decidido:** a limpeza decide por `autorizarCron`. Com o segredo ausente, responde `503 cron_desligado`, como a rota de padrões. Com o cabeçalho errado, mantém `401 { erro: "sem_autorizacao" }`. As rotas novas (padrões e saúde) respondem `nao_autorizado`.
+- **Por quê:** cumpre as duas frases da spec sem quebrar quem já lê o 401 da limpeza.
+- **Como desfazer:** responder com o `erro` de `autorizarCron` também na limpeza e ajustar os testes dela.
+
+## 022 · A2 · `c5-publico` adiado
+
+- **Faltava:** a spec manda registrar o `c5-publico` com os mesmos casos e o mesmo alvo do `c4-site`, mas o `c4-site` ainda não existe em `evals/llm/checkpoints.ts`: ele nasce no fechamento da entrega 3.
+- **Decidido:** o registro do `c5-publico` fica para a junção com o `c4-site`; o resto da 022 segue.
+- **Por quê:** copiar um checkpoint que não existe obrigaria a inventar o alvo.
+- **Como desfazer:** registrar o `c5-publico` com as pastas do `c3-confiavel`.
+
+## 022 · A3 · `vercel` CLI 65.17.0 e `rollback --non-interactive`
+
+- **Faltava:** a versão do CLI e as flags exatas.
+- **Decidido:** `vercel@65.17.0` (a estável publicada em 2026-11-17). Deploy com `deploy --prod --yes --token "$VERCEL_TOKEN" --env RITU_VERSAO=<sha>`, já que a documentação atual diz que `--env` define variável de runtime. Volta com `rollback --token "$VERCEL_TOKEN" --non-interactive`: sem argumento, o `rollback` volta ao deploy de produção anterior (no Hobby, só a ele), e a documentação não lista `--yes` para ele.
+- **Por quê:** é o que a documentação atual da Vercel descreve; não foi possível rodar o CLI nesta sessão para conferir o `--help`.
+- **Como desfazer:** trocar a versão e as flags nos dois passos do job `deploy`.
+
+## 022 · A4 · `x-forwarded-for` na Vercel
+
+- **Faltava:** a spec pede conferir se a Vercel reescreve o `x-forwarded-for` na borda.
+- **Decidido:** nada muda. A documentação de request headers diz que a Vercel sobrescreve o `X-Forwarded-For` e não repassa IP externo, para impedir spoofing (exceção: Trusted Proxy, só no plano Enterprise).
+- **Por quê:** a confiança da 017 no primeiro endereço vale em produção.
+- **Como desfazer:** —

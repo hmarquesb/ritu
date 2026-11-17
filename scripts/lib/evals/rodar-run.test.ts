@@ -65,6 +65,17 @@ describe("runner da conversa com LLM falso", () => {
     expect(resultado.marcas).toEqual([])
   })
 
+  it("o uso sai por papel: Intérprete e Juiz em apoio, o agente em decisao", async () => {
+    const { resultado } = await rodarConversa(casoConversa, {
+      runtime: createScriptedRuntime(soAtalhos.roteiro),
+      llm: createFakeLlm([{ apontamentos: [] }]),
+    })
+
+    expect(resultado.uso.apoio?.chamadas).toBeGreaterThanOrEqual(1)
+    expect(resultado.uso.decisao).toBeDefined()
+    expect(resultado.uso).not.toHaveProperty("reforco")
+  })
+
   it("com telemetria, o span run da conversa chega a ela além da memória do caso", async () => {
     const telemetria = createMemoryTelemetry()
 

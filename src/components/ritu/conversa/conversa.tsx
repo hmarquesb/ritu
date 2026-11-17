@@ -62,7 +62,7 @@ function ExtrasDoRun({ visao, trocas, conversa, aoTrocou }: ExtrasProps) {
   return (
     <>
       {visao.avisos.map((aviso) => (
-        <p key={aviso.texto} className="max-w-[38rem] font-body text-sm text-ink-muted">
+        <p key={aviso.texto} className="max-w-prose font-body text-sm text-ink-muted">
           {aviso.texto}
         </p>
       ))}
@@ -97,7 +97,7 @@ function ExtrasDoRun({ visao, trocas, conversa, aoTrocou }: ExtrasProps) {
         )
       })}
       {visao.evitar.length > 0 ? (
-        <p className="max-w-[38rem] font-body text-body text-ink">
+        <p className="max-w-prose font-body text-body text-ink">
           {formatar(T.evitar.rotulo, { itens: visao.evitar.join(", ") })}
         </p>
       ) : null}
@@ -224,7 +224,7 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
       <div className="sr-only" aria-live="polite">
         {ultimaFrase}
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="sticky bottom-[calc(var(--ritu-bar-h)+1px+env(safe-area-inset-bottom))] z-10 flex flex-col gap-3 bg-canvas lg:bottom-0">
         <IndicadorDeRetornos n={estado.pendentes} />
         <CaixaDeMensagem
           texto={estado.caixa.texto}

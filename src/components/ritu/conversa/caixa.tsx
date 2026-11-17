@@ -84,17 +84,18 @@ export function CaixaDeMensagem({
         enviar()
       }}
       className={cx(
-        "sticky bottom-0 flex flex-col gap-3 border-t border-line bg-canvas px-4 pb-4 pt-3 font-body",
+        "flex flex-col gap-2 border-t border-line bg-canvas px-4 pb-3 pt-2 font-body",
         className,
       )}
     >
       <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-        <legend className="mb-2 p-0 text-sm font-medium text-ink">{T.atalhos}</legend>
-        <div className="flex flex-wrap gap-2">
+        <legend className="mb-1 p-0 text-sm font-medium text-ink">{T.atalhos}</legend>
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
           {atalhosDisponiveis.map((a) => (
             <ToggleChip
               key={a.id}
               icon={ICONES[a.id]}
+              className="shrink-0"
               isSelected={atalhos.includes(a.id)}
               onChange={(m) => alternar(a.id, m)}
             >

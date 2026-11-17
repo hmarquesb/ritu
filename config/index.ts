@@ -21,6 +21,7 @@ import { telaConversa } from "./tela-conversa"
 import { telemetria } from "./telemetria"
 import { textosConversa } from "./textos-conversa"
 import { textosEntrada } from "./textos-entrada"
+import { textosLimites } from "./textos-limites"
 import { toques } from "./toques"
 import { ui } from "./ui"
 
@@ -28,6 +29,7 @@ export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
 export { telaConversa } from "./tela-conversa"
 export { textosConversa } from "./textos-conversa"
+export { textosLimites } from "./textos-limites"
 
 export const config = {
   app,
@@ -53,6 +55,7 @@ export const config = {
   telemetria,
   textosConversa,
   textosEntrada,
+  textosLimites,
   toques,
   ui,
 } as const

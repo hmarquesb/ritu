@@ -1,7 +1,9 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { contaAtual } from "@/app/_lib/conta"
 import { codigoDoErroDeEntrada, signIn, signOut } from "@/infra/auth/next"
+import { getContainer } from "@/infra/container"
 
 const CODIGOS_DE_LIMITE = ["demo_limite_ip", "demo_limite_global"]
 
@@ -23,4 +25,11 @@ export async function entrarComGoogleAcao(): Promise<void> {
 
 export async function sair(): Promise<void> {
   await signOut({ redirectTo: "/" })
+}
+
+export async function apagarMeusDados(): Promise<void> {
+  const atual = await contaAtual()
+  if (!atual) redirect("/")
+  await getContainer().accounts.apagarConta(atual.conta)
+  await signOut({ redirectTo: "/?aviso=dados_apagados" })
 }

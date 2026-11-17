@@ -50,6 +50,7 @@ const STATUS_409 = new Set([
   "pergunta_expirada",
   "aprovacao_expirada",
   "run_pausado",
+  "conversa_em_andamento",
 ])
 
 // O Next carrega os módulos em cópias separadas: o erro lançado pelo container (que vive no

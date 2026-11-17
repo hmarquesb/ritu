@@ -84,13 +84,13 @@ export function CaixaDeMensagem({
         enviar()
       }}
       className={cx(
-        "flex flex-col gap-2 border-t border-line bg-canvas px-4 pb-3 pt-2 font-body",
+        "flex flex-col gap-1.5 border-t border-line bg-canvas px-4 pb-2 pt-1.5 font-body",
         className,
       )}
     >
-      <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-        <legend className="mb-1 p-0 text-sm font-medium text-ink">{T.atalhos}</legend>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+      <fieldset className="m-0 flex min-w-0 flex-col gap-1 border-0 p-0">
+        <legend className="mb-0.5 p-0 text-sm font-medium text-ink">{T.atalhos}</legend>
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
           {atalhosDisponiveis.map((a) => (
             <ToggleChip
               key={a.id}
@@ -120,7 +120,7 @@ export function CaixaDeMensagem({
           }
         }}
       />
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <p
           id={motivoId}
           role="status"

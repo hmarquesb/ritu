@@ -16,7 +16,7 @@ export function DemoBanner({
 }: DemoBannerProps) {
   return (
     <aside aria-label="Demonstração" className="bg-amber-soft text-ink">
-      <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-3">
+      <div className="mx-auto flex max-w-shell flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-3">
         <p className="min-w-0 flex-1 text-sm">{texto}</p>
         {podeCriarPerfil && entrarComGoogleAcao ? (
           <form action={entrarComGoogleAcao}>

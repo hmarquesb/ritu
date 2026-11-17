@@ -142,14 +142,39 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
   const { estado, tentarDeNovo, enviar, digitar, marcar } = conversa
   const [trocas, setTrocas] = useState<Record<string, Troca>>({})
   const listaRef = useRef<HTMLDivElement>(null)
+  const raizRef = useRef<HTMLDivElement>(null)
+  const painelRef = useRef<HTMLDivElement>(null)
+
+  // Mede o painel fixo e guarda a altura numa variável CSS: a rolagem até a resposta a leva em conta.
+  useEffect(() => {
+    const painel = painelRef.current
+    const raiz = raizRef.current
+    if (!painel || !raiz) return
+    const medir = () => raiz.style.setProperty("--painel-h", `${painel.offsetHeight}px`)
+    medir()
+    const observador = new ResizeObserver(medir)
+    observador.observe(painel)
+    return () => observador.disconnect()
+  }, [])
+
+  const statusAberto = estado.aberto?.status
+  const statusAnterior = useRef(statusAberto)
 
   useEffect(() => {
-    if (!estado.anuncio) return
+    const virouPausa =
+      statusAnterior.current !== statusAberto &&
+      (statusAberto === "waiting_for_input" || statusAberto === "waiting_for_approval")
+    statusAnterior.current = statusAberto
+    if (!estado.anuncio && !virouPausa) return
     const respostas = listaRef.current?.querySelectorAll("[data-fala-agente]")
     const ultima = respostas?.item(respostas.length - 1)
     const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ultima?.scrollIntoView({ block: "start", behavior: reduzido ? "auto" : "smooth" })
-  }, [estado.anuncio])
+    const behavior = reduzido ? "auto" : "smooth"
+    // Com fala do agente, ela vai para o alto; sem fala (só pergunta ou bloco), o fim da lista
+    // fica logo acima do painel, que não cobre nada da conversa.
+    if (ultima && !virouPausa) ultima.scrollIntoView({ block: "start", behavior })
+    else listaRef.current?.lastElementChild?.scrollIntoView({ block: "end", behavior })
+  }, [estado.anuncio, statusAberto])
 
   const onde = ondeFicamOsExtras(estado.falas)
   const mostrados = new Set(onde.values())
@@ -164,12 +189,12 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
     setTrocas((t) => ({ ...t, [`${runId}:${posicao}`]: troca }))
 
   return (
-    <div className="flex min-h-[60dvh] flex-col gap-6">
+    <div ref={raizRef} className="flex min-h-[60dvh] flex-col gap-4">
       <div
         ref={listaRef}
         role="log"
         aria-label={T.abas.conversa}
-        className="flex flex-1 flex-col gap-5"
+        className="flex flex-1 flex-col [&>*]:scroll-mb-[var(--painel-h,0px)] gap-5"
       >
         {semNada ? vazio : null}
         {estado.falas.map((fala) => {
@@ -179,7 +204,7 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
               {fala.autor === "pessoa" ? (
                 <FalaDaPessoa texto={fala.texto} />
               ) : (
-                <div data-fala-agente="" className="scroll-mt-4">
+                <div data-fala-agente="" className="scroll-mt-4 scroll-mb-[var(--painel-h,0px)]">
                   <FalaDoAgente texto={fala.texto} />
                 </div>
               )}
@@ -224,7 +249,10 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
       <div className="sr-only" aria-live="polite">
         {ultimaFrase}
       </div>
-      <div className="sticky bottom-[calc(var(--ritu-bar-h)+1px+env(safe-area-inset-bottom))] z-10 flex flex-col gap-3 bg-canvas lg:bottom-0">
+      <div
+        ref={painelRef}
+        className="sticky bottom-[calc(var(--ritu-bar-h)+1px+env(safe-area-inset-bottom))] z-10 flex flex-col gap-1 bg-canvas lg:bottom-0"
+      >
         <IndicadorDeRetornos n={estado.pendentes} />
         <CaixaDeMensagem
           texto={estado.caixa.texto}

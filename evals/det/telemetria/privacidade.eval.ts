@@ -20,7 +20,7 @@ import {
 import type { Cenario } from "../../../test/fixtures/cenarios/tipos"
 
 // Privacidade da telemetria: nada da pessoa, nome de alimento da base, canário ou valor fora do formato de identificador
-// sai em span, evento, métrica, log, resumo de etapa ou console. Roda todos os cenários, os quatro toques, a detecção de
+// sai em span, evento, métrica, log, resumo de etapa ou console. Roda todos os cenários, os quatro toques e os da casa e da lista, a detecção de
 // padrões e os dois caminhos de erro do modelo (troca de modelo e erro na chamada).
 
 // Canários: texto que o código nunca deve emitir. Entram nos campos do cenário, ou pelos stores quando não há campo.
@@ -180,7 +180,7 @@ function cenarioBase(nome: string): Cenario {
   return c
 }
 
-// Os quatro toques sobre um run entregue (chá do frio-agitada), como na cobertura.
+// Os quatro toques sobre um run entregue (chá do frio-agitada), mais os da casa e da lista, como na cobertura.
 async function preparadaDosToques(): Promise<Preparada> {
   const c = plantar(cenarioBase("frio-agitada"))
   if (!c.entrada) throw new Error("frio-agitada sem entrada")
@@ -199,6 +199,9 @@ async function preparadaDosToques(): Promise<Preparada> {
     motivo: "trocar",
   })
   await deps.touches.tocarRetorno(contaId, retornoId, "ajudou")
+  await deps.touches.tocarCasa(contaId, { acao: "adicionar_texto", texto: CANARIO_TEXTO })
+  await deps.touches.tocarLista(contaId, { acao: "por", alimento_id: "gengibre" })
+  await deps.touches.tocarLista(contaId, { acao: "tirar", alimento_id: "gengibre" })
   const respostas = [normalizar(r.saida.resposta ?? "")].filter((t) => t !== "")
   return { contaId, deps, textos: { entradas: textosDaEntrada(c), respostas } }
 }

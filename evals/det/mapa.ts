@@ -116,6 +116,7 @@ export const mapa: LinhaDoMapa[] = [
       "evals/det/aprendizado/nao-tenho.eval.ts",
       "evals/det/aprendizado/toques-sem-modelo.eval.ts",
       "evals/det/telemetria/voto.eval.ts",
+      "evals/det/casa/efeito.eval.ts",
     ],
     desde: 2,
   },
@@ -653,7 +654,11 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Rota sem sessão → `401`; uma conta não lê run, proposta, cas",
-    arquivos: ["evals/det/seguranca/sessao.eval.ts", "evals/det/seguranca/conversa.eval.ts"],
+    arquivos: [
+      "evals/det/seguranca/sessao.eval.ts",
+      "evals/det/seguranca/conversa.eval.ts",
+      "evals/det/seguranca/toques-casa.eval.ts",
+    ],
     desde: 3,
   },
   {

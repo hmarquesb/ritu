@@ -162,11 +162,13 @@ export function Fixos({ fixos, em, grupos, aoMudarDosha }: Props) {
   const [aberta, setAberta] = useState<Aberta>(null)
   const [tirando, setTirando] = useState<ItemFixo | null>(null)
   const fechar = () => setAberta(null)
+  const [tocada, setTocada] = useState<Restricao | null>(null)
   const marcadas = new Set(fixos.restricoes)
 
   async function alternar(id: Restricao, ligada: boolean) {
     const novas = RESTRICOES.filter((r) => (r === id ? ligada : marcadas.has(r)))
     const rotulos = novas.map((r) => T.fixos.restricao[r])
+    setTocada(id)
     await em.perfil(
       { acao: "restricoes", restricoes: novas },
       formatar(T.confirma.anotei, { item: rotulos.join(", ") || T.fixos.nenhum }),
@@ -225,8 +227,7 @@ export function Fixos({ fixos, em, grupos, aoMudarDosha }: Props) {
                   <ToggleChip
                     key={r}
                     isSelected={marcadas.has(r)}
-                    aria-busy={em.pendente === "restricoes" || undefined}
-                    className={em.pendente === "restricoes" ? "opacity-60" : undefined}
+                    isPending={em.pendente === "restricoes" && tocada === r}
                     onChange={(ligada) => alternar(r, ligada)}
                   >
                     {T.fixos.restricao[r]}

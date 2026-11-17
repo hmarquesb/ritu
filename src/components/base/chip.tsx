@@ -17,7 +17,7 @@ import { ICON } from "@/components/base/icon-size"
 import { cx } from "@/components/cx"
 
 const CHIP =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-pill border border-line bg-surface px-4 py-1.5 font-body text-sm font-medium text-ink transition-[transform,background-color,border-color] duration-[var(--ritu-fast)] ease-ritu data-hovered:bg-sunken data-pressed:scale-[0.98] data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-focus-visible:outline-focus data-disabled:opacity-60 data-selected:border-primary data-selected:bg-primary-soft"
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-pill border border-line bg-surface px-4 py-1.5 font-body text-sm font-medium text-ink transition-[transform,background-color,border-color] duration-[var(--ritu-fast)] ease-ritu data-hovered:bg-sunken data-pressed:scale-[0.98] data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-focus-visible:outline-focus data-disabled:opacity-60 data-selected:border-primary data-selected:bg-primary-soft data-pending:cursor-progress data-pending:border-dashed data-pending:bg-sunken"
 
 export type ChipProps = Omit<AriaButtonProps, "className"> & { icon?: Icon; className?: string }
 
@@ -37,11 +37,36 @@ export function Chip({ icon: Glyph, className, children, ...props }: ChipProps) 
 export type ToggleChipProps = Omit<AriaToggleButtonProps, "className"> & {
   icon?: Icon
   className?: string
+  /** Toque em andamento: o chip segue focável, mas não alterna de novo. */
+  isPending?: boolean
 }
 
-export function ToggleChip({ icon: Glyph, className, children, ...props }: ToggleChipProps) {
+/** O chip pendente não repassa o toque (o foco fica nele) e se anuncia como ocupado. */
+export function pendingChipProps(
+  isPending: boolean | undefined,
+  onChange: ((selecionado: boolean) => void) | undefined,
+) {
+  return {
+    onChange: isPending ? undefined : onChange,
+    "data-pending": isPending || undefined,
+    "aria-busy": isPending || undefined,
+  }
+}
+
+export function ToggleChip({
+  icon: Glyph,
+  className,
+  children,
+  isPending,
+  onChange,
+  ...props
+}: ToggleChipProps) {
   return (
-    <AriaToggleButton {...props} className={cx(CHIP, className)}>
+    <AriaToggleButton
+      {...props}
+      {...pendingChipProps(isPending, onChange)}
+      className={cx(CHIP, className)}
+    >
       {(state) => (
         <>
           {state.isSelected ? (

@@ -32,11 +32,14 @@ function complemento(g: Linha): string {
   return partes.filter((p): p is string => p !== null).join(" · ")
 }
 
-// O toque do chip grava `gosto: <valor>` ao marcar e `gosto: null` ao desmarcar.
-function chaveGosto(g: Linha, valor: "gosta" | "nao_gosta"): string | null {
+// O toque no chip grava `gosto: <valor>` ao marcar e `gosto: null` ao desmarcar: a ação
+// serve ao `onChange` e à chave do pendente.
+function acaoDoGosto(g: Linha, valor: "gosta" | "nao_gosta") {
   const gosto = g.gosto === valor ? null : valor
-  return chaveDoToque({ acao: "gosto", item_tipo: g.item_tipo, item_id: g.item_id, gosto })
+  return { acao: "gosto", item_tipo: g.item_tipo, item_id: g.item_id, gosto } as const
 }
+
+const chaveGosto = (g: Linha, valor: "gosta" | "nao_gosta") => chaveDoToque(acaoDoGosto(g, valor))
 
 type Props = { gostos: Linha[]; em: VoceEmUso }
 
@@ -63,22 +66,16 @@ export function GostosNaMemoria({ gostos, em }: Props) {
                   <ToggleChip
                     aria-label={`${C.gosto}: ${g.nome}`}
                     isSelected={g.gosto === "gosta"}
-                    aria-busy={pendente === chaveGosto(g, "gosta") || undefined}
-                    className={pendente === chaveGosto(g, "gosta") ? "opacity-60" : undefined}
-                    onChange={(marcado) =>
-                      memoria({ acao: "gosto", ...base(g), gosto: marcado ? "gosta" : null })
-                    }
+                    isPending={pendente === chaveGosto(g, "gosta")}
+                    onChange={() => memoria(acaoDoGosto(g, "gosta"))}
                   >
                     {C.gosto}
                   </ToggleChip>
                   <ToggleChip
                     aria-label={`${C.naoGosto}: ${g.nome}`}
                     isSelected={g.gosto === "nao_gosta"}
-                    aria-busy={pendente === chaveGosto(g, "nao_gosta") || undefined}
-                    className={pendente === chaveGosto(g, "nao_gosta") ? "opacity-60" : undefined}
-                    onChange={(marcado) =>
-                      memoria({ acao: "gosto", ...base(g), gosto: marcado ? "nao_gosta" : null })
-                    }
+                    isPending={pendente === chaveGosto(g, "nao_gosta")}
+                    onChange={() => memoria(acaoDoGosto(g, "nao_gosta"))}
                   >
                     {C.naoGosto}
                   </ToggleChip>

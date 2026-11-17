@@ -216,3 +216,31 @@
 - **Decidido:** os dois arquivos gerados saem do Biome em `biome.json` (`files.includes`), só eles. O teste da T12 trava que o gerado bate com a definição.
 - **Por quê:** mesmo precedente do `evals/resultados/historico.json` (014 T17): arquivo gerado, travado por teste, não se formata à mão.
 - **Como desfazer:** tirar as duas linhas de `biome.json` e fazer o `painel:gerar` formatar a saída com o Biome.
+
+## 018 · A1 · RadioGroup e ToggleButton na base
+
+- **Faltava:** a spec usa `RadioGroup` (pergunta de casa) e `ToggleButton` (👍/👎), que a 016 não criou.
+- **Decidido:** a T5 cria `src/components/base/radio-group.tsx` e `toggle-button.tsx` sobre o React Aria, com tokens, e os mostra na `/marca`.
+- **Por quê:** React Aria só em `src/components/` (R5); componente base novo vai para a vitrine, cujo E2E é o gate de acessibilidade.
+- **Como desfazer:** trocar os usos por `Checkbox`/`ToggleChip` e apagar os dois arquivos.
+
+## 018 · A2 · handlers em `src/app/_rotas/`
+
+- **Faltava:** onde ficam os handlers das rotas da conversa.
+- **Decidido:** como na 017 A4: `src/app/_rotas/conversa.ts` e `fluxo-de-run.ts`, testados com os stores em memória; `route.ts` só liga a `depsReais()`.
+- **Por quê:** mesmo padrão já em uso; evals chamam os handlers sem servidor.
+- **Como desfazer:** mover o corpo para cada `route.ts`.
+
+## 018 · A3 · status HTTP por código de erro
+
+- **Faltava:** `criarRota` responde `400` para todo `RituError`; a spec pede `409` para `run_aberto`, `run_nao_continuavel`, `pergunta_expirada`, `aprovacao_expirada` e `404` para `run_nao_encontrado`.
+- **Decidido:** `statusDoErro(code)` em `src/app/_lib/rota.ts` (T12), usado por `criarRota` e `criarRotaDeFluxo`; `run_pausado` também → 409; o resto continua 400.
+- **Por quê:** um mapa só para as duas rotas; nenhuma rota da 017 lança esses códigos.
+- **Como desfazer:** voltar `criarRota` a 400 fixo e mapear nos handlers.
+
+## 018 · A4 · estado da tela em redutor puro
+
+- **Faltava:** como testar `useConversa` sem teste de componente.
+- **Decidido:** o estado fica em `src/components/ritu/conversa/estado.ts` (redutor puro, Vitest); `use-conversa.ts` só liga o redutor ao `fetch` e ao fluxo.
+- **Por quê:** a lógica de estado fica testada sem DOM; o E2E cobre a ligação.
+- **Como desfazer:** juntar o redutor no hook.

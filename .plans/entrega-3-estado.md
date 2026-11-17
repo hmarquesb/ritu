@@ -1,5 +1,6 @@
 # Entrega 3 · Estado
 
+> A dona autorizou (2026-11-16, 5ª sessão): seguir sozinho até 95% de uso; a partir de 85%, no máximo duas tarefas por onda. Autorizou também juntar a `entrega-3` (017) na `main` antes do portão 2 e começar a 018.
 > A dona autorizou (2026-11-16, 2ª sessão) seguir sozinho até 95% (janela de 5 horas e contexto); a partir de 80%, no máximo duas tarefas por onda.
 > 2026-11-16: `main` juntada (a0e68e4; 013 e 016 `implemented` na `main`). A 017 pode começar; 018 a 020 dependem dela.
 > Sem `git push`: o remoto `origin` não está acessível (como na entrega 2); a branch `entrega-3` fica só local. Push e CI ficam para quando o repositório remoto existir.
@@ -87,3 +88,29 @@
 > 2026-11-16: `main` juntada em 324041b (014 e 015). Conflitos: config, `METRICAS` (registro tipado; `ritu_entrada_total` acrescentada), DECISOES; acomodação `telemetry.log(codigo)` em rota/cron; `mapa.ts` com os evals de segurança da 017 e o `telemetria/voto.eval.ts` da `main`. A2 resolvida pela `main` (`erro_inesperado` em `LOGS`). Gates do merge: lint, typecheck, build, dup verdes; as duas falhas (contagem de métricas e mapa) corrigidas e reconferidas isoladas; gates completos no fechamento.
 > 017 fechada (2026-11-16) em 70cdd07: gates 1 a 6 verdes no repositório inteiro (lint; typecheck; test 2851, a única falha — contagem de painéis da C7 — corrigida e `scripts/lib` reconferido 505/505; eval:det 1108; build; E2E 99 + 9 pulados; dup 0 clones). ADR 0043 (0042 ficou com a telemetria da trilha principal). Docs vivos atualizados (ARCHITECTURE §4–§7, BUSINESS §6 e §13, DESIGN §5, OBSERVABILITY, DEVELOPMENT, linha do `test:e2e` no AGENTS, linhas 017 e 020 do backlog); linhas de status ficam com a sessão principal.
 > Para o relatório (017): não conferidos sem Postgres/rede — `test:db` (tabela `limites`, `semear`), demonstração com banco real e `npm run cleanup` imprimindo `limites`, login Google real. Critérios de aceite da spec seguem com `[ ]` (cobertos por E2E e testes, salvo os acima). No E2E, `[WebServer] [auth][error] CredentialsSignin` aparece no cenário de limite (6ª demonstração recusada), sem falha. Screenshots em `.plans/017-*.png`.
+
+> 2026-11-16 (5ª sessão): `main` juntada na branch (fb91cd6, com a correção J1: o eval de cobertura de telemetria da 015 passa a emitir `ritu_entrada_total` pelos caminhos de entrada); gates 1 a 5 verdes. Depois, `entrega-3` juntada na `main` (a3dd60f) com autorização da dona; 017 `implemented` na `main`. Falha intermitente de carga em `guardrails/privacidade.eval.ts` (passa isolado 3/3).
+
+## 018 · Tela Conversa
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Add RunRepository.doDia and votos | pendente |  |
+| T2 · Add the conversation screen configs and texts | pendente |  |
+| T3 · Call aoCriar when conversar creates the run | pendente |  |
+| T4 · Add the E2E mode scripts, the fixed weather and wire them in the container | pendente |  |
+| T5 · Add the radio group and the toggle button to the base components | pendente |  |
+| T6 · Add the step sentences | pendente |  |
+| T7 · Add the signed-in navigation and the empty tab pages | pendente |  |
+| T8 · Add the run view projection | pendente |  |
+| T9 · Build the speech, steps, footer, returns indicator and message box | pendente |  |
+| T10 · Add the stream events codec | pendente |  |
+| T11 · Add the conversation of the day | pendente |  |
+| T12 · Add the streaming route helper and the error status map | pendente |  |
+| T13 · Add the screen state reducer and the useConversa hook | pendente |  |
+| T14 · Build the suggestion, ingredient, buy-later line, question and approval block | pendente |  |
+| T15 · Add the JSON routes of the conversation and the run | pendente |  |
+| T16 · Add the streaming run routes | pendente |  |
+| T17 · Build the conversation screen and page | pendente |  |
+| T18 · Add the conversation deterministic evals | pendente |  |
+| T19 · Write the conversation E2E and take the screenshots | pendente |  |

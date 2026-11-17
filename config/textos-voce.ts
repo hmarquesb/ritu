@@ -4,6 +4,7 @@ export const textosVoce = {
   titulo: "Você",
   dosha: {
     titulo: "Seu dosha",
+    nomes: { vata: "Vata", pitta: "Pitta", kapha: "Kapha" },
     elementos: "Elementos: {lista}",
     qualidades: "Qualidades: {lista}",
     corpo: "Corpo",

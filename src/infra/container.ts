@@ -1,5 +1,6 @@
 import { type AppConfig, config } from "@config/index"
 import { apagarConta } from "@/core/accounts/apagar"
+import { fusoDaConta } from "@/core/accounts/fuso"
 import type { Conta } from "@/core/accounts/types"
 import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
@@ -371,7 +372,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return lerCasaDoCore(
         { stores: container.stores, kb: container.knowledge, clock },
         contaId,
-        await fusoDaConta(container, contaId),
+        await fusoDaConta(container.stores, contaId),
       )
     },
     async lerComoFicou(contaId) {
@@ -380,7 +381,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
         retornos,
         kb: container.knowledge,
         agora: clock.now(),
-        fuso: await fusoDaConta(container, contaId),
+        fuso: await fusoDaConta(container.stores, contaId),
       })
     },
     // Você e Como pensei: o fuso vem do perfil, como em Minha casa.
@@ -388,7 +389,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return lerVoceDoCore(
         { stores: container.stores, kb: container.knowledge, clock },
         conta,
-        await fusoDaConta(container, conta.id),
+        await fusoDaConta(container.stores, conta.id),
       )
     },
     async lerComoPensei(contaId, runId) {
@@ -396,7 +397,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
         { stores: container.stores, kb: container.knowledge, clock },
         contaId,
         runId,
-        await fusoDaConta(container, contaId),
+        await fusoDaConta(container.stores, contaId),
       )
     },
     // Apagar a conta: a cascata e a métrica ficam em `core/accounts/apagar.ts`.
@@ -422,11 +423,6 @@ export function createContainer(overrides?: Partial<Container>): Container {
     ...overrides,
   }
   return container
-}
-
-async function fusoDaConta(container: Container, contaId: string): Promise<string> {
-  const perfil = await container.stores.profiles.ler(contaId)
-  return perfil?.cidade_fuso ?? config.clima.fusoPadrao
 }
 
 let instance: Container | undefined

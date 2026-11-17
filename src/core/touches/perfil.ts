@@ -50,8 +50,11 @@ export type AcaoDoPerfil = z.infer<typeof acaoDoPerfilSchema>
 
 type Item = { tipo: string; valor: string }
 type ItemDeNaoCome = { tipo: "alimento" | "texto"; valor: string }
-type Resultado = { nome: string }
 type Cidade = z.infer<typeof cidadeSchema>
+
+// Toda ação devolve o nome. O quiz devolve também o resultado (doshas e dual) que já calculou.
+export type ResultadoDoPerfil = { nome: string } | { nome: string; doshas: Dosha[]; dual: boolean }
+type Resultado = ResultadoDoPerfil
 
 const corpoInvalido = () => new RituError("corpo_invalido", "Corpo inválido")
 const toqueInvalido = () => new RituError("toque_invalido", "Toque inválido")
@@ -92,7 +95,11 @@ async function aplicarQuiz(
   if (!quizCompleto(ids, enviados)) throw corpoInvalido()
   const resultado = calcularQuiz(respostas.map((r) => r.dosha))
   await stores.profiles.definirPrakriti(contaId, resultado.prakriti, "quiz")
-  return { nome: nomeDoDosha(resultado.prakriti, deps.kb) }
+  return {
+    nome: nomeDoDosha(resultado.prakriti, deps.kb),
+    doshas: resultado.doshas,
+    dual: resultado.dual,
+  }
 }
 
 async function aplicarCidade(

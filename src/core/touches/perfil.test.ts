@@ -117,6 +117,13 @@ describe("tocarPerfil: quiz", () => {
     expect(perfil.prakriti?.pitta).toBe(1)
   })
 
+  it("devolve o nome, os doshas e o dual que o quiz já calculou", async () => {
+    const { deps, kb } = montar()
+    const respostas = kb.quiz.map((p) => ({ pergunta_id: p.id, dosha: "vata" as const }))
+    const r = await tocarPerfil(deps, "c1", { acao: "quiz", respostas })
+    expect(r).toEqual({ nome: expect.any(String), doshas: ["vata"], dual: false })
+  })
+
   it("pergunta faltando recusa com corpo_invalido", async () => {
     const { deps, kb } = montar()
     const respostas = kb.quiz.slice(1).map((p) => ({ pergunta_id: p.id, dosha: "vata" as const }))

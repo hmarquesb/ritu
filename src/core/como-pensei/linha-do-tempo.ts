@@ -1,6 +1,7 @@
 import { textosComoPensei } from "@config/index"
 import { z } from "zod"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
+import { fraseDoEstado } from "@/core/patterns/textos"
 import { conteudoDaPropostaSchema } from "@/core/proposals/conteudo"
 import type { Proposta } from "@/core/proposals/ports"
 import { textoDaProposta } from "@/core/proposals/textos"
@@ -98,14 +99,6 @@ function formatarNumero(n: number): string {
   return n.toLocaleString("pt-BR", { maximumFractionDigits: 1 })
 }
 
-// Nome do estado como aparece na frase de 012: o primeiro trecho do rótulo, em minúsculas.
-function nomeDoEstado(id: string, kb: KnowledgeBase): string | undefined {
-  const rotulo = kb.estados.find((e) => e.id === id)?.rotulo
-  if (!rotulo) return undefined
-  const primeiro = (rotulo.split(",")[0] ?? rotulo).trim()
-  return primeiro.charAt(0).toLowerCase() + primeiro.slice(1)
-}
-
 function horaNoFuso(d: Date, fuso: string): string {
   const partes = new Intl.DateTimeFormat("pt-BR", {
     hour: "numeric",
@@ -168,7 +161,7 @@ function corpoDoInterprete(e: RunEtapa, ctx: Contexto): Corpo | undefined {
     .filter((n): n is string => n !== undefined)
   if (nomes.length === 0) return undefined
   const estados = (ctx.run.momento?.estados ?? [])
-    .map((id) => nomeDoEstado(id, ctx.kb))
+    .map((id) => fraseDoEstado(id))
     .filter((n): n is string => n !== undefined)
   return {
     tipo: "entendi",

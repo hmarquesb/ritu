@@ -79,6 +79,11 @@ export function lerChave(
   return lerJuntos(chave)
 }
 
+// Frase de um estado como a 012 mostra ("com frio"); undefined: o id não é um estado.
+export function fraseDoEstado(id: string): string | undefined {
+  return ehEstado(id) ? NA_FRASE[id] : undefined
+}
+
 function textoDosEstados(estados: Estado[]): string {
   const nomes = emOrdem(estados).map((e) => NA_FRASE[e])
   if (nomes.length <= 1) return nomes.join("")

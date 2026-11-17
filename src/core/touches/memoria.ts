@@ -1,11 +1,10 @@
 import { config } from "@config/index"
 import { z } from "zod"
 import { RituError } from "@/core/errors"
-import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { createPatterns } from "@/core/patterns"
-import type { ItemTipo } from "@/core/preferences/ports"
 import type { createRoutine } from "@/core/routine"
 import { diaLocal, diasEntre } from "@/core/time/dia-local"
+import { nomeNaBase } from "./base"
 import type { Deps } from "./deps"
 import { tocarGosto } from "./gosto"
 
@@ -48,22 +47,9 @@ export type DepsDaMemoria = Deps & { routine: RotinaDeMemoria; patterns: Padroes
 
 type Nivel = "gostos" | "faltas" | "rotina" | "padroes" | "conversa"
 type Feito = { nome: string; nivel: Nivel }
-type Item = { tipo: ItemTipo; id: string }
 
 const toqueInvalido = () => new RituError("toque_invalido", "Toque inválido")
 const conversaEmAndamento = () => new RituError("conversa_em_andamento", "Conversa em andamento")
-
-// Nome do item na base; undefined: fora da base.
-function nomeDoItem(kb: KnowledgeBase, item: Item): string | undefined {
-  switch (item.tipo) {
-    case "alimento":
-      return kb.alimento(item.id)?.nome
-    case "preparo":
-      return kb.preparo(item.id)?.nome
-    case "pratica":
-      return kb.pratica(item.id)?.nome
-  }
-}
 
 // Só apaga a conversa de um dia dentro da janela (hoje e os dias anteriores, no fuso da conta).
 async function apagarConversa(
@@ -92,11 +78,11 @@ async function executar(
     case "gosto": {
       const item = { tipo: acao.item_tipo, id: acao.item_id }
       await tocarGosto(deps, contaId, item, acao.gosto)
-      return { nome: nomeDoItem(deps.kb, item) ?? item.id, nivel: "gostos" }
+      return { nome: nomeNaBase(deps.kb, item) ?? item.id, nivel: "gostos" }
     }
     case "esquecer": {
       const item = { tipo: acao.item_tipo, id: acao.item_id }
-      const nome = nomeDoItem(deps.kb, item)
+      const nome = nomeNaBase(deps.kb, item)
       if (nome === undefined) throw toqueInvalido()
       await deps.tx.emTransacao((s) => s.preferences.apagar(contaId, item))
       return { nome, nivel: "gostos" }

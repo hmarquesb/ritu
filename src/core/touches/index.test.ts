@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { RituError } from "@/core/errors"
 import { createTouches } from "@/core/touches"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
@@ -16,6 +16,8 @@ function montar() {
     kb: createMiniKnowledge(),
     clock,
     telemetry,
+    routine: { apagarNota: vi.fn(), corrigirNota: vi.fn() },
+    patterns: { decidirPadrao: vi.fn(), apagarPadrao: vi.fn() },
   })
   return { stores, telemetry, touches }
 }
@@ -30,17 +32,35 @@ async function erroDe(promessa: Promise<unknown>): Promise<unknown> {
 }
 
 describe("createTouches", () => {
-  it("expõe os sete toques", () => {
+  it("expõe os nove toques", () => {
     const { touches } = montar()
     expect(Object.keys(touches).sort()).toEqual([
       "responderTroca",
       "tocarCasa",
       "tocarGosto",
       "tocarLista",
+      "tocarMemoria",
+      "tocarPerfil",
       "tocarRetorno",
       "tocarVoto",
       "trocarIngrediente",
     ])
+  })
+
+  it("tocarPerfil e tocarMemoria chegam ao domínio com as deps do container", async () => {
+    const { stores, telemetry, touches } = montar()
+    expect(await touches.tocarPerfil("c1", { acao: "cidade", cidade: null })).toEqual({ nome: "" })
+    const memoria = await touches.tocarMemoria("c1", {
+      acao: "gosto",
+      item_tipo: "alimento",
+      item_id: "leite",
+      gosto: "gosta",
+    })
+    expect(memoria).toEqual({ nome: "Leite" })
+    const pref = (await stores.preferences.ler("c1", [{ tipo: "alimento", id: "leite" }]))[0]
+    expect(pref?.gosto).toBe("gosta")
+    const metricas = telemetry.metricas.map((m) => m.nome)
+    expect(metricas).toContain("ritu_memoria_edicoes_total")
   })
 
   it("tocarCasa e tocarLista chegam ao domínio com as deps do container", async () => {

@@ -1,9 +1,12 @@
+import { config } from "@config/index"
 import type { Resultado, Retorno } from "@/core/outcomes/ports"
 import type { ItemTipo } from "@/core/preferences/ports"
 import { type AcaoDaCasa, tocarCasa } from "./casa"
 import type { Deps } from "./deps"
 import { tocarGosto } from "./gosto"
 import { type AcaoDaLista, tocarLista } from "./lista"
+import { type AcaoDaMemoria, type DepsDaMemoria, tocarMemoria } from "./memoria"
+import { type AcaoDoPerfil, tocarPerfil } from "./perfil"
 import { tocarRetorno } from "./retorno"
 import {
   type MotivoDaTroca,
@@ -13,7 +16,13 @@ import {
 } from "./troca"
 import { tocarVoto } from "./voto"
 
-export function createTouches(deps: Deps): {
+// O fuso da conta (perfil ou o padrão), como o container já lê para Minha casa.
+async function fusoDaConta(deps: Deps, contaId: string): Promise<string> {
+  const perfil = await deps.stores.profiles.ler(contaId)
+  return perfil?.cidade_fuso ?? config.clima.fusoPadrao
+}
+
+export function createTouches(deps: DepsDaMemoria): {
   tocarRetorno(contaId: string, retornoId: string, resultado: Resultado): Promise<Retorno>
   tocarGosto(
     contaId: string,
@@ -37,6 +46,8 @@ export function createTouches(deps: Deps): {
   ): Promise<ResultadoDaTroca>
   tocarCasa(contaId: string, acao: AcaoDaCasa): Promise<{ nome: string }>
   tocarLista(contaId: string, acao: AcaoDaLista): Promise<{ nome: string }>
+  tocarPerfil(contaId: string, acao: AcaoDoPerfil): Promise<{ nome: string }>
+  tocarMemoria(contaId: string, acao: AcaoDaMemoria): Promise<{ nome: string }>
 } {
   return {
     tocarRetorno: (contaId, retornoId, resultado) =>
@@ -47,9 +58,14 @@ export function createTouches(deps: Deps): {
     responderTroca: (contaId, p) => responderTroca(deps, contaId, p),
     tocarCasa: (contaId, acao) => tocarCasa(deps, contaId, acao),
     tocarLista: (contaId, acao) => tocarLista(deps, contaId, acao),
+    tocarPerfil: (contaId, acao) => tocarPerfil(deps, contaId, acao),
+    tocarMemoria: async (contaId, acao) =>
+      tocarMemoria(deps, contaId, acao, await fusoDaConta(deps, contaId)),
   }
 }
 
 export { type AcaoDaCasa, acaoDaCasaSchema } from "./casa"
 export { type AcaoDaLista, acaoDaListaSchema } from "./lista"
+export { type AcaoDaMemoria, acaoDaMemoriaSchema } from "./memoria"
+export { type AcaoDoPerfil, acaoDoPerfilSchema } from "./perfil"
 export type { MotivoDaTroca, ResultadoDaTroca } from "./troca"

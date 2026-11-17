@@ -260,5 +260,43 @@ export function outcomesContract(make: () => Promise<ContractEnv> | ContractEnv)
       expect((await outcomes.respondidosDesde(a, desde)).map((r) => r.id)).toEqual([depois.id])
       expect((await outcomes.respondidosDesde(b, desde)).map((r) => r.id)).toEqual([deOutra.id])
     })
+
+    it("criar com criadoEm grava o criado_em passado, não o do relógio", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const runId = await criarRun(env.stores, a)
+      const criadoEm = new Date("2026-01-10T08:00:00.000Z")
+
+      const [retorno] = await env.stores.outcomes.criar(a, runId, [sugestao("chá antigo")], {
+        criadoEm,
+      })
+
+      expect(retorno).toMatchObject({ criado_em: "2026-01-10T08:00:00.000Z" })
+    })
+
+    it("criar sem criadoEm grava o criado_em do relógio", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const runId = await criarRun(env.stores, a)
+      env.clock.advance(3 * UMA_HORA)
+
+      const [retorno] = await env.stores.outcomes.criar(a, runId, [sugestao("chá")])
+
+      expect(retorno).toMatchObject({ criado_em: env.clock.now().toISOString() })
+    })
+
+    it("pendentes ordena por criado_em desc respeitando o criadoEm passado, não a ordem de inserção", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const { outcomes } = env.stores
+      const runId = await criarRun(env.stores, a)
+      const cedo = new Date("2026-01-15T09:00:00.000Z")
+      const tarde = new Date("2026-01-15T11:00:00.000Z")
+      const meio = new Date("2026-01-15T10:00:00.000Z")
+
+      await outcomes.criar(a, runId, [sugestao("cedo")], { criadoEm: cedo })
+      await outcomes.criar(a, runId, [sugestao("tarde")], { criadoEm: tarde })
+      await outcomes.criar(a, runId, [sugestao("meio")], { criadoEm: meio })
+
+      const pendentes = await outcomes.pendentes(a)
+      expect(pendentes.map((r) => r.sugestao.titulo)).toEqual(["tarde", "meio", "cedo"])
+    })
   })
 }

@@ -82,6 +82,21 @@ export function shortagesContract(make: () => Promise<ContractEnv> | ContractEnv
       expect(await shortages.lista(a)).toEqual([])
     })
 
+    it("porNaLista aceita o motivo pessoa, sem detalhe, e lista devolve o item", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const { shortages } = env.stores
+      await shortages.porNaLista(a, { alimento_id: "gengibre", motivo: "pessoa", detalhe: "" })
+
+      const lista = await shortages.lista(a)
+      expect(lista).toHaveLength(1)
+      expect(lista[0]).toMatchObject({
+        conta_id: a,
+        alimento_id: "gengibre",
+        motivo: "pessoa",
+        detalhe: "",
+      })
+    })
+
     it("apagarFaltasAntesDe apaga as faltas de dias anteriores, de todas as contas, e devolve a quantidade", async () => {
       const { a, b } = await criarDuasContas(env.stores)
       const { shortages } = env.stores

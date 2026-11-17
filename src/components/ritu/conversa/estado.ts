@@ -15,6 +15,9 @@ export type EstadoDaConversa = {
   anuncio?: string
   // A mensagem enviada e ainda sem run: volta para a caixa se o envio falhar.
   enviado?: { texto: string; atalhos: string[] }
+  limites: EstadoDosLimites
+  // O texto escrito quando o envio foi barrado pelo limite (só em memória).
+  textoGuardado?: string
 }
 
 export type AcaoDaConversa =
@@ -22,6 +25,8 @@ export type AcaoDaConversa =
   | { tipo: "retomou" }
   | { tipo: "evento"; evento: EventoDaTela }
   | { tipo: "falhou"; codigo?: string }
+  | { tipo: "barrou"; limites: EstadoDosLimites }
+  | { tipo: "desfez" }
   | { tipo: "visao"; visao: VisaoDoRun; pendentes?: number }
   | { tipo: "digitou"; texto: string }
   | { tipo: "marcou"; atalhos: string[] }
@@ -36,6 +41,7 @@ export function inicial(c: ConversaDoDia): EstadoDaConversa {
     aberto: c.aberto,
     pendentes: c.pendentes,
     caixa: { texto: c.mensagem_sugerida ?? "", atalhos: [], respondendo: false },
+    limites: c.limites,
   }
 }
 
@@ -131,6 +137,21 @@ function aoFim(
     aoVivo: undefined,
     enviado: undefined,
     erro: undefined,
+    limites: evento.limites ?? estado.limites,
+  }
+}
+
+function barrar(estado: EstadoDaConversa, limites: EstadoDosLimites): EstadoDaConversa {
+  const pendente = estado.falas.some((f) => f.id === ID_OTIMISTA) ? estado.enviado : undefined
+  return {
+    ...estado,
+    falas: semOtimista(estado.falas),
+    caixa: { ...estado.caixa, respondendo: false },
+    aoVivo: undefined,
+    enviado: undefined,
+    erro: undefined,
+    limites,
+    textoGuardado: pendente?.texto || estado.textoGuardado,
   }
 }
 
@@ -183,6 +204,16 @@ export function reduzir(estado: EstadoDaConversa, acao: AcaoDaConversa): EstadoD
       }
     case "evento":
       return aoEvento(estado, acao.evento)
+    case "desfez":
+      return {
+        ...estado,
+        falas: semOtimista(estado.falas),
+        caixa: { ...estado.caixa, respondendo: false },
+        aoVivo: undefined,
+        enviado: undefined,
+      }
+    case "barrou":
+      return barrar(estado, acao.limites)
     case "falhou":
       return falhar(estado, acao.codigo ?? "rede")
     case "visao": {

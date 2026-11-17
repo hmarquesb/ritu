@@ -148,4 +148,42 @@ describe("estado da conversa", () => {
     e = reduzir(e, { tipo: "marcou", atalhos: ["seca"] })
     expect(e.caixa).toEqual({ texto: "x", atalhos: ["seca"], respondendo: false })
   })
+
+  describe("limites", () => {
+    const esgotadas = {
+      mensagens: { tipo: "esgotadas" as const, motivo: "conta" as const },
+      cota_ia: { esgotada: false as const },
+    }
+
+    it("inicial traz os limites da conversa", () => {
+      expect(inicial(vazia).limites).toEqual(vazia.limites)
+    })
+
+    it("fim troca os limites", () => {
+      const e = reduzir(enviado(), {
+        tipo: "evento",
+        evento: { tipo: "fim", visao: visao("r1"), pendentes: 1, limites: esgotadas },
+      })
+      expect(e.limites).toEqual(esgotadas)
+    })
+
+    it("fim sintético sem limites mantém os do estado", () => {
+      let e = reduzir(inicial({ ...vazia, limites: esgotadas }), {
+        tipo: "evento",
+        evento: { tipo: "inicio", run_id: "r1" },
+      })
+      e = reduzir(e, { tipo: "visao", visao: visao("r1") })
+      expect(e.limites).toEqual(esgotadas)
+    })
+
+    it("recusa 429 guarda o texto, troca os limites e desfaz a fala otimista", () => {
+      const e = reduzir(enviado(), { tipo: "barrou", limites: esgotadas })
+      expect(e.limites).toEqual(esgotadas)
+      expect(e.textoGuardado).toBe("oi")
+      expect(e.falas.some((f) => f.id === "otimista")).toBe(false)
+      expect(e.caixa.respondendo).toBe(false)
+      expect(e.aoVivo).toBeUndefined()
+      expect(e.enviado).toBeUndefined()
+    })
+  })
 })

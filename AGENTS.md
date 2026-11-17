@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 construída (008 a 015), com a tag `entrega-2`, aguardando o portão 2. Entrega 3 (016 a 020) aprovada; 016 implementada (trilha adiantada, juntada na `main`).
+> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 construída (008 a 015), com a tag `entrega-2`, aguardando o portão 2. Entrega 3 (016 a 020) aprovada; 016 e 017 implementadas (trilha adiantada, juntadas na `main`); 018 em construção.
 
 ## O que é o projeto
 

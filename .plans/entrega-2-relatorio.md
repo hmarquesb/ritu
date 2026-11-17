@@ -1,6 +1,6 @@
 # Entrega 2 · Relatório: o agente que conversa, pergunta, aprende e se confere
 
-Data: 2026-11-17 · Tag: `entrega-2` · Com `git push` (CI verde no fechamento da 015).
+Data: 2026-11-17 · Tag: `entrega-2` (`c9ccf6d`) · Com `git push`. A CI do commit da tag ficou vermelha (formatação do `c3-confiavel.json` e o teste que travava o histórico em duas entradas); as duas correções vieram logo depois (`0a8444b` e a C1). A tag não foi movida (sem `--force`).
 
 ## 1. O que foi construído
 
@@ -16,11 +16,12 @@ Data: 2026-11-17 · Tag: `entrega-2` · Com `git push` (CI verde no fechamento d
 | 014 `evals` | `eval:llm` por checkpoint com famílias, avaliador, `--retomar`/`--do-zero`/`--extra`, `historico.json` e `COMPARACAO.md`; `eval:det:resumo` por grupo | 5948486 | 053d869 |
 | 015 `observabilidade-completa` | Lista fechada tipada de spans, métricas e logs; duração por trecho; painel e alertas gerados (`painel:gerar`, `painel:check`), provisionados no LGTM fixado; evals de cobertura, privacidade e voto | a79f5ed | 16d1bd9 |
 
-Também entrou na `main`, antes do portão 2 e por decisão da dona, a 016 (`design-system`, entrega 3, trilha adiantada). A 017 (`auth`) está fechada na branch `entrega-3` (`55d5a85`, ADR 0043) e a 018 está em construção nela; as duas entram na `main` na junção do `/construir-entrega 3`, depois deste portão.
+Também entrou na `main`, antes do portão 2 e por decisão da dona, a 016 (`design-system`, entrega 3, trilha adiantada). A 017 (`auth`, ADR 0043) também entrou: a dona juntou a branch `entrega-3` na `main` (`a3dd60f`, 21:31 de 16/11), então a tag `entrega-2` já contém a 017. A junção aconteceu durante a rodada do `c3` (21:10–21:35); o processo já tinha os módulos carregados e os casos não usam o código da 017. A 018 segue em construção na trilha adiantada.
 
 ## 2. Números
 
-- Gates no fechamento (verificador, 2026-11-16): lint ✔ (771 arquivos), typecheck ✔, `npm test` **2709** testes (176 arquivos), `eval:det` **1246** evals (110 arquivos), build ✔, e2e 47 passaram e 9 puladas (`CI=1`), `dup` 0 clones, ⚠️ `test:db` **121** contra o Postgres. `painel:gerar` sem diff.
+- Gates no fechamento da 015 (verificador, 2026-11-16): lint ✔ (771 arquivos), typecheck ✔, `npm test` **2709** testes (176 arquivos), `eval:det` **1246** evals (110 arquivos), build ✔, e2e 47 passaram e 9 puladas (`CI=1`), `dup` 0 clones, ⚠️ `test:db` **121** contra o Postgres. `painel:gerar` sem diff.
+- Gates depois da junção da 017 e da C1 (verificador): lint ✔ (846), typecheck ✔, `npm test` **2856** (193 arquivos), `eval:det` **1269** (113 arquivos), build ✔, e2e 99 passaram e 9 puladas, `dup` 0 clones (230 arquivos).
 - `demo`: 38 cenários, todos com código 0 (verificador da junção da 016).
 - `demo --cenario frio-agitada --esgotar decisao` com OTLP: `done`/`agente`, 4 passos, 1 troca de modelo, Juiz aprovado na 1ª; `painel:check` saiu 0, com dados em "Trocas de modelo" e o log `troca_de_modelo`. Print: `.plans/015-painel.png`.
 

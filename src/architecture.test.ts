@@ -35,7 +35,7 @@ const PACKAGE_HOMES: Record<string, string[]> = {
   "@google/genai": ["src/infra/gemini/"],
   "next-auth": ["src/infra/auth/"],
   "@auth": ["src/infra/auth/"],
-  yaml: ["src/infra/knowledge/"],
+  yaml: ["src/infra/knowledge/", "scripts/"],
   "react-aria-components": ["src/components/"],
   "react-aria": ["src/components/"],
   "react-stately": ["src/components/"],
@@ -622,6 +622,7 @@ describe("R5 · pacote só na sua pasta", () => {
 
   it("yaml só em src/infra/knowledge", () => {
     expectClean("src/infra/knowledge/x.ts", `${IMPORT} { parse } from "yaml"`)
+    expectClean("scripts/x.ts", `${IMPORT} { parse } from "yaml"`)
     expect(checkFile("src/core/x.ts", `${IMPORT} { parse } from "yaml"`)).toContain(
       'src/core/x.ts: R1 importa "yaml"',
     )

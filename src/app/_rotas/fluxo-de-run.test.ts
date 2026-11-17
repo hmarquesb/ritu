@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { copiarSeed } from "@/core/accounts/copiar-seed"
 import type { EventoDaTela } from "@/core/conversation/eventos"
+import { chavesDeMensagem } from "@/core/limits/chaves"
+import { diaLocal } from "@/core/time/dia-local"
 import { type Container, createContainer } from "@/infra/container"
 import { rotasDeFluxoDeRun } from "./fluxo-de-run"
-
-const quemPede = () => ({ ipHash: "h" })
 
 const PERGUNTA_DE_CASA = "fui à feira ontem, o que faço pro jantar?"
 
@@ -17,7 +17,11 @@ async function montar() {
     kb: container.knowledge,
   })
   const outra = await container.stores.accounts.criar({ tipo: "demo" })
-  const deps = (contaId?: string) => ({ contaDaSessao: async () => contaId, container, quemPede })
+  const deps = (contaId?: string, teto?: number) => ({
+    contaDaSessao: async () => contaId,
+    container,
+    quemPede: () => ({ ipHash: "h", ...(teto ? { teto } : {}) }),
+  })
   return { container, conta, outra, deps }
 }
 
@@ -178,5 +182,106 @@ describe("rotasDeFluxoDeRun", () => {
     await leitor?.cancel()
     if (inicio.tipo !== "inicio") throw new Error("sem inicio")
     expect(await ate(m.container, m.conta.id, inicio.run_id, "waiting_for_approval")).toBe(true)
+  })
+
+  describe("limite de mensagens", () => {
+    async function gastarAteOLimite(m: Awaited<ReturnType<typeof montar>>, teto: number) {
+      const { iniciar } = rotasDeFluxoDeRun(m.deps(m.conta.id, teto))
+      for (let i = 0; i < teto; i++) {
+        const ev = await eventos(await iniciar(pedido(texto("quero um chá"))))
+        const runId = ev[0]?.tipo === "inicio" ? ev[0].run_id : ""
+        await m.container.stores.runs.atualizar(m.conta.id, runId, { status: "done" })
+      }
+      return iniciar
+    }
+
+    it("depois do teto: 429 com limites e Retry-After, sem run nem mensagem gravados", async () => {
+      const m = await montar()
+      const iniciar = await gastarAteOLimite(m, 2)
+      const dia = diaLocal(m.container.clock.now(), m.container.config.clima.fusoPadrao)
+      const msgsAntes = (await m.container.stores.messages.doDia(m.conta.id, dia)).length
+      const runsAntes = (await m.container.stores.runs.doDia(m.conta.id, dia)).length
+      expect(msgsAntes).toBeGreaterThan(0)
+      const r = await iniciar(pedido(texto("outro chá, por favor")))
+      expect(r.status).toBe(429)
+      expect(Number(r.headers.get("Retry-After"))).toBeGreaterThan(0)
+      const corpo = (await r.json()) as { erro: string; limites: { mensagens: { tipo: string } } }
+      expect(corpo.erro).toMatch(/^limite_/)
+      expect(corpo.limites.mensagens.tipo).toBe("esgotadas")
+      expect((await m.container.stores.messages.doDia(m.conta.id, dia)).length).toBe(msgsAntes)
+      expect((await m.container.stores.runs.doDia(m.conta.id, dia)).length).toBe(runsAntes)
+      expect(await m.container.stores.runs.aberto(m.conta.id)).toBeUndefined()
+    })
+
+    it("só atalhos depois do limite seguem sem modelo", async () => {
+      const m = await montar()
+      const iniciar = await gastarAteOLimite(m, 1)
+      const ev = await eventos(await iniciar(pedido({ atalhos: ["pesada"] })))
+      const fim = ev.at(-1)
+      if (fim?.tipo !== "fim") throw new Error("sem fim")
+      expect(fim.visao.caminho).toBe("sem_modelo")
+    })
+
+    it("alerta depois do limite recebe o texto de alerta", async () => {
+      const m = await montar()
+      const iniciar = await gastarAteOLimite(m, 1)
+      const r = await iniciar(pedido(texto("estou com dor no peito")))
+      expect(r.status).toBe(200)
+      const fim = (await eventos(r)).at(-1)
+      if (fim?.tipo !== "fim") throw new Error("sem fim")
+      expect(fim.visao.caminho).toBe("alerta")
+      expect(fim.visao.resposta).toBeTruthy()
+    })
+
+    it("run aberto é 409 e a contagem não sobe", async () => {
+      const m = await montar()
+      await m.container.stores.runs.criar(m.conta.id, {
+        caminho: "acompanhante",
+        intencoes: [],
+        dia: "2026-03-10",
+      })
+      const { iniciar } = rotasDeFluxoDeRun(m.deps(m.conta.id, 1))
+      expect((await iniciar(pedido(texto("oi")))).status).toBe(409)
+      const estado = await m.container.stores.runs.aberto(m.conta.id)
+      if (estado) await m.container.stores.runs.atualizar(m.conta.id, estado.id, { status: "done" })
+      const ev = await eventos(await iniciar(pedido(texto("quero um chá"))))
+      expect(ev.at(-1)?.tipo).toBe("fim")
+    })
+
+    it("corpo inválido é 400 e não consome", async () => {
+      const m = await montar()
+      const { iniciar } = rotasDeFluxoDeRun(m.deps(m.conta.id, 1))
+      expect((await iniciar(pedido({ nada: 1 }))).status).toBe(400)
+      const ev = await eventos(await iniciar(pedido(texto("quero um chá"))))
+      expect(ev.at(-1)?.tipo).toBe("fim")
+    })
+
+    it("cota do dia esgotada: a mensagem passa e não consome", async () => {
+      const m = await montar()
+      const router = { ...m.container.router, cotaDoDiaEsgotada: async () => true }
+      const container = { ...m.container, router } as Container
+      const { iniciar } = rotasDeFluxoDeRun({
+        contaDaSessao: async () => m.conta.id,
+        container,
+        quemPede: () => ({ ipHash: "h", teto: 1 }),
+      })
+      for (let i = 0; i < 2; i++) {
+        const r = await iniciar(pedido(texto("quero um chá")))
+        expect(r.status).toBe(200)
+        const ev = await eventos(r)
+        const runId = ev[0]?.tipo === "inicio" ? ev[0].run_id : ""
+        await m.container.stores.runs.atualizar(m.conta.id, runId, { status: "done" })
+      }
+      const { conta: chave } = chavesDeMensagem(m.conta, "h", m.container.clock.now(), undefined, 1)
+      expect(await m.container.limiter.usado(chave.chave, "dia", chave.inicio ?? "")).toBe(0)
+    })
+
+    it("o fim leva os limites com as restantes atualizadas", async () => {
+      const m = await montar()
+      const { iniciar } = rotasDeFluxoDeRun(m.deps(m.conta.id, 5))
+      const fim = (await eventos(await iniciar(pedido(texto("quero um chá"))))).at(-1)
+      if (fim?.tipo !== "fim") throw new Error("sem fim")
+      expect(fim.limites.mensagens).toMatchObject({ tipo: "contando", restantes: 4 })
+    })
   })
 })

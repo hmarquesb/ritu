@@ -18,7 +18,12 @@ function visao(run_id: string, extra: Partial<VisaoDoRun> = {}): VisaoDoRun {
   } as VisaoDoRun
 }
 
-const vazia: ConversaDoDia = { falas: [], runs: {}, pendentes: 1 }
+const vazia: ConversaDoDia = {
+  falas: [],
+  runs: {},
+  pendentes: 1,
+  limites: { mensagens: { tipo: "livre" }, cota_ia: { esgotada: false } },
+}
 
 function enviado() {
   return reduzir(
@@ -67,7 +72,12 @@ describe("estado da conversa", () => {
     let e = reduzir(enviado(), { tipo: "evento", evento: { tipo: "inicio", run_id: "r1" } })
     e = reduzir(e, {
       tipo: "evento",
-      evento: { tipo: "fim", visao: visao("r1", { resposta: "Um chá." }), pendentes: 3 },
+      evento: {
+        tipo: "fim",
+        visao: visao("r1", { resposta: "Um chá." }),
+        pendentes: 3,
+        limites: { mensagens: { tipo: "livre" }, cota_ia: { esgotada: false } },
+      },
     })
     expect(e.caixa).toEqual({ texto: "", atalhos: [], respondendo: false })
     expect(e.anuncio).toBe("Um chá.")
@@ -99,7 +109,12 @@ describe("estado da conversa", () => {
   it("fim sem visão válida vira erro inesperado, sem quebrar", () => {
     const e = reduzir(enviado(), {
       tipo: "evento",
-      evento: { tipo: "fim", visao: undefined as never, pendentes: 0 },
+      evento: {
+        tipo: "fim",
+        visao: undefined as never,
+        pendentes: 0,
+        limites: { mensagens: { tipo: "livre" }, cota_ia: { esgotada: false } },
+      },
     })
     expect(e.erro?.codigo).toBe("inesperado")
   })

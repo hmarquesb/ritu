@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { quemPedeNext } from "./next"
+import { quemPedeDosHeaders, quemPedeNext } from "./next"
 
 vi.mock("next-auth", () => ({
   default: () => ({ handlers: {}, auth: vi.fn(), signIn: vi.fn(), signOut: vi.fn() }),
@@ -33,5 +33,16 @@ describe("quemPedeNext", () => {
     })
     expect(quemPedeNext(pedido({ "x-ritu-e2e-teto": "0" })).teto).toBeUndefined()
     expect(quemPedeNext(pedido({ "x-ritu-e2e-teto": "101" })).teto).toBeUndefined()
+  })
+})
+
+describe("quemPedeDosHeaders", () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  it("dá o mesmo resultado que quemPedeNext", () => {
+    vi.stubEnv("RITU_MODO", "e2e")
+    vi.stubEnv("IP_HMAC_SECRET", "segredo")
+    const h = { "x-ritu-e2e": "a", "x-ritu-e2e-teto": "7" }
+    expect(quemPedeDosHeaders(new Headers(h))).toEqual(quemPedeNext(pedido(h)))
   })
 })

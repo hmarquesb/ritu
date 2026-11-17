@@ -71,6 +71,8 @@ describe("rotasDaConversa", () => {
       const corpo = await r.json()
       expect(corpo.falas).toEqual([])
       expect(corpo.pendentes).toBe(0)
+      expect(corpo.limites.mensagens.tipo).toBe("contando")
+      expect(corpo.limites.cota_ia).toEqual({ esgotada: false })
     })
   })
 

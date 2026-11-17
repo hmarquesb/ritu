@@ -2,6 +2,7 @@ import type { ConversaDoDia, FalaNaTela } from "@/core/conversation/do-dia"
 import type { FraseDeEtapa } from "@/core/conversation/etapas"
 import type { EventoDaTela } from "@/core/conversation/eventos"
 import type { VisaoDoRun } from "@/core/conversation/visao"
+import type { EstadoDosLimites } from "@/core/limits/estado"
 
 export type EstadoDaConversa = {
   falas: FalaNaTela[]
@@ -116,7 +117,7 @@ function falhar(estado: EstadoDaConversa, codigo: string): EstadoDaConversa {
 
 function aoFim(
   estado: EstadoDaConversa,
-  evento: Extract<EventoDaTela, { tipo: "fim" }>,
+  evento: Omit<Extract<EventoDaTela, { tipo: "fim" }>, "limites"> & { limites?: EstadoDosLimites },
 ): EstadoDaConversa {
   if (!visaoValida(evento.visao)) return falhar(estado, "inesperado")
   const base = comVisao(estado, evento.visao)

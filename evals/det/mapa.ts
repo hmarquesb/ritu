@@ -710,6 +710,18 @@ export const mapa: LinhaDoMapa[] = [
     desde: 4,
   },
   {
+    grupo: "Segurança e privacidade",
+    linha: "Cron sem segredo: /api/cron/* responde 401 sem o bearer e 503 sem CRON_SECRET",
+    arquivos: ["evals/det/seguranca/cron-e-saude.eval.ts"],
+    desde: 4,
+  },
+  {
+    grupo: "Segurança e privacidade",
+    linha: "Saúde sem segredo: /api/saude pede o bearer e não devolve valor de variável",
+    arquivos: ["evals/det/seguranca/cron-e-saude.eval.ts"],
+    desde: 4,
+  },
+  {
     grupo: "Telas (E2E)",
     linha: "Caminho da demonstração: da Entrada à primeira resposta só c",
     arquivos: [],

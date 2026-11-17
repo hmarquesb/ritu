@@ -153,7 +153,7 @@ Rotina e padrões têm funções do core que as rotas de "O que sei sobre você"
 - **Limites:** mensagens, toques e demonstrações têm limites próprios (`BUSINESS.md` §14), contados por conta e por IP em HMAC, na tabela `limites`. Cada pedido de consumo leva o próprio início de janela, e o adaptador do banco confere todos os tetos sob trava, numa transação, e só então soma: se um barra, nenhum sobe. A limpeza diária apaga as janelas de dia anteriores a ontem e as de minuto anteriores a hoje. No modo e2e (`RITU_MODO=e2e`), o header `x-ritu-e2e-teto` (1 a 100) substitui os tetos daquele pedido e o `x-ritu-e2e-cota: esgotada` tira a cota do dia do modelo `decisao`; fora do modo e2e os dois são ignorados.
 - **Cron e saúde:** `/api/cron/limpeza`, `/api/cron/padroes` e `/api/saude` só com `Authorization: Bearer <CRON_SECRET>`, conferido por `autorizarCron` em tempo constante; sem `CRON_SECRET`, `503 cron_desligado`. A Vercel manda o bearer sozinha nos crons. A saúde (banco, última migração, contagens da base, seed, telemetria, Google, versão) nunca devolve valor de variável, URL nem mensagem de erro.
 - **Servidor MCP:** público e sem login, com limite por IP. Só expõe as tools de leitura da base e do clima; nunca dado de conta.
-- **Dependências:** Dependabot semanal e `npm audit --omit=dev --audit-level=high` na CI.
+- **Dependências:** Dependabot semanal, com os pacotes `@opentelemetry/*` e o `@vercel/otel` num grupo só (eles só instalam juntos). Na CI, o `audit-ci` barra advisory alto ou crítico em dependência de produção; as exceções ficam em `audit-ci.jsonc`, cada uma com o id e o porquê.
 
 ## 5. Portas e adaptadores
 

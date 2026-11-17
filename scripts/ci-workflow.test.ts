@@ -55,8 +55,21 @@ describe("CI: auditoria no job gates", () => {
   const gates = jobDe("gates")
   const ordem = nomes(gates)
 
-  it("tem o passo Auditoria com o comando e o nível fixados", () => {
-    expect(passoNomeado(gates, "Auditoria").run).toBe("npm audit --omit=dev --audit-level=high")
+  it("tem o passo Auditoria com o audit-ci fixado e a configuração do repositório", () => {
+    expect(passoNomeado(gates, "Auditoria").run).toBe(
+      "npx --yes audit-ci@7.1.0 --config audit-ci.jsonc",
+    )
+  })
+
+  it("a configuração barra alta e crítica, ignora dev e só libera advisories pelo id", () => {
+    const config = parse(lerTexto("audit-ci.jsonc").replace(/^\s*\/\/.*$/gm, "")) as {
+      high?: boolean
+      "skip-dev"?: boolean
+      allowlist?: string[]
+    }
+    expect(config.high).toBe(true)
+    expect(config["skip-dev"]).toBe(true)
+    for (const id of config.allowlist ?? []) expect(id).toMatch(/^GHSA(-[0-9a-z]{4}){3}$/)
   })
 
   it("fica logo depois de Instalar dependências e antes do Build", () => {
@@ -179,9 +192,14 @@ describe("Dependabot", () => {
     expect(u["commit-message"]).toEqual({ prefix: "chore(deps)" })
   })
 
-  it("npm tem limite de 5 PRs abertos e os grupos de produção e desenvolvimento", () => {
+  it("npm tem limite de 5 PRs abertos e os grupos de OpenTelemetry, produção e desenvolvimento", () => {
     expect(npm?.["open-pull-requests-limit"]).toBe(5)
+    expect(Object.keys(npm?.groups as object)[0]).toBe("opentelemetry")
     expect(npm?.groups).toEqual({
+      opentelemetry: {
+        patterns: ["@opentelemetry/*", "@vercel/otel"],
+        "update-types": ["major", "minor", "patch"],
+      },
       producao: { "dependency-type": "production", "update-types": ["minor", "patch"] },
       desenvolvimento: { "dependency-type": "development", "update-types": ["minor", "patch"] },
     })

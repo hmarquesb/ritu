@@ -31,6 +31,7 @@ import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
+import { createRelogioE2e } from "@/infra/e2e/relogio"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
@@ -143,8 +144,9 @@ export function readDemoSeed(dir?: string): DemoSeed {
 }
 
 export function createContainer(overrides?: Partial<Container>): Container {
-  const clock = overrides?.clock ?? systemClock
   const e2e = optionalEnv("RITU_MODO") === "e2e"
+  // No modo e2e, a hora local fica à noite, para o E2E não depender da hora em que roda.
+  const clock = overrides?.clock ?? (e2e ? createRelogioE2e(systemClock) : systemClock)
   if (e2e && optionalEnv("VERCEL_ENV") === "production") {
     throw new RituError("modo_e2e_em_producao", "RITU_MODO=e2e não pode rodar em produção")
   }

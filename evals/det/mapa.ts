@@ -750,7 +750,7 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Telas (E2E)",
     linha: "Resposta do agente com `<script>` aparece como texto.",
-    arquivos: [],
+    arquivos: ["e2e/conversa.spec.ts"],
     desde: 3,
   },
   {

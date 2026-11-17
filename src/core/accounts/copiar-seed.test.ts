@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { DemoSeed } from "@/core/demo-seed"
+import { visaoComoFicou } from "@/core/outcomes/visao"
+import { diaLocal } from "@/core/time/dia-local"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
@@ -110,6 +112,24 @@ describe("copiarSeed", () => {
     expect(recentes).toHaveLength(3)
     expect(recentes[0]).toMatchObject({ caminho: "acompanhante", prompt_versao: "semente" })
     expect(recentes[0]?.juiz_aprovado).toBe(true)
+  })
+
+  it("data os retornos no dia da conversa semeada, e a visão os põe em Ontem", async () => {
+    const { stores, conta } = await nova()
+    await copiarSeed(stores, conta.id, seed, { clock, kb })
+
+    const pendentes = await stores.outcomes.pendentes(conta.id)
+    expect(pendentes).toHaveLength(1)
+    expect(diaLocal(new Date(pendentes[0]?.criado_em ?? ""), "America/Sao_Paulo")).toBe(
+      "2026-03-09",
+    )
+    const visao = visaoComoFicou({
+      retornos: pendentes,
+      kb,
+      agora: clock.now(),
+      fuso: "America/Sao_Paulo",
+    })
+    expect(visao.dias[0]?.nome).toBe("Ontem")
   })
 
   it("falha no meio propaga o erro", async () => {

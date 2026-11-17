@@ -710,8 +710,8 @@ function criarOutcomes(db: Db, clock: Clock): OutcomeStore {
     db.estado.retornos.find((r) => r.id === retornoId && r.conta_id === contaId)
 
   return {
-    async criar(contaId, runId, sugestoes) {
-      const agora = agoraIso(clock)
+    async criar(contaId, runId, sugestoes, opts) {
+      const agora = opts?.criadoEm ? opts.criadoEm.toISOString() : agoraIso(clock)
       const criados = sugestoes.map(
         (s): Retorno => ({
           id: crypto.randomUUID(),

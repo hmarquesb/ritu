@@ -17,7 +17,13 @@ export type Retorno = {
 }
 
 export interface OutcomeStore {
-  criar(contaId: string, runId: string, sugestoes: SugestaoRegistrada[]): Promise<Retorno[]>
+  /** `criadoEm` data os retornos (a semente os põe no dia da conversa); sem ele, vale o relógio. */
+  criar(
+    contaId: string,
+    runId: string,
+    sugestoes: SugestaoRegistrada[],
+    opts?: { criadoEm?: Date },
+  ): Promise<Retorno[]>
   /** Mais recente primeiro. */
   pendentes(contaId: string): Promise<Retorno[]>
   /** Respondidos da conta com respondido_em a partir de desde. */

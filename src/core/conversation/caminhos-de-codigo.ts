@@ -45,8 +45,9 @@ function etapaDeGuardrail(ctx: ContextoDoCaminho, nome: string): NovaEtapa {
 }
 
 // D1/D3: o que a pessoa disse para evitar vale no dia, mesmo que já esteja no perfil.
+// O "não como" livre (sem id) não vai para o dia: só o que tem alimento da base.
 export function itensDoDia(i: Interpretacao): ItemTemporario[] {
-  const naoCome = i.nao_come.map(itemDoNaoCome)
+  const naoCome = i.nao_come.flatMap((c) => (c.alimento_id ? [itemDoNaoCome(c)] : []))
   const restricoes = i.restricoes.map((valor) => ({ tipo: "restricao" as const, valor }))
   return [...i.evitar, ...naoCome, ...restricoes]
 }

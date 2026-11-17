@@ -12,6 +12,7 @@ import {
   textoDeCasa,
   textoDeEvitar,
   textoDeRetorno,
+  textoDoNaoComeDesconhecido,
   textosDaConversa,
 } from "./textos"
 
@@ -95,6 +96,9 @@ describe("textosDaConversa", () => {
     )
     expect(textosDaConversa.naoCome).toBe(
       "Entendi, você não come {itens}. Já vale para hoje; confirma abaixo para eu guardar.",
+    )
+    expect(textosDaConversa.naoComeDesconhecido).toBe(
+      "Obrigado por me contar. Ainda não conheço {itens}, então não consigo guardar isso. Se eu sugerir algo com {itens}, é só me dizer que eu troco.",
     )
     expect(textosDaConversa.restricao).toBe(
       "Entendi: sua alimentação é {itens}. Já vale para hoje; confirma abaixo para eu guardar.",
@@ -183,7 +187,7 @@ describe("textoDeEvitar", () => {
       nao_come: [{ alimento_id: "leite", nome: "Leite" }, { nome: "Pitaia" }],
     })
     expect(textoDeEvitar(i, perfil(), kb)).toBe(
-      "Entendi, você não come leite e pitaia. Já vale para hoje; confirma abaixo para eu guardar.",
+      "Entendi, você não come leite. Já vale para hoje; confirma abaixo para eu guardar. Obrigado por me contar. Ainda não conheço pitaia, então não consigo guardar isso. Se eu sugerir algo com pitaia, é só me dizer que eu troco.",
     )
     const p = perfil({
       nao_come: [
@@ -191,7 +195,16 @@ describe("textoDeEvitar", () => {
         { tipo: "texto", valor: "pitaia" },
       ],
     })
-    expect(textoDeEvitar(i, p, kb)).toBe("Isso eu já tinha guardado: leite e pitaia.")
+    expect(textoDeEvitar(i, p, kb)).toBe(
+      "Obrigado por me contar. Ainda não conheço pitaia, então não consigo guardar isso. Se eu sugerir algo com pitaia, é só me dizer que eu troco. Isso eu já tinha guardado: leite.",
+    )
+  })
+
+  it("não como livre não vira 'não como' novo, nem 'já guardado'", () => {
+    const i = interpretacao({ nao_come: [{ nome: "Pitaya" }] })
+    expect(textoDeEvitar(i, perfil(), kb)).toBe(
+      "Obrigado por me contar. Ainda não conheço pitaya, então não consigo guardar isso. Se eu sugerir algo com pitaya, é só me dizer que eu troco.",
+    )
   })
 
   it("trata restrição nova e restrição antiga", () => {
@@ -218,5 +231,32 @@ describe("textoDeEvitar", () => {
     const texto = textoDeEvitar(i, perfil(), kb)
     expect(texto).toContain("não sugiro $& {titulo} {itens}, nem nada")
     expect(texto).toContain("Ainda não conheço $& {titulo} {itens}, mas")
+  })
+})
+
+describe("textoDoNaoComeDesconhecido", () => {
+  it("vazio sem item livre", () => {
+    expect(textoDoNaoComeDesconhecido(interpretacao())).toBe("")
+    expect(
+      textoDoNaoComeDesconhecido(
+        interpretacao({ nao_come: [{ alimento_id: "banana", nome: "Banana" }] }),
+      ),
+    ).toBe("")
+  })
+
+  it("troca os dois {itens} pelos nomes livres", () => {
+    expect(
+      textoDoNaoComeDesconhecido(
+        interpretacao({ nao_come: [{ nome: "Pitaya" }, { nome: "Jaca" }] }),
+      ),
+    ).toBe(
+      "Obrigado por me contar. Ainda não conheço pitaya e jaca, então não consigo guardar isso. Se eu sugerir algo com pitaya e jaca, é só me dizer que eu troco.",
+    )
+  })
+
+  it("mantém $& e chaves vindas da pessoa como texto", () => {
+    const texto = textoDoNaoComeDesconhecido(interpretacao({ nao_come: [{ nome: "$& {itens}" }] }))
+    expect(texto).toContain("Ainda não conheço $& {itens}, então")
+    expect(texto).toContain("Se eu sugerir algo com $& {itens}, é só")
   })
 })

@@ -1220,3 +1220,42 @@ describe("conversar: o Juiz antes de entregar", () => {
     expect(linhas.map((l) => l.tool)).toEqual(["casa.propor"])
   })
 })
+
+describe("conversar: não como livre", () => {
+  const frasePitaya =
+    "Ainda não conheço pitaya, então não consigo guardar isso. Se eu sugerir algo com pitaya, é só me dizer que eu troco."
+
+  it("não como pitaya (sem id) no caminho evitar: sem anotação, sem item no dia, com a frase", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["evitar"], nao_come: ["pitaya"] })] })
+    const r = await dizer(m, "não como pitaya")
+    expect(r.saida?.anotacoes).toEqual([])
+    expect(r.saida?.resposta).toContain(frasePitaya)
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([])
+  })
+
+  it("não como banana (com id) segue como antes: anotação e item do dia", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["evitar"], nao_come: ["banana"] })] })
+    const r = await dizer(m, "não como banana")
+    expect(r.saida?.anotacoes).toEqual([
+      { tipo: "nao_come", itens: [{ alimento_id: "banana", nome: "Banana" }] },
+    ])
+    expect(r.saida?.resposta).not.toContain("Ainda não conheço")
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([
+      { tipo: "nao_come", valor: "banana" },
+    ])
+  })
+
+  it("momento + não como pitaya pelo agente: a resposta termina com a frase, sem linha nao_come", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio"], nao_come: ["pitaya"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "estou com frio e não como pitaya")
+    expect(r.saida?.resposta.endsWith(` ${frasePitaya}`)).toBe(true)
+    expect(r.saida?.anotacoes.some((a) => a.tipo === "nao_come")).toBe(false)
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([])
+  })
+})

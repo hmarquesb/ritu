@@ -49,7 +49,10 @@ function candidatas(i: Interpretacao, perfil: Perfil, extra: Extra): Anotacao[] 
     },
     {
       tipo: "nao_come",
-      itens: i.nao_come.filter((c) => !citadoNoPerfilDoNaoCome(c, perfil)).map(copiaDoCitado),
+      // "Não como" livre (sem id) não é proposto nem guardado: a pessoa recebe o texto fixo.
+      itens: i.nao_come
+        .filter((c) => c.alimento_id && !citadoNoPerfilDoNaoCome(c, perfil))
+        .map(copiaDoCitado),
     },
     {
       tipo: "gosta",

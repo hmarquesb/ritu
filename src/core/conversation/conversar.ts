@@ -39,6 +39,7 @@ import {
 import { criarContinuar } from "./continuar"
 import { fecharOuFalhar, filtroDoRun } from "./fim-com-propostas"
 import { anotarPendencia, ETAPA_DA_VARIANTE, perguntaDaVariantePendente } from "./pausa-de-codigo"
+import { comNaoComeDesconhecido } from "./textos"
 
 export { type MensagemRecebida, mensagemRecebidaSchema } from "@/core/messages/texto"
 
@@ -115,6 +116,7 @@ function entradaDoAcompanhante(
   intencoes: string[],
 ): EntradaDoAcompanhante {
   const casa = casaDaMensagem(i)
+  const naoComeDaBase = i.nao_come.filter((c) => c.alimento_id)
   const { retorno } = i
   return {
     intencoes: intencoesDoAcompanhante(intencoes, i),
@@ -122,7 +124,8 @@ function entradaDoAcompanhante(
     evitar_da_mensagem: i.evitar.filter((item) => item.tipo === "texto").map((item) => item.valor),
     ...(texto ? { texto } : {}),
     ...(i.incomodo ? { incomodo: i.incomodo } : {}),
-    ...(i.nao_come.length > 0 ? { nao_come_da_mensagem: i.nao_come } : {}),
+    // Só o "não como" com alimento da base: o livre não vai ao Acompanhante nem ao dia (preparo grava o que chega aqui).
+    ...(naoComeDaBase.length > 0 ? { nao_come_da_mensagem: naoComeDaBase } : {}),
     ...(i.restricoes.length > 0 ? { restricoes_da_mensagem: i.restricoes } : {}),
     ...(casa ? { casa_da_mensagem: casa } : {}),
     ...(i.gosta.length > 0 ? { gosta_da_mensagem: i.gosta.map((g) => g.alimento_id) } : {}),
@@ -315,7 +318,11 @@ export function createConversation(deps: Deps) {
       return { pergunta: r.pergunta, incomodo }
     }
     if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
-    const saida = { ...comAvisoDeIncomodo(r.saida, incomodo), anotacoes }
+    const saida = {
+      ...comAvisoDeIncomodo(r.saida, incomodo),
+      resposta: comNaoComeDesconhecido(r.saida.resposta, ctx.interpretacao),
+      anotacoes,
+    }
     await stores.runs.atualizar(x.contaId, x.run.id, { saida, ...(await somarApoio(x, apoio)) })
     return { saida, incomodo }
   }

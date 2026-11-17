@@ -232,3 +232,19 @@ describe("acrescentarNaoCome", () => {
     expect(acrescentarNaoCome(antes, [], perfil(), kb)).toEqual(antes)
   })
 })
+
+describe("montarAnotacoes com não como livre", () => {
+  it("não como sem id não vira anotação nao_come", () => {
+    const i = interpretacao({ nao_come: [{ nome: "Pitaya" }] })
+    expect(montarAnotacoes(i, perfil(), extra)).toEqual([])
+  })
+
+  it("não como sem id não entra no run, e o com id segue como antes", () => {
+    const i = interpretacao({
+      nao_come: [{ nome: "Pitaya" }, { alimento_id: "banana", nome: "Banana" }],
+    })
+    expect(montarAnotacoes(i, perfil(), extra)).toEqual([
+      { tipo: "nao_come", itens: [{ alimento_id: "banana", nome: "Banana" }] },
+    ])
+  })
+})

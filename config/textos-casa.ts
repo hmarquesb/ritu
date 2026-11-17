@@ -4,6 +4,7 @@ export const textosCasa = {
   adicionar: "Adicionar",
   adicionarTitulo: "Adicionar à casa",
   adicionarBusca: "Procure um alimento",
+  adicionarMinimo: "Digite {n} letras ou mais",
   adicionarLivre: "Adicionar “{texto}” assim mesmo",
   adicionado: "{Item} está na sua casa.",
   aindaTem: {
@@ -50,6 +51,8 @@ export const textosCasa = {
     pessoa: "Você pôs na lista",
     comprei: "Comprei",
     tirar: "Tirar da lista",
+    rotuloComprei: "Comprei {item}",
+    rotuloTirar: "Tirar {item} da lista",
     vazia: "Nada na lista por enquanto. Quando algo fizer falta, eu aviso na conversa.",
   },
   vazia: {

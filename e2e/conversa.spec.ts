@@ -2,7 +2,7 @@ import { config } from "@config/index"
 import { formatar } from "@config/textos-conversa"
 import type { Locator, Page } from "@playwright/test"
 import { expectSemViolacoes } from "./apoio/a11y"
-import { entrarComContaNova, entrarNaDemo, expect, test } from "./apoio/sessao"
+import { entrarComContaNova, entrarNaDemo, expect, fixarNoite, test } from "./apoio/sessao"
 import { TEMAS, usarTema } from "./apoio/tema"
 
 const T = config.textosConversa
@@ -192,7 +192,8 @@ test.describe("caixa de mensagem", () => {
 })
 
 test.describe("pergunta de casa", () => {
-  test("responder retoma e entrega a resposta", async ({ page }) => {
+  test("responder retoma e entrega a resposta", async ({ context, page }) => {
+    await fixarNoite(context)
     await entrarNaDemo(page)
     await caixaDe(page).fill(MSG_PERGUNTA_CASA)
     await enviarDe(page).click()
@@ -207,7 +208,8 @@ test.describe("pergunta de casa", () => {
     await expect(couve).toHaveCount(0)
   })
 
-  test("pular também retoma", async ({ page }) => {
+  test("pular também retoma", async ({ context, page }) => {
+    await fixarNoite(context)
     await entrarNaDemo(page)
     await enviarTexto(page, MSG_PERGUNTA_CASA)
     await expect(page.getByRole("radiogroup", { name: "Couve" })).toBeVisible()
@@ -456,6 +458,7 @@ for (const tema of TEMAS) {
     })
 
     test("pergunta", async ({ context, page }) => {
+      await fixarNoite(context)
       await usarTema(context, tema)
       await entrarNaDemo(page)
       await enviarTexto(page, MSG_PERGUNTA_CASA)
@@ -508,6 +511,7 @@ test.describe("screenshots da Conversa", () => {
     })
 
     test(`pergunta ${tema}`, async ({ context, page }, info) => {
+      await fixarNoite(context)
       await usarTema(context, tema)
       await entrarNaDemo(page)
       await enviarTexto(page, MSG_PERGUNTA_CASA)

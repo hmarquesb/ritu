@@ -28,7 +28,6 @@ import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
-import { createRelogioE2e, instanteDoPedidoNext } from "@/infra/e2e/relogio"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
@@ -155,33 +154,12 @@ export function readDemoSeed(dir?: string): DemoSeed {
   return loadDemoSeed(dir)
 }
 
-// Cada entrada da conversa roda sob o relógio do pedido (só no modo e2e).
-function conversaComRelogioE2e(
-  c: ReturnType<typeof createConversation>,
-  comRelogio: <T>(leitor: () => Promise<string | undefined>, fn: () => Promise<T>) => Promise<T>,
-): ReturnType<typeof createConversation> {
-  return {
-    ...c,
-    conversar: (...a) => comRelogio(instanteDoPedidoNext, () => c.conversar(...a)),
-    continuar: (...a) => comRelogio(instanteDoPedidoNext, () => c.continuar(...a)),
-    aprovar: (...a) => comRelogio(instanteDoPedidoNext, () => c.aprovar(...a)),
-  }
-}
-
-function modoE2e(): boolean {
+export function createContainer(overrides?: Partial<Container>): Container {
+  const clock = overrides?.clock ?? systemClock
   const e2e = optionalEnv("RITU_MODO") === "e2e"
   if (e2e && optionalEnv("VERCEL_ENV") === "production") {
     throw new RituError("modo_e2e_em_producao", "RITU_MODO=e2e não pode rodar em produção")
   }
-  return e2e
-}
-
-export function createContainer(overrides?: Partial<Container>): Container {
-  const e2e = modoE2e()
-  // Modo e2e: o header `x-ritu-e2e-agora` fixa o instante do pedido (relógio de base sem ele).
-  const base = overrides?.clock ?? systemClock
-  const relogioE2e = e2e ? createRelogioE2e(base) : undefined
-  const clock = relogioE2e?.clock ?? base
   // Modo de E2E: tudo em memória, sem banco nem rede.
   const memoria = e2e
     ? createMemoryStores(clock, {
@@ -354,7 +332,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
         interpreter: container.interpreter,
         companion: container.companion,
       })
-      return relogioE2e ? conversaComRelogioE2e(conversation, relogioE2e.comRelogio) : conversation
+      return conversation
     },
     // Os quatro toques da tela (retorno, gosto e troca): as deps são as do próprio container.
     get touches() {

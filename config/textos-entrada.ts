@@ -17,6 +17,7 @@ export const textosEntrada = {
     demo_limite_global: "As demonstrações de hoje acabaram. Entre com Google ou volte amanhã.",
     demo_expirou: "Sua demonstração expirou. Você pode abrir outra.",
     erro_google: "Não consegui entrar com o Google agora. Tente de novo.",
+    dados_apagados: "Seus dados foram apagados.",
   },
   avisoInicial: {
     titulo: "Antes de começar",

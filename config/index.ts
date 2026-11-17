@@ -21,8 +21,10 @@ import { telaConversa } from "./tela-conversa"
 import { telemetria } from "./telemetria"
 import { textosCasa } from "./textos-casa"
 import { textosComoFicou } from "./textos-como-ficou"
+import { textosComoPensei } from "./textos-como-pensei"
 import { textosConversa } from "./textos-conversa"
 import { textosEntrada } from "./textos-entrada"
+import { textosVoce } from "./textos-voce"
 import { toques } from "./toques"
 import { ui } from "./ui"
 
@@ -31,7 +33,9 @@ export { llmCotas } from "./llm-cotas"
 export { telaConversa } from "./tela-conversa"
 export { textosCasa } from "./textos-casa"
 export { textosComoFicou } from "./textos-como-ficou"
+export { textosComoPensei } from "./textos-como-pensei"
 export { textosConversa } from "./textos-conversa"
+export { textosVoce } from "./textos-voce"
 
 export const config = {
   app,
@@ -57,8 +61,10 @@ export const config = {
   telemetria,
   textosCasa,
   textosComoFicou,
+  textosComoPensei,
   textosConversa,
   textosEntrada,
+  textosVoce,
   toques,
   ui,
 } as const

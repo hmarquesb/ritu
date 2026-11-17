@@ -219,4 +219,71 @@ describe("config", () => {
     expect(formatar("Opções para {item}", {})).toBe("Opções para {item}")
     expect(formatar("Oi {nome}, {n} itens", { n: 4 })).toBe("Oi {nome}, 4 itens")
   })
+
+  it("expõe os textos de Você com as chaves e os textos da spec", () => {
+    expect(config.textosVoce.titulo).toBe("Você")
+    expect(config.textosVoce.dosha.titulo).toBe("Seu dosha")
+    expect(config.textosVoce.dosha.proporcao).toBe("{n}% {Dosha}")
+    expect(config.textosVoce.nivel.casa.vazio).toBe("Nada anotado na sua casa ainda.")
+    expect(config.textosVoce.nivel.fixos.titulo).toBe("Fixos")
+    expect(config.textosVoce.conta.apagarTudo).toBe("Apagar tudo")
+    expect(config.textosVoce.confirma.esqueci).toBe("Esqueci {item}.")
+    expect(config.textosVoce.erro).toBe("Não consegui anotar agora. Nada mudou; tente de novo.")
+  })
+
+  it("expõe o aviso dados_apagados da Entrada com o texto da spec", () => {
+    expect(config.textosEntrada.aviso.dados_apagados).toBe("Seus dados foram apagados.")
+  })
+
+  it("expõe os textos de Como pensei com as frases dos passos, as intenções e os códigos da spec", () => {
+    expect(config.textosComoPensei.titulo).toBe("Como pensei")
+    expect(config.textosComoPensei.passos.entendi.intencoes).toBe(
+      "Entendi que você falou de {intencoes}.",
+    )
+    expect(config.textosComoPensei.passos.fim.semSugestoes).toBe("Entreguei a resposta.")
+    expect(config.textosComoPensei.intencoes.retorno).toBe("como ficou uma sugestão")
+    expect(config.textosComoPensei.codigosValidacao.fora_da_base).toBe("algo fora da base")
+    expect(config.textosComoPensei.motivosJuiz.promessa).toBe("uma promessa de cura")
+  })
+
+  it("não deixa nenhum texto de Você nem de Como pensei vazio", () => {
+    const textos = [
+      ...textosDe(config.textosVoce),
+      ...textosDe(config.textosComoPensei),
+      config.textosEntrada.aviso.dados_apagados,
+    ]
+    expect(textos.length).toBeGreaterThan(80)
+    for (const texto of textos) expect(texto.trim()).not.toBe("")
+  })
+
+  it("só usa nos modelos de Você e Como pensei as chaves de placeholder esperadas", () => {
+    const esperadas = new Set([
+      "lista",
+      "Dosha",
+      "n",
+      "item",
+      "Item",
+      "dia",
+      "hora",
+      "data",
+      "h",
+      "cidade",
+      "nome",
+      "incertos",
+      "acabou",
+      "intencoes",
+      "estados",
+      "temperatura",
+      "umidade",
+      "gunas",
+      "resumo",
+      "texto",
+    ])
+    for (const modelo of [...textosDe(config.textosVoce), ...textosDe(config.textosComoPensei)]) {
+      for (const casamento of modelo.matchAll(/\{(\w+)\}/g)) {
+        const chave = casamento[1] ?? ""
+        expect(esperadas.has(chave), `chave {${chave}} inesperada em "${modelo}"`).toBe(true)
+      }
+    }
+  })
 })

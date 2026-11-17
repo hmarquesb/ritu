@@ -3,6 +3,7 @@ export type AvisoDaEntrada =
   | "demo_limite_global"
   | "demo_expirou"
   | "erro_google"
+  | "dados_apagados"
 
 const AVISOS: readonly AvisoDaEntrada[] = [
   "demo_limite_ip",

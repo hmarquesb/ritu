@@ -667,6 +667,18 @@ function tabela(deps: DepsDaRota, runId: string): Rota[] {
       excecao: "Segredo próprio (CRON_SECRET), não é rota de toque",
     },
     {
+      arquivo: "src/app/api/cron/padroes/route.ts",
+      metodo: "GET",
+      nome: "GET /api/cron/padroes",
+      excecao: "Segredo próprio (CRON_SECRET), não é rota de toque",
+    },
+    {
+      arquivo: "src/app/api/saude/route.ts",
+      metodo: "GET",
+      nome: "GET /api/saude",
+      excecao: "Segredo próprio (CRON_SECRET), não é rota de toque",
+    },
+    {
       arquivo: "src/app/api/casa/route.ts",
       metodo: "GET",
       nome: "GET /api/casa",

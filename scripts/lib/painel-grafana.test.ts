@@ -69,8 +69,8 @@ describe("gerarPainel", () => {
 
   it("conta os painéis de cada linha", () => {
     const contagem = PAINEL.linhas.map((l) => l.paineis.length)
-    expect(contagem).toEqual([6, 9, 7, 7, 2])
-    expect(paineisComuns()).toHaveLength(31)
+    expect(contagem).toEqual([6, 9, 7, 8, 2])
+    expect(paineisComuns()).toHaveLength(32)
   })
 
   it("dá largura 12 aos painéis e 6 aos stat, com altura 8", () => {

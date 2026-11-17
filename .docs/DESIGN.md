@@ -115,9 +115,10 @@ Escritos no Ritu sobre **React Aria Components**, que trazem comportamento e ace
 | `design/ritu-logo.jpeg` | Logo de referência (símbolo e palavra) |
 | `design/vata-card.jpeg`, `design/pitta-card.jpeg`, `design/kapha-card.jpeg` | Cartas de referência dos doshas, de onde saem as manchas |
 | `design/login-cover.jpeg` | Imagem da Entrada |
-| `design/login-screen-reference.jpeg` | Referência de clima da Entrada (não define o formato da tela) |
+| `design/login-screen-reference.jpeg` | Referência do corte diagonal da Entrada e do logo |
 | `design/derivados/` | Recortes feitos das referências: as três manchas e o símbolo do logo |
 | `public/marca/simbolo-ritu.png` | Máscara do símbolo do logo (640 × 640, só alfa), pintada com a cor do texto pelo `Logo` |
 | `public/marca/mancha-vata.webp`, `mancha-pitta.webp`, `mancha-kapha.webp` | Manchas de aquarela (512 × 512, fundo transparente, sem ícone), usadas pelo `DoshaBlot` |
+| `public/marca/entrada.webp` | Imagem da Entrada, derivada de `design/login-cover.jpeg` |
 | `public/marca/papel.svg` | Textura de papel (ruído fino, 240 × 240, repetível) sobre o fundo da página |
 | `src/app/fonts/` | Cormorant Garamond e Figtree em `woff2` variável, com a licença OFL |

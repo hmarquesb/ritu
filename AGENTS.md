@@ -61,7 +61,7 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run eval:det:resumo` | Roda os evals determinísticos e imprime o resultado por grupo de `QA.md`, pelo mapa `evals/det/mapa.ts` |
 | `npm run dup` | Duplicação em `src/` (jscpd); no fechamento de spec e na CI |
 | `npm run build` | `next build` |
-| `npm run test:e2e` | Playwright (celular e desktop); precisa do build |
+| `npm run test:e2e` | Playwright (celular e desktop); precisa do build; o servidor sobe em modo e2e (`RITU_MODO=e2e`, tudo em memória) |
 | `npm run base:check` | Valida `data/` (schema, referências, cobertura) e imprime as contagens e as linhas `a_confirmar`. `-- --producao` falha com `a_confirmar` ou fonte não aprovada |
 | ⚠️ `npm run clima:real -- "<cidade>"` | Busca a cidade e o clima de verdade na Open-Meteo e imprime faixas, gunas e tendência. Chama a rede; fora dos gates |
 | `npm run db:migrate` | Aplica as migrações pendentes de `db/migrations/` no banco do `DATABASE_URL`. Precisa do Postgres no ar |

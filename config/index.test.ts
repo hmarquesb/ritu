@@ -1,7 +1,42 @@
 import { describe, expect, it } from "vitest"
 import { config } from "./index"
 
+function textosDe(valor: unknown): string[] {
+  if (typeof valor === "string") return [valor]
+  if (valor && typeof valor === "object") return Object.values(valor).flatMap(textosDe)
+  return []
+}
+
 describe("config", () => {
+  it("expõe os limites da entrada e das demonstrações com os valores da spec", () => {
+    expect(config.limites.demo.porIpPorDia).toBe(5)
+    expect(config.limites.demo.globalPorDia).toBe(30)
+    expect(config.limites.demo.duracaoHoras).toBe(24)
+    expect(config.limites.sessao.dias).toBe(30)
+    expect(config.limites.corpoMaximoBytes).toBe(16_384)
+    expect(config.limites.evitar).toEqual({ maxItens: 20, textoLivreCaracteres: 40 })
+    expect(config.limites.buscaDeAlimento).toEqual({ minimoCaracteres: 2, maximoResultados: 8 })
+  })
+
+  it("expõe a diferença do quiz dual com o valor da spec", () => {
+    expect(config.quiz.diferencaDual).toBe(1)
+  })
+
+  it("expõe os textos de entrada com as chaves da spec e sem marcação nem a palavra alergia", () => {
+    expect(config.textosEntrada.entrada.titulo).toBe("Entrar")
+    expect(config.textosEntrada.aviso.demo_limite_ip).toBe(
+      "Você já abriu 5 demonstrações hoje. Entre com Google ou volte amanhã.",
+    )
+    expect(config.textosEntrada.avisoInicial.saude.forte).toBe("Não é orientação médica.")
+    expect(config.textosEntrada.quiz.resultado).toBe("Seu dosha é {nome}")
+    const textos = textosDe(config.textosEntrada)
+    expect(textos.length).toBeGreaterThan(30)
+    for (const texto of textos) {
+      expect(texto).not.toMatch(/[<>]/)
+      expect(texto.toLowerCase()).not.toContain("alergia")
+    }
+  })
+
   it("expõe a configuração de telemetria com o painel ritu", () => {
     expect(config.telemetria.grafana.uidDoPainel).toBe("ritu")
   })

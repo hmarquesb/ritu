@@ -137,12 +137,29 @@
 - **Por quê:** evita um vai e volta por defeito entre duas tarefas que só ficam verdes juntas; os arquivos não se cruzam com os da T16.
 - **Como desfazer:** reverter o commit da C1 e reabrir cada correção como tarefa separada.
 
+## 017 · Entrada e contas (plano)
+
+- **A1 · Mapa dos evals.** Faltava: `evals/det/mapa.ts` (da 014, ainda não implementada). Decidi: não criar o mapa; os três evals de `evals/det/seguranca/` entram nas linhas "Rota sem sessão", "Duas demonstrações", "POST com `Origin`" e "31ª demonstração" quando a 014 chegar. Por quê: criar o mapa seria construir parte da 014. Desfazer: acrescentar as linhas no mapa na junção.
+- **A2 · Log `erro_inesperado`.** Faltava: a lista `LOGS` (da 015). Decidi: `criarRota` chama `telemetry.log("error", "erro_inesperado")` sem campos. Desfazer: incluir o código em `LOGS` quando a 015 chegar.
+- **A3 · Rótulos de `ritu_entrada_total`.** Faltava: nomes de atributo. Decidi: `conta.tipo` (existente) e `entrada.resultado` (novo). Desfazer: renomear em `nomes.ts`.
+- **A4 · Handlers das rotas.** Faltava: onde ficam os handlers que os evals chamam com stores em memória. Decidi: `src/app/_rotas/` (funções que recebem `DepsDaRota`); os `route.ts` só ligam às dependências reais (`src/app/_lib/deps.ts`). Desfazer: mover os handlers para dentro dos `route.ts`.
+- **A5 · Conta nova no E2E.** A spec cita o header `x-ritu-e2e-conta: nova`; decidi passar isso a `criarDemonstracao` como `semSeed` (só no modo e2e), para o core não ler header. Desfazer: tirar o parâmetro e tratar no provedor.
+
 ## 014 e 015 · Planos (2026-11-16)
 
 - **Faltava:** decisões que as specs 014 e 015 não fixam (destino do runner, `--casos`, nome do log de padrões, espelho de telemetria nos cenários, relógio em `chamarComPapel`, entre outras).
 - **Decidido:** a opção mais conservadora em cada uma, listadas como D1–D21 em `.plans/014-evals-plan.md` e D1–D15 em `.plans/015-observabilidade-completa-plan.md` (seção "Decisões do planejamento").
 - **Para o relatório:** 014 D4 (`--casos` sai), 015 D1 (log `padroes_conta_falhou` mantido), 015 D4 (latências 0 nos cenários).
 - **Desfazer:** cada D diz o que muda; reverter a tarefa correspondente.
+
+- **A6 · Lugar do schema do seed (017 T7).** Faltava: `src/core/accounts/demo-seed.ts` importa `saidaDoAcompanhanteSchema` de `agents`, e `agents` já importa `accounts`, o que fecha o ciclo `accounts → agents → accounts` (R9). Decidi: o schema, o validador e o teste viram arquivos soltos em `src/core/` (`demo-seed.ts`, `demo-seed.test.ts`), como `memory-schemas.ts`; a R9 não olha arquivos soltos. Desfazer: tirar de `accounts` o que `agents` usa e devolver o arquivo à pasta `accounts/`.
+
+- **A7 · Resumo e sugestão na cópia do seed (017 T10).** Faltava: `copiarSeed` precisa de `resumoPorCodigo` (`agents/memory`) e `sugestaoRegistrada` (`agents/companion`), e `accounts` importar `agents` fecha o ciclo R9. Decidi: duas funções locais em `src/core/accounts/copiar-seed.ts`, com a mesma regra; o `dup` não acusa clone. Risco: divergirem das originais sem teste que compare. Desfazer: mover as duas para arquivos soltos em `src/core/` e importar dos dois lados.
+- **A8 · Teste do seed real (017 T10).** A T10 pedia "`validarSeed` do seed real sem erros", mas teste de core não importa infra (R1). Decidi: a cobertura fica no `base:check` e num teste em `src/infra/knowledge/yaml-seed.test.ts`, aberto como tarefa de correção no fechamento da 017.
+
+- **A9 · C1 da 017 (helper de envio do onboarding).** Faltava: a T19 foi reprovada só no `npm run dup` (o `continuar()` de `escolher-dosha.tsx` repete o envio de `aviso/aceitar.tsx` e `evitar/escolher-evitar.tsx`), e a correção mexe em arquivos da T18. Decidi: tarefa de correção C1 (tela), com `src/app/(comecar)/_lib/enviar-passo.ts` compartilhado, despachada junto da T19 ao mesmo implementador, com commits separados. Desfazer: reverter o commit da C1 (a T19 volta a ter o clone).
+- **A10 · C2 e C3 da 017 (defeitos revelados pelo E2E da Entrada).** Faltava: a T21 proíbe corrigir telas, e o E2E acusou violação de CSP de estilo inline em toda página e `role-img-alt` deixado pelo anunciador do botão pendente. Decidi: duas tarefas de correção na mesma onda (C2 núcleo, CSP; C3 tela, botão), commitadas antes da T21, que roda de novo com os testes estritos. Desfazer: reverter os commits da C2 e da C3.
+- **A11 · C4 da 017 (defeitos revelados pelo E2E do onboarding).** Faltava: a T22 proíbe corrigir telas e contornou três defeitos (ComboBox, clique interceptado, anúncio órfão demorado). Decidi: tarefa de correção C4 (tela) antes do commit da T22, que roda de novo sem os contornos. Desfazer: reverter o commit da C4.
 
 ## 014 · T3 · `familias` obrigatório quebra os literais do teste antigo
 

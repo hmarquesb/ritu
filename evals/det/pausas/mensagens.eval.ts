@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { executarLimpeza } from "@/core/cleanup"
 import { type Pergunta, textoDaResposta } from "@/core/runs/pergunta"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createScriptedRuntime } from "@/infra/fakes/scripted-runtime"
 import { cenariosComPausa, montarCenario, rodarCenario } from "../../../test/fixtures/cenarios"
 import type { CenarioDeConversa } from "../../../test/fixtures/cenarios/tipos"
@@ -90,7 +91,12 @@ describe("mensagens: a variante fica marcada com incômodo", () => {
     const run = await deps.stores.runs.buscar(contaId, rodada.final.run_id)
 
     deps.clock.set(DIA_SEGUINTE)
-    await executarLimpeza({ stores: deps.stores, clock: deps.clock, ledger: deps.ledger })
+    await executarLimpeza({
+      stores: deps.stores,
+      clock: deps.clock,
+      ledger: deps.ledger,
+      limiter: createMemoryLimiter(),
+    })
 
     expect(await deps.stores.messages.doDia(contaId, run?.dia ?? "")).toEqual([])
   })
@@ -108,7 +114,12 @@ describe("mensagens: a variante sem resposta expira, e a limpeza apaga a pergunt
     expect(antes.every((m) => m.com_incomodo)).toBe(true)
 
     deps.clock.set(DIA_SEGUINTE)
-    await executarLimpeza({ stores: deps.stores, clock: deps.clock, ledger: deps.ledger })
+    await executarLimpeza({
+      stores: deps.stores,
+      clock: deps.clock,
+      ledger: deps.ledger,
+      limiter: createMemoryLimiter(),
+    })
 
     const depois = await deps.stores.runs.buscar(contaId, r.run_id)
     expect(depois?.status).toBe("expired")

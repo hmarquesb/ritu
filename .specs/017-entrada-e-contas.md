@@ -1,6 +1,7 @@
 ---
 title: Entrada e contas
-status: approved
+status: implemented
+implemented: 70cdd07
 entrega: 3
 created: 2026-11-15
 ---

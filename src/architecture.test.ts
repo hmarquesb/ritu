@@ -171,6 +171,8 @@ function publicEnvDetail(node: ts.Node): string | undefined {
 const importedBy = (file: FileCtx, applies: (ctx: ImportCtx) => boolean): string[] =>
   file.imports.filter(applies).map((ctx) => `importa "${ctx.raw}"`)
 
+const NEXT_SERVER_SPEC = "next/server"
+
 const RULE_R1: Rule = {
   id: "R1",
   check: (file) =>
@@ -196,7 +198,25 @@ const RULE_R3: Rule = {
   id: "R3",
   check: (file) =>
     inDir(file.path, "src/app")
-      ? importedBy(file, (ctx) => isUnder(ctx.spec, "@/infra") && ctx.spec !== "@/infra/container")
+      ? importedBy(
+          file,
+          (ctx) =>
+            isUnder(ctx.spec, "@/infra") &&
+            ctx.spec !== "@/infra/container" &&
+            !isUnder(ctx.spec, "@/infra/auth/next"),
+        )
+      : [],
+}
+
+// R11: o proxy só importa de @/core/security/ e de next/server.
+const RULE_R11: Rule = {
+  id: "R11",
+  check: (file) =>
+    file.path === "src/proxy.ts"
+      ? importedBy(
+          file,
+          (ctx) => ctx.spec !== NEXT_SERVER_SPEC && !isUnder(ctx.spec, "@/core/security"),
+        )
       : [],
 }
 
@@ -276,6 +296,7 @@ const RULES: Rule[] = [
   RULE_R7,
   RULE_R8,
   RULE_R10,
+  RULE_R11,
 ]
 
 const formatViolation = (path: string, id: string, detail: string): string =>
@@ -470,6 +491,29 @@ describe("R3 · app só importa infra pelo container", () => {
 
   it("@/infra/container em src/app é válido", () => {
     expectClean("src/app/page.tsx", `${IMPORT} { getContainer } from "@/infra/container"`)
+  })
+})
+
+describe("R3 · adaptador de auth do Next liberado em app", () => {
+  it("@/infra/auth/next em src/app é válido", () => {
+    expectClean("src/app/x.ts", `${IMPORT} { auth } from "@/infra/auth/next"`)
+  })
+})
+
+describe("R11 · proxy só importa de core/security e next/server", () => {
+  it("imports permitidos passam", () => {
+    expectClean(
+      "src/proxy.ts",
+      `${IMPORT} { NextResponse } from "${NEXT_SERVER}"\n${IMPORT} { montarCsp } from "@/core/security/csp"`,
+    )
+  })
+
+  it("outra importação é violação", () => {
+    expectOnly("src/proxy.ts", `${IMPORT} { env } from "@/infra/env"`, "R11")
+  })
+
+  it("outros arquivos não são afetados", () => {
+    expectClean("src/app/x.ts", `${IMPORT} { z } from "zod"`)
   })
 })
 

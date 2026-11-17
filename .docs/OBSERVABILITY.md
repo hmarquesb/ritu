@@ -69,6 +69,7 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_run_duracao_ms` | histograma | `caminho`, `status`: tempo de cada trecho de trabalho num run (o que a pessoa espera por uma resposta), com o status ao fim do trecho |
 | `ritu_run_passos` | histograma | `caminho`, `status`: uma vez por run, no encerramento; conta runs e falhas |
 | `ritu_run_intencao_total` | contador | `intencao` |
+| `ritu_entrada_total` | contador | `conta.tipo` (google, demo), `entrada.resultado` (nova, retorno, limite_ip, limite_global): uma por entrada, sem identificador da conta |
 | `ritu_tokens_total` | contador | `modelo`, `papel`, `direcao` |
 | `ritu_llm_chamadas_total` | contador | `modelo`, `papel` |
 | `ritu_llm_duracao_ms` | histograma | `modelo`, `papel` |
@@ -115,7 +116,7 @@ Linhas do painel:
 1. **Saúde:** runs por hora, espera por resposta (p50 e p95), runs que falharam, 429 do modelo, latência do modelo e das tools.
 2. **Agente:** intenções, caminhos, passos por run, tools, violações do validador, juiz, guardrail, pausas, memória.
 3. **Modelos e cota:** chamadas e tokens por modelo e por papel; cota do dia e do minuto por modelo; trocas de modelo; respostas sem modelo; erros do modelo.
-4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, gostos, faltas, propostas, indicações de "vale ter em casa".
+4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, gostos, faltas, propostas, indicações de "vale ter em casa", entradas por tipo de conta e resultado.
 5. **Rastro:** runs recentes (Tempo, com `run.caminho`, `run.status`, `run.passos` e a duração de cada um) e avisos e erros (Loki).
 
 Alertas, visíveis só no Grafana, sem notificação; limites em `config/telemetria.ts`:

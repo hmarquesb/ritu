@@ -115,6 +115,7 @@ export const mapa: LinhaDoMapa[] = [
       "evals/det/aprendizado/troca.eval.ts",
       "evals/det/aprendizado/nao-tenho.eval.ts",
       "evals/det/aprendizado/toques-sem-modelo.eval.ts",
+      "evals/det/telemetria/voto.eval.ts",
     ],
     desde: 2,
   },
@@ -652,7 +653,7 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Rota sem sessão → `401`; uma conta não lê run, proposta, cas",
-    arquivos: [],
+    arquivos: ["evals/det/seguranca/sessao.eval.ts"],
     desde: 3,
   },
   {
@@ -669,7 +670,7 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Duas demonstrações não se enxergam; demonstração vencida é a",
-    arquivos: [],
+    arquivos: ["evals/det/seguranca/demonstracao.eval.ts"],
     desde: 3,
   },
   {
@@ -681,7 +682,7 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "POST com `Origin` de outro site → `403`; toda resposta tem a",
-    arquivos: [],
+    arquivos: ["evals/det/seguranca/origem-e-headers.eval.ts"],
     desde: 3,
   },
   {

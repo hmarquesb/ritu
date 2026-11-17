@@ -54,8 +54,8 @@ describe("nomes da telemetria", () => {
     }
   })
 
-  it("tem 27 métricas, todas com tipo e rótulos", () => {
-    expect(Object.keys(METRICAS)).toHaveLength(27)
+  it("tem 28 métricas, todas com tipo e rótulos", () => {
+    expect(Object.keys(METRICAS)).toHaveLength(28)
     for (const definicao of Object.values(METRICAS)) {
       expect(["contador", "histograma", "medidor"]).toContain(definicao.tipo)
       expect(Array.isArray(definicao.rotulos)).toBe(true)
@@ -128,5 +128,10 @@ describe("nomes da telemetria", () => {
     expect(ATRIBUTOS_PERMITIDOS).toContain("trace_id")
     expect(ATRIBUTOS_PERMITIDOS).toContain("pausa.tipo")
     expect(ATRIBUTOS_PERMITIDOS).toContain("modelo")
+  })
+
+  it("METRICAS e ATRIBUTOS_PERMITIDOS têm a entrada", () => {
+    expect(METRICAS).toHaveProperty("ritu_entrada_total")
+    expect(ATRIBUTOS_PERMITIDOS).toContain("entrada.resultado")
   })
 })

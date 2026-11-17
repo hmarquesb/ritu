@@ -57,6 +57,7 @@ export const METRICAS = {
   ritu_gosto_total: { tipo: "contador", rotulos: ["gosto"] },
   ritu_faltas_total: { tipo: "contador", rotulos: ["origem"] },
   ritu_para_ter_total: { tipo: "contador", rotulos: ["etapa"] },
+  ritu_entrada_total: { tipo: "contador", rotulos: ["conta.tipo", "entrada.resultado"] },
 } as const satisfies Record<
   string,
   { tipo: "contador" | "histograma" | "medidor"; rotulos: readonly AtributoPermitido[] }
@@ -127,6 +128,7 @@ export const ATRIBUTOS_PERMITIDOS = [
   "resumo.origem",
   "padroes.contas",
   "padroes.propostos",
+  "entrada.resultado",
   // rótulos da tabela de métricas
   "caminho",
   "status",

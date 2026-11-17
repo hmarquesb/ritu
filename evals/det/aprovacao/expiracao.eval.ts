@@ -6,6 +6,7 @@ import { lerConteudo } from "@/core/proposals/conteudo"
 import { RunNaoContinuavelError } from "@/core/runs/errors"
 import { getContainer } from "@/infra/container"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import {
@@ -198,6 +199,7 @@ describe("limpeza: run aguardando a aprovação", () => {
       stores: deps.stores,
       clock: deps.clock,
       ledger: deps.ledger,
+      limiter: createMemoryLimiter(),
     })
 
     expect(limpeza.runs_expirados).toBe(1)
@@ -215,6 +217,7 @@ describe("limpeza: run aguardando a aprovação", () => {
       stores: deps.stores,
       clock: deps.clock,
       ledger: deps.ledger,
+      limiter: createMemoryLimiter(),
     })
 
     expect(limpeza.runs_expirados).toBe(0)

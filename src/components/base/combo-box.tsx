@@ -43,6 +43,9 @@ export function ComboBox<T extends object>({
 }: ComboBoxProps<T>) {
   return (
     <AriaComboBox
+      // Abre ao digitar mesmo antes de as sugestões chegarem, mas não reabre
+      // quando o campo é limpo depois de uma escolha.
+      allowsEmptyCollection={Boolean(props.inputValue)}
       {...props}
       isInvalid={isInvalid || Boolean(errorMessage)}
       className={cx("group flex flex-col gap-1.5 font-body", className)}
@@ -58,7 +61,10 @@ export function ComboBox<T extends object>({
         </Button>
       </div>
       <FieldHelp description={description} errorMessage={errorMessage} />
-      <Popover className="w-(--trigger-width) rounded-lg border border-line bg-raised shadow-lift">
+      <Popover
+        offset={6}
+        className="w-(--trigger-width) rounded-lg border border-line bg-raised shadow-lift"
+      >
         <ListBox
           className="max-h-72 overflow-y-auto p-1.5 outline-none"
           renderEmptyState={() =>

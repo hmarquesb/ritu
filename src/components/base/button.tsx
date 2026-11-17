@@ -1,6 +1,7 @@
 "use client"
 
 import type { Icon } from "@phosphor-icons/react"
+import { useEffect } from "react"
 import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components"
 import { ICON } from "@/components/base/icon-size"
 import { Spinner } from "@/components/base/spinner"
@@ -39,6 +40,48 @@ const SIZE: Record<ButtonSize, string> = {
   sm: "min-h-9 px-4 py-1 text-sm after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']",
 }
 
+type AnnouncementDocument = Pick<Document, "querySelectorAll" | "getElementById">
+
+/**
+ * O React Aria anuncia o botão pendente com `role="img"` e `aria-labelledby`
+ * apontando para o próprio botão. Se a navegação desmonta o botão, o anúncio
+ * fica por sete segundos no `role="log"` sem o elemento que lhe dá o nome.
+ * Remove esses anúncios órfãos.
+ */
+export function removeOrphanAnnouncements(doc: AnnouncementDocument): void {
+  for (const node of doc.querySelectorAll("[data-live-announcer] [role='img'][aria-labelledby]")) {
+    const ids = (node.getAttribute("aria-labelledby") ?? "").split(/\s+/).filter(Boolean)
+    if (ids.length === 0 || ids.some((id) => !doc.getElementById(id))) node.remove()
+  }
+}
+
+/**
+ * O primeiro anúncio da página só entra no DOM 100 ms depois do pedido (o
+ * React Aria espera o `role="log"` existir), então um botão que sai antes disso
+ * deixa o anúncio chegar depois da limpeza. Repete a limpeza em intervalos
+ * curtos para pegar esse caso também.
+ */
+export const ORPHAN_CLEANUP_DELAYS = [0, 150, 500, 1500] as const
+
+export function scheduleOrphanCleanup(
+  doc: AnnouncementDocument,
+  schedule: (fn: () => void, delay: number) => unknown = setTimeout,
+): void {
+  for (const delay of ORPHAN_CLEANUP_DELAYS) {
+    schedule(() => removeOrphanAnnouncements(doc), delay)
+  }
+}
+
+function PendingCleanup() {
+  useEffect(
+    () => () => {
+      scheduleOrphanCleanup(document)
+    },
+    [],
+  )
+  return null
+}
+
 export function Button({
   variant = "secondary",
   size = "md",
@@ -72,6 +115,7 @@ export function Button({
           </span>
           {renderProps.isPending ? (
             <span className="absolute inset-0 inline-flex items-center justify-center">
+              <PendingCleanup />
               <Spinner label="Carregando" />
             </span>
           ) : null}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { executarLimpeza } from "@/core/cleanup"
 import { textosDaConversa } from "@/core/conversation/textos"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createScriptedRuntime } from "@/infra/fakes/scripted-runtime"
 import { montarCenario } from "../../../test/fixtures/cenarios"
 import type { CenarioDeConversa } from "../../../test/fixtures/cenarios/tipos"
@@ -80,7 +81,12 @@ describe("alerta: as mensagens ficam marcadas e somem no dia seguinte", () => {
 
     // 12h em São Paulo do dia seguinte.
     deps.clock.set("2026-06-16T15:00:00.000Z")
-    await executarLimpeza({ stores: deps.stores, clock: deps.clock, ledger: deps.ledger })
+    await executarLimpeza({
+      stores: deps.stores,
+      clock: deps.clock,
+      ledger: deps.ledger,
+      limiter: createMemoryLimiter(),
+    })
 
     expect(await deps.stores.messages.doDia(contaId, dia)).toEqual([])
   })

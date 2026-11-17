@@ -7,15 +7,18 @@ import { clima } from "./clima"
 import { conversa } from "./conversa"
 import { evals } from "./evals"
 import { juiz } from "./juiz"
+import { limites } from "./limites"
 import { llmCotas } from "./llm-cotas"
 import { loop } from "./loop"
 import { memoria } from "./memoria"
 import { momentoDoDia } from "./momento-do-dia"
 import { padroes } from "./padroes"
 import { pausas } from "./pausas"
+import { quiz } from "./quiz"
 import { ranking } from "./ranking"
 import { resposta } from "./resposta"
 import { telemetria } from "./telemetria"
+import { textosEntrada } from "./textos-entrada"
 import { toques } from "./toques"
 import { ui } from "./ui"
 
@@ -36,11 +39,14 @@ export const config = {
   conversa,
   evals,
   juiz,
+  limites,
   loop,
   llmCotas,
+  quiz,
   ranking,
   resposta,
   telemetria,
+  textosEntrada,
   toques,
   ui,
 } as const

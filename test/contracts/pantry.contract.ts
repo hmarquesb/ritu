@@ -3,6 +3,7 @@ import { ALIMENTO_INEXISTENTE, type ContractEnv, criarDuasContas } from "./env"
 
 const AGORA = "2026-01-15T12:00:00.000Z"
 const UMA_HORA = 3_600_000
+const DATA_ANTIGA = "2026-01-10T12:00:00.000Z"
 
 export function pantryContract(make: () => Promise<ContractEnv> | ContractEnv): void {
   describe("contrato: PantryStore", () => {
@@ -147,6 +148,93 @@ export function pantryContract(make: () => Promise<ContractEnv> | ContractEnv): 
       const depois = await env.stores.pantry.listar(a)
       expect(depois).toHaveLength(1)
       expect(depois[0]).toMatchObject({ estado: "tem", sempre_tenho: false })
+    })
+
+    it("semear grava o item com o confirmado_em dado, estado tem e origem tela", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      await env.stores.pantry.semear(a, [
+        { alimento_id: "arroz-branco", confirmado_em: new Date(DATA_ANTIGA) },
+      ])
+
+      const itens = await env.stores.pantry.listar(a)
+      expect(itens).toHaveLength(1)
+      expect(itens[0]).toMatchObject({
+        alimento_id: "arroz-branco",
+        nome_livre: null,
+        estado: "tem",
+        sempre_tenho: false,
+        confirmado_em: DATA_ANTIGA,
+        origem: "tela",
+      })
+    })
+
+    it("semear com nome livre identifica pelo nome normalizado", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      await env.stores.pantry.semear(a, [
+        { nome_livre: "Feijão preto", confirmado_em: new Date(DATA_ANTIGA) },
+      ])
+
+      const itens = await env.stores.pantry.listar(a)
+      expect(itens).toHaveLength(1)
+      expect(itens[0]).toMatchObject({
+        alimento_id: null,
+        nome_livre: "Feijão preto",
+        nome_normalizado: "feijao preto",
+        estado: "tem",
+        origem: "tela",
+      })
+    })
+
+    it("semear com sempre_tenho true grava o valor", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      await env.stores.pantry.semear(a, [
+        { alimento_id: "mel", confirmado_em: new Date(DATA_ANTIGA), sempre_tenho: true },
+      ])
+
+      expect((await env.stores.pantry.listar(a))[0]).toMatchObject({ sempre_tenho: true })
+    })
+
+    it("semear não apaga a falta do mesmo alimento", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      await env.stores.shortages.registrar(
+        a,
+        [{ alimento_id: "cebola", origem: "nao_tenho" }],
+        "2026-01-14",
+      )
+      const antes = await env.stores.shortages.diasComFalta(a, "2026-01-01")
+      expect(antes).not.toEqual([])
+
+      await env.stores.pantry.semear(a, [
+        { alimento_id: "cebola", confirmado_em: new Date(DATA_ANTIGA) },
+      ])
+
+      expect(await env.stores.shortages.diasComFalta(a, "2026-01-01")).toEqual(antes)
+    })
+
+    it("semear não mexe na lista Para ter em casa", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      await env.stores.shortages.porNaLista(a, {
+        alimento_id: "cebola",
+        motivo: "faltou_hoje",
+        detalhe: "Entraria no prato de hoje",
+      })
+      const antes = await env.stores.shortages.lista(a)
+      expect(antes).not.toEqual([])
+
+      await env.stores.pantry.semear(a, [
+        { alimento_id: "cebola", confirmado_em: new Date(DATA_ANTIGA) },
+      ])
+
+      expect(await env.stores.shortages.lista(a)).toEqual(antes)
+    })
+
+    it("semear na conta A não aparece na conta B", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      await env.stores.pantry.semear(a, [
+        { alimento_id: "arroz-branco", confirmado_em: new Date(DATA_ANTIGA) },
+      ])
+
+      expect(await env.stores.pantry.listar(b)).toEqual([])
     })
   })
 }

@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
+import { criarDemonstracao, entrarComGoogle } from "@/core/accounts/entrar"
 import {
   type AtributoPermitido,
   type CodigoDeLog,
@@ -7,12 +8,16 @@ import {
   type NomeDeSpan,
   SPANS,
 } from "@/core/telemetry/nomes"
+import { createContainer } from "@/infra/container"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
+import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import type {
   LogRegistrado,
   MetricaRegistrada,
   SpanRegistrado,
 } from "@/infra/fakes/memory-telemetry"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import {
   cenarios,
   cenariosComAprovacao,
@@ -122,6 +127,28 @@ async function detectarComHistorico(coleta: Coleta): Promise<void> {
   juntar(coleta, deps)
 }
 
+// Entrada: a demonstração e a conta Google, pelo caminho real, com stores e limitador em memória.
+async function entrar(coleta: Coleta): Promise<void> {
+  vi.stubEnv("RITU_MODO", "e2e")
+  const clock = { now: () => new Date("2026-01-15T12:00:00Z") }
+  const stores = createMemoryStores(clock)
+  const container = createContainer({ clock, stores, tx: stores, limiter: createMemoryLimiter() })
+  const telemetry = createMemoryTelemetry()
+  await criarDemonstracao(
+    {
+      tx: stores,
+      limiter: createMemoryLimiter(),
+      clock,
+      kb: container.knowledge,
+      seed: container.demoSeed,
+      telemetry,
+    },
+    { ipHash: "cobertura", semSeed: true },
+  )
+  await entrarComGoogle({ stores, telemetry }, { sub: "sub-cobertura", email: "a@b.c" })
+  coleta.metricas.push(...telemetry.metricas)
+}
+
 // Atributos que só são obrigatórios em certos casos (OBSERVABILITY.md §3 e nomes.ts).
 type Condicional = {
   aplica: (s: SpanRegistrado) => boolean
@@ -168,7 +195,12 @@ describe("cobertura da telemetria pelos cenários", () => {
     await rodarComErroDoModelo(coleta)
     await tocarRunEntregue(coleta)
     await detectarComHistorico(coleta)
+    await entrar(coleta)
   }, 180_000)
+
+  afterAll(() => {
+    vi.unstubAllEnvs()
+  })
 
   it("todo span de SPANS é emitido pelo menos uma vez", () => {
     const emitidos = new Set(coleta.spans.map((s) => s.nome))

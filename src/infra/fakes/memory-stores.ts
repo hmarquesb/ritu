@@ -395,6 +395,30 @@ function criarPantry(db: Db, clock: Clock, existe: (id: string) => boolean): Pan
         else registrarLivre(contaId, r.livre, origem)
       }
     },
+    async semear(contaId, itens) {
+      for (const item of itens) {
+        const r = resolverRef(item, existe)
+        const agora = item.confirmado_em.toISOString()
+        const sempreTenho = item.sempre_tenho ?? false
+        const existente = acharItem(db.estado, contaId, r)
+        if (existente) {
+          marcarTem(existente, "tela", agora)
+          existente.sempre_tenho = sempreTenho
+          continue
+        }
+        db.estado.itensCasa.push({
+          id: crypto.randomUUID(),
+          conta_id: contaId,
+          alimento_id: "alimento" in r ? r.alimento : null,
+          nome_livre: "livre" in r ? r.livre : null,
+          nome_normalizado: "livre" in r ? normalizar(r.livre) : null,
+          estado: "tem",
+          sempre_tenho: sempreTenho,
+          confirmado_em: agora,
+          origem: "tela",
+        })
+      }
+    },
     async marcarAcabou(contaId, itens) {
       mudarItens(contaId, itens, (i) => {
         i.estado = "acabou"

@@ -1428,6 +1428,49 @@
     },
     {
       "id": 34,
+      "type": "barchart",
+      "title": "Entradas",
+      "description": "Quantas entradas houve, por tipo de conta, e quantas o limite recusou?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 124,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (conta_tipo, entrada_resultado) (max_over_time(ritu_entrada_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 35,
       "type": "row",
       "title": "5. Rastro",
       "collapsed": false,
@@ -1440,7 +1483,7 @@
       }
     },
     {
-      "id": 35,
+      "id": 36,
       "type": "table",
       "title": "Runs recentes",
       "description": "Quais foram os runs recentes, com caminho, status, passos e duração?",
@@ -1499,7 +1542,7 @@
       ]
     },
     {
-      "id": 36,
+      "id": 37,
       "type": "logs",
       "title": "Avisos e erros",
       "description": "Quais avisos e erros aconteceram recentemente?",

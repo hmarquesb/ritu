@@ -31,7 +31,7 @@ import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
-import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createGeminiClient } from "@/infra/gemini/client"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { loadDemoSeed } from "@/infra/knowledge/yaml-seed"
@@ -86,6 +86,27 @@ function climaFixoE2e(): WeatherSource {
       const { createClimaFixo } = await import("@/infra/e2e/clima")
       return createClimaFixo().buscar(coordenadas)
     },
+  }
+}
+
+// Um ledger por `x-ritu-e2e`, como os dados de cada teste.
+function ledgerE2e(clock: Clock): UsageLedger {
+  const porEscopo = new Map<string, UsageLedger>()
+  const atual = async (): Promise<UsageLedger> => {
+    const { createLedgerE2e, escopoDoPedidoNext } = await import("@/infra/e2e/cota")
+    let ledger = porEscopo.get("e2e")
+    if (!ledger) {
+      ledger = createLedgerE2e(clock, escopoDoPedidoNext)
+      porEscopo.set("e2e", ledger)
+    }
+    return ledger
+  }
+  return {
+    reservar: async (m, l) => (await atual()).reservar(m, l),
+    registrarTokens: async (m, t) => (await atual()).registrarTokens(m, t),
+    registrarRateLimit: async (m) => (await atual()).registrarRateLimit(m),
+    uso: async () => (await atual()).uso(),
+    apagarAntigas: async () => (await atual()).apagarAntigas(),
   }
 }
 
@@ -188,7 +209,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return tx
     },
     get ledger() {
-      ledger ??= e2e ? createMemoryLedger(clock) : createPgUsageLedger(bancoPreguicoso().sql, clock)
+      ledger ??= e2e ? ledgerE2e(clock) : createPgUsageLedger(bancoPreguicoso().sql, clock)
       return ledger
     },
     get limiter() {

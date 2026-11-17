@@ -16,6 +16,7 @@ export type TextFieldProps = Omit<AriaTextFieldProps, "children" | "className"> 
   description?: string
   errorMessage?: string
   multiline?: boolean
+  "aria-disabled"?: boolean | "true" | "false"
   rows?: number
   className?: string
 }
@@ -32,6 +33,7 @@ export function TextField({
   rows = 3,
   className,
   isInvalid,
+  "aria-disabled": ariaDisabled,
   ...props
 }: TextFieldProps) {
   return (
@@ -42,9 +44,13 @@ export function TextField({
     >
       <Label className={hideLabel ? "sr-only" : "text-sm font-medium text-ink"}>{label}</Label>
       {multiline ? (
-        <TextArea rows={rows} className={cx(CONTROL, "resize-y leading-[1.6]")} />
+        <TextArea
+          rows={rows}
+          aria-disabled={ariaDisabled}
+          className={cx(CONTROL, "resize-y leading-[1.6]")}
+        />
       ) : (
-        <Input className={CONTROL} />
+        <Input aria-disabled={ariaDisabled} className={CONTROL} />
       )}
       <FieldHelp description={description} errorMessage={errorMessage} />
     </AriaTextField>

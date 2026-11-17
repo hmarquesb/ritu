@@ -296,3 +296,28 @@
 - **Decidido:** `createRouterE2e` em `src/infra/e2e/cota.ts`, embrulhando o router no container só com `RITU_MODO=e2e`, como o ledger por escopo.
 - **Por quê:** o modo e2e já lê headers do pedido por esse módulo.
 - **Como desfazer:** apagar o embrulho e a ligação no container.
+
+## 021 · A6 · Métrica nova sem emissão até a T6
+- **Faltava:** `evals/det/telemetria/cobertura.eval.ts` exige que toda métrica de `METRICAS` seja emitida; `ritu_limite_total` (T4) só é emitida por `consumirToque` (T6).
+- **Decidido:** a T4 é verificada na onda 1 mas commitada só junto da onda 2, logo antes da T6, que acrescenta ao `cobertura.eval.ts` um cenário de toque barrado.
+- **Por quê:** nenhum commit com gate vermelho, sem exceção artificial no eval.
+- **Como desfazer:** nada a desfazer depois do commit da T6.
+
+## 021 · A7 · T2 · Consumo atômico em transação, não em um comando
+- **Faltava:** a T2 pedia "SQL com `inicio` por linha num único comando atômico"; com `inicio` diferente por chave, o comando único ficou difícil de ler e de travar em ordem.
+- **Decidido:** `src/infra/db/limits.ts` faz, numa transação, `insert ... on conflict do nothing` e `select ... for update` por par (chave, início), em ordem fixa; confere os tetos sob trava e só então soma. Algum par no teto: retorna sem somar.
+- **Por quê:** mantém o tudo ou nada e a ordem de trava evita deadlock; o verificador conferiu por leitura (o `test:db` fica para a junção, 021 A4).
+- **Como desfazer:** reescrever `consumir` do adaptador Postgres num único `with ... update` e rodar `npm run test:db`.
+- **Nota da onda 1:** o orquestrador incluiu `evals/det/telemetria/cobertura.eval.ts` na T5 (passar `testers: []` a `entrarComGoogle`), autorizado pelo orquestrador.
+
+## 021 · A8 · T6 · Conta estrutural em `limits`, sem importar `accounts`
+- **Faltava:** os contratos punham `Conta` (de `accounts`) em `QuemPede` e nas chaves, mas `accounts/entrar.ts` já importa `UsageLimiter` de `limits`: ciclo proibido pela R9.
+- **Decidido:** `src/core/limits/estado.ts` declara `ContaDoLimite`, só com os campos de `Conta` que os limites leem; `Conta` continua atribuível a ele.
+- **Por quê:** quebra o ciclo sem mexer em `accounts` nem mover tipo usado em muitos arquivos.
+- **Como desfazer:** mover `Conta` para um módulo comum de `src/core/` e voltar a importá-la em `limits`.
+
+## 021 · A9 · T9 · `quemPede` real em `src/infra/auth/next.ts`
+- **Faltava:** a T9 punha o `quemPede` real em `src/app/_lib/deps.ts`, importando `@/infra/auth/ip` e `@/infra/env`; a R3 só deixa `src/app` importar `@/infra/container` e `@/infra/auth/next`.
+- **Decidido:** a função mora em `src/infra/auth/next.ts` (que já usa `hashDoIp`); `deps.ts` só a liga em `depsReais()`.
+- **Por quê:** não abre exceção na R3.
+- **Como desfazer:** liberar os dois módulos na R3 e devolver a função a `deps.ts`.

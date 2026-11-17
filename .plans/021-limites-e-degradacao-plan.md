@@ -166,7 +166,7 @@ Chaves da tabela `limites` (o `escopo` do modo e2e entra como prefixo `${escopo}
 ### T6 · Write the limit keys, the limit error and the touch limit
 - nivel: mecanica
 - objetivo: funções puras de chave, o erro de limite, os tipos do estado e `consumirToque`.
-- arquivos: `src/core/limits/erros.ts`, `src/core/limits/chaves.ts`, `src/core/limits/chaves.test.ts`, `src/core/limits/estado.ts` (só os tipos), `src/core/limits/toques.ts`, `src/core/limits/toques.test.ts` (todos novos)
+- arquivos: `src/core/limits/erros.ts`, `src/core/limits/chaves.ts`, `src/core/limits/chaves.test.ts`, `src/core/limits/estado.ts` (só os tipos), `src/core/limits/toques.ts`, `src/core/limits/toques.test.ts` (todos novos), e `evals/det/telemetria/cobertura.eval.ts` (um cenário de toque barrado que emite `ritu_limite_total`, 021 A6)
 - depende de: T1, T2, T4
 - leitura: `BUSINESS.md` §14
 - skills: nenhuma
@@ -414,3 +414,23 @@ Chaves da tabela `limites` (o `escopo` do modo e2e entra como prefixo `${escopo}
 | 5 | T13, T15, T16 | T13 precisa de T10/T12; T15 de T12; T16 de T5/T7/T8/T10; arquivos separados |
 | 6 | T14 | Precisa de T13 |
 | 7 | T17 | E2E de tudo |
+
+### T18 · Make the privacy leak evals deterministic (correção)
+- nivel: nucleo
+- objetivo: o caso `expect(vazamentos(valores, termos)).toEqual([])` falhou em 2 de 3 rodadas completas de `npm run eval:det` (onda 6), sem mudança de código; achar a causa e tornar o eval determinístico, sem afrouxar a checagem.
+- arquivos: `evals/det/guardrails/privacidade.eval.ts`, `evals/det/aprendizado/privacidade.eval.ts`, `evals/det/rotina-e-padroes/privacidade.eval.ts`, e o ajudante de `vazamentos` se estiver em outro arquivo de `evals/`
+- depende de: nenhuma
+- pronto quando: `npm run eval:det` verde em 3 rodadas seguidas; a causa explicada no relatório.
+- fora: `src/` (se a causa for vazamento real em `src/`, pare e relate).
+
+| 7 | T17, T18 | T18 entrou como correção de gate intermitente; arquivos separados |
+
+### T19 · Fix the time-dependent house question tests (correção)
+- nivel: nucleo
+- objetivo: `src/app/_rotas/fluxo-de-run.test.ts` ("/resposta numa pergunta de casa segue até o fim") e `src/infra/e2e/roteiros.test.ts:48` ("pergunta-casa: pergunta de couve e leite e, com a resposta, entrega") falham com `expected 'waiting_for_approval' to be 'waiting_for_input'` às 08:12 UTC de 2026-11-17 (05:12 em São Paulo), de forma reproduzível isolada, e passavam nas ondas 5 e 6 sem mudança de `src/`. Hipótese: dependem do relógio real (momento do dia ou dia) em algum ponto do roteiro, do seed ou da rota. Achar a dependência e fixar o relógio no teste (ou corrigir o código, se a regressão for da 021, em especial a T10 `fluxo-de-run.ts`). Um terceiro arquivo falhou numa rodada e não foi identificado: rodar `npm test` completo e listar.
+- arquivos: os dois testes acima e o que a causa exigir (descrever no relatório)
+- depende de: nenhuma
+- pronto quando: `npm test` verde; os dois testes passam com o relógio fixado em várias horas do dia (ex.: 03h, 05h, 12h, 21h em São Paulo).
+
+| 8 | T19 | Correção de gate vermelho sem dono, sozinha |
+| 9 | T17, T18 | Reaplicar `.local/patches/021-T18.patch` (aprovada) e refazer a T17 a partir de `.local/patches/021-T17-limites.spec.ts` com a reprovação |

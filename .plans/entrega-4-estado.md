@@ -13,20 +13,22 @@
 
 | Tarefa | Status | Commit |
 |---|---|---|
-| T1 · Add the usage limits and the limit texts to the config | pendente | |
-| T2 · Let the usage limiter take a start per key and clean minute rows | pendente | |
-| T3 · Tell when the day quota of a role is gone and when it comes back | pendente | |
-| T4 · Add the limit metric and its panel stat | pendente | |
-| T5 · Recognize testers by Google e-mail at sign-in | pendente | |
-| T6 · Write the limit keys, the limit error and the touch limit | pendente | |
-| T8 · Answer from the base when the person's messages ran out | pendente | |
-| T11 · Let E2E tests force the day quota out per request | pendente | |
-| T7 · Decide each message and read the limits state | pendente | |
-| T9 · Count a touch in every POST route and answer 429 | pendente | |
-| T12 · Build the quota banner, the spent box, the remaining note and the touch text | pendente | |
-| T10 · Decide the message limit in POST /api/runs and send limits to the screen | pendente | |
-| T13 · Keep the limits state in the conversation hook | pendente | |
-| T15 · Show the touch limit notice in the onboarding | pendente | |
-| T16 · Cover the limits with deterministic evals | pendente | |
-| T14 · Show the limits in the conversation screen | pendente | |
-| T17 · Cover the limit screens end to end | pendente | |
+| T1 · Add the usage limits and the limit texts to the config | concluida | 998164d |
+| T2 · Let the usage limiter take a start per key and clean minute rows | concluida | 7bc3b24 |
+| T3 · Tell when the day quota of a role is gone and when it comes back | concluida | 40f94de |
+| T4 · Add the limit metric and its panel stat | concluida | ed26142 |
+| T5 · Recognize testers by Google e-mail at sign-in | concluida | cf6f383 |
+| T6 · Write the limit keys, the limit error and the touch limit | concluida | 9798d09 |
+| T8 · Answer from the base when the person's messages ran out | concluida | 6f5cf43 |
+| T11 · Let E2E tests force the day quota out per request | concluida | 256fdc4 |
+| T7 · Decide each message and read the limits state | concluida | f730c49 |
+| T9 · Count a touch in every POST route and answer 429 | concluida | 15b2fd5 |
+| T12 · Build the quota banner, the spent box, the remaining note and the touch text | concluida | 32acb03 |
+| T10 · Decide the message limit in POST /api/runs and send limits to the screen | concluida | 45ba3e3 |
+| T13 · Keep the limits state in the conversation hook | concluida | 7f22d3d |
+| T15 · Show the touch limit notice in the onboarding | concluida | 6666740 |
+| T16 · Cover the limits with deterministic evals | concluida | b71cc43 |
+| T14 · Show the limits in the conversation screen | concluida | cf7ab9d |
+| T17 · Cover the limit screens end to end | revertida (reprovada 1x; refazer depois da T19) | |
+| T18 · Make the privacy leak evals deterministic (correção) | revertida (aprovada, sem commit por gate vermelho sem dono; reaplicar) | |
+| T19 · Fix the time-dependent house question tests (correção) | pendente | |

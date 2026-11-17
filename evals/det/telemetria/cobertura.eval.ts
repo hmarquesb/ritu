@@ -145,7 +145,10 @@ async function entrar(coleta: Coleta): Promise<void> {
     },
     { ipHash: "cobertura", semSeed: true },
   )
-  await entrarComGoogle({ stores, telemetry }, { sub: "sub-cobertura", email: "a@b.c" })
+  await entrarComGoogle(
+    { stores, telemetry, testers: [] },
+    { sub: "sub-cobertura", email: "a@b.c" },
+  )
   coleta.metricas.push(...telemetry.metricas)
 }
 

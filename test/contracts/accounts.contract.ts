@@ -62,6 +62,12 @@ export function accountsContract(make: () => Promise<ContractEnv> | ContractEnv)
       })
     })
 
+    it("marcar grava tester e buscar devolve o valor", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      await env.stores.accounts.marcar(a, { tester: true })
+      expect(await env.stores.accounts.buscar(a)).toMatchObject({ id: a, tester: true })
+    })
+
     it("apagarDemosVencidas apaga só as demonstrações vencidas e devolve a quantidade", async () => {
       await env.stores.accounts.criar({ tipo: "demo", expira_em: new Date("2026-01-15T11:00:00Z") })
       await env.stores.accounts.criar({ tipo: "demo", expira_em: new Date("2026-01-14T11:00:00Z") })

@@ -8,7 +8,7 @@ import {
   LimiteDeDemonstracaoError,
 } from "@/core/accounts/entrar"
 import { getContainer } from "@/infra/container"
-import { optionalEnv, requireEnv } from "@/infra/env"
+import { optionalEnv, requireEnv, testers } from "@/infra/env"
 import { type LoginDaConta, montarSessao, montarToken, type TipoDeConta } from "./callbacks"
 import { hashDoIp, ipDoPedido } from "./ip"
 
@@ -88,7 +88,11 @@ async function loginDoJwt(
 ): Promise<LoginDaConta | undefined> {
   if (account?.provider === "google") {
     if (!perfilValido(profile)) return undefined
-    const conta = await entrarComGoogle(getContainer(), { sub: profile.sub, email: profile.email })
+    const container = getContainer()
+    const conta = await entrarComGoogle(
+      { stores: container.stores, telemetry: container.telemetry, testers: testers() },
+      { sub: profile.sub, email: profile.email },
+    )
     return { contaId: conta.id, tipo: conta.tipo }
   }
   const usuario = user as Partial<UsuarioDaConta> | undefined

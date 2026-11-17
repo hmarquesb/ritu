@@ -2,9 +2,28 @@ import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it, vi } from "vitest"
 import { MissingEnvError } from "@/core/errors"
-import { ENV_VARS, envStatus, optionalEnv, requireEnv } from "./env"
+import { ENV_VARS, envStatus, optionalEnv, requireEnv, testers } from "./env"
 
 const ENV_EXAMPLE = fileURLToPath(new URL("../../.env.example", import.meta.url))
+
+describe("testers", () => {
+  it("lê TESTER_IDS separado por vírgula, normalizado e sem itens vazios", () => {
+    expect(testers({ TESTER_IDS: " A@x.com, ,b@y.com" })).toEqual(["a@x.com", "b@y.com"])
+  })
+
+  it.each([
+    ["ausente", {}],
+    ["vazia", { TESTER_IDS: "" }],
+    ["só espaços", { TESTER_IDS: "   " }],
+  ])("devolve lista vazia quando a variável está %s", (_, env) => {
+    expect(testers(env)).toEqual([])
+  })
+
+  it("a descrição no catálogo diz que não tem limite de uso", () => {
+    const variavel = ENV_VARS.find((item) => item.name === "TESTER_IDS")
+    expect(variavel?.descricao).toBe("E-mails do Google, separados por vírgula, sem limite de uso.")
+  })
+})
 
 describe("RITU_MODO", () => {
   const variavel = ENV_VARS.find((item) => item.name === "RITU_MODO")

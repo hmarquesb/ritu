@@ -1,3 +1,4 @@
+import { normalizarEmail } from "@/core/accounts/email"
 import { MissingEnvError } from "@/core/errors"
 
 export type EnvVar = {
@@ -62,7 +63,7 @@ export const ENV_VARS: readonly EnvVar[] = [
     name: "TESTER_IDS",
     entrega: 4,
     obrigatoria: false,
-    descricao: "Contas com limite ampliado.",
+    descricao: "E-mails do Google, separados por vírgula, sem limite de uso.",
   },
   {
     name: "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -98,6 +99,16 @@ export function requireEnv(name: string, env: EnvSource = process.env): string {
 
 export function optionalEnv(name: string, env: EnvSource = process.env): string | undefined {
   return valorPresente(env[name])
+}
+
+/** E-mails de TESTER_IDS, normalizados e sem itens vazios. */
+export function testers(env: EnvSource = process.env): string[] {
+  const valor = optionalEnv("TESTER_IDS", env)
+  if (valor === undefined) return []
+  return valor
+    .split(",")
+    .map((item) => normalizarEmail(item))
+    .filter((item) => item !== "")
 }
 
 export function envStatus(env: EnvSource = process.env): {

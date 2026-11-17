@@ -10,7 +10,7 @@ Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela 
 1. Na `main`: as correções do portão 2 (`.plans/portao-2-correcoes-plan.md`).
 2. Em paralelo, no worktree: `/construir-entrega 3 adiantada`, seguindo pela 020.
 3. Depois das correções: ⚠️ rodada nova do `c3-confiavel`, em outro dia, com o modelo estável.
-4. A dona revisa a base (as linhas `a_confirmar`) e escreve, com o Claude, a spec nova dos chás híbridos. Ela é construída antes da 022.
+4. A dona escreve, com o Claude, a spec nova dos chás híbridos (a base já não tem linhas `a_confirmar`). Ela é construída antes da 022.
 5. `/construir-entrega 3`, que junta o que houver de novo na branch `entrega-3` (skill §0.6) e fecha a entrega.
 
 ## 1. Entregas

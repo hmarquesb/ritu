@@ -127,7 +127,7 @@
   nome: Chá de erva-doce
   ingredientes: [erva-doce]
   preparo: "Deixe sementes de erva-doce em água quente, tampado, por alguns minutos. Coe e beba morno, de preferência depois da refeição."
-  gunas: [leve, suave, brando]
+  gunas: [frio, leve, seco]
   favorece_estados: [com_calor, agitada, seca]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
   momento: [almoco, tarde, jantar]
@@ -145,7 +145,7 @@
   nome: Chá de cominho, coentro e erva-doce
   ingredientes: [cominho, coentro-em-grao, erva-doce]
   preparo: "Ferva sementes de cominho, de coentro e de erva-doce na água por alguns minutos. Coe e beba morno ou em temperatura ambiente."
-  gunas: [leve, brando]
+  gunas: [leve]
   favorece_estados: [pesada, com_calor]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   momento: [manha, almoco, tarde]
@@ -181,7 +181,7 @@
   nome: Chá de hortelã
   ingredientes: [hortela]
   preparo: "Deixe folhas de hortelã em água quente, tampado, por alguns minutos. Beba morno ou em temperatura ambiente, sem gelo."
-  gunas: [frio, leve]
+  gunas: [frio, leve, seco]
   favorece_estados: [com_calor, irritada]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   momento: [almoco, tarde]
@@ -236,7 +236,7 @@
   nome: Chá de camomila com erva-doce
   ingredientes: [camomila, erva-doce]
   preparo: "Deixe flores de camomila e sementes de erva-doce em água quente, tampado, por alguns minutos. Coe e beba morno."
-  gunas: [frio, leve]
+  gunas: [frio, leve, seco]
   favorece_estados: [com_calor, pesada]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
   momento: [jantar, noite]
@@ -288,7 +288,7 @@
   nome: Chá de erva-cidreira
   ingredientes: [erva-cidreira]
   preparo: "Deixe folhas de erva-cidreira em água quente, tampado, por alguns minutos. Coe e beba morno."
-  gunas: [frio, leve, brando]
+  gunas: [frio, leve, seco]
   favorece_estados: [irritada, com_calor]
   efeito: { vata: 1, pitta: -1, kapha: -1 }
   momento: [tarde, noite]
@@ -321,7 +321,7 @@
   nome: Chá de anis-estrelado
   ingredientes: [anis-estrelado]
   preparo: "Deixe anis-estrelado em água quente, tampado, por alguns minutos. Coe e beba morno."
-  gunas: [quente, leve]
+  gunas: [quente, leve, seco]
   favorece_estados: [com_frio, pesada]
   efeito: { vata: -1, pitta: 1, kapha: -1 }
   momento: [tarde, jantar]
@@ -516,9 +516,8 @@
     - { ref: banyan-digestao, campos: [preparo] }
     - { ref: ayurveda-com-vata, campos: [preparo] }
     - { ref: lifespa-agua-quente, campos: [efeito] }
-    - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados] }
-    - { ref: a_confirmar, campos: [momento] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados, momento] }
+  confianca: media
 - id: caminhada-leve-apos-refeicao
   tipo: pratica
   nome: Caminhada leve depois de comer
@@ -631,9 +630,8 @@
   fontes:
     - { ref: ayurveda-com-vata, campos: [favorece_estados, efeito] }
     - { ref: ritu-textos-revisados, campos: [preparo] }
-    - { ref: ritu-regras-da-base, campos: [gunas] }
-    - { ref: a_confirmar, campos: [momento] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas, momento] }
+  confianca: media
 - id: escalda-pes-morno
   tipo: pratica
   nome: Escalda-pés morno
@@ -648,9 +646,9 @@
   aviso: "Confira a temperatura da água com a mão antes de pôr os pés."
   fontes:
     - { ref: ritu-textos-revisados, campos: [preparo, aviso] }
-    - { ref: ritu-regras-da-base, campos: [gunas, efeito] }
-    - { ref: a_confirmar, campos: [favorece_estados, momento, contraindicacoes] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas, efeito, favorece_estados, contraindicacoes] }
+    - { ref: ayurvaid-sono, campos: [momento, favorece_estados] }
+  confianca: media
 - id: banho-morno
   tipo: pratica
   nome: Banho morno
@@ -697,15 +695,17 @@
   gunas: [quente, estavel]
   favorece_estados: [com_frio]
   efeito: { vata: -1, pitta: 0, kapha: 0 }
-  momento: [tarde, noite]
+  momento: [manha, tarde, noite]
   contraindicacoes: [com_calor]
   nunca_sugerir_se: []
   aviso: "Use a bolsa morna, nunca quente demais, sempre com um pano entre ela e a pele."
   fontes:
     - { ref: ritu-textos-revisados, campos: [preparo, aviso] }
-    - { ref: ritu-regras-da-base, campos: [gunas, efeito] }
-    - { ref: a_confirmar, campos: [favorece_estados, momento, contraindicacoes] }
-  confianca: baixa
+    - {
+        ref: ritu-regras-da-base,
+        campos: [gunas, efeito, favorece_estados, momento, contraindicacoes],
+      }
+  confianca: media
 - id: comer-sentada-sem-tela
   tipo: pratica
   nome: Comer sentada e sem tela
@@ -721,9 +721,9 @@
   fontes:
     - { ref: banyan-comer-com-atencao, campos: [preparo] }
     - { ref: banyan-digestao, campos: [preparo] }
-    - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados] }
-    - { ref: a_confirmar, campos: [efeito, momento] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados, efeito, momento] }
+    - { ref: tae-digestao, campos: [preparo] }
+  confianca: media
 - id: almoco-como-refeicao-principal
   tipo: pratica
   nome: Almoço como refeição principal

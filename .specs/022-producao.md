@@ -11,7 +11,7 @@ created: 2026-11-15
 
 ## Pré-condição (pendência da dona)
 
-**Revisão da base feita (2026-11-17)** e juntada na `main`: das 156 linhas `ref: a_confirmar`, restam **49** (44 em `alimentos.yaml` e 5 em `praticas.yaml`; nenhuma em `preparos.yaml` nem em `incomodos.yaml`). A dona resolve essas 49 numa segunda rodada com o Claude **antes do primeiro deploy real**. A construção desta spec pode começar. Até a segunda rodada, o job `deploy` fica vermelho no `npm run base:check -- --producao`, como manda `KNOWLEDGE.md` §8; a checagem não se afrouxa por isso. A pendência fica em `.specs/README.md` ("Pendências da dona").
+**Revisão da base concluída (2026-11-17):** nenhuma linha `ref: a_confirmar` em `data/`, e `npm run base:check -- --producao` passa sem bloqueios. A construção desta spec pode começar.
 
 ## Contexto
 

@@ -365,7 +365,7 @@ describe("regra 12 · fonte com url sem data de acesso", () => {
 describe("regra 13 · cobertura", () => {
   it("gera erros cobertura: quando a base está abaixo do mínimo", () => {
     const resultado = validarBase(dados())
-    expect(resultado.erros).toContain("cobertura: alimentos tem 2, mínimo 130")
+    expect(resultado.erros).toContain("cobertura: alimentos tem 2, mínimo 127")
     expect(resultado.erros.every((e) => e.startsWith("cobertura:"))).toBe(true)
   })
 

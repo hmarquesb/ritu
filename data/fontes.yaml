@@ -1007,6 +1007,138 @@
   url: https://kripalu.org/resources/breathe-stay-balanced-ayurvedic-pranayama-enhance-your-energy
   acessado_em: "2026-11-17"
   aprovada: true
+- ref: jaims-shad-rasa
+  titulo: "Shad Rasa and their effect on the body"
+  autor: "Katariya e Mishra, Journal of Ayurveda and Integrated Medical Sciences (2021)"
+  url: https://jaims.in/jaims/article/download/1575/1555
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: caraka-rasa
+  titulo: "Rasa"
+  autor: "Charak Samhita Research, Training and Skill Development Centre"
+  url: https://www.carakasamhitaonline.com/index.php/Rasa
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-escarola
+  titulo: "Cichorium endivia"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/4016-cichorium-endivia
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-quiabo
+  titulo: "Okra in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/819-okra-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-pimentao
+  titulo: "Red Chilli – Capsicum annuum Uses, Research, Remedies, Side Effects"
+  autor: "Easy Ayurveda"
+  url: https://www.easyayurveda.com/red-chilli-capsicum-annuum-bell-pepper/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-batata
+  titulo: "Potato Uses, Remedies, Qualities"
+  autor: "Easy Ayurveda"
+  url: https://www.easyayurveda.com/potato/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-ervilha
+  titulo: "Peas in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/hi/wiki/article/820-peas-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-manteiga
+  titulo: "Butter Benefits: Ayurveda Details"
+  autor: "Easy Ayurveda"
+  url: https://www.easyayurveda.com/butter-benefits-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-amendoim
+  titulo: "Peanut in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/921-peanut-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-erva-doce
+  titulo: "Fennel Seed Health Benefits, Dose, How To Use"
+  autor: "Easy Ayurveda"
+  url: https://www.easyayurveda.com/fennel-seed-health-benefits-dose-how-to-use-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: tae-capim-limao
+  titulo: "Lemongrass and its therapeutic benefits in Ayurveda"
+  autor: "The Ayurveda Experience"
+  url: https://www.theayurvedaexperience.com/blogs/tae/lemongrass-and-its-therapeutic-benefits-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ayurvaid-sono
+  titulo: "How to Sleep Better at Night: 10 Proven Tips"
+  autor: "AyurVAID"
+  url: https://ayurvaid.com/?p=137692
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: tae-digestao
+  titulo: "Six Easy Ayurvedic Tips For Healthy Digestion"
+  autor: "The Ayurveda Experience"
+  url: https://blog.theayurvedaexperience.com/six-easy-ayurvedic-tips-for-healthy-digestion
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-maracuja
+  titulo: "Passiflora edulis"
+  autor: "Ask Ayurveda (resposta de médico no Q&A da página)"
+  url: https://ask-ayurveda.com/wiki/article/5239-passiflora-edulis
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: satyori-maracuja
+  titulo: "Passion Fruit"
+  autor: "Satyori"
+  url: https://satyori.com/food/passion-fruit/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: satyori-acelga
+  titulo: "Pitta + Chard"
+  autor: "Satyori"
+  url: https://satyori.com/ayurveda/dosha-food/pitta-chard/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: satyori-tapioca
+  titulo: "Tapioca"
+  autor: "Satyori"
+  url: https://satyori.com/food/tapioca/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-tapioca
+  titulo: "Is Tapioca Good for Weight Loss? Ayurvedic Insight"
+  autor: "Ask Ayurveda (artigo)"
+  url: https://ask-ayurveda.com/articles/1362-is-tapioca-good-for-weight-loss-ayurvedic-insight
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: satyori-abobrinha
+  titulo: "Pitta + Zucchini"
+  autor: "Satyori"
+  url: https://satyori.com/ayurveda/dosha-food/pitta-zucchini/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: satyori-cebolinha
+  titulo: "Scallion"
+  autor: "Satyori"
+  url: https://satyori.com/food/scallion/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: satyori-erva-cidreira
+  titulo: "Lemon Balm"
+  autor: "Satyori"
+  url: https://satyori.com/herbs/lemon-balm/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: satyori-mate
+  titulo: "About Yerba Mate"
+  autor: "Satyori"
+  url: https://satyori.com/tea/yerba-mate/
+  acessado_em: "2026-11-17"
+  aprovada: true
 - ref: ritu-regras-da-base
   titulo: "Regras de derivação da base"
   autor: Ritu

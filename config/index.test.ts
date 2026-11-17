@@ -48,7 +48,7 @@ describe("config", () => {
   })
 
   it("expõe os limites da base e a adequação com os valores da spec", () => {
-    expect(config.base.minAlimentos).toBe(130)
+    expect(config.base.minAlimentos).toBe(127)
     expect(config.adequacao.porQualidadeOposta).toBe(-2)
   })
 

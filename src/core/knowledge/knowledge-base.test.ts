@@ -113,7 +113,7 @@ describe("createKnowledgeBase", () => {
     const erro = erroDe(() => createKnowledgeBase(base()))
     expect(erro).toBeInstanceOf(KnowledgeInvalidError)
     expect((erro as KnowledgeInvalidError).erros).toContain(
-      "cobertura: alimentos tem 2, mínimo 130",
+      "cobertura: alimentos tem 2, mínimo 127",
     )
   })
 })

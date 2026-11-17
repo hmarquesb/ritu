@@ -86,7 +86,7 @@ Vocabulário **fechado**: o agente só sugere alimentos de `alimentos.yaml`, pre
 
 ### 5.1 `data/alimentos.yaml`
 
-**130 alimentos** comuns numa cozinha brasileira, cobrindo todos os grupos: frutas, verduras e folhas, legumes, raízes e tubérculos, grãos e féculas, leguminosas, laticínios, ovos, oleaginosas e sementes, óleos e gorduras, especiarias e ervas, adoçantes, bebidas. A base não tem carnes, peixes nem frutos do mar. Todo óleo vegetal leva a observação de preferir o prensado a frio. A base cresce pelos alimentos que as pessoas registram em casa e ela ainda não conhece.
+**127 alimentos** comuns numa cozinha brasileira, cobrindo todos os grupos: frutas, verduras e folhas, legumes, raízes e tubérculos, grãos e féculas, leguminosas, laticínios, ovos, oleaginosas e sementes, óleos e gorduras, especiarias e ervas, adoçantes, bebidas. A base não tem carnes, peixes nem frutos do mar. Todo óleo vegetal leva a observação de preferir o prensado a frio. A base cresce pelos alimentos que as pessoas registram em casa e ela ainda não conhece.
 
 ```yaml
 - id: abobora
@@ -307,6 +307,27 @@ Com mais de um sabor, vale o sabor principal, o primeiro do `rasa`. Uma fonte qu
 
 **R4. Preparos pelo peso.** O momento de um preparo segue a leveza: preparo leve vai para a manhã e o jantar; preparo pesado, para o almoço, quando a digestão está mais forte.
 
+**R5. Pelo sabor.** Quando nenhuma fonte dá as gunas ou o efeito de um alimento, eles saem do sabor principal, o primeiro do `rasa` ([JAIMS, Shad Rasa](https://jaims.in/jaims/article/download/1575/1555), ref `jaims-shad-rasa`; [Charak Samhita Online, Rasa](https://www.carakasamhitaonline.com/index.php/Rasa), ref `caraka-rasa`). Uma fonte do próprio alimento vence a regra, e o campo pode ficar só com a parte que a regra confirma.
+
+| Rasa | Gunas | Vata | Pitta | Kapha |
+|---|---|---|---|---|
+| doce | pesado, oleoso, frio | acalma | acalma | agrava |
+| azedo | leve, oleoso, quente | acalma | agrava | agrava |
+| salgado | oleoso, quente | acalma | agrava | agrava |
+| picante | leve, seco, quente | agrava | agrava | acalma |
+| amargo | leve, seco, frio | agrava | acalma | acalma |
+| adstringente | seco, frio | agrava | acalma | acalma |
+
+A temperatura das gunas segue o `virya` da linha. O efeito por dosha soma os sabores do `rasa` (agrava +1, acalma −1) e fica em −1, 0 ou +1 pelo sinal da soma.
+
+**R6. Marcas das frutas.** Fruta com azedo no `rasa` leva a marca `fruta_azeda`; fruta com doce e sem azedo leva `fruta_doce`.
+
+**R7. Hábitos pelo calor e pela hora.** Prática com a qualidade `quente` não vai para quem está `com_calor`, como o chá de virya quente (R2). Os estados que ela favorece são os que pedem as qualidades dela (tabela de §3). Sem fonte de horário: hábito ligado à refeição vale nos momentos de refeição; hábito "ao longo do dia" vale de manhã, no almoço e à tarde; calor no corpo sem hora própria vale de manhã, à tarde e à noite.
+
+**R8. Farinha de mandioca.** A farinha herda o sabor da mandioca. Torrada, é seca e áspera, e por isso agrava vata (o semelhante aumenta).
+
+**Fontes mais fracas, aceitas pela dona.** Para itens sem página nas fontes de §7, valem Satyori e textos do Ask Ayurveda fora do formato "X in Ayurveda" (artigo ou resposta de médico na página): maracujá, acelga, mandioca, tapioca, abobrinha, cebolinha, erva-cidreira e chá-mate. Chuchu, jiló e mandioquinha não têm fonte nenhuma e ficam fora da base.
+
 **Hábitos pelos doshas.** Um hábito (prática do tipo `pratica`) se lê pelo que ele faz com cada dosha. O `efeito` vem da fonte que trata do dosha. As `gunas` são as qualidades por trás desse efeito (o que sobe e o que desce), e os `favorece_estados` são os estados que pedem essas qualidades.
 
 - Água morna (ao acordar e ao longo do dia) acalma vata e kapha; água gelada agrava os dois.
@@ -316,7 +337,8 @@ Com mais de um sabor, vale o sabor principal, o primeiro do `rasa`. Uma fonte qu
 - Dormir cedo acalma vata (ficar acordada à noite resseca e agrava vata) e pitta (das 22h às 2h é a hora de pitta).
 - Respiração lenta, pausa em silêncio e alongamento leve acalmam vata. Telas desligadas antes de dormir acalmam vata e pitta.
 - Almoço como refeição principal e jantar leve e cedo seguem o ritmo do dia: a refeição maior na hora de pitta.
-- Pés aquecidos, escalda-pés morno e bolsa morna acalmam vata pelo calor (vata é frio). Sem fonte própria de cada item, ficam com `confianca: baixa`.
+- Pés aquecidos, escalda-pés morno e bolsa morna acalmam vata pelo calor (vata é frio). O escalda-pés vai para a noite, antes de dormir (AyurVAID); os horários dos outros dois e os estados e cuidados dos três saem de R7.
+- Comer sentada, com calma e sem tela, ajuda a digestão (The Ayurveda Experience) e acalma vata, que é móvel, pela estabilidade.
 
 ## 9. Cuidados
 

@@ -13,7 +13,7 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 
 ## Pendências da dona
 
-- **Segunda rodada da base, antes do primeiro deploy real.** A revisão das 156 linhas `a_confirmar` foi feita e juntada na `main` em 2026-11-17; restam **49** (44 em `alimentos.yaml`, 5 em `praticas.yaml`), que a dona resolve com o Claude. A construção da 022 pode começar; o deploy dela roda `base:check -- --producao`, que falha enquanto houver alguma. Agentes não mexem em `data/` para passar esse gate.
+- ~~**Segunda rodada da base.**~~ Feita em 2026-11-17: nenhuma linha `a_confirmar` (`base:check -- --producao` sem bloqueios). Regras novas R5–R8 e fontes mais fracas aceitas pela dona em `KNOWLEDGE.md` §8.1; chuchu, jiló e mandioquinha saíram da base (127 alimentos).
 
 ## Backlog
 

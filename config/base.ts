@@ -1,5 +1,5 @@
 export const base = {
-  minAlimentos: 130,
+  minAlimentos: 127,
   minPreparos: 30,
   minPraticas: { cha: 20, oleo: 7, pratica: 17 },
   minAlimentosPorVaga: 3,

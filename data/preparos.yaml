@@ -46,17 +46,7 @@
     - {
         funcao: base,
         obrigatoria: false,
-        alimentos:
-          [
-            batata-doce,
-            batata,
-            mandioca,
-            inhame,
-            mandioquinha,
-            arroz-branco,
-            arroz-integral,
-            quinoa,
-          ],
+        alimentos: [batata-doce, batata, mandioca, inhame, arroz-branco, arroz-integral, quinoa],
       }
     - { funcao: gordura, obrigatoria: false, grupos: [oleos] }
     - {

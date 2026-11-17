@@ -248,7 +248,7 @@ describe("cenários de aprendizado (011)", () => {
     ])
     // O cardamomo já tinha três faltas (nao_tenho) e não entra de novo nas faltas de hoje: o que a entrega grava é o que faltou no preparo.
     const faltas = await deps.stores.shortages.diasComFalta(contaId, "2026-06-15")
-    expect(faltas.map((f) => f.alimento_id).sort()).toEqual(["mandioca", "tofu"])
+    expect(faltas.map((f) => f.alimento_id).sort()).toEqual(["batata-doce", "tofu"])
     expect(faltas.every((f) => f.ultimo_dia === "2026-06-15")).toBe(true)
     const sugeridos = await deps.stores.preferences.ler(contaId, [
       { tipo: "pratica", id: "cha-gengibre-canela" },

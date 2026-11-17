@@ -60,6 +60,33 @@ export const textosEntrada = {
     progresso: "Pergunta {n} de 8",
     resultado: "Seu dosha é {nome}",
   },
+  componentes: {
+    buscaMinima: "Digite {n} letras ou mais",
+    erroSalvar:
+      "Não consegui salvar agora. Suas escolhas continuam aqui; toque de novo para tentar.",
+    evitar: {
+      grupos: "Grupos de alimentos",
+      buscar: "Buscar um alimento",
+      nenhumAlimento: "Nenhum alimento encontrado",
+      outro: "Outro alimento",
+      adicionar: "Adicionar",
+      escolhidos: "Escolhidos ({n} de {max})",
+      nadaEscolhido: "Nada escolhido ainda.",
+    },
+    cidade: {
+      buscar: "Buscar cidade",
+      nenhuma: "Nenhuma cidade encontrada",
+      indisponivel: "Não consegui buscar a cidade agora. Você pode seguir sem ela.",
+      pular: "Pular a cidade",
+    },
+    quiz: {
+      erro: "Não consegui calcular agora. Suas respostas continuam aqui; toque de novo para tentar.",
+      voltar: "Voltar",
+      proxima: "Próxima",
+      verResultado: "Ver resultado",
+      continuar: "Continuar",
+    },
+  },
   faixa: {
     botao: "Criar meu perfil",
   },

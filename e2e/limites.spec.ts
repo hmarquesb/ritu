@@ -204,3 +204,19 @@ test.describe("toques", () => {
     ).toBeVisible()
   })
 })
+
+test.describe("limite de toques em Minha casa", () => {
+  test("o toque além do teto mostra o aviso e não muda a tela", async ({ page }) => {
+    await entrarNaDemo(page)
+    await pedirComCabecalhos(page, { teto: 1 })
+    await page.goto("/casa")
+    const tenho = page.getByRole("button", { name: /^Ainda tenho / })
+    await expect(tenho.first()).toBeVisible()
+    await tenho.first().click()
+    const alvo = tenho.last()
+    const nome = (await alvo.getAttribute("aria-label")) ?? ""
+    await alvo.click()
+    await expect(page.getByText(new RegExp(`${L.toques.minuto}|${L.toques.dia}`))).toBeVisible()
+    await expect(page.getByRole("button", { name: nome })).toBeVisible()
+  })
+})

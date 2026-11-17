@@ -30,15 +30,28 @@ async function erroDe(promessa: Promise<unknown>): Promise<unknown> {
 }
 
 describe("createTouches", () => {
-  it("expõe os cinco toques", () => {
+  it("expõe os sete toques", () => {
     const { touches } = montar()
     expect(Object.keys(touches).sort()).toEqual([
       "responderTroca",
+      "tocarCasa",
       "tocarGosto",
+      "tocarLista",
       "tocarRetorno",
       "tocarVoto",
       "trocarIngrediente",
     ])
+  })
+
+  it("tocarCasa e tocarLista chegam ao domínio com as deps do container", async () => {
+    const { stores, telemetry, touches } = montar()
+    const r = await touches.tocarCasa("c1", { acao: "adicionar", alimento_id: "leite" })
+    expect(r).toEqual({ nome: "Leite" })
+    expect(await stores.pantry.listar("c1")).toHaveLength(1)
+    await touches.tocarLista("c1", { acao: "por", alimento_id: "banana" })
+    expect(await stores.shortages.lista("c1")).toHaveLength(1)
+    const spans = telemetry.spans.filter((s) => s.nome === "toque").map((s) => s.atributos)
+    expect(spans).toEqual([{ tipo: "casa" }, { tipo: "lista" }])
   })
 
   it("tocarVoto chega ao domínio com as deps do container (grava e soma a métrica)", async () => {

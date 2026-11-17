@@ -13,6 +13,9 @@ import type { UsageLimiter } from "@/core/limits/ports"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
+import { type ComoFicouNaTela, visaoComoFicou } from "@/core/outcomes/visao"
+import { lerCasa as lerCasaDoCore } from "@/core/pantry/ler"
+import type { CasaNaTela } from "@/core/pantry/visao"
 import { createPatterns } from "@/core/patterns"
 import { createRoutine } from "@/core/routine"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
@@ -28,6 +31,7 @@ import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
+import { createRelogioE2e } from "@/infra/e2e/relogio"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
@@ -66,6 +70,8 @@ export type Container = {
   touches: ReturnType<typeof createTouches>
   routine: ReturnType<typeof createRoutine>
   patterns: ReturnType<typeof createPatterns>
+  lerCasa(contaId: string): Promise<CasaNaTela>
+  lerComoFicou(contaId: string): Promise<ComoFicouNaTela>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -155,8 +161,9 @@ export function readDemoSeed(dir?: string): DemoSeed {
 }
 
 export function createContainer(overrides?: Partial<Container>): Container {
-  const clock = overrides?.clock ?? systemClock
   const e2e = optionalEnv("RITU_MODO") === "e2e"
+  // No modo e2e, a hora local fica à noite, para o E2E não depender da hora em que roda.
+  const clock = overrides?.clock ?? (e2e ? createRelogioE2e(systemClock) : systemClock)
   if (e2e && optionalEnv("VERCEL_ENV") === "production") {
     throw new RituError("modo_e2e_em_producao", "RITU_MODO=e2e não pode rodar em produção")
   }
@@ -365,6 +372,23 @@ export function createContainer(overrides?: Partial<Container>): Container {
       })
       return patterns
     },
+    // Telas de Minha casa e Como ficou: o fuso vem do perfil, com o padrão quando a pessoa não escolheu cidade.
+    async lerCasa(contaId) {
+      return lerCasaDoCore(
+        { stores: container.stores, kb: container.knowledge, clock },
+        contaId,
+        await fusoDaConta(container, contaId),
+      )
+    },
+    async lerComoFicou(contaId) {
+      const retornos = await container.stores.outcomes.pendentes(contaId)
+      return visaoComoFicou({
+        retornos,
+        kb: container.knowledge,
+        agora: clock.now(),
+        fuso: await fusoDaConta(container, contaId),
+      })
+    },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {
       if (telemetriaIniciada) return
@@ -383,6 +407,11 @@ export function createContainer(overrides?: Partial<Container>): Container {
     ...overrides,
   }
   return container
+}
+
+async function fusoDaConta(container: Container, contaId: string): Promise<string> {
+  const perfil = await container.stores.profiles.ler(contaId)
+  return perfil?.cidade_fuso ?? config.clima.fusoPadrao
 }
 
 let instance: Container | undefined

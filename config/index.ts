@@ -19,6 +19,8 @@ import { ranking } from "./ranking"
 import { resposta } from "./resposta"
 import { telaConversa } from "./tela-conversa"
 import { telemetria } from "./telemetria"
+import { textosCasa } from "./textos-casa"
+import { textosComoFicou } from "./textos-como-ficou"
 import { textosConversa } from "./textos-conversa"
 import { textosEntrada } from "./textos-entrada"
 import { textosLimites } from "./textos-limites"
@@ -28,6 +30,8 @@ import { ui } from "./ui"
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
 export { telaConversa } from "./tela-conversa"
+export { textosCasa } from "./textos-casa"
+export { textosComoFicou } from "./textos-como-ficou"
 export { textosConversa } from "./textos-conversa"
 export { textosLimites } from "./textos-limites"
 
@@ -53,6 +57,8 @@ export const config = {
   resposta,
   telaConversa,
   telemetria,
+  textosCasa,
+  textosComoFicou,
   textosConversa,
   textosEntrada,
   textosLimites,

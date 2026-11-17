@@ -4,6 +4,7 @@ import { config } from "@config/index"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { DepsDaRota } from "@/app/_lib/rota"
 import { rotasDeBusca } from "@/app/_rotas/busca"
+import { rotasDaCasa } from "@/app/_rotas/casa"
 import { rotasDaConversa } from "@/app/_rotas/conversa"
 import { rotasDeFluxoDeRun } from "@/app/_rotas/fluxo-de-run"
 import { rotasDeOnboarding } from "@/app/_rotas/onboarding"
@@ -526,6 +527,7 @@ function tabela(deps: DepsDaRota, runId: string): Rota[] {
   const fluxo = rotasDeFluxoDeRun(deps)
   const onboarding = rotasDeOnboarding(deps)
   const busca = rotasDeBusca(deps)
+  const casa = rotasDaCasa(deps)
   const params = { params: Promise.resolve({ id: runId }) }
   const quiz = deps.container.knowledge.quiz.map((p) => ({ pergunta_id: p.id, dosha: "vata" }))
   const AUTH = "Auth.js: entrada com Google, fora do limite de toque"
@@ -601,6 +603,34 @@ function tabela(deps: DepsDaRota, runId: string): Rota[] {
       chamar: onboarding.quiz,
     },
     {
+      arquivo: "src/app/api/casa/route.ts",
+      metodo: "POST",
+      nome: "POST /api/casa",
+      corpo: { acao: "adicionar", alimento_id: "gengibre" },
+      chamar: casa.tocarCasa,
+    },
+    {
+      arquivo: "src/app/api/lista/route.ts",
+      metodo: "POST",
+      nome: "POST /api/lista",
+      corpo: { acao: "por", alimento_id: "gengibre" },
+      chamar: casa.lista,
+    },
+    {
+      arquivo: "src/app/api/preferencias/route.ts",
+      metodo: "POST",
+      nome: "POST /api/preferencias",
+      corpo: { alimento_id: "gengibre", gosto: "gosta" },
+      chamar: casa.preferencias,
+    },
+    {
+      arquivo: "src/app/api/retornos/[id]/route.ts",
+      metodo: "POST",
+      nome: "POST /api/retornos/:id",
+      corpo: { resultado: "ajudou" },
+      chamar: (r) => casa.responderRetorno(r, params),
+    },
+    {
       arquivo: "src/app/api/auth/[...nextauth]/route.ts",
       metodo: "POST",
       nome: "POST /api/auth",
@@ -635,6 +665,18 @@ function tabela(deps: DepsDaRota, runId: string): Rota[] {
       metodo: "GET",
       nome: "GET /api/cron/limpeza",
       excecao: "Segredo próprio (CRON_SECRET), não é rota de toque",
+    },
+    {
+      arquivo: "src/app/api/casa/route.ts",
+      metodo: "GET",
+      nome: "GET /api/casa",
+      chamar: casa.lerCasa,
+    },
+    {
+      arquivo: "src/app/api/retornos/route.ts",
+      metodo: "GET",
+      nome: "GET /api/retornos",
+      chamar: casa.lerRetornos,
     },
     {
       arquivo: "src/app/api/auth/[...nextauth]/route.ts",
@@ -673,6 +715,10 @@ function espioesDeEscrita(c: Container) {
     vi.spyOn(c.touches, "trocarIngrediente"),
     vi.spyOn(c.touches, "responderTroca"),
     vi.spyOn(c.touches, "tocarVoto"),
+    vi.spyOn(c.touches, "tocarCasa"),
+    vi.spyOn(c.touches, "tocarLista"),
+    vi.spyOn(c.touches, "tocarGosto"),
+    vi.spyOn(c.touches, "tocarRetorno"),
     vi.spyOn(c.stores.accounts, "marcar"),
     vi.spyOn(c.stores.profiles, "acrescentarEvitarSempre"),
     vi.spyOn(c.stores.profiles, "definirCidade"),

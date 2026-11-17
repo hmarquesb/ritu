@@ -108,6 +108,7 @@ Evolução entre checkpoints (`evals/COMPARACAO.md`):
 - `ha_dias` sem teste com fuso diferente de UTC; 015 C3: `prompt.versao` no run retomado só coberto pelo eval de cobertura; 015 T18: o teste de privacidade do adaptador não exige ponto de métrica nem log exportado.
 - `npm run dup` só cobre `src/`. `cobertura.eval.ts` leva de 92 s a 470 s sob carga.
 - Flakes sob carga (vitest de outro worktree em paralelo): timeouts de 20 s em casos que mudam a cada rodada, sem falha de asserção.
+- O `.json` de resultado do `eval:llm` sai fora do formato do Biome e deixou a CI vermelha no fechamento; formatado à mão (ver `DECISOES-AUTONOMAS.md`). Volta a cada checkpoint até virar tarefa de correção.
 - `ritu_juiz_total` não existe (013 D17); o painel do Juiz usa as métricas de reprovação e aviso.
 
 ## 4. Bibliotecas instaladas

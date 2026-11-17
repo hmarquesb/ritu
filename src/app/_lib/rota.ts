@@ -3,6 +3,7 @@ import type { Conta } from "@/core/accounts/types"
 import { MARCA_RITU, RituError } from "@/core/errors"
 import { consumirToque } from "@/core/limits/toques"
 import type { Container } from "@/infra/container"
+import { descarregarDepois } from "../_apoio/descarregar"
 
 export type DepsDaRota = {
   contaDaSessao(): Promise<string | undefined>
@@ -142,8 +143,11 @@ export function criarRota<B, R>(
     try {
       const preparado = await prepararContexto(deps, opts, request)
       if (!preparado.ok) return preparado.resposta
-      return resposta(200, await fn(preparado.ctx))
+      const r = resposta(200, await fn(preparado.ctx))
+      descarregarDepois(container)
+      return r
     } catch (erro) {
+      descarregarDepois(container)
       if (ehRituError(erro)) {
         if (statusDoErro(erro.code) === 429) return respostaDeLimite(erro.code, erro)
         return resposta(statusDoErro(erro.code), { erro: erro.code })

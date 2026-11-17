@@ -1,5 +1,6 @@
 import { codificarEvento, type EventoDaTela } from "@/core/conversation/eventos"
 import type { Container } from "@/infra/container"
+import { descarregarDepois } from "../_apoio/descarregar"
 import {
   type Contexto,
   type DepsDaRota,
@@ -100,6 +101,7 @@ export function criarRotaDeFluxo<B>(
         .finally(() => {
           abrir()
           fechar()
+          descarregarDepois(container)
         })
     })
   }

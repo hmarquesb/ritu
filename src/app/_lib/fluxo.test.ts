@@ -4,6 +4,9 @@ import { MARCA_RITU, RituError } from "@/core/errors"
 import { createContainer } from "@/infra/container"
 import { criarRotaDeFluxo } from "./fluxo"
 
+const agendados = vi.hoisted(() => [] as Array<() => Promise<void>>)
+vi.mock("next/server", () => ({ after: (f: () => Promise<void>) => void agendados.push(f) }))
+
 const quemPede = () => ({ ipHash: "h" })
 
 function montar() {
@@ -169,5 +172,39 @@ describe("criarRotaDeFluxo", () => {
     expect(r.headers.get("Retry-After")).not.toBeNull()
     expect(await r.json()).toEqual({ erro: "limite_toques" })
     expect(fn).not.toHaveBeenCalled()
+  })
+})
+
+describe("criarRotaDeFluxo: descarga da telemetria", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    agendados.length = 0
+  })
+
+  it("agenda só depois de o stream fechar", async () => {
+    const { container, deps } = await comConta()
+    const falso = Object.create(container, {
+      telemetriaLigada: { value: true },
+    }) as typeof container
+    let liberar: () => void = () => {}
+    const espera = new Promise<void>((r) => {
+      liberar = r
+    })
+    const rota = criarRotaDeFluxo({ ...deps, container: falso }, {}, async (_c, emitir) => {
+      emitir({ tipo: "erro", erro: "x" })
+      await espera
+    })
+    const r = await rota(pedido())
+    expect(agendados).toHaveLength(0)
+    liberar()
+    await r.text()
+    expect(agendados).toHaveLength(1)
+  })
+
+  it("com a telemetria nula, nada é agendado", async () => {
+    const { deps } = await comConta()
+    const r = await criarRotaDeFluxo(deps, {}, async () => {})(pedido())
+    await r.text()
+    expect(agendados).toHaveLength(0)
   })
 })

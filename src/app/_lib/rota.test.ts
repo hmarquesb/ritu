@@ -5,6 +5,9 @@ import { LimiteError } from "@/core/limits/erros"
 import { createContainer } from "@/infra/container"
 import { criarRota, statusDoErro } from "./rota"
 
+const agendados = vi.hoisted(() => [] as Array<() => Promise<void>>)
+vi.mock("next/server", () => ({ after: (f: () => Promise<void>) => void agendados.push(f) }))
+
 const quemPede = () => ({ ipHash: "h" })
 
 // Modo de E2E: o container usa stores em memória, sem banco.
@@ -259,5 +262,56 @@ describe("limite de toques", () => {
     for (const c of ["limite_mensagens", "limite_demo", "limite_ip", "limite_toques"]) {
       expect(statusDoErro(c)).toBe(429)
     }
+  })
+})
+
+describe("criarRota: descarga da telemetria", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    agendados.length = 0
+  })
+
+  async function ligada() {
+    vi.stubEnv("RITU_MODO", "e2e")
+    const container = createContainer()
+    const conta = await container.stores.accounts.criar({
+      tipo: "google",
+      google_sub: "s",
+      email: "a@b.c",
+    })
+    const encerrar = vi.fn(async () => {})
+    const falso = Object.create(container, {
+      telemetriaLigada: { value: true },
+      telemetry: { value: { ...container.telemetry, log: () => {}, encerrar } },
+    }) as typeof container
+    return { deps: { contaDaSessao: async () => conta.id, container: falso, quemPede }, encerrar }
+  }
+
+  it("agenda uma vez e o agendado chama encerrar uma vez", async () => {
+    const { deps, encerrar } = await ligada()
+    await criarRota(deps, {}, async () => ({ ok: true }))(pedido())
+    expect(agendados).toHaveLength(1)
+    await agendados[0]?.()
+    expect(encerrar).toHaveBeenCalledTimes(1)
+  })
+
+  it("erro dentro da rota ainda agenda", async () => {
+    const { deps } = await ligada()
+    const r = await criarRota(deps, {}, async () => {
+      throw new Error("x")
+    })(pedido())
+    expect(r.status).toBe(500)
+    expect(agendados).toHaveLength(1)
+  })
+
+  it("com a telemetria nula, nada é agendado", async () => {
+    const { container, stores } = montar()
+    const conta = await stores.accounts.criar({ tipo: "google", google_sub: "s", email: "a@b.c" })
+    await criarRota(
+      { contaDaSessao: async () => conta.id, container, quemPede },
+      {},
+      async () => 1,
+    )(pedido())
+    expect(agendados).toHaveLength(0)
   })
 })

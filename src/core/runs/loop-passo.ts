@@ -88,9 +88,12 @@ function despacho(
 }
 
 function despachoDeControle(r: ResultadoDeControle, nome: string): Despacho {
-  if (r.tipo === "entregar") return despacho("validacao", nome, "ok", r.saida, undefined, r)
-  if (r.tipo === "recusar")
-    return despacho("validacao", nome, "recusado", r.resultado, undefined, r)
+  if (r.tipo === "entregar") {
+    return despacho("validacao", nome, "ok", r.saida, r.resumo?.slice(0, RESUMO_MAX), r)
+  }
+  if (r.tipo === "recusar") {
+    return despacho("validacao", nome, "recusado", r.resultado, r.resumo?.slice(0, RESUMO_MAX), r)
+  }
   const tipo = r.pendencia.tipo === "pergunta" ? "pergunta" : "proposta"
   return despacho(tipo, nome, "ok", null, r.resumo?.slice(0, 80), r)
 }

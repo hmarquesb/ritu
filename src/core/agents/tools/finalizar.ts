@@ -24,6 +24,12 @@ function climaDoRun(estado: Checkpoint): { gunas: z.infer<typeof gunaSchema>[] }
   return undefined
 }
 
+/** Resumo da etapa `validacao`: `ok` ou os códigos das violações, únicos, na ordem. */
+export function resumoDaValidacao(violacoes: { codigo: string }[]): string {
+  if (violacoes.length === 0) return "ok"
+  return [...new Set(violacoes.map((v) => v.codigo))].join(",")
+}
+
 export const finalizar: ToolDeControle<EntregaDoModelo> = {
   name: "finalizar",
   description:
@@ -50,12 +56,17 @@ export const finalizar: ToolDeControle<EntregaDoModelo> = {
       for (const v of violacoes) {
         ctx.telemetry.contador("ritu_validacao_violacoes_total", { violacao: v.codigo })
       }
-      return { tipo: "recusar", resultado: { entregue: false, violacoes } }
+      return {
+        tipo: "recusar",
+        resultado: { entregue: false, violacoes },
+        resumo: resumoDaValidacao(violacoes),
+      }
     }
     const propostas = propostasDoAgente(estado.mensagens)
     const saida = completarSaida(entrada, dados, ctx.kb)
     return {
       tipo: "entregar",
+      resumo: resumoDaValidacao([]),
       saida: propostas.length > 0 ? { ...saida, propostas_do_agente: propostas } : saida,
     }
   },

@@ -260,6 +260,42 @@ describe("executarComando: andamento e cota do dia", () => {
   })
 })
 
+describe("executarComando: recusa do dia por checkpoint", () => {
+  it("rodada de c2 hoje não recusa a rodada nova de c3", async () => {
+    const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c2-conversa", HOJE) } })
+    expect(await executarComando(["--checkpoint", "c3-confiavel"], io)).toBe(0)
+    expect(io.chamados).toHaveLength(84)
+  })
+
+  it("rodada de c3 hoje recusa a rodada nova de c3 com a mensagem do checkpoint", async () => {
+    const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c3-confiavel", HOJE) } })
+    expect(await executarComando(["--checkpoint", "c3-confiavel"], io)).toBe(1)
+    expect(io.erros[0]).toBe(
+      `Já há uma rodada completa de c3-confiavel hoje (${HOJE}). Use --extra para rodar outra.`,
+    )
+    expect(io.chamados).toEqual([])
+  })
+
+  it("rodada de c3 hoje não recusa com --extra", async () => {
+    const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c3-confiavel", HOJE) } })
+    expect(await executarComando(["--checkpoint", "c3-confiavel", "--extra"], io)).toBe(0)
+    expect(io.chamados).toHaveLength(84)
+  })
+
+  it("--do-zero segue a mesma regra: c2 hoje não recusa c3", async () => {
+    const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c2-conversa", HOJE) } })
+    expect(await executarComando(["--checkpoint", "c3-confiavel", "--do-zero"], io)).toBe(0)
+    expect(io.chamados).toHaveLength(84)
+  })
+
+  it("--do-zero recusa quando o mesmo checkpoint já rodou hoje", async () => {
+    const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c3-confiavel", HOJE) } })
+    expect(await executarComando(["--checkpoint", "c3-confiavel", "--do-zero"], io)).toBe(1)
+    expect(io.erros[0]).toContain("Já há uma rodada completa de c3-confiavel hoje")
+    expect(io.chamados).toEqual([])
+  })
+})
+
 describe("executarComando: rodada completa", () => {
   it("grava relatório, JSON, histórico e comparação, e apaga o andamento", async () => {
     const io = criarIo()
@@ -394,12 +430,16 @@ describe("executarComando: --caso e --listar", () => {
 })
 
 function historicoComHoje(): string {
+  return historicoDoDia("c1-base", HOJE)
+}
+
+function historicoDoDia(checkpoint: string, data: string): string {
   return JSON.stringify({
     versao: 1,
     checkpoints: [
       {
-        checkpoint: "c1-base",
-        data: HOJE,
+        checkpoint,
+        data,
         prompts: PROMPTS,
         modelos: ["modelo-x"],
         casos: 12,

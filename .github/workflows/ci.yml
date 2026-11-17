@@ -28,7 +28,7 @@ jobs:
         run: npm ci
 
       - name: Auditoria
-        run: npm audit --omit=dev --audit-level=high
+        run: npx --yes audit-ci@7 --config audit-ci.jsonc
 
       - name: Lint
         run: npm run lint

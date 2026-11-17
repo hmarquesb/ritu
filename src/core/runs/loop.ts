@@ -49,6 +49,8 @@ type Chamada = { fim: FimDoTrecho } | { resultado: ResultadoDePasso }
 const PENSAMENTO_MAX = 160
 // Salvaguarda contra um fornecedor que sempre devolve rate_limit.
 const MAX_TROCAS_POR_CHAMADA = 8
+// O loop serve ao agente de decisão: é o papel que o roteador usa nas chamadas dele.
+const PAPEL_DO_LOOP = "decisao"
 
 export function novoCheckpoint(
   agente: DefinicaoDoAgente,
@@ -269,7 +271,11 @@ async function sessaoLlm(amb: Ambiente, span: SpanAtivo): Promise<Chamada> {
 }
 
 function chamarModelo(amb: Ambiente): Promise<Chamada> {
-  return amb.deps.telemetry.span("llm.chamada", {}, (span) => sessaoLlm(amb, span))
+  return amb.deps.telemetry.span(
+    "llm.chamada",
+    { "llm.papel": PAPEL_DO_LOOP, "llm.troca_de_modelo": false },
+    (span) => sessaoLlm(amb, span),
+  )
 }
 
 async function aplicarResultado(

@@ -658,9 +658,10 @@ export const mapa: LinhaDoMapa[] = [
   },
   {
     grupo: "Segurança e privacidade",
-    linha: "Nenhum span, métrica ou log do fake de telemetria contém tex",
+    linha: "Nenhum span, métrica, log, `resumo` ou saída de console cont",
     arquivos: [
-      "evals/det/acompanhante/privacidade.eval.ts",
+      "evals/det/telemetria/privacidade.eval.ts",
+      "src/infra/otel/privacidade.test.ts",
       "evals/det/conversa/privacidade.eval.ts",
       "evals/det/loop/rastro.eval.ts",
     ],
@@ -762,6 +763,24 @@ export const mapa: LinhaDoMapa[] = [
     linha: "Toda spec de tela usa `usarTema` e `TEMAS` (`e2e/apoio/tema.",
     arquivos: [],
     desde: 3,
+  },
+  {
+    grupo: "Telemetria",
+    linha: "Todo span, métrica e log da lista fechada é emitido por algu",
+    arquivos: ["evals/det/telemetria/cobertura.eval.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Telemetria",
+    linha: "O painel cobre todas as métricas",
+    arquivos: ["scripts/lib/painel.test.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Telemetria",
+    linha: "O toque de voto soma 👍/👎 só quando o voto é novo ou mudou",
+    arquivos: ["evals/det/telemetria/voto.eval.ts"],
+    desde: 2,
   },
   {
     grupo: "Evals",

@@ -321,7 +321,11 @@ export const PAINEL: { uid: string; titulo: "Ritu"; linhas: Linha[] } = {
           descricao: "Quais foram os runs recentes, com caminho, status, passos e duração?",
           tipo: "table",
           fonte: "traces",
-          consultas: [{ expr: `{ name = "run" }` }],
+          consultas: [
+            {
+              expr: `{ name = "run" } | select(span.run.caminho, span.run.status, span.run.passos)`,
+            },
+          ],
         },
         {
           titulo: "Avisos e erros",

@@ -140,11 +140,16 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 **Segurança e privacidade**
 - O guardrail de entrada neutraliza as mensagens de injection do conjunto de testes.
 - Rota sem sessão → `401`; uma conta não lê run, proposta, casa, preferência, rotina nem retorno de outra.
-- Nenhum span, métrica ou log do fake de telemetria contém texto da pessoa.
+- Nenhum span, métrica, log, `resumo` ou saída de console contém texto da pessoa, nome de alimento ou valor fora do formato de identificador, no fake e no adaptador OTel.
 - Duas demonstrações não se enxergam; demonstração vencida é apagada.
 - Nota de rotina, mensagem anterior e "evitar sempre" em texto livre com instrução embutida chegam ao prompt delimitados e com `<` e `>` neutralizados.
 - POST com `Origin` de outro site → `403`; toda resposta tem a CSP e os headers de `ARCHITECTURE.md` §4.
 - Rotas de toque respeitam o limite próprio; a 31ª demonstração do dia é recusada.
+
+**Telemetria**
+- Todo span, métrica e log da lista fechada é emitido por algum cenário, com os atributos e rótulos declarados.
+- O painel cobre todas as métricas.
+- O toque de voto soma 👍/👎 só quando o voto é novo ou mudou.
 
 **Evals**
 - O mapa liga cada linha de evals determinísticos a um arquivo.

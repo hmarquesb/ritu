@@ -10,7 +10,7 @@ import { tendenciaDasProximasHoras } from "@/core/weather/tendencia"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
-import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
+import { createMemoryTelemetry, type MemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { climaAgoraTool, climaProximasHorasTool, climaTools } from "./clima"
 
@@ -54,6 +54,24 @@ describe("clima.agora", () => {
 
     expect(r).toEqual(SEM_CIDADE)
     expect(fake.chamadas).toBe(0)
+  })
+
+  it("sem cidade marca cache.hit false no span atual", async () => {
+    const c = ctx(createFakeWeather())
+    const t = c.telemetry as MemoryTelemetry
+    await t.span("tool.chamada", { "tool.nome": "clima.agora" }, () =>
+      climaAgoraTool.execute({}, c),
+    )
+    expect(t.spans[0]?.atributos["cache.hit"]).toBe(false)
+  })
+
+  it("clima.proximas_horas sem cidade marca cache.hit false", async () => {
+    const c = ctx(createFakeWeather())
+    const t = c.telemetry as MemoryTelemetry
+    await t.span("tool.chamada", { "tool.nome": "clima.proximas_horas" }, () =>
+      climaProximasHorasTool.execute({}, c),
+    )
+    expect(t.spans[0]?.atributos["cache.hit"]).toBe(false)
   })
 
   it("porta fora do ar devolve indisponivel", async () => {

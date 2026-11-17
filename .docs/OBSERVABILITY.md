@@ -58,7 +58,7 @@ Etapa `juiz` (uma por leitura): `resumo` é `aprovado`, `reprovado: <motivos>` o
 
 Aprovação (`AI.md` §5): cada linha do bloco grava uma etapa `proposta`, com `nome` igual à tool (`casa.propor`, `memoria.propor`, `lista.propor`) e `resumo` só de tipo e contagem (`casa: 2 itens`, `evitar_sempre: 1 item`, `rotina`, `lista`, `padrao`), nunca o texto da linha, o alimento nem a nota. A decisão grava uma etapa `aprovacao` com `resumo` `N de M` (linhas gravadas de linhas pendentes). Linha que o executor recusa por conteúdo que a base não conhece grava a etapa `erro` `proposta_invalida`, com status `falhou` e sem resumo. Aprovada uma nota de rotina, o resumo refeito grava a etapa `memoria` de nome `resumo_de_rotina`, com `resumo` igual à origem (`vazio`, `direto`, `modelo` ou `codigo`), mais modelo e tokens quando houve chamada; a etapa fica no run mesmo quando o resumo não mudou. Se o resumo falha, a aprovação segue e o run grava a etapa `erro` `resumo_de_rotina`, com status `falhou` e sem resumo. A gravação da entrega (`AI.md` §6) que falha grava a etapa `erro` `registro_da_entrega`, com status `falhou` e sem resumo; o run segue e a resposta sai. A pausa para aprovação emite o evento `pausa` com `pausa.tipo = aprovacao` e soma `ritu_pausas_total{tipo: "aprovacao"}`. As métricas da decisão (`ritu_propostas_total`, `ritu_para_ter_total`, `ritu_gosto_total`) só somam depois que a transação termina, para uma decisão desfeita não contar.
 
-Spans fora de um run: `toque` (`tipo`: `retorno`, `gosto` ou `troca`; na troca, `motivo`: `trocar`, `nao_tenho` ou `nao_gosto`, e `resultado`: `trocou`, `perguntar` ou `sem_substituto`; nunca o alimento nem a sugestão), `memoria.resumo` (`resumo.origem`: `modelo` ou `codigo`; só abre quando o agente de Memória é chamado, com duas notas ou mais, e dentro do run da aprovação ele fica no trace do run) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`, a detecção diária; erro numa conta vira log `error` com o código do erro e não para o job).
+Spans fora de um run: `toque` (`tipo`: `retorno`, `gosto`, `troca` ou `voto`; na troca, `motivo`: `trocar`, `nao_tenho` ou `nao_gosto`, e `resultado`: `trocou`, `perguntar` ou `sem_substituto`; nunca o alimento nem a sugestão), `memoria.resumo` (`resumo.origem`: `modelo` ou `codigo`; só abre quando o agente de Memória é chamado, com duas notas ou mais, e dentro do run da aprovação ele fica no trace do run) e `padroes.deteccao` (`padroes.contas`, `padroes.propostos`, a detecção diária; erro numa conta vira log `error` com o código do erro e não para o job).
 
 Spans, métricas, atributos e códigos de log são uma lista fechada em `src/core/telemetry/nomes.ts`, com os atributos obrigatórios de cada span, o tipo e os rótulos de cada métrica e o nível de cada log. Nome novo entra lá primeiro.
 
@@ -81,6 +81,7 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_tool_duracao_ms` | histograma | `tool` |
 | `ritu_validacao_violacoes_total` | contador | `violacao` |
 | `ritu_guardrail_total` | contador | `resultado` (`alerta_fisico`, `alerta_emocional`, `injection`, `suspeito`), `origem` (`codigo`, `interprete`): uma vez por mensagem barrada antes do Acompanhante |
+| `ritu_juiz_total` | contador | `resultado` (`aprovado`, `reprovado`, `sem_juiz`): um por leitura do Juiz |
 | `ritu_juiz_reprovacoes_total` | contador | `motivo`: um por motivo grave de cada leitura reprovada |
 | `ritu_juiz_avisos_total` | contador | `motivo` (`jargao`, `saude_na_proposta`): apontamentos que só registram |
 | `ritu_pausas_total` | contador | `tipo` |
@@ -108,7 +109,7 @@ JSON estruturado. Cada código tem um nível fixo; dentro de um run, todo log le
 
 ### Painel e alertas como código
 
-Os dois saem de uma definição em TypeScript (`scripts/lib/painel.ts`) por `npm run painel:gerar`: `observability/dashboards/ritu.json` e `observability/grafana/alerting/ritu.yaml`. Carregam sozinhos no LGTM local e são importáveis no Grafana Cloud. Um teste confere que o gerado é igual ao commitado e que toda métrica aparece no painel. ⚠️ `npm run painel:check` diz, painel por painel, se há dados.
+Os dois saem de uma definição em TypeScript (`scripts/lib/painel.ts`) por `npm run painel:gerar`: `observability/dashboards/ritu.json` e `observability/grafana/alerting/ritu.yaml` (escrito em JSON, que é YAML válido). Os gerados não se editam à mão. O `docker compose` sobe o LGTM numa tag fixa da imagem `grafana/otel-lgtm` e provisiona o painel e as regras ao subir (`observability/grafana/dashboards.yaml` aponta o provedor para a pasta do painel); os dois arquivos também são importáveis no Grafana Cloud. Um teste confere que o gerado é igual ao commitado, que toda métrica de `nomes.ts` aparece no painel e que as consultas só citam métricas da lista. ⚠️ `npm run painel:check` confere um Grafana no ar: painel e regras presentes, e, painel por painel, se há dados; sai com 1 se falta painel ou regra e com 2 se o Grafana não responde.
 
 Linhas do painel:
 
@@ -116,7 +117,7 @@ Linhas do painel:
 2. **Agente:** intenções, caminhos, passos por run, tools, violações do validador, juiz, guardrail, pausas, memória.
 3. **Modelos e cota:** chamadas e tokens por modelo e por papel; cota do dia e do minuto por modelo; trocas de modelo; respostas sem modelo; erros do modelo.
 4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, gostos, faltas, propostas, indicações de "vale ter em casa", entradas por tipo de conta e resultado.
-5. **Rastro:** runs recentes (Tempo) e avisos e erros (Loki).
+5. **Rastro:** runs recentes (Tempo, com `run.caminho`, `run.status`, `run.passos` e a duração de cada um) e avisos e erros (Loki).
 
 Alertas, visíveis só no Grafana, sem notificação; limites em `config/telemetria.ts`:
 
@@ -138,6 +139,7 @@ Um print desse painel vai para o README.
 | Configuração | `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` | Endpoint e token nas variáveis da Vercel |
 | Sem endpoint | Telemetria desligada (testes, CI, quem clonar o repo) | — |
 
+- `npm run demo` e `npm run eval:llm` exportam quando há endpoint: os cenários espelham a telemetria em memória no adaptador OTel.
 - Envio só pelas variáveis padrão do OTel: `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_SERVICE_NAME`.
 - **Serverless:** a função termina logo após a resposta. Usar `@vercel/otel` em `instrumentation.ts` e garantir o envio antes do fim (validar na spec 005).
 - A telemetria do core passa pela porta `Telemetry` (spans, contadores, histogramas). O adaptador OTel fica em `src/infra/`; o fake grava em memória e é o que os testes conferem.
@@ -167,6 +169,6 @@ Sem nenhum dado de pessoa.
 ## 5. O que cada portão confere
 
 - **Entrega 1:** um run no terminal aparece como trace no Grafana local, com a árvore de §3 e o modelo de cada chamada.
-- **Entrega 2:** o painel e os alertas carregam sozinhos, com dados da rodada do `c3-confiavel` (feita com o OTLP ligado); a linha de modelos e cota mostra as trocas; o teste de privacidade passa.
+- **Entrega 2:** o painel e os alertas carregam sozinhos, com dados da rodada do `c3-confiavel` (feita com o OTLP ligado; nos cenários o relógio é fixo, então as latências saem 0); `npm run painel:check` sai com 0; a linha de modelos e cota mostra as trocas; o teste de privacidade passa.
 - **Entrega 3:** Como pensei mostra a mesma história do trace.
 - **Entrega 4:** traces de produção chegam ao Grafana Cloud; Bastidores no ar, com a evolução dos checkpoints.

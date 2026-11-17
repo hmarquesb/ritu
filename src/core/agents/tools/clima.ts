@@ -54,6 +54,21 @@ async function climaDaCidade(ctx: ToolContext, cidade: CidadeDaPessoa): Promise<
   }
 }
 
+// Fluxo comum às duas tools: sem cidade marca o cache e devolve sem_cidade; falha do clima vira indisponivel.
+async function consultarClima<S extends { status: "ok" }>(
+  ctx: ToolContext,
+  montar: (cidade: CidadeDaPessoa, clima: Clima) => S,
+): Promise<S | { status: "sem_cidade" } | { status: "indisponivel" }> {
+  const cidade = ctx.clima.cidade
+  if (!cidade) {
+    ctx.telemetry.atribuirAoSpanAtual({ "cache.hit": false })
+    return { status: "sem_cidade" }
+  }
+  const clima = await climaDaCidade(ctx, cidade)
+  if (!clima) return { status: "indisponivel" }
+  return montar(cidade, clima)
+}
+
 export const climaAgoraTool = definirTool({
   name: "clima.agora",
   description:
@@ -61,20 +76,15 @@ export const climaAgoraTool = definirTool({
   input: entradaSchema,
   output: agoraSaidaSchema,
   resumir: resumoDeClima,
-  async executar(_entrada, ctx) {
-    const cidade = ctx.clima.cidade
-    if (!cidade) return { status: "sem_cidade" }
-    const clima = await climaDaCidade(ctx, cidade)
-    if (!clima) return { status: "indisponivel" }
-    return {
+  executar: (_entrada, ctx) =>
+    consultarClima(ctx, (cidade, clima) => ({
       status: "ok",
       cidade: cidade.nome,
       temperatura_aparente: umaCasa(clima.temperatura_aparente),
       umidade: Math.round(clima.umidade),
       ...climaEmQualidades(clima),
       observado_em: clima.observado_em,
-    }
-  },
+    })),
 })
 
 export const climaProximasHorasTool = definirTool({
@@ -84,13 +94,12 @@ export const climaProximasHorasTool = definirTool({
   input: entradaSchema,
   output: proximasHorasSaidaSchema,
   resumir: resumoDeClima,
-  async executar(_entrada, ctx) {
-    const cidade = ctx.clima.cidade
-    if (!cidade) return { status: "sem_cidade" }
-    const clima = await climaDaCidade(ctx, cidade)
-    if (!clima) return { status: "indisponivel" }
-    return { status: "ok", cidade: cidade.nome, ...tendenciaDasProximasHoras(clima) }
-  },
+  executar: (_entrada, ctx) =>
+    consultarClima(ctx, (cidade, clima) => ({
+      status: "ok",
+      cidade: cidade.nome,
+      ...tendenciaDasProximasHoras(clima),
+    })),
 })
 
 export const climaTools: Tool<unknown, unknown>[] = [climaAgoraTool, climaProximasHorasTool]

@@ -363,6 +363,13 @@ describe("executarTrecho", () => {
     expect(m.telemetry.metricas.some((x) => x.nome === "ritu_llm_erros_total")).toBe(false)
   })
 
+  it("llm.chamada leva o papel e llm.troca_de_modelo false quando não houve troca", async () => {
+    const m = montar([{ chamadas: [fin] }])
+    await executarTrecho(agente, inicio(), ctx, m.deps)
+    const llm = m.telemetry.spans.find((s) => s.nome === "llm.chamada")
+    expect(llm?.atributos).toMatchObject({ "llm.papel": "decisao", "llm.troca_de_modelo": false })
+  })
+
   it("rate_limit sem próximo modelo termina em sem_modelo", async () => {
     const m = montar([{ erro: "rate_limit" }], ["so-um"])
     const { fim } = await executarTrecho(agente, inicio(), ctx, m.deps)

@@ -1,11 +1,14 @@
 "use client"
 
+import { ThumbsDown, ThumbsUp } from "@phosphor-icons/react"
 import { useState } from "react"
 import { Checkbox } from "@/components/base/checkbox"
 import { Chip, TagList, ToggleChip } from "@/components/base/chip"
 import { ComboBox, ComboBoxItem } from "@/components/base/combo-box"
+import { Radio, RadioGroup } from "@/components/base/radio-group"
 import { Switch } from "@/components/base/switch"
 import { TextField } from "@/components/base/text-field"
+import { ToggleButton } from "@/components/base/toggle-button"
 import { Bloco, Linha } from "./componentes-bloco"
 
 const ALIMENTOS = ["Gengibre", "Canela", "Cúrcuma", "Arroz", "Ghee", "Cardamomo", "Erva-doce"].map(
@@ -87,6 +90,34 @@ export function Selecao() {
           <Switch defaultSelected>Lembrar do chá da tarde</Switch>
           <Switch>Avisar quando esfriar</Switch>
           <Switch isDisabled>Sincronizar</Switch>
+        </Linha>
+      </Bloco>
+      <Bloco titulo="RadioGroup">
+        <div className="grid gap-4 md:grid-cols-2">
+          <RadioGroup label="Gengibre em casa" defaultValue="tenho">
+            <Radio value="tenho">Tenho</Radio>
+            <Radio value="nao-tenho">Não tenho</Radio>
+            <Radio value="nao-gosto">Não gosto</Radio>
+          </RadioGroup>
+          <RadioGroup label="Canela em casa" orientation="vertical" isDisabled>
+            <Radio value="tenho">Tenho</Radio>
+            <Radio value="nao-tenho">Não tenho</Radio>
+          </RadioGroup>
+        </div>
+      </Bloco>
+      <Bloco titulo="ToggleButton">
+        <Linha>
+          <ToggleButton icon={ThumbsUp} aria-label="Ajudou" />
+          <ToggleButton icon={ThumbsDown} aria-label="Não ajudou" />
+          <ToggleButton icon={ThumbsUp} aria-label="Ajudou (marcado)" defaultSelected />
+          <ToggleButton icon={ThumbsDown} variant="secondary" aria-label="Não ajudou" />
+          <ToggleButton
+            icon={ThumbsUp}
+            variant="secondary"
+            aria-label="Ajudou (marcado)"
+            defaultSelected
+          />
+          <ToggleButton icon={ThumbsUp} aria-label="Ajudou (desativado)" isDisabled />
         </Linha>
       </Bloco>
       <Bloco titulo="Checkbox">

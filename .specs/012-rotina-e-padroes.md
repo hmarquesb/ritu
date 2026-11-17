@@ -505,6 +505,8 @@ Os textos e os prompts são copiados desta spec; não há parte `conteudo`.
 
 ## Correção do portão 2
 
+Aplicada (commits e75f0ed).
+
 Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T4). Desfaz a decisão D19 do plano da 012.
 
 ### P2-3 · A casa tira prática dos candidatos

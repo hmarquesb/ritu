@@ -439,6 +439,8 @@ Os padrões, o prompt e os textos são copiados desta spec; não há parte `cont
 
 ## Correção do portão 2
 
+Aplicada (commits 4694c12).
+
 Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T6).
 
 ### P2-9a · O aviso de incômodo sai sempre que a pessoa fala de saúde

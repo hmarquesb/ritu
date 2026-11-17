@@ -209,7 +209,7 @@ O agente responde com o momento e o clima, e avisa: *"Resposta geral. Descubra s
 |---|---|---|
 | **Confirmado** | A pessoa disse que tem, dentro da validade do grupo | Usa sem perguntar |
 | **Incerto** | Passou a validade do grupo desde a última confirmação | Pergunta antes de usar, ou sugere já com uma troca pronta |
-| **Acabou** | A pessoa disse que não tem | Não usa; pode propor pôr na lista "Para ter em casa" |
+| **Acabou** | A pessoa disse que não tem (em Minha casa, na mensagem ou com "Não tenho" numa pergunta) | Não usa: chá, óleo ou prática com um ingrediente que acabou não é sugerido. A falta conta para o "vale ter em casa" |
 | **Sempre tenho** | A pessoa marcou o item como básico da casa | Usa sem perguntar; nunca fica incerto |
 
 Validade por grupo, contada da última confirmação:
@@ -322,7 +322,7 @@ Regras da memória:
 - **Toques diretos** (Não gosto, Não tenho, Ajudou) são gravados na hora: o toque é o consentimento.
 - **Faltas** são anotadas por código, sem pergunta: guardam só o alimento e o dia. Pôr o alimento na lista "Para ter em casa" pede aprovação.
 - **Incômodos de saúde nunca entram na memória.** O agente usa na resposta daquela mensagem e não anota. A mensagem em que o incômodo aparece e a resposta do agente ficam na conversa do dia e são apagadas no dia seguinte.
-- **Restrição e "não como" ditos na conversa valem no dia**, na resposta daquela mensagem e nas seguintes, mesmo sem aprovação. Para ficar guardados, entram no bloco "Posso anotar isto?". Com "Agora não" ou sem resposta, deixam de valer no dia seguinte. O mesmo vale para o "Não como" respondido a uma pergunta do agente. Um nome que o Ritu não conhece é guardado como texto: aparece no perfil, mas não filtra sugestões.
+- **Restrição e "não como" ditos na conversa valem no dia**, na resposta daquela mensagem e nas seguintes, mesmo sem aprovação. Para ficar guardados, entram no bloco "Posso anotar isto?". Com "Agora não" ou sem resposta, deixam de valer no dia seguinte. O mesmo vale para o "Não como" respondido a uma pergunta do agente. Um "não como" de algo que o Ritu não conhece não é guardado nem proposto: a resposta diz, com texto fixo, que ele ainda não conhece o alimento e que, se sugerir algo com ele, é só pedir a troca.
 - Quando dois registros se contradizem, vale o mais recente. **Exceção: "evitar sempre"** (abaixo).
 
 ### Evitar sempre

@@ -266,3 +266,35 @@
 - **Decidido:** `lerEventos` (e os testes dele) passa para `src/components/ritu/conversa/ler-eventos.ts`; `EventoDaTela` e `codificarEvento` ficam no core, e a tela importa o tipo com `import type`.
 - **Por quê:** quem lê o fluxo é só o navegador; mudar a regra de camada pediria ADR e abriria exceção para um caso que não precisa dela.
 - **Como desfazer:** voltar a função ao core e acrescentar uma exceção à R4 (com ADR).
+
+## Portão 2 · P2-T4 · "Não tenho" do run
+
+- **Faltava:** o contrato manda unir `entrada.nao_tem_do_run` ao `acabou` em `lerContexto`, mas a entrada do acompanhante não tem esse campo: `nao_tem_do_run` é dado do preparo, preenchido por `aplicarResposta` depois do `preparar`.
+- **Decidido:** `lerContexto` une só Minha casa e `casa_da_mensagem.acabou`. O "Não tenho" já entra em `acabou` em `aplicarCasa` (`pergunta-do-run.ts`), que chama `entregaveis` de novo; a regra nova de `entregaveis` vale ali sem mudança. O teste do "Não tenho" fica em `pergunta-do-run.test.ts`.
+- **Por quê:** é o único ponto em que a resposta existe; mudar o schema da entrada levaria o dado para antes de ele existir.
+- **Como desfazer:** acrescentar `nao_tem_do_run` a `entradaDoAcompanhanteSchema`, repassar em `responder.ts` e unir em `lerContexto`.
+
+## Portão 2 · P2-T9 · Relógio do modo e2e
+
+- **Faltava:** o roteiro `pergunta-casa` dependia da hora real (o corte das refeições muda com o momento do dia), e o teste dele já falhava no commit que o criou.
+- **Decidido:** no modo e2e (`RITU_MODO=e2e`), o container usa um relógio que anda como o real a partir de 20h30 UTC do dia em que o processo sobe (`src/infra/e2e/relogio.ts`); o produto real segue com `systemClock`. O roteiro pergunta a banana (incerta na semente) e entrega `pausa-em-silencio`, com ou sem a resposta.
+- **Por quê:** teste determinístico sem mudar regra de produto; o modo e2e já fixa o clima pelo mesmo motivo.
+- **Como desfazer:** tirar `relogio.ts` do container e2e e escolher um cenário de pergunta de casa que não dependa da hora.
+
+## Portão 2 · P2-T6 · Aviso de saúde na retomada
+
+- **Faltava:** a tarefa cobria só `conversar.ts`; um run com fala de saúde que pausa (pergunta de casa) fecha em `continuar.ts`, sem o aviso.
+- **Decidido:** na pausa, o run com fala de saúde grava `com_incomodo: true` (como já faz o alerta e a variante); na retomada, `continuar.ts` põe o aviso `incomodo` na saída final quando `com_incomodo`, sem repetir. `continuar.ts` e o teste dele entram na tarefa.
+- **Por quê:** o objetivo da tarefa é "a saída final sempre leva o aviso"; o `com_incomodo` do run é o dado que a retomada já lê.
+- **Como desfazer:** tirar o aviso de `continuar.ts` e a gravação de `com_incomodo` na pausa.
+
+## Portão 2 · P2-T5 · "Não como" livre
+
+- **Faltava (1):** o preparo do acompanhante gravava o item livre no dia (`nao_come_texto`), o que contraria "não grava".
+- **Decidido (1):** `conversar.ts` passa ao acompanhante só os itens de `nao_come` com `alimento_id`. O caminho de item livre em `preparo.ts` continua (testado por `preparo.test.ts` e `evals/det/aprovacao/restricao-no-run.eval.ts`), mas a conversa não o alimenta mais.
+- **Por quê (1):** candidato só sai da base, então evitar um nome que a base não conhece não mudava nenhuma sugestão; e a frase aprovada já diz "se eu sugerir algo com X, é só me dizer que eu troco".
+- **Como desfazer (1):** voltar a passar os itens livres em `nao_come_da_mensagem`. Limpeza possível: tirar o caminho livre de `preparo.ts` (fica para a revisão da 010, a pedido da dona).
+- **Faltava (2):** quando o run pausa, a frase `naoComeDesconhecido` não chega à resposta final da retomada: a pausa não guarda a interpretação.
+- **Decidido (2):** não mudar schema nem checkpoint; a frase sai nos runs sem pausa e no caminho `evitar`.
+- **Por quê (2):** a opção mais conservadora; mudar o checkpoint mexe em núcleo fora da tarefa.
+- **Como desfazer (2):** guardar os itens livres no checkpoint da pausa e acrescentar a frase em `continuar.ts`.

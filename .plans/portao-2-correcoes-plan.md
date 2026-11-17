@@ -188,12 +188,31 @@ A dona aprovou a entrega 2 com correções em 2026-11-17. Este plano tem as tare
 - pronto quando: gates verdes; `evals/resultados/*.json` fora do Biome e nada mais mudou nos `includes`.
 - fora: `scripts/`, `evals/` (nenhum arquivo de resultado é reescrito).
 
+### P2-T9 · Fix the home-question scenarios that stopped pausing
+- nivel: nucleo
+- objetivo: o roteiro e2e `pergunta-casa` e o fluxo de rotas da pergunta de casa voltam a pausar em `waiting_for_input`.
+- arquivos: a descobrir no diagnóstico; só testes, fixtures, roteiros e2e (`src/infra/e2e/`) e o código que causar a falha. Liste-os no relatório.
+- depende de: nenhuma (aberta pelos gates da onda 1: falha já existente na `main` antes da P2-T4, em `efeedfb`)
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - Falham hoje, na `main`: `src/infra/e2e/roteiros.test.ts` "pergunta-casa: pergunta de couve e leite e, com a resposta, entrega" e `src/app/_rotas/fluxo-de-run.test.ts` "/resposta numa pergunta de casa segue até o fim" (`waiting_for_approval` no lugar de `waiting_for_input`) e "se a pessoa cancela o fluxo, o run termina no store".
+  - O `ask_user` recusa couve e leite com `fora_dos_candidatos`: nenhum candidato de `preparar` traz couve ou leite (`legumes-no-vapor` não aparece). Com a semente demo, `acabou` vem vazio. Mudar a hora do relógio não resolveu.
+  - Hipótese a conferir primeiro: dependência da data real (estação, ritu, mês, clima fixo do modo e2e, idade de registros da semente) ou de uma mudança de dados/ranking juntada da `entrega-3`. Use `git bisect` só de leitura (sem alterar histórico) ou rode os testes em commits antigos com `git stash`/`git worktree` temporário dentro de `ritu/`, e diga onde passou a falhar.
+  - O teste deve ficar determinístico: se a causa é a data, fixe a data no cenário/teste (não no produto). Não afrouxe as expectativas. Se a causa é uma regra de produto que mudou de propósito, ajuste o dado do cenário para que ele continue exercitando a pausa da pergunta de casa.
+- testes primeiro: os três testes acima já falham; eles são o teste.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test`, `npm run eval:det`
+- pronto quando: gates verdes; os três testes passam em qualquer data.
+- fora: `.docs/`, `config/` (a não ser que a causa esteja lá; diga).
+
 ## Ondas
 
 | Onda | Tarefas | Por quê |
 |---|---|---|
-| 1 | P2-T1, P2-T2, P2-T3, P2-T4, P2-T7 | Sem dependência e sem arquivo em comum |
-| 2 | P2-T6 | `conversar.ts` e `mapa.ts`; nucleo, sozinha |
+| 1 | P2-T1, P2-T2, P2-T3, P2-T4 | Sem dependência e sem arquivo em comum |
+| 1b | P2-T9 | Correção dos gates da onda 1 (vermelho sem dono), sozinha |
+| 2 | P2-T6, P2-T7 | P2-T7 saiu da onda 1: divide `scripts/lib/evals/eval-llm.test.ts` com a P2-T3; não tem arquivo em comum com a P2-T6 |
 | 3 | P2-T5 | Depois da P2-T6 (mesmo `conversar.ts`) |
 | 4 | P2-T8 | Configuração do Biome: sozinha (skill §1.4) |
 

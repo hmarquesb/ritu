@@ -4,8 +4,9 @@ import { StateBlock } from "@/components/base/state-block"
 import { Conversa } from "@/components/ritu/conversa/conversa"
 import { conversaDoDia } from "@/core/conversation/do-dia"
 import { textoDaMensagem } from "@/core/messages/texto"
-import { quemPedeDosHeaders } from "@/infra/auth/next"
+import { googleDisponivel, quemPedeDosHeaders } from "@/infra/auth/next"
 import { getContainer } from "@/infra/container"
+import { entrarComGoogleAcao } from "../../_acoes/sessao"
 import { exigirPasso } from "../../_lib/conta"
 
 const T = config.textosConversa
@@ -35,6 +36,8 @@ export default async function PaginaDaConversa() {
         inicial={inicial}
         atalhos={atalhos}
         rotulos={rotulos}
+        googleDisponivel={googleDisponivel()}
+        entrarComGoogleAcao={entrarComGoogleAcao}
         vazio={<StateBlock kind="empty" title={T.vazia.titulo} description={T.vazia.texto} />}
       />
     </>

@@ -12,6 +12,7 @@ import type { ResultadoDaTroca } from "@/core/touches/troca"
 import { BlocoDeAprovacao } from "./bloco-aprovacao"
 import { type Atalho, CaixaDeMensagem } from "./caixa"
 import { EtapasAoVivo, EtapasRecolhidas } from "./etapas"
+import { FaixaDeCota } from "./faixa-cota"
 import { FalaDaPessoa, FalaDoAgente } from "./fala"
 import { LinhaParaTer } from "./para-ter"
 import { PerguntaDoAgente } from "./pergunta"
@@ -21,12 +22,15 @@ import { BlocoDeSugestao } from "./sugestao"
 import { useConversa } from "./use-conversa"
 
 const T = config.textosConversa
+const T_LIMITES = config.textosLimites
 
 export type ConversaProps = {
   inicial: ConversaDoDia
   atalhos: Atalho[]
   rotulos?: Record<string, string>
   vazio?: ReactNode
+  googleDisponivel?: boolean
+  entrarComGoogleAcao?: () => Promise<void>
 }
 
 type Troca = { alimento_id: string; resultado: ResultadoDaTroca }
@@ -137,9 +141,16 @@ function ondeFicamOsExtras(falas: FalaNaTela[]): Map<string, string> {
   return onde
 }
 
-export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProps) {
+export function Conversa({
+  inicial,
+  atalhos,
+  rotulos = {},
+  vazio,
+  googleDisponivel = false,
+  entrarComGoogleAcao,
+}: ConversaProps) {
   const conversa = useConversa(inicial, rotulos)
-  const { estado, tentarDeNovo, enviar, digitar, marcar } = conversa
+  const { limites, textoGuardado, estado, tentarDeNovo, enviar, digitar, marcar } = conversa
   const [trocas, setTrocas] = useState<Record<string, Troca>>({})
   const listaRef = useRef<HTMLDivElement>(null)
   const raizRef = useRef<HTMLDivElement>(null)
@@ -156,6 +167,20 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
     observador.observe(painel)
     return () => observador.disconnect()
   }, [])
+
+  const cotaEsgotada = limites.cota_ia.esgotada
+  const voltaAs = limites.cota_ia.esgotada ? limites.cota_ia.volta_as : ""
+  const cotaAntes = useRef(cotaEsgotada)
+  const [anuncioDaCota, setAnuncioDaCota] = useState("")
+
+  // A faixa que aparece depois do carregamento é anunciada uma vez; a que já veio na página, não.
+  useEffect(() => {
+    if (cotaEsgotada && !cotaAntes.current) {
+      setAnuncioDaCota(T_LIMITES.cota.faixa.replace("{hora}", voltaAs))
+    }
+    if (!cotaEsgotada) setAnuncioDaCota("")
+    cotaAntes.current = cotaEsgotada
+  }, [cotaEsgotada, voltaAs])
 
   const statusAberto = estado.aberto?.status
   const statusAnterior = useRef(statusAberto)
@@ -190,6 +215,7 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
 
   return (
     <div ref={raizRef} className="flex min-h-[60dvh] flex-col gap-4">
+      {limites.cota_ia.esgotada ? <FaixaDeCota voltaAs={limites.cota_ia.volta_as} /> : null}
       <div
         ref={listaRef}
         role="log"
@@ -247,6 +273,9 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
         {estado.anuncio}
       </div>
       <div className="sr-only" aria-live="polite">
+        {anuncioDaCota}
+      </div>
+      <div className="sr-only" aria-live="polite">
         {ultimaFrase}
       </div>
       <div
@@ -264,6 +293,10 @@ export function Conversa({ inicial, atalhos, rotulos = {}, vazio }: ConversaProp
             else marcar(v.atalhos)
           }}
           aoEnviar={() => void enviar()}
+          limites={limites}
+          textoGuardado={textoGuardado}
+          googleDisponivel={googleDisponivel}
+          entrarComGoogleAcao={entrarComGoogleAcao}
         />
       </div>
     </div>

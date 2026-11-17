@@ -695,7 +695,7 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Rotas de toque respeitam o limite próprio; a 31ª demonstraçã",
-    arquivos: [],
+    arquivos: ["evals/det/seguranca/limites.eval.ts"],
     desde: 4,
   },
   {

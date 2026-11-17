@@ -13,7 +13,7 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 
 ## Pendências da dona
 
-- **Revisão das 156 linhas `a_confirmar` da base** (106 em `alimentos.yaml`, 37 em `praticas.yaml`, 10 em `preparos.yaml`, 3 em `incomodos.yaml`), em conversa com o Claude, **antes de a 022 ir para código**. O deploy da 022 roda `base:check -- --producao`, que falha enquanto houver alguma. Agentes não mexem em `data/` para passar esse gate.
+- **Segunda rodada da base, antes do primeiro deploy real.** A revisão das 156 linhas `a_confirmar` foi feita e juntada na `main` em 2026-11-17; restam **49** (44 em `alimentos.yaml`, 5 em `praticas.yaml`), que a dona resolve com o Claude. A construção da 022 pode começar; o deploy dela roda `base:check -- --producao`, que falha enquanto houver alguma. Agentes não mexem em `data/` para passar esse gate.
 
 ## Backlog
 

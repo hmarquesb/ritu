@@ -298,3 +298,18 @@
 - **Decidido (2):** não mudar schema nem checkpoint; a frase sai nos runs sem pausa e no caminho `evitar`.
 - **Por quê (2):** a opção mais conservadora; mudar o checkpoint mexe em núcleo fora da tarefa.
 - **Como desfazer (2):** guardar os itens livres no checkpoint da pausa e acrescentar a frase em `continuar.ts`.
+
+## Revisão da base · R1 nos chás de ervas alteradas (d0b187f)
+
+- **Faltava:** a R1 (`KNOWLEDGE.md` §8.1) diz "soma das ervas" sem dizer como somar, e cardamomo, cravo, camomila e capim-limão mudaram na revisão.
+- **Decidido:** qualidades de cada erva = virya + `gunas` de `alimentos.yaml`; gunas do chá = soma por erva, com pares opostos se cancelando, e ficam as de saldo positivo. `favorece_estados` = estados cujas `presentes` têm o oposto de alguma guna do chá e cujas `presentes` e `evitar_gunas` não têm nenhuma. Campo com fonte real fica (a fonte vence a regra), exceto em `cha-cravo-canela` e `cha-canela-cardamomo`: as páginas da Banyan liam cravo e cardamomo como quentes, e a revisão ficou com a Easy Ayurveda (mais peso, §7), que diz que os dois são frios. A R2 foi refeita só onde o campo já citava a regra; com saldo térmico zero, o chá fica sem contraindicação térmica. O efeito não muda: nenhuma erva mudou de efeito. Chás alterados: `cha-canela-cardamomo`, `cha-cardamomo`, `cha-cravo-canela`, `cha-camomila`, `cha-camomila-erva-doce`, `cha-capim-limao`, `cha-capim-limao-hortela`.
+- **Por quê:** é a conta mais direta do vocabulário de pares (§1) e reproduz os chás de uma erva que a revisão já tinha refeito (`cha-hortela`, `cha-capim-limao`).
+- **Consequências para a dona ver na segunda rodada:** (1) o chá de camomila fica `frio` e deixa de ser candidato para quem está `agitada` (que evita frio), embora a fonte dele cite `agitada`; os testes do runner da pausa passaram a perguntar anis-estrelado. (2) `cha-camomila-erva-doce` passa a favorecer `[com_calor, pesada]` em vez de `[agitada, seca, irritada]`; a citação `banyan-erva-doce`, que trata da erva-doce sozinha, saiu. (3) `cha-camomila-erva-doce` tem saldo frio e `contraindicacoes: []`, campo sem citação da regra; pela R2 seria `[com_frio]`, e ficou como estava. (4) `cha-capim-limao-hortela` fica `intenso` com `favorece_estados` de fonte que inclui `irritada`. (5) `cha-canela-cardamomo` perde `com_calor`, porque o saldo térmico fica zero.
+- **Como desfazer:** reverter d0b187f.
+
+## Junção da entrega-4 · relógio e2e
+
+- **Faltava:** o pedido da dona era manter "o relógio por requisição da `entrega-4` (T20)", mas a T20 foi revertida na própria `entrega-4` (438479b), porque a `entrega-3` trouxe o relógio deslocado para a noite (019 C3).
+- **Decidido:** manter o relógio que a `entrega-4` tem hoje (o noturno, `createRelogioE2e`) e adaptar a ele os roteiros e testes da P2-T9 da `main`.
+- **Por quê:** segue a intenção do pedido (vence o lado da `entrega-4`) sem ressuscitar um código que a trilha já tinha tirado.
+- **Como desfazer:** reaplicar a T20 (a91d363) e trocar o relógio do container.

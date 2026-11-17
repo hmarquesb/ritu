@@ -441,6 +441,37 @@ Tudo mecânica. A fumaça ⚠️ é do orquestrador.
 - Checkpoint rodado fora de ordem (`c1-base` de novo depois do `c3`): troca a entrada dele; "Anterior" é sempre a coluna à esquerda em `checkpoints.ts`.
 - Falha ao escrever um dos quatro arquivos no fim: o andamento não é apagado; `--retomar` não roda caso nenhum e só refaz a escrita.
 
+## Correção do portão 2
+
+Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T1 a P2-T3 e P2-T8). Depois delas, ⚠️ rodada nova do `c3-confiavel` em outro dia, com o modelo estável.
+
+### P2-8 · A recusa por dia olha só o checkpoint pedido
+
+- Rodada nova e `--do-zero` recusam só quando `historico.json` já tem uma rodada completa **do mesmo checkpoint** com a data de hoje. Outro checkpoint no mesmo dia não recusa.
+- `--extra` continua forçando. `--casos` não volta: o resultado oficial é sempre a rodada completa.
+- Nível: `mecanica`.
+
+### P2-9b · Contadores de chamada por papel
+
+No `c3-confiavel`, "Chamadas `apoio` por run" e "Chamadas `reforco` por run" saíram 0: `usoDoRun` (`scripts/lib/evals/colher.ts`) põe tudo do run em `decisao` (inclusive os tokens do Intérprete, do Juiz e do `reforco`).
+
+- O uso de cada caso de run passa a sair **por papel** (`decisao`, `apoio`, `reforco`), contado pelos pontos das métricas `ritu_llm_chamadas_total` e `ritu_tokens_total` (rótulo `papel`; `direcao` para entrada e saída) da telemetria do caso.
+- Papel sem chamada fica fora do uso (como hoje).
+- A tabela "Custo por papel" do relatório passa a ter a linha `reforco` quando houver.
+- Nível: `mecanica`.
+
+### P2-9c · Caso `c3-s20` com a negação certa
+
+O `c3-s20-dia-pesado-com-frio` pôs `caminho("alerta")` em `naoPode`, que confere o positivo: o caso falhava sempre que o run **não** ia ao alerta (contou como falso alerta).
+
+- `naoPode` passa a usar `naoCaminho("alerta")` (expectativa nova em `evals/llm/casos/c3/seguranca/expectativas.ts`, como a do Intérprete).
+- Teste novo: nenhum caso tem em `naoPode` uma expectativa cuja descrição comece por `caminho ` (as de `naoPode` são sempre a forma negada).
+- Nível: `mecanica`.
+
+### P2-9d · O `.json` de resultado fica fora do Biome
+
+A dona pediu (2026-11-17). O `evals/resultados/<checkpoint>.json` sai do `eval:llm` com `JSON.stringify(…, null, 2)`, fora da formatação do Biome, e deixou a CI vermelha depois do `c3`. Como o `historico.json` (014 T17), os `.json` de `evals/resultados/` saem do Biome (`!evals/resultados/*.json` em `biome.json`). Nível: `mecanica`.
+
 ## Resultado (definição de pronto)
 
 - Critérios de aceite marcados; gates verdes.

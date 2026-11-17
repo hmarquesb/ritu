@@ -1,7 +1,9 @@
 import type { Resultado, Retorno } from "@/core/outcomes/ports"
 import type { ItemTipo } from "@/core/preferences/ports"
+import { type AcaoDaCasa, tocarCasa } from "./casa"
 import type { Deps } from "./deps"
 import { tocarGosto } from "./gosto"
+import { type AcaoDaLista, tocarLista } from "./lista"
 import { tocarRetorno } from "./retorno"
 import {
   type MotivoDaTroca,
@@ -33,6 +35,8 @@ export function createTouches(deps: Deps): {
       resposta: "tenho" | "nao_tenho"
     },
   ): Promise<ResultadoDaTroca>
+  tocarCasa(contaId: string, acao: AcaoDaCasa): Promise<{ nome: string }>
+  tocarLista(contaId: string, acao: AcaoDaLista): Promise<{ nome: string }>
 } {
   return {
     tocarRetorno: (contaId, retornoId, resultado) =>
@@ -41,7 +45,11 @@ export function createTouches(deps: Deps): {
     tocarVoto: (contaId, runId, voto) => tocarVoto(deps, contaId, runId, voto),
     trocarIngrediente: (contaId, p) => trocarIngrediente(deps, contaId, p),
     responderTroca: (contaId, p) => responderTroca(deps, contaId, p),
+    tocarCasa: (contaId, acao) => tocarCasa(deps, contaId, acao),
+    tocarLista: (contaId, acao) => tocarLista(deps, contaId, acao),
   }
 }
 
+export { type AcaoDaCasa, acaoDaCasaSchema } from "./casa"
+export { type AcaoDaLista, acaoDaListaSchema } from "./lista"
 export type { MotivoDaTroca, ResultadoDaTroca } from "./troca"

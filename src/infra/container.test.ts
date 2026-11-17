@@ -259,6 +259,43 @@ describe("container", () => {
     }
   })
 
+  it("telemetriaLigada é false com a telemetria nula e true com o endpoint", async () => {
+    const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    try {
+      delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+      const { createContainer } = await import("./container")
+      expect(createContainer().telemetriaLigada).toBe(false)
+
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+      expect(createContainer().telemetriaLigada).toBe(true)
+    } finally {
+      if (anterior === undefined) delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+      else process.env.OTEL_EXPORTER_OTLP_ENDPOINT = anterior
+    }
+  })
+
+  it("saude sem DATABASE_URL: banco ok em memória e contagens da base carregada", async () => {
+    const anterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+
+      const saude = await container.saude()
+
+      expect(saude.banco).toBe("ok")
+      expect(saude.migracao).toBeNull()
+      expect(saude.base).toEqual({
+        alimentos: container.knowledge.alimentos.length,
+        preparos: container.knowledge.preparos.length,
+        praticas: container.knowledge.praticas.length,
+      })
+      expect(saude.seed).toBe("ok")
+    } finally {
+      if (anterior !== undefined) process.env.DATABASE_URL = anterior
+    }
+  })
+
   it("com o endpoint, telemetry é a do OTel; createContainer aceita override", async () => {
     const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"

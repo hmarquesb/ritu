@@ -44,6 +44,7 @@ import { createOpenMeteoCities } from "@/infra/open-meteo/cities"
 import { createOpenMeteoWeather } from "@/infra/open-meteo/weather"
 import { createNullTelemetry } from "@/infra/otel/null-telemetry"
 import { createOtelTelemetry } from "@/infra/otel/telemetry"
+import { type DepsDaSaude, lerSaude, type Saude } from "@/infra/saude"
 import { systemClock } from "@/infra/system-clock"
 
 export type Container = {
@@ -72,6 +73,8 @@ export type Container = {
   patterns: ReturnType<typeof createPatterns>
   lerCasa(contaId: string): Promise<CasaNaTela>
   lerComoFicou(contaId: string): Promise<ComoFicouNaTela>
+  telemetriaLigada: boolean
+  saude(): Promise<Saude>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -259,11 +262,15 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
     get telemetry() {
-      telemetry ??=
-        e2e || optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined
-          ? createNullTelemetry()
-          : createOtelTelemetry()
+      telemetry ??= semTelemetria(e2e) ? createNullTelemetry() : createOtelTelemetry()
       return telemetry
+    },
+    get telemetriaLigada() {
+      return !semTelemetria(e2e)
+    },
+    // Sem DATABASE_URL (ou no e2e) o banco é em memória e responde ok.
+    async saude() {
+      return lerSaude(depsDaSaude(container, e2e))
     },
     // A chave do modelo só é lida na primeira chamada de passo.
     get runtime() {
@@ -407,6 +414,37 @@ export function createContainer(overrides?: Partial<Container>): Container {
     ...overrides,
   }
   return container
+}
+
+function semTelemetria(e2e: boolean): boolean {
+  return e2e || optionalEnv("OTEL_EXPORTER_OTLP_ENDPOINT") === undefined
+}
+
+function depsDaSaude(container: Container, e2e: boolean): DepsDaSaude {
+  return {
+    env: process.env,
+    emMemoria: e2e || optionalEnv("DATABASE_URL") === undefined,
+    consultarBanco: async () => {
+      await bancoPreguicoso().sql`select 1`
+    },
+    ultimaMigracao: async () => {
+      const linhas = await bancoPreguicoso().sql<{ nome: string }[]>`
+        select nome from _migracoes order by aplicada_em desc, nome desc limit 1`
+      return linhas[0]?.nome ?? null
+    },
+    contagensDaBase: () => ({
+      alimentos: container.knowledge.alimentos.length,
+      preparos: container.knowledge.preparos.length,
+      praticas: container.knowledge.praticas.length,
+    }),
+    lerSeed: () => {
+      loadDemoSeed()
+    },
+    // Mesma regra de googleDisponivel() (auth/next.ts), sem importá-lo: ele importa o container.
+    google: () =>
+      optionalEnv("AUTH_GOOGLE_ID") !== undefined &&
+      optionalEnv("AUTH_GOOGLE_SECRET") !== undefined,
+  }
 }
 
 async function fusoDaConta(container: Container, contaId: string): Promise<string> {

@@ -18,5 +18,6 @@ export const telemetria = {
     uidDoPainel: "ritu",
     pasta: "Ritu",
     uidMetricas: "prometheus",
+    producao: { pasta: "Ritu", uidDaPasta: "ritu", contato: "ritu-email" },
   },
 } as const

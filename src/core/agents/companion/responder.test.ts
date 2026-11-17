@@ -156,6 +156,7 @@ describe("createCompanion.responder", () => {
     const m = await montar([])
     const semProximo = {
       temModelo: async () => true,
+      cotaDoDiaEsgotada: async () => false,
       paraPapel: () => ({
         proximo: async () => null,
         usou: async () => undefined,

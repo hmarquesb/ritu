@@ -16,6 +16,8 @@ export interface ModelRouter {
     opts?: { preferir?: string; aoTrocar?: (t: Troca) => void },
   ): FornecedorDeModelo
   temModelo(papel: Papel): Promise<boolean>
+  /** Verdadeiro quando todo modelo do papel esgotou o dia (cota diária ou 429 do dia). A cota do minuto não conta. */
+  cotaDoDiaEsgotada(papel: Papel): Promise<boolean>
 }
 
 type Deps = {
@@ -121,6 +123,15 @@ export function createModelRouter(deps: Deps): ModelRouter {
           modelos[m] as Limites,
         ),
       )
+    },
+
+    async cotaDoDiaEsgotada(papel) {
+      const uso = await ledger.uso()
+      return cotas.papeis[papel].every((m) => {
+        const u = uso.find((x) => x.modelo === m)
+        const diaCheio = (u?.dia.pedidos ?? 0) >= (modelos[m] as Limites).rpd
+        return u?.esgotado_ate === "dia" || diaCheio
+      })
     },
   }
 }

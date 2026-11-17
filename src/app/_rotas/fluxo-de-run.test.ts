@@ -8,9 +8,11 @@ import { rotasDeFluxoDeRun } from "./fluxo-de-run"
 
 const PERGUNTA_DE_CASA = "fui à feira ontem, o que faço pro jantar?"
 
-async function montar() {
+// O momento do dia muda os candidatos do agente (de manhã e ao almoço a couve não entra): o relógio fica fixo à noite
+// (21h em São Paulo), que é onde o roteiro da pergunta de casa vale.
+async function montar(agora = "2026-11-18T00:00:00Z") {
   vi.stubEnv("RITU_MODO", "e2e")
-  const container = createContainer()
+  const container = createContainer({ clock: { now: () => new Date(agora) } })
   const conta = await container.stores.accounts.criar({ tipo: "demo" })
   await copiarSeed(container.stores, conta.id, container.demoSeed, {
     clock: container.clock,
@@ -136,8 +138,13 @@ describe("rotasDeFluxoDeRun", () => {
     expect(await r.json()).toEqual({ erro: "run_nao_encontrado" })
   })
 
-  it("/resposta numa pergunta de casa segue até o fim", async () => {
-    const m = await montar()
+  it.each([
+    "2026-11-17T06:00:00Z",
+    "2026-11-18T01:00:00Z",
+    "2026-11-18T00:00:00Z",
+    "2026-11-18T02:30:00Z",
+  ])("/resposta numa pergunta de casa segue até o fim (%s)", async (agora) => {
+    const m = await montar(agora)
     const { iniciar, responder } = rotasDeFluxoDeRun(m.deps(m.conta.id))
     const primeiro = await eventos(await iniciar(pedido(texto(PERGUNTA_DE_CASA))))
     const fim1 = primeiro.at(-1)

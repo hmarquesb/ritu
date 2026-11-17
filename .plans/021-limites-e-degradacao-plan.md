@@ -434,3 +434,31 @@ Chaves da tabela `limites` (o `escopo` do modo e2e entra como prefixo `${escopo}
 
 | 8 | T19 | Correção de gate vermelho sem dono, sozinha |
 | 9 | T17, T18 | Reaplicar `.local/patches/021-T18.patch` (aprovada) e refazer a T17 a partir de `.local/patches/021-T17-limites.spec.ts` com a reprovação |
+
+### T20 · Let E2E tests pin the hour per request (correção)
+- nivel: nucleo
+- objetivo: no modo e2e, o roteiro `pergunta-casa` (`e2e/roteiros/pergunta-casa.ts`) só funciona à noite: a couve só entra nos candidatos no momento "noite" (21h a 04h59 em São Paulo, `momentoDoDia` em `src/core/knowledge/momento.ts`), e o container e2e usa o relógio real; de dia o `ask_user` é recusado com `fora_dos_candidatos` e os E2E que dependem da pergunta de casa (ex.: `e2e/conversa.spec.ts` "axe … pergunta") falham. Tornar os E2E independentes da hora real.
+- arquivos: `src/infra/e2e/relogio.ts` (novo) e `src/infra/e2e/relogio.test.ts` (novo); `src/infra/container.ts` (ligar o relógio do modo e2e, como já se faz com `x-ritu-e2e-cota`); `e2e/apoio/` (onde os headers e2e são postos no contexto do navegador); os `e2e/*.spec.ts` que usam o roteiro `pergunta-casa`, só se precisarem mandar o header.
+- depende de: T19
+- leitura: nenhuma
+- skills: nenhuma
+- contratos: header novo `x-ritu-e2e-agora: <instante ISO 8601>`, lido só no modo e2e (`RITU_MODO=e2e`), pelo mesmo caminho de `cotaEsgotadaNoPedidoNext` em `src/infra/e2e/cota.ts` (`headers()` do Next; fora de pedido ou sem header, relógio real). Valor inválido = relógio real. Fora do modo e2e o header é ignorado e o código do relógio e2e nem é importado (import dinâmico, como o resto do modo e2e). Os E2E que dependem da pergunta de casa mandam o instante de 21h em São Paulo do dia corrente (00:00Z do dia seguinte), por um ajudante em `e2e/apoio/`.
+- testes primeiro: `relogio.test.ts`: com header válido devolve o instante; sem header, header inválido ou fora de pedido devolve o relógio de base.
+- comandos: `npm test`, `npm run typecheck`, `rtk bypass npm run lint`, `npm run build`, `CI=1 npm run test:e2e -- e2e/conversa.spec.ts` (porta ocupada: espere e repita). Rodar agora (manhã em São Paulo) prova a correção.
+- pronto quando: gates verdes; `e2e/conversa.spec.ts` verde em celular e desktop fora da janela noturna.
+- fora: `src/core/`, as faixas de `momentoDoDia`, o roteiro em si, `e2e/limites.spec.ts`.
+
+| 10 | T20 | Mexe em `container.ts`, sozinha. Onda 9 passa a depender dela: ordem real 8 = T19, 9 = T20, 10 = T17 + T18 |
+
+### T21 · Give the conversation log room above the sticky panel (correção)
+- nivel: tela
+- objetivo: no desktop, com o bloco de mensagens esgotadas, o painel sticky de `src/components/ritu/conversa/conversa.tsx` (~linha 283) cobre o pé do log: o axe acusa `target-size` (serious) num `button` React Aria do log, "partially obscured", de forma determinística, nos dois temas (`e2e/limites.spec.ts`, teste "mensagens esgotadas na demonstração › sem violações de acessibilidade"). Dar ao log folga inferior igual à altura do painel, para nenhum alvo do log ficar coberto quando rolado até o fim.
+- arquivos: `src/components/ritu/conversa/conversa.tsx` e o CSS/módulo de estilo dela, se houver
+- depende de: T14
+- leitura: `DESIGN.md` só a seção de espaçamento/tokens
+- skills: `frontend-design`, `web-design-guidelines`
+- comandos: `npm run build`, `CI=1 npm run test:e2e -- e2e/limites.spec.ts e2e/conversa.spec.ts`, `rtk bypass npm run lint`, `npm run typecheck`, `npm test`
+- pronto quando: o teste acima verde em celular e desktop sem exclusão no axe; `e2e/conversa.spec.ts` continua verde.
+- fora: `e2e/` (o spec é da T17), lógica de hooks.
+
+| 11 | T21 | Correção de tela; depois dela a T17 é reverificada |

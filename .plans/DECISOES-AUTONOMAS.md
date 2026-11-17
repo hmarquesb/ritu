@@ -321,3 +321,9 @@
 - **Decidido:** a função mora em `src/infra/auth/next.ts` (que já usa `hashDoIp`); `deps.ts` só a liga em `depsReais()`.
 - **Por quê:** não abre exceção na R3.
 - **Como desfazer:** liberar os dois módulos na R3 e devolver a função a `deps.ts`.
+
+## 021 · A10 · T19 e T20 · Relógio fixo nos testes da pergunta de casa
+- **Faltava:** a T19 pedia que os testes de `pergunta-casa` passassem a qualquer hora; o roteiro pergunta por couve, que só é candidata à noite (21h a 04h59 em São Paulo), então isso exigiria mudar o roteiro ou os candidatos.
+- **Decidido:** os testes unitários fixam o relógio em horas noturnas (T19). Os E2E ganham o header `x-ritu-e2e-agora`, só no modo e2e, e mandam 21h em São Paulo (T20).
+- **Por quê:** a dependência da hora é comportamento do produto, não defeito; fixar o relógio é a mudança mais conservadora e segue o padrão do `x-ritu-e2e-cota`.
+- **Como desfazer:** trocar o roteiro por itens candidatos em qualquer momento e tirar o header e o relógio fixo.

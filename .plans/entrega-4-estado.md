@@ -52,17 +52,20 @@ Plano em `.plans/022-producao-plan.md`. `c5-publico` adiado (022 A2).
 
 | Tarefa | Status | Commit |
 |---|---|---|
-| T1 · Add vercel.json and its schema test | em andamento | |
-| T2 · Share autorizarCron between the cron routes | em andamento | |
-| T3 · Turn off prepared statements on the Neon pooler | em andamento | |
-| T4 · Add the production column to the env catalog | em andamento | |
-| T5 · Write the smoke checks as pure functions | em andamento | |
-| T6 · Write the Grafana Cloud publishing requests as pure functions | pendente | |
-| T7 · Add the deploy job, the audit step and Dependabot to CI | pendente | |
-| T8 · Add the health check and the telemetry flag to the container | pendente | |
-| T9 · Flush telemetry after each request with work | pendente | |
-| T10 · Add the patterns cron route and the health route | pendente | |
-| T11 · Cover the cron and health routes with a deterministic eval | pendente | |
-| T12 · Add the production scripts and the production smoke spec | pendente | |
-| T13 · Write DEPLOY.md | pendente | |
-| T14 · Close spec 022 | pendente | |
+| T1 · Add vercel.json and its schema test | concluida | 454bac7 |
+| T2 · Share autorizarCron between the cron routes | concluida | ac16829 |
+| T3 · Turn off prepared statements on the Neon pooler | concluida | 0f792ca |
+| T4 · Add the production column to the env catalog | concluida | 2e9af68 |
+| T5 · Write the smoke checks as pure functions | concluida | bee9ab7 |
+| T6 · Write the Grafana Cloud publishing requests as pure functions | concluida | ba7a0c2 |
+| T7 · Add the deploy job, the audit step and Dependabot to CI | concluida | d56fc4a |
+| T8 · Add the health check and the telemetry flag to the container | concluida | 2f53c20 |
+| T9 · Flush telemetry after each request with work | concluida | 0f9b2f5 |
+| T10 · Add the patterns cron route and the health route | concluida | 5049b6e |
+| T11 · Cover the cron and health routes with a deterministic eval | concluida | d84b6d0 |
+| T12 · Add the production scripts and the production smoke spec | concluida | 28c987f |
+| T13 · Write DEPLOY.md | concluida | 7b4e997 |
+| T14 · Close spec 022 | concluida | (commit de docs) |
+
+> 022 fechada em 2026-11-17 na trilha adiantada: gates 1 a 6, `dup` (0 clones) e `base:check` (49 `a_confirmar`, sem erros) verdes; spec `implemented`; ADRs 0046 a 0048. Pendente: `c5-publico` (022 A2, espera o `c4-site`); o que depende das contas da dona está em `.plans/BLOQUEIOS.md` (base, primeiro deploy, `painel:publicar`, `smoke:completo`, flags do `vercel` CLI). Sem push (pedido da dona). Pendências para a junção na `main`: `test:db` do `UsageLimiter` (021 A4) e do `container.saude()` com Postgres real; linhas de status de `AGENTS.md`, `ROADMAP.md` §0 e `.specs/README.md` ficam com a sessão principal.
+

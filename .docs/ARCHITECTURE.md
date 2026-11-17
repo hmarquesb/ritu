@@ -33,8 +33,8 @@ ROTAS DO SERVIDOR (Next.js na Vercel)
 
 Todas as chamadas de modelo passam pelo ModelRouter (papéis, registro de cota, troca de modelo).
 
-Vercel Cron (diário) → limpeza (demos vencidas, runs e propostas expirados, mensagens com mais de 7 dias, mensagens de run com incômodo do dia anterior, retornos sem resposta há mais de 7 dias, faltas com mais de 30 dias)
-                     → detecção de padrões
+Vercel Cron, 3h em São Paulo → limpeza (demos vencidas, runs e propostas expirados, mensagens com mais de 7 dias, mensagens de run com incômodo do dia anterior, retornos sem resposta há mais de 7 dias, faltas com mais de 30 dias)
+Vercel Cron, 5h em São Paulo → detecção de padrões
 ```
 
 ## 2. Stack
@@ -151,7 +151,7 @@ Rotina e padrões têm funções do core que as rotas de "O que sei sobre você"
 - **Nonce da CSP:** o proxy gera um nonce por pedido, põe na CSP e o repassa à página, que o lê do header e o expõe também em `<meta name="csp-nonce">`.
 - **Entrada das rotas:** corpo validado em zod, com tamanho máximo. Erro para fora nunca mostra stack nem detalhe interno.
 - **Limites:** mensagens, toques e demonstrações têm limites próprios (`BUSINESS.md` §14), contados por conta e por IP em HMAC, na tabela `limites`. Cada pedido de consumo leva o próprio início de janela, e o adaptador do banco confere todos os tetos sob trava, numa transação, e só então soma: se um barra, nenhum sobe. A limpeza diária apaga as janelas de dia anteriores a ontem e as de minuto anteriores a hoje. No modo e2e (`RITU_MODO=e2e`), o header `x-ritu-e2e-teto` (1 a 100) substitui os tetos daquele pedido e o `x-ritu-e2e-cota: esgotada` tira a cota do dia do modelo `decisao`; fora do modo e2e os dois são ignorados.
-- **Cron:** só com `CRON_SECRET`.
+- **Cron e saúde:** `/api/cron/limpeza`, `/api/cron/padroes` e `/api/saude` só com `Authorization: Bearer <CRON_SECRET>`, conferido por `autorizarCron` em tempo constante; sem `CRON_SECRET`, `503 cron_desligado`. A Vercel manda o bearer sozinha nos crons. A saúde (banco, última migração, contagens da base, seed, telemetria, Google, versão) nunca devolve valor de variável, URL nem mensagem de erro.
 - **Servidor MCP:** público e sem login, com limite por IP. Só expõe as tools de leitura da base e do clima; nunca dado de conta.
 - **Dependências:** Dependabot semanal e `npm audit --omit=dev --audit-level=high` na CI.
 
@@ -233,11 +233,14 @@ src/
     runs/                    # estados, checkpoint, etapas, loop, caminhos por intenção, aprovação
     telemetry/               # porta Telemetry e nomes de spans e métricas
   infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth (Auth.js, token, IP em HMAC), otel
-    container.ts             # composition root
+    container.ts             # composition root; saude() e telemetriaLigada
+    saude.ts                 # leitura da saúde (banco, migração, base, seed), sem valor de variável
     e2e/                     # modo e2e: roteiros, clima e relógio fixos e cota por x-ritu-e2e; só o container importa
   app/                       # Next.js: telas e rotas; marca/ é a vitrine do design system
     _lib/                    # rota.ts (sessão, corpo e erros do Ritu viram status), fluxo.ts (rota de fluxo NDJSON)
-    _rotas/                  # corpo das rotas: conversa, fluxo-de-run (mensagem e resposta do run), cron, onboarding, busca
+    _rotas/                  # corpo das rotas: conversa, fluxo-de-run (mensagem e resposta do run), cron (limpeza e padrões), saude, onboarding, busca
+    _apoio/                  # descarregar.ts: telemetry.encerrar() em after() com telemetria ligada
+    api/cron/_autorizar.ts   # autorizarCron, comum aos crons e à saúde
     fonts/                   # Cormorant Garamond e Figtree (woff2 variável, OFL)
   proxy.ts                   # headers de segurança (CSP com nonce) e checagem de Origin
   components/                # UI: só aqui se importa react-aria-components (R5)
@@ -248,7 +251,7 @@ src/
     ritu/                    # telas do Ritu: abas.tsx (barra de navegação) e conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts)
 config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas)
 public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
-scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts
+scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts, env-producao.ts, painel-publicar.ts; ci-workflow.test.ts trava o workflow
   lib/evals/                 # runner do eval com LLM: casos, rodadores, avaliador, rodada, métricas, metas, relatório, histórico e comparação
 data/                        # base ayurvédica em YAML
 seed/                        # perfil de demonstração (demo.yaml)
@@ -265,6 +268,10 @@ observability/
 mcp/                         # servidor MCP
 test/fixtures/
 e2e/                         # Playwright; apoio/ com usarTema e expectSemViolacoes (axe); roteiros/ são os roteiros do modo e2e
+e2e-producao/                # smoke:completo contra a produção (playwright.producao.config.ts), só à mão
+.github/                     # workflows/ci.yml (gates, evals, db, deploy) e dependabot.yml
+vercel.json                  # região gru1, deploy pelo Git desligado, crons
+DEPLOY.md                    # roteiro da dona para ligar as contas de produção
 ```
 
 ## 8. Serviços e planos
@@ -273,8 +280,8 @@ Só planos gratuitos, sem cartão.
 
 | Serviço | Plano | Cuidado |
 |---|---|---|
-| Vercel | Hobby | Tempo máximo de função; as pausas já evitam função longa |
-| Postgres em produção | Neon Free ou Supabase Free | Um projeto para o Ritu |
+| Vercel | Hobby, funções em `gru1` (São Paulo) | Um cron por dia por agendamento, com atraso de até 59 min; tempo máximo de função (as pausas já evitam função longa) |
+| Postgres em produção | Neon Free em `aws-sa-east-1` | Dorme após 5 min parado; 100 CU-h por mês; sem backup próprio além do histórico curto de restauração |
 | Gemini | Gratuito | Cotas por modelo e troca automática (`AI.md` §10). No plano gratuito o provedor pode usar as mensagens: o Aviso inicial e a tela Sobre dizem isso |
 | Grafana Cloud | Free | Retenção curta e limite mensal |
 | Open-Meteo | Gratuito, uso não comercial | Cache de 1 h por cidade |
@@ -285,7 +292,9 @@ Só planos gratuitos, sem cartão.
 | | Dev | Prod |
 |---|---|---|
 | Site | `localhost:3000` | Vercel (`*.vercel.app`) |
-| Banco | Postgres no Docker | Neon ou Supabase |
+| Banco | Postgres no Docker | Neon: a aplicação usa a URL com pooler (`prepare: false`); as migrações, a URL direta |
 | Observabilidade | LGTM no Docker (`localhost:3001`) ou desligada | Grafana Cloud |
 | Google | Cliente OAuth com `localhost` | Mesmo cliente, com a URL de produção |
 | LLM | Chave do projeto de desenvolvimento; é a que roda os evals | Chave do projeto de produção |
+
+**Deploy** (ADR 0046). O deploy pelo Git da Vercel fica desligado; quem sobe é o job `deploy` da CI, a cada push na `main` (ou `workflow_dispatch`), só depois dos jobs `gates` e `db` verdes, no ambiente `producao` do GitHub (restrito à `main`, com os segredos `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `DATABASE_URL_DIRETA` e `CRON_SECRET`, e a variável `SITE_URL`), um de cada vez. Passos: `base:check -- --producao` → `env:producao` → `db:migrate` pela URL direta → `vercel deploy --prod` com `RITU_VERSAO` igual ao sha → `smoke`. Se o smoke falha depois do deploy, `vercel rollback` volta ao deploy anterior e o job fica vermelho. Toda migração funciona com o código que já está no ar. O roteiro para ligar as contas é o `DEPLOY.md`.

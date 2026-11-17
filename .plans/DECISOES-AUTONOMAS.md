@@ -402,3 +402,17 @@
 - **Decidido:** nada muda. A documentação de request headers diz que a Vercel sobrescreve o `X-Forwarded-For` e não repassa IP externo, para impedir spoofing (exceção: Trusted Proxy, só no plano Enterprise).
 - **Por quê:** a confiança da 017 no primeiro endereço vale em produção.
 - **Como desfazer:** —
+
+## 022 · A5 · `yaml` em `scripts/`
+
+- **Faltava:** a spec manda o teste do workflow ler o YAML com `yaml`, e o `painel:publicar` lê as regras de `observability/grafana/alerting/ritu.yaml`. A regra R5 do teste de arquitetura só deixa importar `yaml` em `src/infra/knowledge/`.
+- **Decidido:** `scripts/` passa a ser casa permitida do `yaml` (T7, em `src/architecture.test.ts`). O produto (`src/`) continua só com `src/infra/knowledge/`. A ADR sai no fechamento da 022.
+- **Por quê:** `scripts/` é ferramenta de quem desenvolve e opera; passar o YAML pelo container só para ler um arquivo de CI seria indireção sem ganho.
+- **Como desfazer:** tirar `scripts/` da lista e ler os arquivos por uma função exportada de `src/infra/knowledge/`.
+
+## 022 · A6 · `google` da saúde sem importar `auth/next`
+
+- **Faltava:** a saúde usa `googleDisponivel()` (`src/infra/auth/next.ts`), mas importar esse módulo no container cria ciclo, e o import dinâmico quebra no Vitest.
+- **Decidido:** o container repete a regra (`AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET` presentes) com `optionalEnv` (T8).
+- **Por quê:** evita o ciclo sem mexer na autenticação.
+- **Como desfazer:** mover a regra para um módulo sem dependência de `next-auth` e usá-lo nos dois lugares.

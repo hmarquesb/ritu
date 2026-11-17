@@ -27,10 +27,10 @@
 | [ ] Projeto de **desenvolvimento** no AI Studio + chave | Construção e evals | 1 | `GEMINI_API_KEY` |
 | [ ] Segredos locais (`openssl rand -base64 32`) | Sessão, HMAC do IP, cron | 1 e 3 | `AUTH_SECRET`, `IP_HMAC_SECRET`, `CRON_SECRET` |
 | [ ] Cliente OAuth do Google com `http://localhost:3000` | Login | 3 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` |
-| [ ] Projeto de **produção** no AI Studio + chave | Produção | 4 | `GEMINI_API_KEY` na Vercel |
-| [ ] Banco de produção (Neon ou Supabase) | Produção | 4 | `DATABASE_URL` na Vercel |
-| [ ] Projeto na Vercel ligado ao repositório | Produção | 4 | — |
-| [ ] Grafana Cloud Free + token OTLP | Traces de produção | 4 | `OTEL_EXPORTER_OTLP_*` na Vercel |
+| [ ] Projeto de **produção** no AI Studio + chave | Produção | 4 | `GEMINI_API_KEY` na Vercel (`DEPLOY.md` §2) |
+| [ ] Banco de produção (Neon Free, São Paulo) | Produção | 4 | `DATABASE_URL` na Vercel e `DATABASE_URL_DIRETA` no GitHub (`DEPLOY.md` §3) |
+| [ ] Projeto na Vercel ligado ao repositório | Produção | 4 | Variáveis na Vercel e segredos do ambiente `producao` no GitHub (`DEPLOY.md` §4 e §7) |
+| [ ] Grafana Cloud Free + token OTLP | Traces de produção | 4 | `OTEL_EXPORTER_OTLP_*` na Vercel; `GRAFANA_*` no `.env.local` (`DEPLOY.md` §6) |
 
 - [ ] Conferir no AI Studio se as cotas de `AI.md` §10 continuam as mesmas. Mudou: atualizar a tabela de lá.
 

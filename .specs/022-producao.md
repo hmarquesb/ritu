@@ -1,6 +1,6 @@
 ---
 title: Produção
-status: approved
+status: implemented
 entrega: 4
 created: 2026-11-15
 ---

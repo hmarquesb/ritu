@@ -38,6 +38,8 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 
 `PREPARO.md` (raiz) é a lista da dona antes de a construção começar. Agentes só o leem para conferir pré-condições.
 
+`DEPLOY.md` (raiz) é o roteiro da dona para ligar as contas de produção (Gemini, Neon, Vercel, Google, Grafana Cloud, GitHub). Agentes não o seguem: tudo nele depende de conta da dona.
+
 ## Onde fica cada coisa
 
 | Pasta | Conteúdo |
@@ -83,6 +85,10 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |
 | `npm run painel:gerar` | Gera `observability/dashboards/ritu.json` e `observability/grafana/alerting/ritu.yaml` a partir de `scripts/lib/painel.ts`. Os gerados não se editam à mão; um teste trava o gerado |
 | ⚠️ `npm run painel:check` | Confere um Grafana no ar (o local, por padrão): painel e regras presentes e, painel por painel, se há dados. Sai com 1 se falta painel ou regra e com 2 se o Grafana não responde |
+| ⚠️ `npm run env:producao` | Lê na API da Vercel só os nomes das variáveis de produção e imprime `presente`, `ausente`, `proibida` ou `—` por variável do catálogo. Sai com 1 se falta obrigatória ou há proibida, e com 2 se a API não responde. Nunca imprime valor. Precisa de `VERCEL_TOKEN`, `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID` |
+| ⚠️ `npm run smoke -- <url>` | Smoke de produção sem LLM: espera a versão `RITU_VERSAO_ESPERADA` (até 120 s), confere saúde, página com o aviso, headers e proteções (`401` do cron, `403` sem `Origin`). Sai com 1 no primeiro grupo que falha. Precisa de `CRON_SECRET`; a URL vem do argumento ou de `SITE_URL`. Roda no job `deploy` da CI |
+| ⚠️ `npm run smoke:completo` | Playwright contra `SITE_URL` (`playwright.producao.config.ts`, projeto `celular`): demonstração, Aviso, mensagem sugerida e resposta com "Não é orientação médica", com LLM de produção. Só à mão |
+| ⚠️ `npm run painel:publicar` | Publica no Grafana Cloud a pasta `Ritu`, o painel, as cinco regras, o ponto de contato `ritu-email` e a política. Imprime `criado`, `atualizado` ou `sem mudança` por item; nunca o e-mail nem o token. Precisa de `GRAFANA_URL`, `GRAFANA_TOKEN` e `GRAFANA_ALERTA_EMAIL` |
 | `docker compose up -d` | Postgres (`5432`) e Grafana LGTM (`3001`, OTLP `4317`/`4318`), numa tag fixa, com o painel e as regras de alerta provisionados |
 
 ## Skills

@@ -31,7 +31,7 @@ O teste de arquitetura garante a tabela.
 - **Toda chamada de modelo passa pelo `ModelRouter`** (`AI.md` §10). Nenhum código escolhe modelo por conta própria nem chama o SDK direto.
 - **Números ajustáveis ficam em `config/`** (cotas, faixas de clima, pesos da ordenação, limites, durabilidade), nunca espalhados no código.
 - **Prompts em arquivo** (`src/core/agents/prompts/`), com versão.
-- **Telemetria pela porta `Telemetry`**, com os nomes de `OBSERVABILITY.md`. Nunca texto da pessoa, prompt, saída do agente ou segredo em span, métrica ou log.
+- **Telemetria pela porta `Telemetry`**, com os nomes da lista fechada de `src/core/telemetry/nomes.ts` (`OBSERVABILITY.md` §3): contador, histograma e medidor tipados pelo registro, rótulos só os declarados (o fake recusa os outros), e `log(codigo, campos)` com o nível vindo da lista. Nome novo entra em `nomes.ts` antes de ser emitido. Nunca texto da pessoa, prompt, saída do agente ou segredo em span, métrica ou log.
 - **Tempo pela porta `Clock`**, nunca `new Date()` no core.
 - **Segredos** só por variável de ambiente, lidos em `src/infra/env.ts`. O `.env.example` lista todas: `DATABASE_URL`, `GEMINI_API_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `IP_HMAC_SECRET`, `CRON_SECRET`, `TESTER_IDS`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_SERVICE_NAME`.
 - **Identificador de modelo não é segredo:** fica em `config/llm-cotas.ts`, versionado (`AI.md` §10), nunca em variável de ambiente.

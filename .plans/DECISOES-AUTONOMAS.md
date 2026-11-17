@@ -178,3 +178,24 @@
 - **Decidido:** vale a tabela da T3. Em `expectativas-c3.test.ts`, a entrada 18 passa a esperar `conversa`; o s21 fica sem marca (o `falso_alerta` é do s20). `pergunta` e `proposta` saíram dos casos (ninguém os lia).
 - **Por quê:** a tabela é a classificação da spec; o campo antigo era do runner apagado.
 - **Como desfazer:** dar ao s18 `familias: ["conversa", "linguagem"]` e voltar a entrada 18 para `linguagem`.
+
+## 015 · T11 · biblioteca do painel:check
+
+- **Faltava:** o contrato só define as saídas 1 (painel ou regras faltando) e 2 (Grafana fora); não dizia o que fazer com séries ausentes ou sobrando, resposta não 200 da consulta de dados, nem falha ao listar séries.
+- **Decidido:** séries ausentes ou sobrando são relatadas, mas não mudam o código de saída (0); painel cuja consulta não volta 200 conta como "sem dados"; falha ao listar séries vira lista vazia (todas as esperadas saem como ausentes); "`ritu_*` sem estar no painel" é série existente cujo nome não aparece em nenhuma expressão de painel; as séries esperadas derivam de `METRICAS` (histogramas com `_bucket`, `_count`, `_sum`).
+- **Por quê:** o `painel:check` é conferência para a dona, não gate; sem dados é normal num LGTM recém-subido.
+- **Como desfazer:** em `scripts/lib/painel-check.ts`, devolver 1 quando houver série ausente; ajustar `painel-check.test.ts`.
+
+## 015 · T10 · YAML das regras de alerta sem a biblioteca `yaml`
+
+- **Faltava:** o contrato da T10 mandava gerar o YAML das regras com a biblioteca `yaml`, mas a regra R5 do teste de arquitetura só permite `yaml` em `src/infra/knowledge/`.
+- **Decidido:** vale a regra de arquitetura. `gerarAlertas` escreve o arquivo de provisionamento como JSON indentado (JSON é YAML válido; o Grafana lê igual), sem a biblioteca.
+- **Por quê:** não abre exceção numa regra de camada sem ADR; o conteúdo e o determinismo ficam iguais.
+- **Como desfazer:** acrescentar `scripts/lib/painel-grafana.ts` à lista de `yaml` em `src/architecture.test.ts` (com ADR) e voltar a usar `stringify` do `yaml`.
+
+## 015 · T12 · arquivos do painel gerados fora do Biome
+
+- **Faltava:** a T12 grava `observability/dashboards/ritu.json` e `observability/grafana/alerting/ritu.yaml` com `JSON.stringify(…, null, 2)`, e o Biome reformata (array curto numa linha; o `.yaml` é lido como YAML).
+- **Decidido:** os dois arquivos gerados saem do Biome em `biome.json` (`files.includes`), só eles. O teste da T12 trava que o gerado bate com a definição.
+- **Por quê:** mesmo precedente do `evals/resultados/historico.json` (014 T17): arquivo gerado, travado por teste, não se formata à mão.
+- **Como desfazer:** tirar as duas linhas de `biome.json` e fazer o `painel:gerar` formatar a saída com o Biome.

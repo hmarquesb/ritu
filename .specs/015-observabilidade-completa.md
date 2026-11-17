@@ -1,6 +1,7 @@
 ---
 title: Observabilidade completa
-status: approved
+status: implemented
+implemented: a79f5ed
 entrega: 2
 created: 2026-11-15
 ---

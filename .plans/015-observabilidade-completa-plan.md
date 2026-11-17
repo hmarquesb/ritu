@@ -574,6 +574,7 @@ Lacunas e contradições entre a spec e o código, com a opção mais conservado
 - pronto quando: com `docker compose up -d`, o painel `Ritu` (uid `ritu`) e as cinco regras da pasta `Ritu` aparecem sem passo manual; `painel:check` sai com 0.
 - fora: notificação, ponto de contato, política (nada disso é configurado).
 
+- acrescentado (implementador da T10): confira no Grafana da imagem que o painel gerado aceita `schemaVersion: 39`; que o painel de rastro (TraceQL `{ name = "run" }`, com uma transformação `organize`) mostra as colunas `run.caminho`, `run.status`, `run.passos` e a duração; e que o grupo de regras com `orgId: 1` é provisionado. Se algo não aparecer, relate (não mude `scripts/lib/painel-grafana.ts` sem dizer).
 ### T18 · Test privacy through the real OTel adapter and the Mastra runtime
 - nivel: nucleo
 - objetivo: provar, pelo adaptador OTel de verdade com exportadores em memória, que um cenário e uma chamada pelo runtime da Mastra exportam só nomes da lista fechada e nenhum canário.
@@ -629,6 +630,73 @@ Lacunas e contradições entre a spec e o código, com a opção mais conservado
 - pronto quando: `npm run eval:det` inteiro verde, inclusive `mapa.eval.ts`.
 - fora: código de produto.
 
+### C4 · Remove the clone in the weather tools
+- nivel: mecanica
+- objetivo: `npm run dup` voltar a 0 clones. O jscpd acusa `src/core/agents/tools/clima.ts` [62:27-74:27] x [88:35-98:48]: o trecho de `clima.agora` e o de `clima.proximas_horas` ficaram iguais (inclusive a marcação `cache.hit: false` em `sem_cidade` posta pela C3).
+- arquivos: `src/core/agents/tools/clima.ts` (e `clima.test.ts` só se um teste precisar mudar de import)
+- depende de: C3
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos: extraia o trecho comum para uma função interna do próprio arquivo (sem export novo), usada pelas duas tools. Comportamento idêntico: mesmas saídas, mesmos status, mesmos atributos de span (`cache.hit: false` em `sem_cidade`). Nenhuma assinatura exportada muda.
+- testes primeiro: nenhum novo; os de `clima.test.ts` e o `evals/det/telemetria/cobertura.eval.ts` têm de continuar passando sem mudança.
+- comandos: `npm run dup` (0 clones), `npx vitest run src/core/agents/tools`, `npx vitest run --config vitest.eval.config.ts evals/det/telemetria/cobertura.eval.ts evals/det/clima`, `npm run typecheck`, `rtk bypass npm run lint`
+- pronto quando: `npm run dup` com 0 clones e os testes acima verdes.
+- fora: o resto de `src/core/agents/tools/`; `src/core/weather/`.
+
+### C3 · Fill the telemetry attributes the coverage eval found missing
+- nivel: nucleo
+- objetivo: fechar as três lacunas de produto que o eval de cobertura da T19 (`evals/det/telemetria/cobertura.eval.ts`, ainda sem commit, já no working tree) achou, para ele passar sem mudar o contrato.
+- arquivos: `src/core/runs/loop.ts` e `src/core/runs/loop.test.ts`; `src/core/agents/tools/clima.ts` e `src/core/agents/tools/clima.test.ts`; para o item 2, o arquivo onde o span `run` de conversa deixa de receber `prompt.versao` (provável `src/core/runs/run-service.ts`, `src/core/conversation/conversar.ts` ou `src/core/agents/companion/*`) e o teste dele. Liste no relatório exatamente o que tocou.
+- depende de: T4 a T7, T19 (o eval no working tree)
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  1. `llm.chamada` aberto pelo loop (`chamarModelo` em `src/core/runs/loop.ts`, hoje aberto com `{}`) leva sempre `llm.papel` (o papel da chamada, `decisao` no acompanhante) e `llm.troca_de_modelo` (`false` quando não houve troca; `true` quando houve, como hoje), igual ao que `src/core/llm/chamar.ts` já faz. Os outros atributos obrigatórios de `SPANS["llm.chamada"]` (`gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `llm.tentativas`) também têm de estar no span sem `falha`.
+  2. Todo span `run` cujo `run.caminho` é `acompanhante` leva `prompt.versao` (a versão do prompt do acompanhante), também nos runs de conversa (os que passam por `conversar`, inclusive os que terminam em `waiting_for_input`) e no caminho em que `dentroDoSpan` reaproveita o span aberto. Ache onde o atributo é posto hoje no run direto do acompanhante e faça o mesmo valer para a conversa; não duplique a constante da versão.
+  3. `tool.chamada` de `clima.agora` e `clima.proximas_horas` leva sempre `cache.hit`: quando a tool volta antes de consultar a fonte (`sem_cidade`, ou qualquer saída antecipada), marca `cache.hit: false` no span atual pela porta (`atribuirAoSpanAtual`).
+  - Nada de texto da pessoa em atributo; rótulos e atributos só de `ATRIBUTOS_PERMITIDOS`.
+- testes primeiro: um teste por item no arquivo de teste vizinho (loop: span `llm.chamada` com `llm.papel: "decisao"` e `llm.troca_de_modelo: false`; conversa: span `run` com `prompt.versao`; clima: `sem_cidade` com `cache.hit: false`).
+- comandos: `npm run typecheck`, `rtk bypass npm run lint`, `npx vitest run --config vitest.eval.config.ts evals/det/telemetria/cobertura.eval.ts` (tem de passar 5 de 5), `npm test`, `npm run eval:det` (esperado: só `mapa.eval.ts` acusando evals novos sem linha)
+- pronto quando: os testes novos passam e o eval de cobertura passa inteiro, sem mudar `cobertura.eval.ts`.
+- fora: `evals/det/telemetria/cobertura.eval.ts`, `test/fixtures/cenarios/*`, `src/core/telemetry/nomes.ts`.
+
+### C2 · Show the run attributes as columns in the trace panel
+- nivel: mecanica
+- objetivo: o painel de rastro (linha "Rastro", fonte `traces`) mostrar `run.caminho`, `run.status`, `run.passos` e a duração de cada span `run`. Conferido pela T17 no Grafana 13.3.0 da imagem `grafana/otel-lgtm:0.41.0`: com `{ name = "run" }` e `tableType: "traces"` as colunas são só traceID, startTime, traceService, traceName e traceDuration; com `tableType: "spans"` e o `select`, as três colunas aparecem.
+- arquivos: `scripts/lib/painel.ts` (só a consulta do painel de rastro), `scripts/lib/painel-grafana.ts` (só o `tableType` e, se preciso, os nomes da transformação `organize`), `scripts/lib/painel-grafana.test.ts`, `observability/dashboards/ritu.json` (regerado com `npm run painel:gerar`)
+- depende de: T12, T17
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos:
+  - consulta TraceQL do painel de rastro: `{ name = "run" } | select(span.run.caminho, span.run.status, span.run.passos)`
+  - alvo Tempo do painel: `queryType: "traceql"`, `tableType: "spans"`, `limit: 20` (o resto como está)
+  - transformação `organize`: ordena as colunas `run.caminho`, `run.status`, `run.passos` e a duração; use os nomes de campo que o Grafana devolve no modo `spans` (com o `select`, os campos vêm como `span.run.caminho` etc. ou `run.caminho`; se não der para saber sem o Grafana, mantenha os nomes de hoje e diga no relatório)
+  - nada mais muda em `painel.ts`, nos outros painéis ou nos alertas
+- testes primeiro: em `painel-grafana.test.ts`, o teste do painel de rastro passa a esperar a consulta nova e `tableType: "spans"`.
+- comandos: `npm run painel:gerar` (duas vezes, sem diferença na segunda), `npx vitest run scripts/lib`, `npm run typecheck`, `rtk bypass npm run lint`
+- pronto quando: o teste de `painel.test.ts` que trava o gerado passa com o `ritu.json` novo; as consultas continuam só citando `METRICAS` nos painéis de métrica.
+- fora: alertas, `ritu.yaml`, provisionamento, `docker-compose.yml`.
+
+### C1 · Declare the OTel resources dependency and keep Node-only imports out of the Edge instrumentation
+- nivel: nucleo
+- objetivo: corrigir os dois avisos deixados pela T13: `@opentelemetry/resources` importado sem estar no `package.json`, e o build do Next avisando que `node:crypto` (em `src/infra/otel/opcoes.ts`) não é suportado no Edge, porque `src/instrumentation.ts` também é compilado como "Edge Instrumentation".
+- arquivos: `package.json`, `package-lock.json`, `src/instrumentation.ts`, `src/instrumentation.test.ts`; `src/infra/otel/opcoes.ts` e `src/infra/otel/opcoes.test.ts` só se preciso
+- depende de: T13
+- leitura: nenhuma
+- skills: next-best-practices
+- referencia: nenhuma
+- contratos:
+  - `npm install --save-exact @opentelemetry/resources@<a versão hoje resolvida em node_modules/@opentelemetry/resources/package.json>` (não suba nem desça a versão; confira com `npm ls @opentelemetry/resources` que fica uma cópia só, a mesma que o `@opentelemetry/sdk-node` usa). Se o `package.json` usa faixa (`^`) nas outras dependências `@opentelemetry/*`, siga o mesmo estilo delas em vez de `--save-exact`.
+  - `register()` em `src/instrumentation.ts`: além de voltar cedo sem `OTEL_EXPORTER_OTLP_ENDPOINT` (como hoje), só importa `@vercel/otel` e `./infra/otel/opcoes` quando `process.env.NEXT_RUNTIME === "nodejs"`; no Edge, volta sem fazer nada. O import de `opcoes` continua dinâmico (dentro de `register`). O comportamento no Node não muda.
+  - Se, depois disso, o build ainda avisar de `node:crypto`, troque em `opcoes.ts` o `import { randomUUID } from "node:crypto"` por `globalThis.crypto.randomUUID()` (mesmo uuid por módulo; o teste de formato continua valendo).
+- testes primeiro: em `src/instrumentation.test.ts`, caso novo: com endpoint e `NEXT_RUNTIME = "edge"`, `register()` não chama `registerOTel` nem importa `opcoes` (mesmo espião dos testes de hoje); com endpoint e `NEXT_RUNTIME = "nodejs"`, chama como hoje. Guarde e restaure as variáveis de ambiente.
+- comandos: `npm run typecheck`, `rtk bypass npm run lint`, `npx vitest run src/instrumentation.test.ts src/infra/otel src/architecture.test.ts`, `npm run build` (confira que a saída não tem mais o aviso de `node:crypto` nem de Edge para `opcoes.ts`)
+- pronto quando: o `package.json` declara `@opentelemetry/resources`; `npm ls @opentelemetry/resources` sem duplicata nem `invalid`; o build sai com 0 e sem o aviso; os testes passam.
+- fora: o resto do OTel; outras dependências; `next.config`.
+
 ## Ondas
 
 | Onda | Tarefas | Por quê |
@@ -636,10 +704,13 @@ Lacunas e contradições entre a spec e o código, com a opção mais conservado
 | 1 | T1, T2 | Sem dependência; `nomes.ts` e `config/` numa, a porta `votar` e os stores na outra |
 | 2 | T3 | Muda a porta `Telemetry`, usada em todo o core: roda sozinha |
 | 3 | T4, T5, T8, T9, T13 | Dependem só de T1 a T3; arquivos distintos (`run-service`, cache do clima e `montar.ts`, toques, `scripts/lib/painel.ts`, `src/infra/otel/opcoes.ts` e `instrumentation`) |
+| 3b | C1 | Correção da T13 (dependência declarada e aviso de Edge no build); mexe em `package.json`: roda sozinha |
 | 4 | T6 | Muda `usou` e o `Deps` de `chamarComPapel` e `chamarApoio`, usados por vários agentes: roda sozinha |
 | 5 | T7, T10, T11, T14, T15 | T7 depois da T6 (`julgar.ts`); T10 e T11 da T9; T14 da T5 (`montar.ts`); T15 da T8; arquivos distintos |
 | 6 | T12 | Mexe em `package.json`: roda sozinha |
 | 7 | T16, T17, T18, T19 | T16 depende de T13 e T14; T17 de T12; T18 de T4 a T7 e T14; T19 de T4 a T8; arquivos distintos (T19 só cria arquivos em `test/fixtures/cenarios/` e o registro novo em `index.ts`, que nenhuma outra da onda toca) |
+| 7b | C2 | Correção do painel de rastro achada pela T17; mexe em `scripts/lib/painel*.ts` e no `ritu.json` gerado |
+| 7c | C3 (depois T19 de novo ao verificador) | Lacunas de produto achadas pelo eval de cobertura da T19 |
 | 8 | T20 | Precisa dos três evals e do teste do painel para fechar o mapa |
 
 ## Fechamento
@@ -658,3 +729,10 @@ O orquestrador, depois da T20:
 6. Marcar a spec `implemented`, com o hash.
 7. Notas para o relatório da entrega 2: D1 (`padroes_conta_falhou` em vez do nome da spec), D3 (espelho), D4 (latência 0 nos cenários e no `eval:llm`: o painel da rodada do `c3` não terá latência), D5, D10, D14 (tag do LGTM), D15 (se ocorreu); runs fechados por `mudarStatus` (cancelado na abertura de outro, ou `done` de um bloco abandonado) não entram em `ritu_run_passos`; o que a T17 achou de diferente na imagem.
 8. Fechamento da entrega 2, logo depois desta spec (não é desta spec): ⚠️ `npm run eval:llm -- --checkpoint c3-confiavel` com `OTEL_EXPORTER_OTLP_ENDPOINT` ligado e o LGTM no ar; o relatório do portão 2 leva o `painel:check` e um print do painel depois da rodada.
+
+### Registro do fechamento (2026-11-16)
+
+- Verificador: gates 1 a 6 verdes (2709 testes, 1246 evals det, e2e 47 passaram e 9 puladas), `dup` 0 clones, `test:db` 121 testes, `painel:gerar` sem diff.
+- `demo --cenario frio-agitada --esgotar decisao` com OTLP: `painel:check` saiu 0; "Trocas de modelo" com dados (decisao → `gemini-3.1-flash-lite`); log `troca_de_modelo` em "Avisos e erros". Print em `.plans/015-painel.png` (janela de 5600 px de altura: o Grafana só desenha os painéis visíveis).
+- `painel:check` imprime "Série fora do painel" para `_count`/`_sum`/`_bucket` de histogramas que o painel não usa diretamente; informativo, não falha.
+- Nota para o relatório: em "Runs recentes", `run.status` aparece como `running` (atributo gravado na abertura do span, não o status final).

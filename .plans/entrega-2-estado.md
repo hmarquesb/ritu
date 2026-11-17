@@ -202,26 +202,30 @@
 | 014 | T18 · Add the deterministic eval map | mecanica | concluida | 7d21d0a |
 | 014 | T19 · Add the LLM case registry eval | mecanica | concluida | 5948486 |
 | 014 | T20 · Add the evals CI job with the per-group summary | mecanica | concluida | e6730e7 |
-| 015 | T1 · Rewrite the telemetry names as typed registries and add the telemetry config | mecanica | pendente | |
-| 015 | T2 · Return the previous vote from votar | mecanica | pendente | |
-| 015 | T3 · Type the telemetry port by metric kind, propagate run.id to logs and enforce declared labels | nucleo | pendente | |
-| 015 | T4 · Measure each run segment and close the run with steps and logs | nucleo | pendente | |
-| 015 | T5 · Mark cache hits and log weather outages in the weather cache | mecanica | pendente | |
-| 015 | T6 · Measure model and tool latency, and log model swaps, missing models and model errors | nucleo | pendente | |
-| 015 | T7 · Count judge verdicts, log safe answers and tag the run span with the chosen path | mecanica | pendente | |
-| 015 | T8 · Add the vote touch | mecanica | pendente | |
-| 015 | T9 · Add the dashboard and alert definitions | mecanica | pendente | |
-| 015 | T10 · Add the Grafana dashboard and alert generators | mecanica | pendente | |
-| 015 | T11 · Add the painel:check library | mecanica | pendente | |
-| 015 | T12 · Add painel:gerar and painel:check, generate the dashboard files and lock them | mecanica | pendente | |
-| 015 | T13 · Build the OTel exporter options and turn on metrics and logs in Next | nucleo | pendente | |
-| 015 | T14 · Add the telemetry mirror for scenarios | nucleo | pendente | |
-| 015 | T15 · Add the vote eval | mecanica | pendente | |
-| 015 | T16 · Turn on OTel in demo and eval:llm | mecanica | pendente | |
-| 015 | T17 · Provision the dashboard and alerts in the local LGTM | mecanica | pendente | |
-| 015 | T18 · Test privacy through the real OTel adapter and the Mastra runtime | nucleo | pendente | |
-| 015 | T19 · Add the telemetry coverage eval | mecanica | pendente | |
-| 015 | T20 · Replace the companion privacy eval by the full one and map the new evals | mecanica | pendente | |
+| 015 | T1 · Rewrite the telemetry names as typed registries and add the telemetry config | mecanica | concluida | 6c4a700 |
+| 015 | T2 · Return the previous vote from votar | mecanica | concluida | 05ebf27 |
+| 015 | T3 · Type the telemetry port by metric kind, propagate run.id to logs and enforce declared labels | nucleo | concluida | c25e2dd |
+| 015 | T4 · Measure each run segment and close the run with steps and logs | nucleo | concluida | 28d341b |
+| 015 | T5 · Mark cache hits and log weather outages in the weather cache | mecanica | concluida | 21b9dab |
+| 015 | T6 · Measure model and tool latency, and log model swaps, missing models and model errors | nucleo | concluida | dfddb89 |
+| 015 | T7 · Count judge verdicts, log safe answers and tag the run span with the chosen path | mecanica | concluida | 748b7b7 |
+| 015 | T8 · Add the vote touch | mecanica | concluida | 69d7ff2 |
+| 015 | T9 · Add the dashboard and alert definitions | mecanica | concluida | 7d1044c |
+| 015 | T10 · Add the Grafana dashboard and alert generators | mecanica | concluida | 5770362 |
+| 015 | T11 · Add the painel:check library | mecanica | concluida | 2d61e1f |
+| 015 | T12 · Add painel:gerar and painel:check, generate the dashboard files and lock them | mecanica | concluida | 41775eb |
+| 015 | T13 · Build the OTel exporter options and turn on metrics and logs in Next | nucleo | concluida | de3e93d |
+| 015 | T14 · Add the telemetry mirror for scenarios | nucleo | concluida | a2651e2 |
+| 015 | T15 · Add the vote eval | mecanica | concluida | a1275bb |
+| 015 | T16 · Turn on OTel in demo and eval:llm | mecanica | concluida | 97017c4 |
+| 015 | T17 · Provision the dashboard and alerts in the local LGTM | mecanica | concluida | ab954b5 |
+| 015 | T18 · Test privacy through the real OTel adapter and the Mastra runtime | nucleo | concluida | 63397e3 |
+| 015 | T19 · Add the telemetry coverage eval | mecanica | concluida | 1f98e66 |
+| 015 | T20 · Replace the companion privacy eval by the full one and map the new evals | mecanica | concluida | 62f33cc |
+| 015 | C1 · Declare the OTel resources dependency and keep Node-only imports out of the Edge instrumentation | nucleo | concluida | f06fa80 |
+| 015 | C2 · Show the run attributes as columns in the trace panel | mecanica | concluida | 6bac014 |
+| 015 | C3 · Fill the telemetry attributes the coverage eval found missing | nucleo | concluida | ba5755f |
+| 015 | C4 · Remove the clone in the weather tools | mecanica | concluida | a79f5ed |
 
 ## Notas para o relatório (vindas da passagem de 2026-11-16)
 
@@ -248,3 +252,7 @@ Nenhum erro inesperado.
 - Gates 1 a 6 e `dup` verdes no repositório inteiro: lint, typecheck, test (2594), eval:det (1080), build, e2e (47 passaram, 9 pulados), dup 0 clones. `--listar`: 12, 54, 84.
 - ADR 0041. Docs: `QA.md`, `RULES.md` §6, `OBSERVABILITY.md` §4, `ARCHITECTURE.md` §7, `AGENTS.md`.
 - Notas para o relatório: decisões D1 a D21 do plano (em especial D4, `--casos` saiu; D13, `c2` transcrito com os números juntos; D21, ordem dos casos por id); evals de lacuna da T18; a fumaça acima; decisões autônomas da T15 e da T16.
+- 015 onda 5: commitada com `eval:det` vermelho só em `mapa.eval.ts` (o `voto.eval.ts` da T15 sem linha no mapa), como o plano prevê; a T20 fecha o mapa. A T10 foi reprovada uma vez pelos gates (R5, `yaml` fora de `src/infra/knowledge/`) e corrigida (decisão em DECISOES-AUTONOMAS).
+- 015 T18: o teste de privacidade exige span exportado, mas não exige ponto de métrica nem log exportado (se não houvesse, as checagens deles passariam vazias). Observação do verificador, não bloqueou.
+- 015 C3: `prompt.versao` no span `run` retomado (`run-service.ts`, `comSpanDoRun`) só é coberto pelo eval de cobertura; falta um teste curto em `run-service.test.ts` (recomendação do verificador, não bloqueou).
+- 015 T19: `cobertura.eval.ts` leva de 92 s a 470 s com a máquina sob carga (roda todos os cenários); vale olhar o tempo na CI.

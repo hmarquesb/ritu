@@ -232,7 +232,10 @@ evals/
   resultados/                # <checkpoint>.md e .json, historico.json
   local/                     # andamento e falhas da rodada; fora do git
   COMPARACAO.md              # gerado de resultados/historico.json
-observability/               # painel e alertas gerados, provisionamento do Grafana
+observability/
+  dashboards/ritu.json       # painel, gerado por npm run painel:gerar
+  grafana/alerting/ritu.yaml # regras de alerta, geradas por npm run painel:gerar
+  grafana/dashboards.yaml    # provedor do painel no LGTM, escrito à mão
 mcp/                         # servidor MCP
 test/fixtures/
 e2e/                         # Playwright; apoio/ com usarTema e expectSemViolacoes (axe)

@@ -16,9 +16,13 @@ const textoDaComparacao = readFileSync(caminho("../../../evals/COMPARACAO.md"), 
 const historico: Historico = historicoSchema.parse(JSON.parse(textoDoHistorico))
 
 describe("evals/resultados/historico.json", () => {
-  it("valida com historicoSchema e tem as duas entradas na ordem de checkpoints.ts", () => {
+  it("valida com historicoSchema e tem as três entradas na ordem de checkpoints.ts", () => {
     expect(historico.versao).toBe(1)
-    expect(historico.checkpoints.map((e) => e.checkpoint)).toEqual(["c1-base", "c2-conversa"])
+    expect(historico.checkpoints.map((e) => e.checkpoint)).toEqual([
+      "c1-base",
+      "c2-conversa",
+      "c3-confiavel",
+    ])
   })
 
   it("tem toda métrica de DEFINICAO_DAS_METRICAS em cada entrada", () => {

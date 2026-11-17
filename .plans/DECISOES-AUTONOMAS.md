@@ -217,6 +217,14 @@
 - **Por quê:** mesmo precedente do `evals/resultados/historico.json` (014 T17): arquivo gerado, travado por teste, não se formata à mão.
 - **Como desfazer:** tirar as duas linhas de `biome.json` e fazer o `painel:gerar` formatar a saída com o Biome.
 
+## Entrega 2 · fechamento · `c3-confiavel.json` reprovado no lint da CI (2026-11-16)
+
+- **Faltava:** o `eval:llm` grava `evals/resultados/<checkpoint>.json` com `JSON.stringify(…, null, 2)`, e o Biome quer arrays curtos numa linha; a CI do commit de fechamento ficou vermelha só no lint. É o primeiro `.json` de resultado no git (o `historico.json` já está fora do Biome, 014 T17).
+- **Decidido:** formatar o arquivo gerado com o Biome (só espaços; mesmo conteúdo). Não mexi em `biome.json` nem no runner no fechamento.
+- **Por quê:** correção mínima, sem mudar configuração fora de uma tarefa verificada.
+- **Pendente (volta a cada checkpoint):** tirar `evals/resultados/*.json` do Biome, como o `historico.json`, ou fazer o runner formatar a saída. Vale uma tarefa de correção.
+- **Desfazer:** regravar o arquivo pelo runner.
+
 ## 018 · A1 · RadioGroup e ToggleButton na base
 
 - **Faltava:** a spec usa `RadioGroup` (pergunta de casa) e `ToggleButton` (👍/👎), que a 016 não criou.

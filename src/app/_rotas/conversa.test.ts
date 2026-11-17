@@ -158,6 +158,17 @@ describe("rotasDaConversa", () => {
       expect(await r.json()).toEqual({ erro: "aprovacao_invalida" })
     })
 
+    it("400 aprovacao_invalida com mais linhas que o máximo", async () => {
+      const { rotas, run, container } = await comConta()
+      const linhas = Array.from(
+        { length: container.config.aprovacao.maxLinhas + 1 },
+        (_, i) => `linha-${i}`,
+      )
+      const r = await rotas.aprovacao(pedido({ aprovadas: linhas }), noRun(run.id))
+      expect(r.status).toBe(400)
+      expect(await r.json()).toEqual({ erro: "aprovacao_invalida" })
+    })
+
     it("400 com corpo inválido", async () => {
       const { rotas, run } = await comConta()
       const r = await rotas.aprovacao(pedido({ aprovadas: "nao" }), noRun(run.id))

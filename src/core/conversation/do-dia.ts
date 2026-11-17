@@ -75,14 +75,15 @@ async function visoesDos(
       const run = conhecidos.get(id) ?? (await stores.runs.buscar(contaId, id))
       if (!run) return undefined
       const voto = votos[id]
-      const visao = await visaoDe(stores, contaId, run, voto, agora)
+      const visao = await visaoDoRunDaConta(stores, contaId, run, voto, agora)
       return [id, visao] as const
     }),
   )
   return new Map(entradas.flatMap((e) => (e ? [e] : [])))
 }
 
-async function visaoDe(
+// A visão de um run da conta: etapas, propostas e retornos lidos do store; usada pela conversa do dia e pelas rotas.
+export async function visaoDoRunDaConta(
   stores: Stores,
   contaId: string,
   run: Run,

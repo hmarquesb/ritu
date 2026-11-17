@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { DemoSeed } from "@/core/demo-seed"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
-import { conversaDoDia } from "./do-dia"
+import { conversaDoDia, visaoDoRunDaConta } from "./do-dia"
 
 const DIA = "2026-11-16"
 const AGORA = "2026-11-16T15:00:00.000Z"
@@ -175,5 +175,15 @@ describe("conversaDoDia", () => {
 
     expect(conversa.falas.map((f) => f.texto)).toEqual(["minha fala"])
     expect(conversa.pendentes).toBe(0)
+  })
+
+  it("visaoDoRunDaConta monta a visão do run com o voto dado", async () => {
+    const m = await montar()
+    const run = await rodada(m)
+
+    const visao = await visaoDoRunDaConta(m.stores, m.conta.id, run, "up", m.clock.now())
+
+    expect(visao.run_id).toBe(run.id)
+    expect(visao.voto).toBe("up")
   })
 })

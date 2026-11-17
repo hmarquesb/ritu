@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { conversaDoDia } from "@/core/conversation/do-dia"
-import { type VisaoDoRun, visaoDoRun } from "@/core/conversation/visao"
+import { conversaDoDia, visaoDoRunDaConta } from "@/core/conversation/do-dia"
+import type { VisaoDoRun } from "@/core/conversation/visao"
 import { RituError } from "@/core/errors"
 import type { Run } from "@/core/runs/ports"
 import type { Container } from "@/infra/container"
@@ -26,11 +26,7 @@ const schemaDaRespostaDaTroca = z.strictObject({
 
 const schemaDoVoto = z.strictObject({ voto: z.enum(["up", "down"]) })
 
-function schemaDaAprovacao(container: Container) {
-  return z.strictObject({
-    aprovadas: z.array(z.string().min(1)).max(container.config.aprovacao.maxLinhas),
-  })
-}
+const schemaDaAprovacao = z.strictObject({ aprovadas: z.array(z.string().min(1)) })
 
 // Run da conta; id inválido, inexistente ou de outra conta é o mesmo 404, antes de qualquer serviço.
 export async function runDaConta(container: Container, contaId: string, id: string): Promise<Run> {
@@ -44,21 +40,8 @@ export async function runDaConta(container: Container, contaId: string, id: stri
 async function visaoDe(container: Container, contaId: string, runId: string): Promise<VisaoDoRun> {
   const { stores, clock } = container
   const run = await runDaConta(container, contaId, runId)
-  const [etapas, propostas, retornos, votos] = await Promise.all([
-    stores.runs.etapas(contaId, run.id),
-    stores.proposals.doRun(contaId, run.id),
-    stores.outcomes.doRun(contaId, run.id),
-    stores.runs.votos(contaId, [run.id]),
-  ])
-  const voto = votos[run.id]
-  return visaoDoRun({
-    run,
-    etapas,
-    propostas,
-    retornos,
-    agora: clock.now(),
-    ...(voto ? { voto } : {}),
-  })
+  const votos = await stores.runs.votos(contaId, [run.id])
+  return visaoDoRunDaConta(stores, contaId, run, votos[run.id], clock.now())
 }
 
 async function pendentesDa(container: Container, contaId: string): Promise<number> {
@@ -98,10 +81,14 @@ export function rotasDaConversa(deps: DepsDaRota) {
 
   const aprovacao = rotaDoRun(
     deps,
-    { corpo: schemaDaAprovacao(deps.container) },
+    { corpo: schemaDaAprovacao },
     async ({ conta, corpo, container, run }) => {
-      if (new Set(corpo.aprovadas).size !== corpo.aprovadas.length) {
-        throw new RituError("aprovacao_invalida", "Há linhas repetidas na aprovação")
+      const { maxLinhas } = container.config.aprovacao
+      if (
+        corpo.aprovadas.length > maxLinhas ||
+        new Set(corpo.aprovadas).size !== corpo.aprovadas.length
+      ) {
+        throw new RituError("aprovacao_invalida", "Aprovação com linhas demais ou repetidas")
       }
       await container.conversation.aprovar(conta.id, run.id, corpo.aprovadas)
       return { visao: await visaoDe(container, conta.id, run.id) }

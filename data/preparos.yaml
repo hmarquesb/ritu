@@ -195,8 +195,8 @@
   fontes:
     - { ref: banyan-caldo-folhas, campos: [vagas, passos, gunas_do_preparo] }
     - { ref: banyan-dieta-vata, campos: [momento] }
-    - { ref: a_confirmar, campos: [momento] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [momento] }
+  confianca: media
 
 - id: arroz-papa
   nome: Arroz papa
@@ -628,8 +628,8 @@
   fontes:
     - { ref: banyan-arroz-e-feijao, campos: [vagas, passos] }
     - { ref: banyan-dieta-vata, campos: [momento] }
-    - { ref: a_confirmar, campos: [gunas_do_preparo] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas_do_preparo] }
+  confianca: media
 
 - id: pure-de-raiz
   nome: Purê de raiz
@@ -676,8 +676,8 @@
   fontes:
     - { ref: ayurveda-com-guia-dieta, campos: [vagas, gunas_do_preparo] }
     - { ref: banyan-dieta-vata, campos: [momento, gunas_do_preparo] }
-    - { ref: a_confirmar, campos: [passos] }
-  confianca: baixa
+    - { ref: ritu-textos-revisados, campos: [passos] }
+  confianca: media
 
 - id: raiz-cozida
   nome: Raiz cozida
@@ -957,8 +957,9 @@
   fontes:
     - { ref: banyan-dieta-vata, campos: [vagas, momento] }
     - { ref: banyan-alimentos-kapha, campos: [passos] }
-    - { ref: a_confirmar, campos: [passos, gunas_do_preparo] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas_do_preparo] }
+    - { ref: ritu-textos-revisados, campos: [passos] }
+  confianca: media
 
 - id: omelete-com-legume
   nome: Omelete com legume
@@ -1005,8 +1006,9 @@
   contraindicacoes: []
   fontes:
     - { ref: banyan-dieta-pitta, campos: [vagas, momento] }
-    - { ref: a_confirmar, campos: [passos, gunas_do_preparo] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas_do_preparo] }
+    - { ref: ritu-textos-revisados, campos: [passos] }
+  confianca: media
 
 - id: iogurte-batido-com-especiaria
   nome: Iogurte batido com especiaria
@@ -1087,8 +1089,8 @@
   fontes:
     - { ref: banyan-guia-inverno, campos: [vagas, momento] }
     - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo] }
-    - { ref: a_confirmar, campos: [passos] }
-  confianca: baixa
+    - { ref: ritu-textos-revisados, campos: [passos] }
+  confianca: media
 
 - id: cuscuz-no-vapor
   nome: Cuscuz no vapor
@@ -1136,8 +1138,9 @@
   fontes:
     - { ref: banyan-modos-de-preparo, campos: [gunas_do_preparo] }
     - { ref: banyan-alimentos-kapha, campos: [vagas] }
-    - { ref: a_confirmar, campos: [passos, momento] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [momento] }
+    - { ref: ritu-textos-revisados, campos: [passos] }
+  confianca: media
 
 - id: torrada-com-gordura
   nome: Torrada com gordura
@@ -1255,8 +1258,9 @@
   fontes:
     - { ref: banyan-guia-inverno, campos: [vagas, momento] }
     - { ref: banyan-alimentos-kapha, campos: [vagas] }
-    - { ref: a_confirmar, campos: [passos, gunas_do_preparo, momento] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas_do_preparo, momento] }
+    - { ref: ritu-textos-revisados, campos: [passos] }
+  confianca: media
 
 - id: oleaginosas-de-molho
   nome: Oleaginosas de molho
@@ -1271,8 +1275,8 @@
     - { ref: banyan-leite-de-amendoa, campos: [passos, momento] }
     - { ref: banyan-lanches-por-dosha, campos: [vagas, passos, momento] }
     - { ref: banyan-alimentos-kapha, campos: [vagas, passos] }
-    - { ref: a_confirmar, campos: [gunas_do_preparo] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas_do_preparo] }
+  confianca: media
 
 - id: leite-morno-com-especiaria
   nome: Leite morno com especiaria
@@ -1304,5 +1308,5 @@
   fontes:
     - { ref: banyan-sono-insuficiente, campos: [vagas, passos, momento] }
     - { ref: banyan-dieta-vata, campos: [gunas_do_preparo] }
-    - { ref: a_confirmar, campos: [gunas_do_preparo] }
-  confianca: baixa
+    - { ref: ritu-regras-da-base, campos: [gunas_do_preparo] }
+  confianca: media

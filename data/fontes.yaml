@@ -503,3 +503,517 @@
   url: https://www.banyanbotanicals.com/blogs/wellness/the-benefits-of-mindful-eating
   acessado_em: "2026-11-15"
   aprovada: true
+- ref: banyan-quente-frio
+  titulo: "Cooling vs. Heating Foods"
+  autor: "Banyan Botanicals"
+  url: https://www.banyanbotanicals.com/pages/ayurvedic-cooling-vs-heating-foods
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: banyan-cardamomo-po
+  titulo: "Cardamom Powder - Ground Cardamom"
+  autor: "Banyan Botanicals"
+  url: https://www.banyanbotanicals.com/products/cardamom-powder
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: banyan-canela-po
+  titulo: "Cinnamon Powder"
+  autor: "Banyan Botanicals"
+  url: https://www.banyanbotanicals.com/products/cinnamon-powder
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: banyan-gengibre-po
+  titulo: "Powdered Ginger"
+  autor: "Banyan Botanicals"
+  url: https://www.banyanbotanicals.com/products/ginger-powder
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: banyan-curcuma-po
+  titulo: "Turmeric Powder"
+  autor: "Banyan Botanicals"
+  url: https://www.banyanbotanicals.com/products/turmeric-powder
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: banyan-vinagre-maca
+  titulo: "An Ayurvedic Perspective on Apple Cider Vinegar"
+  autor: "Banyan Botanicals"
+  url: https://banyanbotanicals.com/info/amp/blog-the-banyan-insight/details/an-ayurvedic-perspective-on-apple-cider-vinegar
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: banyan-oleo-de-coco
+  titulo: "Organic Coconut Oil"
+  autor: "Banyan Botanicals"
+  url: https://banyanbotanicals.com/coconut-oil
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: cs-frutas
+  titulo: "The group of Fruits (Phala) [Chapter 27e]"
+  autor: "Charaka Samhita, tradução em inglês (Wisdom Library)"
+  url: https://www.wisdomlib.org/hinduism/book/caraka-samhita-english/d/doc627542.html
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: mn-goiaba
+  titulo: "Madanapala Nighantu: Peruka"
+  autor: "Madanapala Nighantu, em tradução (greenmesg.org)"
+  url: https://greenmesg.org/nature/fruits/from_ayurveda/peruka.php
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: jaims-goiaba
+  titulo: "Folklore practices of Peruka (Psidium guajava Linn.) in different diseases"
+  autor: "Kalgutkar e Shaji, Journal of Ayurveda and Integrated Medical Sciences (2020)"
+  url: https://jaims.in/jaims/article/view/1152
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-maca
+  titulo: "Apple"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/08/22/apple/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-pera
+  titulo: "Pears (Pyrus communis)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/09/03/pears-pyrus-communis/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-mamao
+  titulo: "Papaya: Leaves, Latex, Fruit Benefits, Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2016/08/23/papaya-leaves-latex-fruit-benefits-side-effects/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-manga
+  titulo: "Mango Uses"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2015/08/20/mango-uses/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-laranja
+  titulo: "Benefits of Orange Fruits: Traditional and Modern Views"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2011/09/22/benefits-of-orange-fruits-traditional-and-modern-views/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-limao
+  titulo: "Health Benefits of Lemon: Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/health-benefits-of-lemon-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-abacaxi
+  titulo: "Pineapple (Ananas comosus)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2017/07/20/pineapple-ananas-comosus/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-melancia
+  titulo: "Watermelon (Citrullus lanatus)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/08/08/watermelon-citrullus-lanatus/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-melao
+  titulo: "Muskmelon (Kharbuja)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/08/08/muskmelon-kharbuja/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-uva
+  titulo: "Nutritional Health Benefits of Grapes: Total Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2011/04/19/nutritional-health-benefits-of-grapes-total-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-caqui
+  titulo: "Tinduka Uses, Dose, Research"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2015/08/26/tinduka-uses-dose-research/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-coco
+  titulo: "Benefits of Coconut Water and Coconut: Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2011/12/03/benefits-of-coconut-water-and-coconut-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-espinafre
+  titulo: "Spinach (Palak) Uses"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/12/17/spinach-palak-uses/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-rucula
+  titulo: "Arugula (Eruca sativa)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/11/08/arugula-eruca-sativa/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-abobora
+  titulo: "Pumpkin"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2020/01/10/pumpkin/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-quiabo
+  titulo: "Lady Finger Remedies"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2017/01/15/lady-finger-remedies/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-pepino
+  titulo: "Cucumber (Cucumis sativus): Benefits, Ayurvedic Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2016/08/24/cucumber-cucumis-sativus-benefits-ayurvedic-side-effects/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-berinjela
+  titulo: "Eggplant"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2020/01/15/eggplant/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-milho
+  titulo: "Traditional Corn Snack Rumbi: Qualities and Health Benefits"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/traditional-corn-snack-rumbi-qualities-and-health-benefits/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-cenoura
+  titulo: "Carrot Benefits, Remedies, Research, Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2016/09/20/carrot-benefits-remedies-research-side-effects/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-rabanete
+  titulo: "Radish Benefits, Dose: Ayurveda"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/radish-benefits-dose-ayurveda/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-avastha-paka
+  titulo: "Avastha Paka"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/avastha-paka/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-liquidos
+  titulo: "Ashtang Hriday Sutrasthan 5th Chapter: Benefits of Liquid Foods"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://easyayurveda.com/2013/01/28/ashtang-hriday-sutrasthan-5th-chapter-benefits-of-liquid-foods
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-noz
+  titulo: "Walnut (Juglans regia, Akhrot)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2017/05/24/walnut-juglans-regia-akhrot/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-gergelim
+  titulo: "Sesame and Sesame Oil Benefits: Total Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/sesame-and-sesame-oil-benefits-total-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-linhaca
+  titulo: "Flaxseed, Flaxseed Oil: Uses, Research, Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/flaxseed-flaxseed-oil-uses-research-side-effects/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-chia
+  titulo: "Chia Seed Health Benefits (Salvia hispanica)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://easyayurveda.com/2024/11/15/chia-seed-health-benefits-salvia-hispanica
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-oleos
+  titulo: "Sesame Oil, Coconut Oil, Castor Oil, Mustard Oil: Comparison"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://easyayurveda.com/2014/08/11/sesame-oil-coconut-oil-castor-oil-mustard-oil-comparison
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-cominho
+  titulo: "Cumin Seed Benefits, Usage, Side Effects: Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/cumin-seed-benefits-usage-side-effects-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-coentro
+  titulo: "Coriander Seed and Leaves Health Benefits: Complete Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/coriander-seed-and-leaves-health-benefits-complete-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-pimenta-do-reino
+  titulo: "Black Pepper Benefits, Usage, Dose, Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://easyayurveda.com/2014/11/21/black-pepper-benefits-usage-dose-side-effects
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-cravo
+  titulo: "Clove and Clove Oil Benefits, Usage, Dose: Complete Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2013/01/21/clove-and-clove-oil-benefits-usage-dose-complete-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-noz-moscada
+  titulo: "Jaiphal, Nutmeg (Myristica fragrans): Uses, Dose, Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://easyayurveda.com/2014/11/26/jaiphal-nutmeg-myristica-fragrans-uses-dose-side-effects
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-mostarda
+  titulo: "Mustard Benefits, Types, Side Effects, Research"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2015/03/19/mustard-benefits-types-side-effects-research/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-mahodadhi-leguminosas
+  titulo: "Ayurveda Mahodadhi: Legumes"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://easyayurveda.com/2017/08/18/ayurveda-mahodadhi-legumes
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-pimenta
+  titulo: "Red Chilli (Capsicum annuum), Bell Pepper"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2017/02/03/red-chilli-capsicum-annuum-bell-pepper/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-hortela
+  titulo: "Pudina, Mint Leaves: Uses, Remedies, Research"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2017/03/27/pudina-mint-leaves-uses-remedies-research/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-cebola
+  titulo: "Onion Uses, Research, Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2015/01/12/onion-uses-research-side-effects/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-alho
+  titulo: "Health Benefits of Raw Garlic: Ayurveda Details"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://easyayurveda.com/2011/06/30/health-benefits-of-raw-garlic-ayurveda-details/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-cardamomo
+  titulo: "Cardamom Uses, Research, Home Remedies, Side Effects"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/cardamom-uses-research-home-remedies-side-effects/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-louro
+  titulo: "Tejapatra (Cinnamomum tamala)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2017/04/16/tejapatra-cinnamomum-tamala/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-manjericao
+  titulo: "Sweet Basil (Ocimum basilicum)"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/07/16/sweet-basil-ocimum-basilicum/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ea-capim-limao
+  titulo: "Lemongrass"
+  autor: "Easy Ayurveda (Dr. J. V. Hebbar)"
+  url: https://www.easyayurveda.com/2019/06/08/lemongrass/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-goiaba
+  titulo: "Guava in Ayurveda: Health Benefits, Uses & Energetics Explained"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/728-guava-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-morango
+  titulo: "Strawberries in Ayurveda: Benefits, Dosha Effects & Healing Properties"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/751-strawberries-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-tangerina
+  titulo: "Tangerine (Mandarin Orange) Benefits in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/753-tangerine-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-abacate
+  titulo: "Avocado in Ayurveda: Benefits, Uses, Energetics, and Dosha Effects"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/912-avocado-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-mandioca
+  titulo: "Manihot esculenta (Cassava) in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/5024-manihot-esculenta
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-inhame
+  titulo: "Colocasia esculenta – Aaluki (Green Taro)"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/4107-colocasia-esculenta--aaluki-green-taro
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-repolho
+  titulo: "Ayurvedic Benefits of Cabbage – Healing, Detox, and Dosha Balancing"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/778-cabbage-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-alface
+  titulo: "Lettuce (Kahu) in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/816-lettuce-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-agriao
+  titulo: "Watercress (Chandrasura, Ahaliva) Benefits in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/832-watercress-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-ricota
+  titulo: "Panir (Cheese) in Ayurveda: Benefits, Dosha Effects & Precautions"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/890-cheese-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-castanha-do-para
+  titulo: "Brazil Nuts in Ayurveda: Benefits, Dosha Effects, Nutrition & Uses"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/873-brazil-nuts-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-girassol
+  titulo: "Sunflower in Ayurveda – Benefits, Uses, and Healing Properties"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/925-sunflower-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-semente-abobora
+  titulo: "Pumpkin Seeds in Ayurveda: Benefits, Uses, Energetics & Precautions"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/883-pumpkin-seeds-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-azeite
+  titulo: "Jaitoon Olive Benefits in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/920-olive-jaitoon-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-camomila
+  titulo: "Chamomile in Ayurveda: Benefits, Uses & Healing Properties"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/960-chamomile-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-erva-cidreira
+  titulo: "Melissa Officinalis (Lemon Balm) in Ayurveda"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/5057-melissa-officinalis
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-salsinha
+  titulo: "Parsley in Ayurveda: Benefits, Uses, Nutrition, and Healing Properties"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/823-parsley-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-oregano
+  titulo: "Oregano in Ayurveda: Benefits, Uses & Dosha Balancing Properties"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/970-oregano-in-ayurveda
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-anis-estrelado
+  titulo: "Illicium verum Ayurvedic Uses: Star Anise Benefits & Traditional Medicine"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/4669-illicium-verum
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-cha-verde
+  titulo: "Green Tea Benefits and Ayurvedic Uses for Wellness"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/2461-green-tea
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: aa-cha-preto
+  titulo: "Thearubigins (Phytochemicals in Food)"
+  autor: "Ask Ayurveda"
+  url: https://ask-ayurveda.com/wiki/article/6438-thearubigins
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: mapi-dor-de-cabeca
+  titulo: "Ask the Expert: Headaches"
+  autor: "Maharishi Ayurveda"
+  url: https://mapi.com/blogs/articles/ask-the-expert-headaches
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: wjpr-ajirna
+  titulo: "An Ayurvedic Review on Etiopathogenesis and Management of Ajirna"
+  autor: "Parashar et al., World Journal of Pharmaceutical Research 10(12), 2021"
+  url: https://www.wisdomlib.org/uploads/journals/wjpr/volume-10,-october-issue-12_17748.pdf
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ayurveda-com-ciclo
+  titulo: "The Moon Cycle: Understanding Menstruation from an Ayurvedic Perspective"
+  autor: "The Ayurvedic Institute"
+  url: https://ayurveda.com/the-moon-cycle-understanding-menstruation-from-an-ayurvedic-perspective/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: tae-banho
+  titulo: "Ayurveda's take on Snana! (Bathing)"
+  autor: "The Ayurveda Experience (Dra. Palak Garg)"
+  url: https://blog.theayurvedaexperience.com/ayurvedas-take-on-bathing
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: lifespa-agua-quente
+  titulo: "Drinking Hot Water"
+  autor: "LifeSpa (Dr. John Douillard)"
+  url: https://lifespa.com/hot-water-therapy-facts-benefits
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ayurtimes-ushapan
+  titulo: "Ushapan – Drinking Water in the Morning According to Ayurveda"
+  autor: "AyurTimes"
+  url: https://www.ayurtimes.com/?p=35204
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: caraka-vyayama
+  titulo: "Vyayama"
+  autor: "Charaka Samhita Online"
+  url: https://www.carakasamhitaonline.com/index.php/Vyayama
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: caraka-nidra
+  titulo: "Nidra"
+  autor: "Charaka Samhita Online"
+  url: https://www.carakasamhitaonline.com/index.php/Nidra
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ayurvaid-exercicio
+  titulo: "Ayurveda guidelines to exercise"
+  autor: "AyurVAID"
+  url: https://ayurvaid.com/blog/ayurveda-guidelines-to-exercise/
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: kripalu-pranayama
+  titulo: "Breathe, Stay Balanced: Ayurvedic Pranayama to Enhance Your Energy"
+  autor: "Kripalu School of Ayurveda"
+  url: https://kripalu.org/resources/breathe-stay-balanced-ayurvedic-pranayama-enhance-your-energy
+  acessado_em: "2026-11-17"
+  aprovada: true
+- ref: ritu-regras-da-base
+  titulo: "Regras de derivação da base"
+  autor: Ritu
+  pagina: "KNOWLEDGE.md §8.1"
+  aprovada: true
+- ref: ritu-textos-revisados
+  titulo: "Textos de preparo, passos e aviso lidos e aprovados pela dona"
+  autor: Ritu
+  pagina: "KNOWLEDGE.md §8"
+  aprovada: true

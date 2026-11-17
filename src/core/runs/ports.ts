@@ -47,6 +47,8 @@ export type Run = {
   juiz_aprovado: boolean | null
   trace_id: string | null
   dia: string
+  /** Run fechado de um dia que a pessoa apagou: sai da conversa e fica só no rastro. */
+  fora_da_conversa: boolean
   criado_em: string
   atualizado_em: string
 }
@@ -103,9 +105,11 @@ export interface RunRepository {
   recentes(contaId: string, desde: Date, limite: number): Promise<Run[]>
   /** Sem contaId; contas com run done criado a partir de desde, cada uma uma vez. */
   contasComRunDesde(desde: Date): Promise<string[]>
-  /** Runs da conta no dia (YYYY-MM-DD, fuso do run); mais antigo primeiro. */
+  /** Runs da conta no dia (YYYY-MM-DD, fuso do run), sem os fora_da_conversa; mais antigo primeiro. */
   doDia(contaId: string, dia: string): Promise<Run[]>
   contarMensagensDoDia(contaId: string, dia: string): Promise<number>
+  /** Runs fechados do dia: fora_da_conversa = true e saida, checkpoint, pendencia e clima_usado nulos. Devolve quantos. */
+  tirarDaConversa(contaId: string, dia: string): Promise<number>
   /** Devolve o voto anterior; null sem voto antes ou run que não é da conta (e aí não grava). */
   votar(contaId: string, runId: string, voto: "up" | "down"): Promise<"up" | "down" | null>
   /** Voto da conta por run; runs sem voto ou de outra conta ficam de fora. */

@@ -682,6 +682,24 @@ function criarMessages(db: Db, clock: Clock): MessageRepository {
       )
       return copia(doDiaDaConta.sort((a, b) => Date.parse(a.criado_em) - Date.parse(b.criado_em)))
     },
+    async contarPorDia(contaId, desdeDia) {
+      const porDia = new Map<string, number>()
+      for (const m of db.estado.mensagens) {
+        if (m.conta_id !== contaId || m.dia < desdeDia) continue
+        porDia.set(m.dia, (porDia.get(m.dia) ?? 0) + 1)
+      }
+      return [...porDia]
+        .map(([dia, total]) => ({ dia, total }))
+        .sort((a, b) => b.dia.localeCompare(a.dia))
+    },
+    async apagarDoDia(contaId, dia) {
+      const { mantidos, apagados } = separa(
+        db.estado.mensagens,
+        (m) => m.conta_id === contaId && m.dia === dia,
+      )
+      db.estado.mensagens = mantidos
+      return apagados
+    },
     async marcarIncomodoDoRun(contaId, runId) {
       for (const m of db.estado.mensagens) {
         if (m.conta_id === contaId && m.run_id === runId) m.com_incomodo = true
@@ -815,6 +833,7 @@ function criarRuns(db: Db, clock: Clock): RunRepository {
         juiz_aprovado: null,
         trace_id: r.trace_id ?? null,
         dia: r.dia,
+        fora_da_conversa: false,
         criado_em: agora,
         atualizado_em: agora,
       }
@@ -878,13 +897,30 @@ function criarRuns(db: Db, clock: Clock): RunRepository {
       return [...new Set(contas)]
     },
     async doDia(contaId, dia) {
-      const doDiaDaConta = db.estado.runs.filter((r) => r.conta_id === contaId && r.dia === dia)
+      const doDiaDaConta = db.estado.runs.filter(
+        (r) => r.conta_id === contaId && r.dia === dia && !r.fora_da_conversa,
+      )
       return copia(doDiaDaConta.sort((a, b) => Date.parse(a.criado_em) - Date.parse(b.criado_em)))
     },
     async contarMensagensDoDia(contaId, dia) {
       return db.estado.mensagens.filter(
         (m) => m.conta_id === contaId && m.dia === dia && m.autor === "pessoa",
       ).length
+    },
+    async tirarDaConversa(contaId, dia) {
+      const alvos = db.estado.runs.filter(
+        (r) => r.conta_id === contaId && r.dia === dia && !STATUS_ABERTOS.includes(r.status),
+      )
+      for (const run of alvos) {
+        Object.assign(run, {
+          fora_da_conversa: true,
+          saida: null,
+          checkpoint: null,
+          pendencia: null,
+          clima_usado: null,
+        })
+      }
+      return alvos.length
     },
     async votos(contaId, runIds) {
       const doVoto: Record<string, "up" | "down"> = {}

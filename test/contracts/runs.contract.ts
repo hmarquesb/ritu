@@ -64,6 +64,7 @@ export function runsContract(make: () => Promise<ContractEnv> | ContractEnv): vo
         juiz_aprovado: null,
         trace_id: "trace-1",
         dia: DIA,
+        fora_da_conversa: false,
         criado_em: "2026-01-15T12:00:00.000Z",
       })
     })
@@ -261,6 +262,81 @@ export function runsContract(make: () => Promise<ContractEnv> | ContractEnv): vo
 
       expect(await runs.buscar(a, run.id)).toMatchObject({ status: "running" })
       expect((await runs.etapas(a, run.id)).map((e) => e.nome)).toEqual(["buscar_clima"])
+    })
+
+    it("tirarDaConversa zera saída, checkpoint, pendência e clima dos fechados do dia e marca fora_da_conversa", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const { runs } = env.stores
+      const run = await abrir(env.stores, a)
+      await runs.atualizar(a, run.id, {
+        status: "done",
+        saida: { texto: "chá" },
+        checkpoint: { passo: 1 },
+        pendencia: { tipo: "pergunta" },
+        clima_usado: { faixa: "fria" },
+      })
+
+      expect(await runs.tirarDaConversa(a, DIA)).toBe(1)
+      expect(await runs.buscar(a, run.id)).toMatchObject({
+        status: "done",
+        fora_da_conversa: true,
+        saida: null,
+        checkpoint: null,
+        pendencia: null,
+        clima_usado: null,
+      })
+    })
+
+    it("tirarDaConversa não toca run aberto", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const { runs } = env.stores
+      const fechado = await abrir(env.stores, a)
+      await runs.atualizar(a, fechado.id, { status: "done", saida: { texto: "fechado" } })
+      const aberto = await abrir(env.stores, a)
+      await runs.atualizar(a, aberto.id, {
+        status: "waiting_for_input",
+        saida: { texto: "aberto" },
+        checkpoint: { passo: 2 },
+      })
+
+      expect(await runs.tirarDaConversa(a, DIA)).toBe(1)
+      expect(await runs.buscar(a, aberto.id)).toMatchObject({
+        status: "waiting_for_input",
+        fora_da_conversa: false,
+        saida: { texto: "aberto" },
+        checkpoint: { passo: 2 },
+      })
+    })
+
+    it("tirarDaConversa não toca run de outro dia nem de outra conta", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { runs } = env.stores
+      const deOntem = await runs.criar(a, { caminho: "casa", intencoes: [], dia: "2026-01-14" })
+      await runs.atualizar(a, deOntem.id, { status: "done", saida: { texto: "ontem" } })
+      const deB = await runs.criar(b, { caminho: "casa", intencoes: [], dia: DIA })
+      await runs.atualizar(b, deB.id, { status: "done", saida: { texto: "de b" } })
+
+      expect(await runs.tirarDaConversa(a, DIA)).toBe(0)
+      expect(await runs.buscar(a, deOntem.id)).toMatchObject({
+        fora_da_conversa: false,
+        saida: { texto: "ontem" },
+      })
+      expect(await runs.buscar(b, deB.id)).toMatchObject({
+        fora_da_conversa: false,
+        saida: { texto: "de b" },
+      })
+    })
+
+    it("doDia não devolve os runs fora da conversa", async () => {
+      const { a } = await criarDuasContas(env.stores)
+      const { runs } = env.stores
+      const tirado = await abrir(env.stores, a)
+      await runs.atualizar(a, tirado.id, { status: "done" })
+      await runs.tirarDaConversa(a, DIA)
+      const mantido = await abrir(env.stores, a)
+      await runs.atualizar(a, mantido.id, { status: "done" })
+
+      expect((await runs.doDia(a, DIA)).map((r) => r.id)).toEqual([mantido.id])
     })
 
     it("contasComRunDesde traz cada conta uma vez, só com run done criado a partir da data", async () => {

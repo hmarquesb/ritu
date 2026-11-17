@@ -78,7 +78,7 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
           returning id, conta_id, caminho, intencoes, status, checkpoint, pendencia, momento,
             com_incomodo, clima_usado, saida, passos, tokens_entrada, tokens_saida, latencia_ms,
             modelos, trocas_de_modelo, prompt_versao, juiz_tentativas, juiz_aprovado, trace_id,
-            dia::text as dia, criado_em, atualizado_em`
+            dia::text as dia, fora_da_conversa, criado_em, atualizado_em`
         return runDe(row)
       } catch (erro) {
         if (ehRunAberto(erro)) throw new RunAbertoError()
@@ -91,7 +91,7 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
         select id, conta_id, caminho, intencoes, status, checkpoint, pendencia, momento,
           com_incomodo, clima_usado, saida, passos, tokens_entrada, tokens_saida, latencia_ms,
           modelos, trocas_de_modelo, prompt_versao, juiz_tentativas, juiz_aprovado, trace_id,
-          dia::text as dia, criado_em, atualizado_em
+          dia::text as dia, fora_da_conversa, criado_em, atualizado_em
         from runs where id = ${runId} and conta_id = ${contaId}`
       return row ? runDe(row) : undefined
     },
@@ -101,7 +101,7 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
         select id, conta_id, caminho, intencoes, status, checkpoint, pendencia, momento,
           com_incomodo, clima_usado, saida, passos, tokens_entrada, tokens_saida, latencia_ms,
           modelos, trocas_de_modelo, prompt_versao, juiz_tentativas, juiz_aprovado, trace_id,
-          dia::text as dia, criado_em, atualizado_em
+          dia::text as dia, fora_da_conversa, criado_em, atualizado_em
         from runs
         where conta_id = ${contaId}
           and status in ('running', 'waiting_for_input', 'waiting_for_approval')`
@@ -153,7 +153,7 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
         select id, conta_id, caminho, intencoes, status, checkpoint, pendencia, momento,
           com_incomodo, clima_usado, saida, passos, tokens_entrada, tokens_saida, latencia_ms,
           modelos, trocas_de_modelo, prompt_versao, juiz_tentativas, juiz_aprovado, trace_id,
-          dia::text as dia, criado_em, atualizado_em
+          dia::text as dia, fora_da_conversa, criado_em, atualizado_em
         from runs
         where conta_id = ${contaId} and status = 'done' and criado_em >= ${desde}
         order by criado_em desc, id
@@ -173,10 +173,19 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
         select id, conta_id, caminho, intencoes, status, checkpoint, pendencia, momento,
           com_incomodo, clima_usado, saida, passos, tokens_entrada, tokens_saida, latencia_ms,
           modelos, trocas_de_modelo, prompt_versao, juiz_tentativas, juiz_aprovado, trace_id,
-          dia::text as dia, criado_em, atualizado_em
-        from runs where conta_id = ${contaId} and dia = ${dia}::date
+          dia::text as dia, fora_da_conversa, criado_em, atualizado_em
+        from runs where conta_id = ${contaId} and dia = ${dia}::date and not fora_da_conversa
         order by criado_em, id`
       return linhas.map(runDe)
+    },
+
+    async tirarDaConversa(contaId, dia) {
+      const atualizadas = await sql`
+        update runs set fora_da_conversa = true, saida = null, checkpoint = null,
+          pendencia = null, clima_usado = null
+        where conta_id = ${contaId} and dia = ${dia}::date
+          and status not in ('running', 'waiting_for_input', 'waiting_for_approval')`
+      return atualizadas.count
     },
 
     async votos(contaId, runIds) {

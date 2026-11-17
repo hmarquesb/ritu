@@ -103,9 +103,13 @@ export interface RunRepository {
   recentes(contaId: string, desde: Date, limite: number): Promise<Run[]>
   /** Sem contaId; contas com run done criado a partir de desde, cada uma uma vez. */
   contasComRunDesde(desde: Date): Promise<string[]>
+  /** Runs da conta no dia (YYYY-MM-DD, fuso do run); mais antigo primeiro. */
+  doDia(contaId: string, dia: string): Promise<Run[]>
   contarMensagensDoDia(contaId: string, dia: string): Promise<number>
   /** Devolve o voto anterior; null sem voto antes ou run que não é da conta (e aí não grava). */
   votar(contaId: string, runId: string, voto: "up" | "down"): Promise<"up" | "down" | null>
+  /** Voto da conta por run; runs sem voto ou de outra conta ficam de fora. */
+  votos(contaId: string, runIds: string[]): Promise<Record<string, "up" | "down">>
   /** Sem contaId; devolve os ids. */
   expirarEmEsperaAntesDe(limite: Date): Promise<string[]>
 }

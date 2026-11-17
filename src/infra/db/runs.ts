@@ -168,6 +168,25 @@ export function createPgRuns(sql: Conexao, clock: Clock): RunRepository {
       return linhas.map((linha) => linha.conta_id)
     },
 
+    async doDia(contaId, dia) {
+      const linhas = await sql<RunRow[]>`
+        select id, conta_id, caminho, intencoes, status, checkpoint, pendencia, momento,
+          com_incomodo, clima_usado, saida, passos, tokens_entrada, tokens_saida, latencia_ms,
+          modelos, trocas_de_modelo, prompt_versao, juiz_tentativas, juiz_aprovado, trace_id,
+          dia::text as dia, criado_em, atualizado_em
+        from runs where conta_id = ${contaId} and dia = ${dia}::date
+        order by criado_em, id`
+      return linhas.map(runDe)
+    },
+
+    async votos(contaId, runIds) {
+      if (runIds.length === 0) return {}
+      const linhas = await sql<{ run_id: string; voto: "up" | "down" }[]>`
+        select run_id, voto from feedback
+        where conta_id = ${contaId} and run_id in ${sql(runIds)}`
+      return Object.fromEntries(linhas.map((linha) => [linha.run_id, linha.voto]))
+    },
+
     async contarMensagensDoDia(contaId, dia) {
       const [linha] = await sql<{ total: number }[]>`
         select count(*)::int as total from mensagens

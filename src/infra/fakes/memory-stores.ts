@@ -877,10 +877,22 @@ function criarRuns(db: Db, clock: Clock): RunRepository {
       )
       return [...new Set(contas)]
     },
+    async doDia(contaId, dia) {
+      const doDiaDaConta = db.estado.runs.filter((r) => r.conta_id === contaId && r.dia === dia)
+      return copia(doDiaDaConta.sort((a, b) => Date.parse(a.criado_em) - Date.parse(b.criado_em)))
+    },
     async contarMensagensDoDia(contaId, dia) {
       return db.estado.mensagens.filter(
         (m) => m.conta_id === contaId && m.dia === dia && m.autor === "pessoa",
       ).length
+    },
+    async votos(contaId, runIds) {
+      const doVoto: Record<string, "up" | "down"> = {}
+      for (const voto of db.estado.votos) {
+        if (voto.conta_id === contaId && runIds.includes(voto.run_id))
+          doVoto[voto.run_id] = voto.voto
+      }
+      return doVoto
     },
     async votar(contaId, runId, voto) {
       if (!runDaConta(contaId, runId)) return null

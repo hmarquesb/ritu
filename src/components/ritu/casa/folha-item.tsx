@@ -66,7 +66,6 @@ function Conteudo({ item, pendente, tocar, gostar, lista, onMudou }: ConteudoPro
       {emCasa ? (
         <Switch
           isSelected={item.sempre_tenho}
-          isDisabled={ocupado}
           onChange={(valor) => tocar({ acao: "sempre_tenho", item_id: item.id, valor })}
         >
           {T.folha.sempre}
@@ -78,14 +77,12 @@ function Conteudo({ item, pendente, tocar, gostar, lista, onMudou }: ConteudoPro
           <legend className="sr-only">{item.nome}</legend>
           <ToggleChip
             isSelected={item.gosto === "gosta"}
-            isDisabled={ocupado}
             onChange={(marcado) => gostar(alimento, marcado ? "gosta" : null)}
           >
             {T.folha.gosto}
           </ToggleChip>
           <ToggleChip
             isSelected={item.gosto === "nao_gosta"}
-            isDisabled={ocupado}
             onChange={(marcado) => gostar(alimento, marcado ? "nao_gosta" : null)}
           >
             {T.folha.naoGosto}

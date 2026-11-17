@@ -664,6 +664,53 @@ describe("conversar: run e rastro", () => {
     await expect(dizer(m, "oi")).rejects.toBeInstanceOf(RunAbertoError)
     expect(m.llm.pedidos).toHaveLength(0)
   })
+
+  it("aoCriar recebe o id do run, uma vez, antes do primeiro evento de aoVivo", async () => {
+    const m = await montar({ llm: [saida({})], roteiro: [finalizar()] })
+    const ordem: string[] = []
+    const r = await m.conversation.conversar(
+      m.conta.id,
+      { texto: "oi, tudo bem?", atalhos: [] },
+      {
+        aoCriar: (id) => ordem.push(`criar:${id}`),
+        aoVivo: (e) => {
+          if (ordem.length === 1) ordem.push(`evento:${e.tipo}`)
+        },
+      },
+    )
+    expect(ordem[0]).toBe(`criar:${r.run_id}`)
+    expect(ordem.filter((x) => x.startsWith("criar:"))).toHaveLength(1)
+    expect(ordem).toHaveLength(2)
+  })
+
+  it("aoCriar não é chamado com run aberto", async () => {
+    const m = await montar({ llm: [saida({})] })
+    await m.stores.runs.criar(m.conta.id, {
+      caminho: "acompanhante",
+      intencoes: [],
+      dia: diaLocal(m.clock.now()),
+    })
+    const aoCriar = vi.fn()
+    await expect(
+      m.conversation.conversar(m.conta.id, { texto: "oi", atalhos: [] }, { aoCriar }),
+    ).rejects.toBeInstanceOf(RunAbertoError)
+    expect(aoCriar).not.toHaveBeenCalled()
+  })
+
+  it("aoCriar que lança não muda a resposta", async () => {
+    const m = await montar({ llm: [saida({})], roteiro: [finalizar()] })
+    const r = await m.conversation.conversar(
+      m.conta.id,
+      { texto: "oi, tudo bem?", atalhos: [] },
+      {
+        aoCriar: () => {
+          throw new Error("falha")
+        },
+      },
+    )
+    expect(r.status).toBe("done")
+    expect(r.saida?.resposta).toBe(entregaOk.resposta)
+  })
 })
 
 describe("conversar: entrada inválida", () => {

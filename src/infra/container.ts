@@ -13,6 +13,9 @@ import type { UsageLimiter } from "@/core/limits/ports"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
+import { type ComoFicouNaTela, visaoComoFicou } from "@/core/outcomes/visao"
+import { lerCasa as lerCasaDoCore } from "@/core/pantry/ler"
+import type { CasaNaTela } from "@/core/pantry/visao"
 import { createPatterns } from "@/core/patterns"
 import { createRoutine } from "@/core/routine"
 import type { AgentRuntime } from "@/core/runs/agent-runtime"
@@ -66,6 +69,8 @@ export type Container = {
   touches: ReturnType<typeof createTouches>
   routine: ReturnType<typeof createRoutine>
   patterns: ReturnType<typeof createPatterns>
+  lerCasa(contaId: string): Promise<CasaNaTela>
+  lerComoFicou(contaId: string): Promise<ComoFicouNaTela>
   iniciarTelemetria(): Promise<void>
   encerrar(): Promise<void>
 }
@@ -349,6 +354,23 @@ export function createContainer(overrides?: Partial<Container>): Container {
       })
       return patterns
     },
+    // Telas de Minha casa e Como ficou: o fuso vem do perfil, com o padrão quando a pessoa não escolheu cidade.
+    async lerCasa(contaId) {
+      return lerCasaDoCore(
+        { stores: container.stores, kb: container.knowledge, clock },
+        contaId,
+        await fusoDaConta(container, contaId),
+      )
+    },
+    async lerComoFicou(contaId) {
+      const retornos = await container.stores.outcomes.pendentes(contaId)
+      return visaoComoFicou({
+        retornos,
+        kb: container.knowledge,
+        agora: clock.now(),
+        fuso: await fusoDaConta(container, contaId),
+      })
+    },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {
       if (telemetriaIniciada) return
@@ -367,6 +389,11 @@ export function createContainer(overrides?: Partial<Container>): Container {
     ...overrides,
   }
   return container
+}
+
+async function fusoDaConta(container: Container, contaId: string): Promise<string> {
+  const perfil = await container.stores.profiles.ler(contaId)
+  return perfil?.cidade_fuso ?? config.clima.fusoPadrao
 }
 
 let instance: Container | undefined

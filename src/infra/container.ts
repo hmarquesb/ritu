@@ -28,6 +28,7 @@ import { migrate } from "@/infra/db/migrate"
 import { createPgStores } from "@/infra/db/stores"
 import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
+import { createRelogioDoE2e } from "@/infra/e2e/relogio"
 import { optionalEnv, requireEnv } from "@/infra/env"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
@@ -137,9 +138,16 @@ export function readDemoSeed(dir?: string): DemoSeed {
   return loadDemoSeed(dir)
 }
 
+// Um relógio por processo: o container pode ser montado mais de uma vez.
+let relogioE2e: Clock | undefined
+function relogioDoE2e(): Clock {
+  relogioE2e ??= createRelogioDoE2e()
+  return relogioE2e
+}
+
 export function createContainer(overrides?: Partial<Container>): Container {
-  const clock = overrides?.clock ?? systemClock
   const e2e = optionalEnv("RITU_MODO") === "e2e"
+  const clock = overrides?.clock ?? (e2e ? relogioDoE2e() : systemClock)
   if (e2e && optionalEnv("VERCEL_ENV") === "production") {
     throw new RituError("modo_e2e_em_producao", "RITU_MODO=e2e não pode rodar em produção")
   }

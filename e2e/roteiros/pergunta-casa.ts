@@ -1,6 +1,7 @@
 import { type Roteiro, SEM_NADA } from "./tipos"
 
-// Couve e leite estão incertas no perfil semeado: o agente pergunta e, com a resposta, entrega.
+// A banana está incerta no perfil semeado e é a opção de uma refeição candidata: o agente pergunta e, com a resposta, entrega.
+// Fixa as 17h30 (relógio fixo nos testes e no modo e2e), quando a refeição de fruta cozida entra nos candidatos.
 export const roteiroPerguntaCasa: Roteiro = {
   nome: "pergunta-casa",
   mensagem: "fui à feira ontem, o que faço pro jantar?",
@@ -11,35 +12,28 @@ export const roteiroPerguntaCasa: Roteiro = {
       chamadas: [{ nome: "casa.ler", argumentos: {} }],
     },
     {
-      texto: "Vou confirmar a couve e o leite, que estão incertas.",
-      chamadas: [{ nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["couve", "leite"] } }],
+      texto: "Vou confirmar a banana, que está incerta.",
+      chamadas: [{ nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["banana"] } }],
     },
     {
-      texto: "Vou montar a resposta com a abóbora.",
+      texto: "Vou montar a resposta com uma prática que não depende da banana.",
       chamadas: [
         {
           nome: "finalizar",
           argumentos: {
             resposta:
-              "Para o jantar, uma refeição morna de abóbora cozida no vapor é simples e assenta bem. Se puder, sente-se para comer, sem tela.",
+              "Para o jantar, uma pausa em silêncio, antes de comer, assenta a agitação. Se puder, sente-se para comer, sem tela.",
             explicacao: {
               qualidades_do_momento: ["frio", "movel"],
               qualidades_buscadas: ["quente", "estavel", "pesado"],
             },
             sugestoes: [
               {
-                tipo: "refeicao",
-                preparo_id: "legumes-no-vapor",
-                itens: [
-                  {
-                    alimento_id: "abobora",
-                    funcao: "legume",
-                    contribui: [],
-                    linha_base: "alimentos:abobora",
-                  },
-                ],
-                motivo: "Uma comida morna e cozida, com a abóbora que você tem.",
-                linhas_base: ["preparos:legumes-no-vapor"],
+                tipo: "pratica",
+                pratica_id: "pausa-em-silencio",
+                itens: [],
+                motivo: "Uma pausa curta acalma a agitação, sem depender do que tem em casa.",
+                linhas_base: ["praticas:pausa-em-silencio"],
                 novidade: false,
               },
             ],

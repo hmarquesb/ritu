@@ -46,7 +46,7 @@ function proximoMinuto(agora: Date): Date {
 }
 
 // Próxima meia-noite do fuso: a partir da hora local do instante, sem depender do deslocamento.
-function proximaMeiaNoite(agora: Date, fuso: string): Date {
+export function proximaMeiaNoite(agora: Date, fuso: string): Date {
   const formato = new Intl.DateTimeFormat("en-US", {
     timeZone: fuso,
     hourCycle: "h23",

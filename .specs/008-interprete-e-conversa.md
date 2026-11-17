@@ -578,6 +578,23 @@ Os prompts e os textos são copiados desta spec; não há parte `conteudo`.
 - Só atalhos e sem modelo para `decisao`: resposta sem modelo com as práticas (007).
 - Mensagem da pessoa com `{itens}` ou `{titulo}` no texto: os montadores não reinterpretam o que foi inserido.
 
+## Correção do portão 2
+
+Aplicada (commits 4c3f511).
+
+Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T7).
+
+### P2-7 · Estados ditos do jeito do dia a dia
+
+No `c2-conversa` e no `c3-confiavel`, "que dia de merda, tô morta de cansaço" (`c2-15-cansaco-sem-energia`) saiu sem `sem_energia`: o Intérprete leu "morta de cansaço" como figura de linguagem, por causa do "Não deduza".
+
+- Prompt novo `interprete.v2` (`src/core/agents/prompts/interprete.v2.ts`), igual ao `v1` menos a linha `estados` de CAMPOS, que passa a ser:
+  `- estados: só ids da lista em <estados>, e só o que a pessoa disse que sente agora. Não deduza, mas aceite o jeito do dia a dia: "morta de cansaço", "exausta" e "sem pique" são sem_energia.`
+- O Intérprete passa a usar o `v2`; o `v1` fica no repositório (o histórico dos evals cita a versão).
+- Nada muda no schema, na normalização nem nos caminhos.
+- Pronto quando: os testes do prompt e do Intérprete apontam o `v2`; ⚠️ a fumaça `npm run eval:llm -- --checkpoint c2-conversa --caso c2-15-cansaco-sem-energia` traz `sem_energia` (no fechamento, uma vez).
+- Nível: `mecanica`.
+
 ## Resultado (definição de pronto)
 
 - Critérios de aceite marcados; gates 1 a 5 verdes.

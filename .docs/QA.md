@@ -223,10 +223,10 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 Regras da rodada:
 
 - Usa a chave do projeto de **desenvolvimento** e passa pelo `ModelRouter`, que respeita as cotas por minuto e por dia. O runner espaça os casos sozinho.
-- A rodada do `c3-confiavel` gasta cerca de 300 chamadas e leva uns 25 minutos. Não rodar duas rodadas completas no mesmo dia; o runner recusa a segunda sem `--extra`.
+- A rodada do `c3-confiavel` gasta cerca de 300 chamadas e leva uns 25 minutos. Não rodar duas rodadas completas do mesmo checkpoint no mesmo dia; o runner recusa a segunda sem `--extra`.
 - Um caso roda uma vez. `--caso <id>` roda um caso só e imprime as checagens, as etapas e o custo, sem gravar nada: é a fumaça do fechamento de spec. `--listar` mostra os casos por família, a contagem por tipo e a estimativa de chamadas, sem modelo e sem chave.
 - O andamento fica em `evals/local/andamento-<checkpoint>.json`, com uma assinatura dos casos, dos prompts e dos modelos. Erro 429 persistente, ou três erros inesperados seguidos: a rodada para, guarda o que fez e continua no dia seguinte (`--retomar`). Se a assinatura mudou, o runner recusa a retomada e a rodada começa de novo (`--do-zero`).
-- Uma rodada nova é recusada se já há andamento do checkpoint ou se o histórico já tem rodada com a data de hoje; `--extra` libera a segunda rodada do dia, só a pedido da dona.
+- Uma rodada nova é recusada se já há andamento do checkpoint ou se o histórico já tem rodada do mesmo checkpoint com a data de hoje; `--extra` libera a segunda rodada do dia, só a pedido da dona.
 - Mudança de prompt ou de base entre dois checkpoints é conferida pelos evals determinísticos. O efeito no LLM aparece no checkpoint seguinte.
 - A dona pode pedir uma rodada extra; o orquestrador não decide isso sozinho.
 

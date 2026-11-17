@@ -6,6 +6,7 @@ import { juntarNomes } from "@/core/knowledge/lacunas"
 import { nomeDoCitado, nomeDoEvitar } from "@/core/knowledge/nomes"
 import { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 import type { Restricao } from "@/core/knowledge/vocab"
+import { neutralizar } from "@/core/neutralizar"
 
 export { rotulosDeRestricao } from "@/core/knowledge/rotulos"
 
@@ -48,19 +49,35 @@ export const textosDaConversa = {
   evitarDesconhecido: "Ainda não conheço {itens}, mas vou levar isso em conta nas respostas.",
   evitarJaGuardado: "Isso já está em Evitar sempre: continuo sem sugerir {itens}.",
   naoCome: "Entendi, você não come {itens}. Já vale para hoje; confirma abaixo para eu guardar.",
+  naoComeDesconhecido:
+    "Obrigado por me contar. Ainda não conheço {itens}, então não consigo guardar isso. Se eu sugerir algo com {itens}, é só me dizer que eu troco.",
   restricao:
     "Entendi: sua alimentação é {itens}. Já vale para hoje; confirma abaixo para eu guardar.",
   fixoJaGuardado: "Isso eu já tinha guardado: {itens}.",
 } as const
 
-// Troca com função: o valor vindo da pessoa não é reinterpretado ($&, {itens}, {titulo}).
+// Troca com função (todas as ocorrências): o valor vindo da pessoa não é reinterpretado ($&, {itens}, {titulo}).
 function trocar(modelo: string, marca: string, valor: string): string {
-  return modelo.replace(marca, () => valor)
+  return modelo.replaceAll(marca, () => valor)
 }
 
 // Uma frase preenchida com os itens; vazia quando não há item.
 function frase(modelo: string, itens: string[]): string {
   return itens.length === 0 ? "" : trocar(modelo, "{itens}", juntarNomes(itens))
+}
+
+// "Não como" livre (sem id): nome neutralizado, sem consulta à base.
+const livresDoNaoCome = (i: Interpretacao): string[] =>
+  i.nao_come.filter((c) => !c.alimento_id).map((c) => neutralizar(c.nome))
+
+export function textoDoNaoComeDesconhecido(i: Interpretacao): string {
+  return frase(textosDaConversa.naoComeDesconhecido, livresDoNaoCome(i))
+}
+
+// Acrescenta o texto fixo do "não como" livre ao fim da resposta, com um espaço; sem item livre, não muda nada.
+export function comNaoComeDesconhecido(resposta: string, i: Interpretacao): string {
+  const extra = textoDoNaoComeDesconhecido(i)
+  return extra ? `${resposta} ${extra}` : resposta
 }
 
 export function textoDeCasa(itens: ItemDeCasaCitado[], kb: KnowledgeBase): string {
@@ -102,14 +119,14 @@ export function textoDeEvitar(i: Interpretacao, perfil: Perfil, kb: KnowledgeBas
     .filter((item) => item.tipo === "texto")
     .map((item) => nomeDoEvitar(item, kb))
   const naoComeNovos = i.nao_come
-    .filter((citado) => !citadoNoPerfilDoNaoCome(citado, perfil))
+    .filter((citado) => citado.alimento_id && !citadoNoPerfilDoNaoCome(citado, perfil))
     .map((citado) => nomeDoCitado(citado, kb))
   const restricoesNovas = i.restricoes
     .filter((restricao) => !perfil.restricoes.includes(restricao))
     .map((restricao) => rotulosDeRestricao[restricao])
   const jaGuardadosFixos = [
     ...i.nao_come
-      .filter((citado) => citadoNoPerfilDoNaoCome(citado, perfil))
+      .filter((citado) => citado.alimento_id && citadoNoPerfilDoNaoCome(citado, perfil))
       .map((citado) => nomeDoCitado(citado, kb)),
     ...i.restricoes
       .filter((restricao) => perfil.restricoes.includes(restricao))
@@ -120,6 +137,7 @@ export function textoDeEvitar(i: Interpretacao, perfil: Perfil, kb: KnowledgeBas
     frase(textosDaConversa.evitarJaGuardado, jaGuardados),
     frase(textosDaConversa.evitarDesconhecido, desconhecidos),
     frase(textosDaConversa.naoCome, naoComeNovos),
+    frase(textosDaConversa.naoComeDesconhecido, livresDoNaoCome(i)),
     frase(textosDaConversa.restricao, restricoesNovas),
     frase(textosDaConversa.fixoJaGuardado, jaGuardadosFixos),
   ]

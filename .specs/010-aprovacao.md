@@ -379,6 +379,23 @@ Os textos e o prompt são copiados desta spec; não há parte `conteudo`.
 - Falha ao criar as propostas: run `failed`; a resposta já tinha sido devolvida e gravada como mensagem.
 - Run expirado pela limpeza antes da aprovação: `aprovar` recebe `RunNaoContinuavelError`.
 
+## Correção do portão 2
+
+Aplicada (commits 6019a09).
+
+Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T5).
+
+### P2-6 · "Não como" de alimento fora da base não é guardado
+
+Um "não como" de nome livre (sem `alimento_id`) era proposto, gravado em `perfis.nao_come` como `texto` e não filtrava nada. Passa a:
+
+- **Não entrar** na anotação `nao_come` (nem no bloco de aprovação), nem na lista temporária do dia (`acrescentarEvitarTemporario`). O "não como" de alimento da base segue como hoje.
+- **Ser respondido** com um texto fixo, acolhedor, que diz que o Ritu não conhece esse alimento e por isso não guarda. Chave nova `naoComeDesconhecido` em `textosDaConversa` (`src/core/conversation/textos.ts`), com `{itens}`. Texto aprovado pela dona (2026-11-17):
+  > "Obrigado por me contar. Ainda não conheço {itens}, então não consigo guardar isso. Se eu sugerir algo com {itens}, é só me dizer que eu troco."
+- No caminho `evitar` (sem agente), a frase entra no `textoDeEvitar`, no lugar do `naoCome` para esses itens. No caminho com agente, o código acrescenta a mesma frase ao fim da `resposta`, depois do Juiz (é texto fixo, fora dele).
+- O que já está gravado como `texto` em `perfis.nao_come` fica como está (a tela Você deixa apagar); o schema não muda.
+- Nível: `mecanica`.
+
 ## Resultado (definição de pronto)
 
 - Critérios de aceite marcados; gates 1 a 5 verdes.

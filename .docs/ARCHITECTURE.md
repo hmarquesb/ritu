@@ -174,7 +174,7 @@ A lógica fica em `src/core/`, sem Next, Auth.js, driver de banco, Mastra ou SDK
 
 A montagem acontece num único composition root (`src/infra/container.ts`). O teste de arquitetura falha se uma camada importar o que não pode.
 
-**Modo de E2E.** Com `RITU_MODO=e2e`, o container monta stores, limitador e cidades em memória, guardados no `globalThis` (o Next carrega os módulos em separado). Nesse modo o header `x-ritu-e2e` vale como o IP do pedido e como prefixo das chaves do limitador, para cada cenário ter a sua cota. O container recusa subir no modo e2e com `VERCEL_ENV=production`.
+**Modo de E2E.** Com `RITU_MODO=e2e`, o container monta stores, limitador e cidades em memória, guardados no `globalThis` (o Next carrega os módulos em separado). Nesse modo o header `x-ritu-e2e` vale como o IP do pedido e como prefixo das chaves do limitador, para cada cenário ter a sua cota. O relógio anda como o real, mas parte das 20h30 UTC do dia em que o processo sobe, para que o momento do dia (e, com ele, os candidatos dos roteiros) não dependa da hora da rodada. O container recusa subir no modo e2e com `VERCEL_ENV=production`.
 
 ## 6. Modelo de dados
 
@@ -234,7 +234,7 @@ src/
     telemetry/               # porta Telemetry e nomes de spans e métricas
   infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth (Auth.js, token, IP em HMAC), otel
     container.ts             # composition root
-    e2e/                     # modo e2e: roteiros, clima fixo e cota por x-ritu-e2e; só o container importa
+    e2e/                     # modo e2e: roteiros, clima e relógio fixos e cota por x-ritu-e2e; só o container importa
   app/                       # Next.js: telas e rotas; marca/ é a vitrine do design system
     _lib/                    # rota.ts (sessão, corpo e erros do Ritu viram status), fluxo.ts (rota de fluxo NDJSON)
     _rotas/                  # corpo das rotas: conversa, fluxo-de-run (mensagem e resposta do run), cron, onboarding, busca

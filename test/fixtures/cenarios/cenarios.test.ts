@@ -256,7 +256,7 @@ describe("cenários de aprendizado (011)", () => {
     expect(sugeridos[0]?.ultima_sugestao_em).not.toBeNull()
   })
 
-  it("troca-por-toque: canela troca por cravo na hora, sem etapa llm nova", async () => {
+  it("troca-por-toque: canela troca por noz-moscada na hora, sem etapa llm nova", async () => {
     const c = cenariosDeAprendizado["troca-por-toque"]
     if (!c) throw new Error("cenário ausente: troca-por-toque")
     const { contaId, deps } = await montarCenario(c)
@@ -274,8 +274,10 @@ describe("cenários de aprendizado (011)", () => {
     expect(resultado.resultado).toBe("trocou")
     if (resultado.resultado !== "trocou") throw new Error("troca não aconteceu")
     const item = resultado.sugestao.itens.find((i) => i.alimento_id === "canela")
-    expect(item?.troca?.alimento_id).toBe("cravo")
-    expect(item?.troca?.frase).toBe("Troquei canela por cravo: os dois aquecem e aliviam o peso.")
+    expect(item?.troca?.alimento_id).toBe("noz-moscada")
+    expect(item?.troca?.frase).toBe(
+      "Troquei canela por noz-moscada: os dois aquecem e aliviam o peso.",
+    )
     const llmDepois = (await deps.stores.runs.etapas(contaId, antes.final.run_id)).filter(
       (e) => e.tipo === "llm",
     )
@@ -284,7 +286,9 @@ describe("cenários de aprendizado (011)", () => {
     const aguardando = (await deps.stores.outcomes.pendentes(contaId)).find(
       (r) => r.id === retornoId,
     )
-    expect(aguardando?.sugestao.alimentos).toEqual(expect.arrayContaining(["cravo", "gengibre"]))
+    expect(aguardando?.sugestao.alimentos).toEqual(
+      expect.arrayContaining(["noz-moscada", "gengibre"]),
+    )
     expect(aguardando?.sugestao.alimentos).not.toContain("canela")
   })
 
@@ -350,11 +354,13 @@ describe("cenários de aprendizado (011)", () => {
       contaId,
       { intencoes: ["momento"], estados: ["com_frio"], evitar_da_mensagem: [] },
     )
-    // A ordem completa (candidatos_completos) põe o chá com dois "não ajudou" seguidos no fim dos chás; o corte por tipo o tira do contexto.
+    // A ordem completa (candidatos_completos) e o contexto põem o chá com dois "não ajudou" seguidos no fim dos chás.
+    // À noite, com frio, há só quatro chás possíveis (o corte por tipo), então ele segue no contexto, por último.
     const chasNaOrdem = dados.candidatos_completos.filter((id) => id.startsWith("cha-"))
     expect(chasNaOrdem.length).toBeGreaterThanOrEqual(2)
     expect(chasNaOrdem[chasNaOrdem.length - 1]).toBe("cha-gengibre")
-    expect(dados.candidatos.some((c) => c.id === "cha-gengibre")).toBe(false)
+    const chasNoContexto = dados.candidatos.map((c) => c.id).filter((id) => id.startsWith("cha-"))
+    expect(chasNoContexto[chasNoContexto.length - 1]).toBe("cha-gengibre")
   })
 
   it("retorno-pelo-agente: o ajudou da mensagem fecha o pendente 1 com origem conversa", async () => {

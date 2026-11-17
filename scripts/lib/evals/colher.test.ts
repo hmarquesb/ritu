@@ -245,10 +245,55 @@ describe("parteDoRun", () => {
 })
 
 describe("usoDoRun", () => {
-  it("põe as chamadas e os tokens do run no papel decisao", () => {
-    expect(usoDoRun(run, resultado())).toEqual({
-      decisao: { chamadas: 2, tokens_entrada: 120, tokens_saida: 45 },
+  const chamada = (papel: string) => ({
+    nome: "ritu_llm_chamadas_total",
+    valor: 1,
+    rotulos: { modelo: "modelo-a", papel },
+  })
+  const tokens = (papel: string, direcao: "entrada" | "saida", valor: number) => ({
+    nome: "ritu_tokens_total",
+    valor,
+    rotulos: { modelo: "modelo-a", papel, direcao },
+  })
+
+  it("soma chamadas e tokens de cada papel: decisao com 3 chamadas, apoio com 2 e reforco com 1", () => {
+    const metricas = [
+      chamada("decisao"),
+      chamada("decisao"),
+      chamada("decisao"),
+      tokens("decisao", "entrada", 100),
+      tokens("decisao", "entrada", 50),
+      tokens("decisao", "entrada", 20),
+      tokens("decisao", "saida", 10),
+      tokens("decisao", "saida", 20),
+      tokens("decisao", "saida", 5),
+      chamada("apoio"),
+      chamada("apoio"),
+      tokens("apoio", "entrada", 30),
+      tokens("apoio", "entrada", 30),
+      tokens("apoio", "saida", 5),
+      tokens("apoio", "saida", 5),
+      chamada("reforco"),
+      tokens("reforco", "entrada", 40),
+      tokens("reforco", "saida", 8),
+      { nome: "ritu_validacao_violacoes_total", valor: 1, rotulos: { violacao: "estrutura" } },
+    ]
+    expect(usoDoRun(metricas)).toEqual({
+      decisao: { chamadas: 3, tokens_entrada: 170, tokens_saida: 35 },
+      apoio: { chamadas: 2, tokens_entrada: 60, tokens_saida: 10 },
+      reforco: { chamadas: 1, tokens_entrada: 40, tokens_saida: 8 },
     })
+  })
+
+  it("sem ponto de reforco, o objeto não tem reforco", () => {
+    const uso = usoDoRun([chamada("decisao"), tokens("decisao", "entrada", 7)])
+    expect(uso).toEqual({ decisao: { chamadas: 1, tokens_entrada: 7, tokens_saida: 0 } })
+    expect(uso).not.toHaveProperty("reforco")
+    expect(uso).not.toHaveProperty("apoio")
+  })
+
+  it("sem métrica de modelo, o uso sai vazio", () => {
+    expect(usoDoRun([])).toEqual({})
   })
 })
 

@@ -327,3 +327,50 @@
 - **Decidido:** os testes unitários fixam o relógio em horas noturnas (T19). Os E2E ganham o header `x-ritu-e2e-agora`, só no modo e2e, e mandam 21h em São Paulo (T20).
 - **Por quê:** a dependência da hora é comportamento do produto, não defeito; fixar o relógio é a mudança mais conservadora e segue o padrão do `x-ritu-e2e-cota`.
 - **Como desfazer:** trocar o roteiro por itens candidatos em qualquer momento e tirar o header e o relógio fixo.
+
+## Portão 2 · P2-T4 · "Não tenho" do run
+
+- **Faltava:** o contrato manda unir `entrada.nao_tem_do_run` ao `acabou` em `lerContexto`, mas a entrada do acompanhante não tem esse campo: `nao_tem_do_run` é dado do preparo, preenchido por `aplicarResposta` depois do `preparar`.
+- **Decidido:** `lerContexto` une só Minha casa e `casa_da_mensagem.acabou`. O "Não tenho" já entra em `acabou` em `aplicarCasa` (`pergunta-do-run.ts`), que chama `entregaveis` de novo; a regra nova de `entregaveis` vale ali sem mudança. O teste do "Não tenho" fica em `pergunta-do-run.test.ts`.
+- **Por quê:** é o único ponto em que a resposta existe; mudar o schema da entrada levaria o dado para antes de ele existir.
+- **Como desfazer:** acrescentar `nao_tem_do_run` a `entradaDoAcompanhanteSchema`, repassar em `responder.ts` e unir em `lerContexto`.
+
+## Portão 2 · P2-T9 · Relógio do modo e2e
+
+- **Faltava:** o roteiro `pergunta-casa` dependia da hora real (o corte das refeições muda com o momento do dia), e o teste dele já falhava no commit que o criou.
+- **Decidido:** no modo e2e (`RITU_MODO=e2e`), o container usa um relógio que anda como o real a partir de 20h30 UTC do dia em que o processo sobe (`src/infra/e2e/relogio.ts`); o produto real segue com `systemClock`. O roteiro pergunta a banana (incerta na semente) e entrega `pausa-em-silencio`, com ou sem a resposta.
+- **Por quê:** teste determinístico sem mudar regra de produto; o modo e2e já fixa o clima pelo mesmo motivo.
+- **Como desfazer:** tirar `relogio.ts` do container e2e e escolher um cenário de pergunta de casa que não dependa da hora.
+
+## Portão 2 · P2-T6 · Aviso de saúde na retomada
+
+- **Faltava:** a tarefa cobria só `conversar.ts`; um run com fala de saúde que pausa (pergunta de casa) fecha em `continuar.ts`, sem o aviso.
+- **Decidido:** na pausa, o run com fala de saúde grava `com_incomodo: true` (como já faz o alerta e a variante); na retomada, `continuar.ts` põe o aviso `incomodo` na saída final quando `com_incomodo`, sem repetir. `continuar.ts` e o teste dele entram na tarefa.
+- **Por quê:** o objetivo da tarefa é "a saída final sempre leva o aviso"; o `com_incomodo` do run é o dado que a retomada já lê.
+- **Como desfazer:** tirar o aviso de `continuar.ts` e a gravação de `com_incomodo` na pausa.
+
+## Portão 2 · P2-T5 · "Não como" livre
+
+- **Faltava (1):** o preparo do acompanhante gravava o item livre no dia (`nao_come_texto`), o que contraria "não grava".
+- **Decidido (1):** `conversar.ts` passa ao acompanhante só os itens de `nao_come` com `alimento_id`. O caminho de item livre em `preparo.ts` continua (testado por `preparo.test.ts` e `evals/det/aprovacao/restricao-no-run.eval.ts`), mas a conversa não o alimenta mais.
+- **Por quê (1):** candidato só sai da base, então evitar um nome que a base não conhece não mudava nenhuma sugestão; e a frase aprovada já diz "se eu sugerir algo com X, é só me dizer que eu troco".
+- **Como desfazer (1):** voltar a passar os itens livres em `nao_come_da_mensagem`. Limpeza possível: tirar o caminho livre de `preparo.ts` (fica para a revisão da 010, a pedido da dona).
+- **Faltava (2):** quando o run pausa, a frase `naoComeDesconhecido` não chega à resposta final da retomada: a pausa não guarda a interpretação.
+- **Decidido (2):** não mudar schema nem checkpoint; a frase sai nos runs sem pausa e no caminho `evitar`.
+- **Por quê (2):** a opção mais conservadora; mudar o checkpoint mexe em núcleo fora da tarefa.
+- **Como desfazer (2):** guardar os itens livres no checkpoint da pausa e acrescentar a frase em `continuar.ts`.
+
+## Revisão da base · R1 nos chás de ervas alteradas (d0b187f)
+
+- **Faltava:** a R1 (`KNOWLEDGE.md` §8.1) diz "soma das ervas" sem dizer como somar, e cardamomo, cravo, camomila e capim-limão mudaram na revisão.
+- **Decidido:** qualidades de cada erva = virya + `gunas` de `alimentos.yaml`; gunas do chá = soma por erva, com pares opostos se cancelando, e ficam as de saldo positivo. `favorece_estados` = estados cujas `presentes` têm o oposto de alguma guna do chá e cujas `presentes` e `evitar_gunas` não têm nenhuma. Campo com fonte real fica (a fonte vence a regra), exceto em `cha-cravo-canela` e `cha-canela-cardamomo`: as páginas da Banyan liam cravo e cardamomo como quentes, e a revisão ficou com a Easy Ayurveda (mais peso, §7), que diz que os dois são frios. A R2 foi refeita só onde o campo já citava a regra; com saldo térmico zero, o chá fica sem contraindicação térmica. O efeito não muda: nenhuma erva mudou de efeito. Chás alterados: `cha-canela-cardamomo`, `cha-cardamomo`, `cha-cravo-canela`, `cha-camomila`, `cha-camomila-erva-doce`, `cha-capim-limao`, `cha-capim-limao-hortela`.
+- **Por quê:** é a conta mais direta do vocabulário de pares (§1) e reproduz os chás de uma erva que a revisão já tinha refeito (`cha-hortela`, `cha-capim-limao`).
+- **Consequências para a dona ver na segunda rodada:** (1) o chá de camomila fica `frio` e deixa de ser candidato para quem está `agitada` (que evita frio), embora a fonte dele cite `agitada`; os testes do runner da pausa passaram a perguntar anis-estrelado. (2) `cha-camomila-erva-doce` passa a favorecer `[com_calor, pesada]` em vez de `[agitada, seca, irritada]`; a citação `banyan-erva-doce`, que trata da erva-doce sozinha, saiu. (3) `cha-camomila-erva-doce` tem saldo frio e `contraindicacoes: []`, campo sem citação da regra; pela R2 seria `[com_frio]`, e ficou como estava. (4) `cha-capim-limao-hortela` fica `intenso` com `favorece_estados` de fonte que inclui `irritada`. (5) `cha-canela-cardamomo` perde `com_calor`, porque o saldo térmico fica zero.
+- **Como desfazer:** reverter d0b187f.
+
+## Junção da entrega-4 · relógio e2e
+
+- **Faltava:** o pedido da dona era manter "o relógio por requisição da `entrega-4` (T20)", mas a T20 foi revertida na própria `entrega-4` (438479b), porque a `entrega-3` trouxe o relógio deslocado para a noite (019 C3).
+- **Decidido:** manter o relógio que a `entrega-4` tem hoje (o noturno, `createRelogioE2e`) e adaptar a ele os roteiros e testes da P2-T9 da `main`.
+- **Por quê:** segue a intenção do pedido (vence o lado da `entrega-4`) sem ressuscitar um código que a trilha já tinha tirado.
+- **Como desfazer:** reaplicar a T20 (a91d363) e trocar o relógio do container.

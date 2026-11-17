@@ -1,5 +1,5 @@
 import type { z } from "zod"
-import { interpreteV1 } from "@/core/agents/prompts/interprete.v1"
+import { interpreteV2 } from "@/core/agents/prompts/interprete.v2"
 import { juizV1 } from "@/core/agents/prompts/juiz.v1"
 import { memoriaV1 } from "@/core/agents/prompts/memoria.v1"
 import type { LlmClient } from "@/core/llm/client"
@@ -37,7 +37,7 @@ export function createLlmDeRoteiros(): LlmClient {
     async gerar<T>(p: { instrucoes: string; entrada: string; schema: z.ZodType<T> }) {
       const tokens = { entrada: 10, saida: 5 }
       let dado: unknown
-      if (p.instrucoes === interpreteV1.instrucoes) {
+      if (p.instrucoes === interpreteV2.instrucoes) {
         dado = roteiroDaMensagem(mensagemDe(p.entrada))?.interpretacao
       } else if (p.instrucoes === juizV1.instrucoes) {
         dado = { apontamentos: [] }

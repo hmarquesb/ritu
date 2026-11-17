@@ -4,12 +4,14 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 (specs 008 a 015, com a correção C13 da 002) construída, com a tag `entrega-2`, aguardando o portão 2. O relatório está em `.plans/entrega-2-relatorio.md`; o checkpoint `c3-confiavel` está em `evals/resultados/c3-confiavel.md`. Entrega 3: 016 a 020 aprovadas; 016 e 017 implementadas e juntadas na `main` antes do portão 2; 018 em construção na trilha adiantada. 021 a 024 aprovadas (entrega 4 toda especificada).
+Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 (specs 008 a 015, com a correção C13 da 002) construída, com a tag `entrega-2`, e aprovada com correções pela dona no portão 2 em 2026-11-17. O relatório está em `.plans/entrega-2-relatorio.md`; o checkpoint `c3-confiavel` está em `evals/resultados/c3-confiavel.md`. As correções do portão 2 (seções "Correção do portão 2" das specs 008, 010, 012, 013 e 014) estão em `.plans/portao-2-correcoes-plan.md`, com o estado em `.plans/portao-2-estado.md`. Entrega 3: 016 a 020 aprovadas; 016, 017 e 018 implementadas e juntadas na `main`; 019 implementada e 020 em construção na trilha adiantada (`entrega-3`). 021 a 024 aprovadas (entrega 4 toda especificada).
 
 **Próximos passos, na ordem:**
-1. Portão 2: a dona confere o roteiro de `.plans/entrega-2-relatorio.md` §5 e aprova ou lista os ajustes.
-2. Em paralelo, no worktree: `/construir-entrega 3 adiantada`, seguindo pela 018.
-3. Depois do portão 2: `/construir-entrega 3`, que junta o que houver de novo na branch `entrega-3` (skill §0.6) e segue.
+1. Na `main`: as correções do portão 2 (`.plans/portao-2-correcoes-plan.md`).
+2. Em paralelo, no worktree: `/construir-entrega 3 adiantada`, seguindo pela 020.
+3. Depois das correções: ⚠️ rodada nova do `c3-confiavel`, em outro dia, com o modelo estável.
+4. A dona revisa a base (as linhas `a_confirmar`) e escreve, com o Claude, a spec nova dos chás híbridos. Ela é construída antes da 022.
+5. `/construir-entrega 3`, que junta o que houver de novo na branch `entrega-3` (skill §0.6) e fecha a entrega.
 
 ## 1. Entregas
 

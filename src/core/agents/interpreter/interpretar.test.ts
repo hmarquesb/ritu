@@ -6,7 +6,7 @@ import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryLedger } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
-import { interpreteV1 } from "../prompts/interprete.v1"
+import { interpreteV2 } from "../prompts/interprete.v2"
 import { createInterpreter } from "./interpretar"
 
 const kb = createMiniKnowledge()
@@ -47,7 +47,7 @@ describe("createInterpreter", () => {
     expect(r.trocas).toBe(0)
     expect(r.duracao_ms).toBe(0)
     const [p] = client.pedidos as { instrucoes: string; entrada: string }[]
-    expect(p?.instrucoes).toBe(interpreteV1.instrucoes)
+    expect(p?.instrucoes).toBe(interpreteV2.instrucoes)
     expect(p?.entrada).toContain("<mensagem_da_pessoa>")
   })
 

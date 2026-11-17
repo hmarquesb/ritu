@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { createMemoryAgent } from "@/core/agents/memory/memoria"
-import { interpreteV1 } from "@/core/agents/prompts/interprete.v1"
+import { interpreteV2 } from "@/core/agents/prompts/interprete.v2"
 import { juizV1 } from "@/core/agents/prompts/juiz.v1"
 import { createModelRouter } from "@/core/llm/router"
 import { getContainer } from "@/infra/container"
@@ -120,7 +120,7 @@ function pedidosDo(llm: { pedidos: unknown[] }, instrucoes: string): string[] {
 describe("instrução embutida chega delimitada e neutralizada em cada prompt", () => {
   it("Intérprete: a mensagem anterior entra no bloco conversa_do_dia", async () => {
     const { llm } = await rodarComInstrucoes()
-    const [entrada] = pedidosDo(llm, interpreteV1.instrucoes)
+    const [entrada] = pedidosDo(llm, interpreteV2.instrucoes)
 
     expect(entrada).toBeDefined()
     const conversa = dentroDe(entrada ?? "", "conversa_do_dia")

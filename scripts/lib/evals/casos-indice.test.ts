@@ -420,6 +420,16 @@ describe("índice dos casos por checkpoint", () => {
     }
   })
 
+  it("nenhuma expectativa de naoPode afirma um caminho, só a forma negada", () => {
+    for (const checkpoint of ["c1-base", "c2-conversa", "c3-confiavel"] as const) {
+      for (const caso of casosDoCheckpoint(checkpoint)) {
+        for (const expectativa of caso.naoPode ?? []) {
+          expect(expectativa.descricao, `${caso.id} (${checkpoint})`).not.toMatch(/^caminho /)
+        }
+      }
+    }
+  })
+
   it("todo caso com a marca promessa tem o critério de promessa", () => {
     const comPromessa = [...porId.values()].filter((caso) => caso.marcas?.includes("promessa"))
     expect(comPromessa.length).toBeGreaterThan(0)

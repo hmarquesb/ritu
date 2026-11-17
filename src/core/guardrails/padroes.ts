@@ -33,3 +33,11 @@ export const INJECTION: RegExp[] = [
 ]
 
 export const TAGS: RegExp = /<\/?\s*(mensagem_da_pessoa|contexto|sistema|system|instrucoes)\b/i
+
+// Fala de saúde, sobre o texto normalizado (minúsculas, sem acento), palavra inteira.
+export const SAUDE: RegExp[] = [
+  /\b(cura|curar|curou|curaria|cure)\b/,
+  /\b(tratamento|tratar)\b/,
+  /\b(remedio\w*|medicamento\w*|medicacao|diagnostico|doenca\w*)\b/,
+  /\b(gastrite|refluxo|ulcera|diabetes|hipertensao|pressao alta|colesterol|tireoide|enxaqueca|infeccao|inflamacao|cancer)\b/,
+]

@@ -19,6 +19,7 @@ import {
   validarResposta,
 } from "@/core/runs/pergunta"
 import type { Run } from "@/core/runs/ports"
+import { comAvisoDeIncomodo } from "./aviso-de-incomodo"
 import type { Deps, RespostaDaConversa } from "./conversar"
 import { fecharOuFalhar, filtroDoRun } from "./fim-com-propostas"
 import { anotarPendencia } from "./pausa-de-codigo"
@@ -142,7 +143,12 @@ export function criarContinuar(deps: Deps) {
     return { pergunta }
   }
 
-  async function aposFim(x: Retomada, saida: SaidaDoAcompanhante): Promise<Parte> {
+  // `incomodoAntes`: a marca do run antes da retomada, que a nova rodada do agente pode zerar.
+  async function aposFim(
+    x: Retomada,
+    saida: SaidaDoAcompanhante,
+    incomodoAntes: boolean,
+  ): Promise<Parte> {
     const { contaId, run, conteudo } = x
     const atual = await stores.runs.buscar(contaId, run.id)
     const perfil = await stores.profiles.ler(contaId)
@@ -152,11 +158,12 @@ export function criarContinuar(deps: Deps) {
       perfil,
       kb,
     )
-    const final = { ...saida, anotacoes }
+    const incomodo = incomodoAntes || Boolean(atual?.com_incomodo)
+    const final = { ...comAvisoDeIncomodo(saida, incomodo), anotacoes }
     await stores.runs.atualizar(contaId, run.id, { saida: final })
     await fixarTotais(contaId, run.id)
     await gravarMensagemDoAgente(contaId, run, final.resposta, false)
-    if (atual?.com_incomodo) await stores.messages.marcarIncomodoDoRun(contaId, run.id)
+    if (incomodo) await stores.messages.marcarIncomodoDoRun(contaId, run.id)
     if (atual?.status !== "running") return { saida: final }
     const fechada = await fecharOuFalhar(
       { stores, kb, runs, telemetry, clock },
@@ -164,7 +171,7 @@ export function criarContinuar(deps: Deps) {
         contaId,
         runId: run.id,
         caminho: atual.caminho,
-        comIncomodo: atual.com_incomodo,
+        comIncomodo: incomodo,
         saida: final,
         anotacoes,
         filtro: filtroDoRun(atual),
@@ -181,7 +188,7 @@ export function criarContinuar(deps: Deps) {
     const r = await retomar(x, resposta, runAtual)
     if (r.pergunta) return aposOutraPausa(x, r.pergunta, run)
     if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
-    return aposFim(x, r.saida)
+    return aposFim(x, r.saida, runAtual.com_incomodo)
   }
 
   async function falhar(x: Retomada): Promise<Parte> {

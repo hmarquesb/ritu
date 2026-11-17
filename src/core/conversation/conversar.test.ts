@@ -286,6 +286,56 @@ describe("conversar: atalhos e acompanhante", () => {
   })
 })
 
+describe("conversar: aviso de incômodo pela fala de saúde", () => {
+  const avisosDeIncomodo = (avisos: { tipo: string }[] | undefined) =>
+    (avisos ?? []).filter((a) => a.tipo === "incomodo")
+
+  it("sem incômodo na interpretação, a fala de saúde leva o aviso e marca a mensagem", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "esse chá cura gastrite?")
+    expect(avisosDeIncomodo(r.saida?.avisos)).toHaveLength(1)
+    const gravada = (await runDe(m, r.run_id)).saida as { avisos: { tipo: string }[] }
+    expect(avisosDeIncomodo(gravada.avisos)).toHaveLength(1)
+  })
+
+  it("fala de saúde com pausa do agente deixa o run com incômodo", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio", "agitada"] })],
+      roteiro: [
+        { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+        {
+          chamadas: [
+            { nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["abobora", "cenoura"] } },
+          ],
+        },
+      ],
+    })
+    m.clock.set("2026-09-16T22:00:00.000Z")
+    await m.stores.pantry.registrar(
+      m.conta.id,
+      [{ alimento_id: "abobora" }, { alimento_id: "cenoura" }],
+      "tela",
+    )
+    m.clock.set("2026-11-15T22:00:00.000Z")
+    await m.stores.pantry.registrar(m.conta.id, [{ alimento_id: "arroz-branco" }], "tela")
+    const r = await dizer(m, "esse chá cura gastrite? o que como?")
+    expect(r.status).toBe("waiting_for_input")
+    expect((await runDe(m, r.run_id)).com_incomodo).toBe(true)
+  })
+
+  it("com o aviso já na saída, ele não se repete", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], incomodo: { id: "estomago-pesado" } })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "tenho refluxo, o que tomo?")
+    expect(avisosDeIncomodo(r.saida?.avisos)).toHaveLength(1)
+  })
+})
+
 describe("conversar: alertas", () => {
   for (const alerta of ["fisico", "emocional"] as const) {
     it(`alerta ${alerta}: texto fixo, sem anotação, mensagens com incômodo e apagadas no dia seguinte`, async () => {
@@ -1200,5 +1250,44 @@ describe("conversar: semModelo limite", () => {
         { semModelo: "limite" },
       ),
     ).rejects.toMatchObject({ code: "mensagem_invalida" })
+  })
+})
+
+describe("conversar: não como livre", () => {
+  const frasePitaya =
+    "Ainda não conheço pitaya, então não consigo guardar isso. Se eu sugerir algo com pitaya, é só me dizer que eu troco."
+
+  it("não como pitaya (sem id) no caminho evitar: sem anotação, sem item no dia, com a frase", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["evitar"], nao_come: ["pitaya"] })] })
+    const r = await dizer(m, "não como pitaya")
+    expect(r.saida?.anotacoes).toEqual([])
+    expect(r.saida?.resposta).toContain(frasePitaya)
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([])
+  })
+
+  it("não como banana (com id) segue como antes: anotação e item do dia", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["evitar"], nao_come: ["banana"] })] })
+    const r = await dizer(m, "não como banana")
+    expect(r.saida?.anotacoes).toEqual([
+      { tipo: "nao_come", itens: [{ alimento_id: "banana", nome: "Banana" }] },
+    ])
+    expect(r.saida?.resposta).not.toContain("Ainda não conheço")
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([
+      { tipo: "nao_come", valor: "banana" },
+    ])
+  })
+
+  it("momento + não como pitaya pelo agente: a resposta termina com a frase, sem linha nao_come", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio"], nao_come: ["pitaya"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "estou com frio e não como pitaya")
+    expect(r.saida?.resposta.endsWith(` ${frasePitaya}`)).toBe(true)
+    expect(r.saida?.anotacoes.some((a) => a.tipo === "nao_come")).toBe(false)
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([])
   })
 })

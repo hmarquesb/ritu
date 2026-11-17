@@ -1,21 +1,18 @@
-import { timingSafeEqual } from "node:crypto"
+import { autorizarCron } from "@/app/api/cron/_autorizar"
 import { executarLimpeza } from "@/core/cleanup"
 import type { Container } from "@/infra/container"
 
-function autorizado(request: Request, segredo: string): boolean {
-  const recebido = Buffer.from(request.headers.get("authorization") ?? "")
-  const esperado = Buffer.from(`Bearer ${segredo}`)
-  return recebido.length === esperado.length && timingSafeEqual(recebido, esperado)
-}
-
 export function rotaDaLimpeza(deps: {
   container: Container
-  segredo: () => string
+  segredo: () => string | undefined
 }): (request: Request) => Promise<Response> {
   const { container } = deps
   return async (request) => {
-    const segredo = deps.segredo()
-    if (!segredo || !autorizado(request, segredo)) {
+    const autorizacao = autorizarCron(request.headers.get("authorization"), deps.segredo())
+    if (!autorizacao.ok) {
+      if (autorizacao.status === 503) {
+        return Response.json({ erro: "cron_desligado" }, { status: 503 })
+      }
       return Response.json({ erro: "sem_autorizacao" }, { status: 401 })
     }
     try {

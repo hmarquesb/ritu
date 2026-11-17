@@ -244,3 +244,17 @@
 - **Decidido:** o estado fica em `src/components/ritu/conversa/estado.ts` (redutor puro, Vitest); `use-conversa.ts` só liga o redutor ao `fetch` e ao fluxo.
 - **Por quê:** a lógica de estado fica testada sem DOM; o E2E cobre a ligação.
 - **Como desfazer:** juntar o redutor no hook.
+
+## 018 · A5 · roteiros do modo e2e ajustados à base e ao validador (T4)
+
+- **Faltava:** a spec pede o roteiro `pergunta-casa` sobre `couve` e `banana` e o `troca` com `cardamomo` como substituto possível; com a base e o seed reais, `banana` nunca entra nos candidatos do `ask_user` (`fora_dos_candidatos`) e o validador recusa `cardamomo` não confirmado em casa.
+- **Decidido:** `pergunta-casa` pergunta sobre `couve` e `leite` (ambos incertos no seed); `troca` entrega `cha-canela` só com `canela`, e o E2E troca a `canela`. O fake de LLM também responde ao Juiz (aprova) e à Memória (resumo vazio); mensagem sem roteiro cai em `sem_modelo`.
+- **Por quê:** os roteiros precisam passar no validador real; mudar a base ou o seed para caber no roteiro inverteria a regra.
+- **Como desfazer:** trocar os ids em `e2e/roteiros/pergunta-casa.ts` e `troca.ts` quando a base ou o seed mudarem.
+
+## 018 · A6 · `lerEventos` sai do core e vai para a tela (T13)
+
+- **Faltava:** a spec põe `lerEventos` em `src/core/conversation/eventos.ts` ("usado pela tela"), mas a regra R4 do teste de arquitetura só deixa `src/components/` importar tipos do core.
+- **Decidido:** `lerEventos` (e os testes dele) passa para `src/components/ritu/conversa/ler-eventos.ts`; `EventoDaTela` e `codificarEvento` ficam no core, e a tela importa o tipo com `import type`.
+- **Por quê:** quem lê o fluxo é só o navegador; mudar a regra de camada pediria ADR e abriria exceção para um caso que não precisa dela.
+- **Como desfazer:** voltar a função ao core e acrescentar uma exceção à R4 (com ADR).

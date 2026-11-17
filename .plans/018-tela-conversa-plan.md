@@ -453,6 +453,7 @@ export function criarRotaDeFluxo<B>(
 - referencia: nenhuma
 - contratos:
   - `estado.ts` (puro, sem React): `EstadoDaConversa` = `{ falas, runs, aberto?, pendentes, caixa: { texto, atalhos: string[], respondendo: boolean }, aoVivo?: { run_id?: string; frases: FraseDeEtapa[] }, erro?: { codigo: string; texto?: string; atalhos: string[] }, anuncio?: string }`; `inicial(c: ConversaDoDia): EstadoDaConversa` (caixa com `mensagem_sugerida` quando houver); `reduzir(estado, acao)` com ações: `enviou` (fala da pessoa otimista com `textoDaMensagem`, caixa respondendo), `evento` (`inicio`, `etapa` sem repetir a chave anterior, `fim` → visão do run, fala do agente, caixa vazia e atalhos desmarcados, `anuncio` = resposta completa uma vez, `pendentes`; `erro` → `erro` com o código), `falhou` (rede/inesperado: a mensagem e os atalhos voltam para a caixa), `visao` (troca, aprovação, voto ou consulta: substitui a visão do run), `digitou`, `marcou`.
+  - `lerEventos` (T10) só confere o `tipo` de cada evento: o redutor não confia nos campos sem checar (evento `fim` sem `visao` válida, ou `etapa` sem `frase.chave`, é ignorado ou vira `erro.inesperado`, nunca quebra a tela).
   - Run com pergunta aberta ou bloco aberto e nova mensagem enviada: a visão anterior passa a `seguiu` na tela quando o servidor devolver (a tela relê o run anterior depois do `fim`).
   - `use-conversa.ts` (`"use client"`): `useConversa(inicial: ConversaDoDia)` devolve o estado e `enviar()`, `responder(runId, resposta)`, `aprovar(runId, aprovadas)`, `trocar(runId, corpo)`, `responderTroca(runId, corpo)`, `votar(runId, voto)`, `tentarDeNovo()`. Envio: `POST /api/runs` (corpo `mensagemRecebidaSchema` da 008: texto e atalhos), lê `response.body.pipeThrough(lerEventos())`; resposta JSON não-200 vira `erro` com o código (`run_aberto` → texto `erro.run_aberto`). Resposta: `POST /api/runs/:id/resposta`, mesmo fluxo. Aprovação, troca, voto: rotas JSON, despacham `visao`. Fluxo que termina sem `fim` (conexão caiu) ou estado inicial com `aberto.status === "running"`: consulta `GET /api/runs/:id` a cada `telaConversa.consultaDoRun.intervaloMs` até sair de `running` ou passar de `maximoMs` (aí `erro.inesperado`). `401` em qualquer pedido: `window.location.assign("/")`.
   - Nada de texto de mensagem em `localStorage` ou cookie.
@@ -507,7 +508,7 @@ export function criarRotaDeFluxo<B>(
 ### T16 · Add the streaming run routes
 - nivel: nucleo
 - objetivo: `POST /api/runs` e `POST /api/runs/:id/resposta`, que rodam o agente e mandam as etapas ao vivo e a visão final por NDJSON.
-- arquivos: `src/app/_rotas/fluxo-de-run.ts`, `src/app/_rotas/fluxo-de-run.test.ts`, `src/app/api/runs/route.ts`, `src/app/api/runs/[id]/resposta/route.ts`
+- arquivos: `src/app/_rotas/fluxo-de-run.ts`, `src/app/_rotas/fluxo-de-run.test.ts`, `src/app/api/runs/route.ts`, `src/app/api/runs/[id]/resposta/route.ts`, `src/core/conversation/do-dia.ts`, `src/core/conversation/do-dia.test.ts`, `src/app/_rotas/conversa.ts`, `src/app/_rotas/conversa.test.ts`
 - depende de: T3, T6, T8, T12, T15
 - leitura: `.docs/ARCHITECTURE.md` §3 (fluxo de um run, estados)
 - skills: `next-best-practices` (`route-handlers.md`)
@@ -517,6 +518,8 @@ export function criarRotaDeFluxo<B>(
   - `/resposta`: `runDaConta` (T15) antes de tudo; corpo `respostaDaPessoaSchema` (009); emite `inicio` com o id recebido e chama `conversation.continuar` com o mesmo `aoVivo`; o resto igual.
   - `run_aberto` (outro run em `running`) e `pergunta_expirada`, lançados antes da primeira emissão, saem como JSON 409 (é o que a T12 garante: o `inicio` só é emitido depois de `iniciarRun`).
   - O trabalho segue mesmo se a pessoa fechar a aba; não ligar `request.signal`.
+  - **Extração antes de tudo:** `visaoDe` existe duas vezes, em `src/core/conversation/do-dia.ts` (~85-106) e numa cópia em `src/app/_rotas/conversa.ts` (~38-58): as mesmas 3 leituras (etapas, propostas, retornos) e a montagem de `visaoDoRun`. Exporte do core uma função só, `visaoDoRunDaConta(stores, contaId, run, voto, agora): Promise<VisaoDoRun>` (em `do-dia.ts`), use-a em `do-dia.ts`, em `conversa.ts` (apague a cópia) e no `fim` das rotas de fluxo. Os testes existentes de `do-dia` e `conversa` continuam verdes.
+  - Em `conversa.ts` (T15), a aprovação com mais de `config.aprovacao.maxLinhas` linhas hoje dá `corpo_invalido` pelo zod: passe a checar no handler e lançar `aprovacao_invalida`, como as linhas repetidas, com um teste.
   - Nos `route.ts`: `export const maxDuration = 60` (literal; igual a `telaConversa.rotaMaxDurationS`) e `export const dynamic = "force-dynamic"` se a doc instalada pedir.
 - testes primeiro (`fluxo-de-run.test.ts`, container com runtime roteirizado e stores em memória; use um cenário de `test/fixtures/cenarios/`): a primeira linha é `inicio`, há ao menos uma `etapa` antes de `fim`, nenhuma chave de etapa repetida em seguida, `fim` com visão válida e sem campo interno; run aberto → 409 `run_aberto` JSON; sem sessão → 401; `/resposta` com run de outra conta → 404; `/resposta` numa pergunta de casa segue até `fim`; consumidor que cancela o fluxo: o run termina `done` no store.
 - comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`
@@ -526,7 +529,7 @@ export function criarRotaDeFluxo<B>(
 ### T17 · Build the conversation screen and page
 - nivel: tela
 - objetivo: juntar tudo na tela `/conversa`: lista com as falas e as visões, etapas ao vivo, anúncios, indicador de retornos e caixa.
-- arquivos: `src/components/ritu/conversa/conversa.tsx`, `src/app/(app)/conversa/page.tsx`
+- arquivos: `src/components/ritu/conversa/conversa.tsx`, `src/app/(app)/conversa/page.tsx`, `src/app/(app)/layout.tsx`, `src/components/ritu/conversa/ingrediente.tsx`
 - depende de: T7, T9, T13, T14
 - leitura: `.docs/DESIGN.md` §3 e §4; `.docs/BUSINESS.md` §8; `.docs/DEVELOPMENT.md` §"UI"
 - skills: `frontend-design`, `web-design-guidelines`, `next-best-practices` (`rsc-boundaries.md`)
@@ -537,6 +540,10 @@ export function criarRotaDeFluxo<B>(
   - Ao chegar a resposta, o foco continua na caixa; a lista rola até o começo da resposta (`scrollIntoView({ block: "start" })`, sem animação com movimento reduzido).
   - Erro de rede ou `erro.inesperado`: `StateBlock kind="error"` abaixo da última fala, com "Tentar de novo"; `run_aberto` mostra `erro.run_aberto`. Estado recarregado com run `running`: `etapas.ainda` até o run sair de `running`.
   - `IndicadorDeRetornos` acima da caixa; `CaixaDeMensagem` embaixo.
+  - Rótulos dos atalhos para a fala otimista: a página monta no servidor o mapa id→`"{emoji} {rotulo}"` com a mesma função que o servidor usa ao gravar a fala (`rotuloDoAtalho`, `src/core/messages/texto.ts`) sobre `knowledge.estados`, e passa a `useConversa(inicial, rotulos)`. Assim a fala da pessoa não muda de texto ao recarregar.
+  - `BlocoDeAprovacao` guarda as marcadas no estado inicial: passe `key` pelo `run_id` (e pelo estado do bloco) para ele recomeçar quando o bloco mudar. `BlocoDeSugestao` recebe a sugestão inteira; os callbacks de troca montam o corpo da rota com `sugestao.posicao`.
+  - Em `ingrediente.tsx` (T14), o `aria-label` do chip com menu ("Opções para <item>") esconde o "confira se ainda tem" do leitor de tela: inclua o texto de incerto no nome acessível quando `incerto`.
+  - Moldura no desktop: a T7 pôs `max-w-content` (40rem) no envoltório da `nav` lateral (14rem) e do `main`, o que deixa o `main` com cerca de 24rem. Ajuste `src/app/(app)/layout.tsx` para a lateral ficar fora da medida: a medida de leitura (`max-w-content`) vale para o `main`, ao lado da coluna de 14rem. Nada mais muda na moldura.
   - Página (servidor): `exigirPasso("pronto")`, `conversaDoDia({ stores, clock, seed: container.demoSeed }, conta, perfil)`, atalhos de `data/estados.yaml` pela `knowledge` do container, `<Conversa inicial={…} atalhos={…} />`. Sem fala e sem run aberto: `StateBlock kind="empty"` com `vazia.titulo` e `vazia.texto` acima da caixa. `noscript` com `textosConversa.semJs`; as falas do dia renderizam no servidor.
 - testes primeiro: nenhum Vitest (E2E na T19); guard verde.
 - comandos: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, e uma checagem manual com `npm run build && RITU_MODO=e2e npm run start` ou o E2E existente de entrada (`CI=1 npx playwright test e2e/entrada.spec.ts`)
@@ -552,7 +559,7 @@ export function criarRotaDeFluxo<B>(
 - skills: nenhuma
 - referencia: nenhuma
 - contratos:
-  - `seguranca/conversa.eval.ts` (como `evals/det/seguranca/*.eval.ts` da 017; R6 proíbe importar `@/infra/*` fora do container: siga o que os outros evals fazem): cada rota da 018 (`GET /api/conversa`, `POST /api/runs`, `GET /api/runs/:id`, `/resposta`, `/aprovacao`, `/troca`, `/troca/resposta`, `/voto`) sem sessão → 401; com run de outra conta → 404 e nada gravado (troca, voto, aprovação, resposta); `GET /api/conversa` não traz fala nem run de outra conta.
+  - `seguranca/conversa.eval.ts` (como `evals/det/seguranca/*.eval.ts` da 017; R6 proíbe importar `@/infra/*` fora do container: siga o que os outros evals fazem): cada rota da 018 (`GET /api/conversa`, `POST /api/runs`, `GET /api/runs/:id`, `/resposta`, `/aprovacao`, `/troca`, `/troca/resposta`, `/voto`) sem sessão → 401; com run de outra conta → 404 e nada gravado (troca, voto, aprovação, resposta); `GET /api/conversa` não traz fala nem run de outra conta, inclusive quando uma mensagem da conta cita o `run_id` de um run de outra conta (o `conversaDoDia` busca runs citados de outro dia com `runs.buscar`, que filtra por conta: o eval prova que o run não aparece).
   - `conversa/visao.eval.ts`: a visão de cada cenário de conversa de `test/fixtures/cenarios/` (rodado com o runtime roteirizado) passa no tipo `VisaoDoRun` (schema zod local ao eval) e o JSON não tem `linha_base`, `citados`, `checkpoint`, `tokens`, `modelo`, `clima_usado`.
   - `mapa.ts`: as linhas "Rota sem sessão" e "Dado de outra conta" ganham `seguranca/conversa.eval.ts`; a visão entra na linha que fala de dado interno/visão (ou numa linha nova "Visão do run sem campo interno", se não houver).
 - testes primeiro: os próprios evals.
@@ -575,9 +582,9 @@ export function criarRotaDeFluxo<B>(
     - conta nova (Google simulada da 017) começa com a caixa vazia e o texto de apoio;
     - atalhos: marcar dois e enviar sem texto;
     - caixa durante a resposta: `aria-disabled="true"`, foco na caixa, "O Ritu está respondendo"; ao fim, vazia e atalhos desmarcados;
-    - pergunta de casa respondida e pulada;
+    - pergunta de casa (roteiro `pergunta-casa`: itens `couve` e `leite`, A5) respondida e pulada;
     - bloco: aprovar um e recusar outro ("Anotei 1 de 2." ou o número certo); "Agora não";
-    - troca: Trocar mostra o substituto e a frase; Não tenho com pergunta da troca;
+    - troca (roteiro `troca`: `cha-canela`, trocar a `canela`, A5): Trocar mostra o substituto e a frase; Não tenho com pergunta da troca;
     - 👍 e troca para 👎; recarregar mantém o voto, a troca e o bloco aberto;
     - `<script>` e `**` aparecem como texto;
     - recarregar no meio do roteiro `lento` mostra "O Ritu ainda está respondendo…" e depois a resposta;
@@ -588,6 +595,8 @@ export function criarRotaDeFluxo<B>(
     - zoom: 200% em 1280 px sem rolagem horizontal e com a caixa visível;
     - axe (`expectSemViolacoes`) nos estados vazia, respondendo, pergunta, resposta com bloco e erro; nas quatro abas e em `/como-pensei/<run>`; nos dois temas; em `celular` e `desktop`.
   - Esperas observáveis (`expect(...).toBeVisible()` etc.), nada de `waitForTimeout`.
+  - Confira nas screenshots de desktop: o cabeçalho (`max-w-content`) e o corpo (envoltório `max-w-[59rem]` da T17, com a lateral de 14rem) ficam alinhados? Desalinhado é defeito de tela: relate, não contorne.
+  - Os E2E da 017 regravam `.plans/017-*.png` a cada rodada: não inclua esses arquivos na sua resposta como tocados; o orquestrador os reverte.
   - `mapa.ts`: a linha "Resposta do agente com `<script>`" aponta para `e2e/conversa.spec.ts`.
   - Screenshots em `.plans/018-<estado>-<tema>-<projeto>.png` (estados `vazia`, `respondendo`, `pergunta`, `resposta-bloco`; temas `light`, `dark`; projetos `celular`, `desktop`), por um teste marcado que só roda com `SCREENSHOTS=1` ou por script equivalente ao da 017 (procure como a 017 tirou as dela).
   - Antes de rodar: `lsof -nP -iTCP:3000 -sTCP:LISTEN` vazio; se houver servidor, espere e repita (não mate processo).
@@ -595,6 +604,70 @@ export function criarRotaDeFluxo<B>(
 - comandos: `npm run lint`, `npm run typecheck`, `npm run build`, `CI=1 npm run test:e2e`, `npm run eval:det:resumo`
 - pronto quando: `e2e/conversa.spec.ts` verde 3 vezes seguidas (`--repeat-each=3`) e a suíte E2E inteira verde; screenshots gravadas.
 - fora: código de produção. Defeito de tela encontrado vira relato (o orquestrador abre a correção), não contorno no teste.
+
+### C1 · Isolate the model quota per E2E test
+- nivel: nucleo
+- objetivo: no modo e2e, o registro de uso dos modelos (cota por minuto e por dia) não pode ser compartilhado entre testes: cada `x-ritu-e2e` tem a sua cota, como os stores.
+- arquivos: `src/infra/container.ts`, `src/infra/fakes/memory-stores.ts` (se o isolamento ficar lá), um teste novo ao lado (`src/infra/e2e/cota.test.ts` ou no teste existente do container/e2e)
+- depende de: nenhuma
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos: hoje `createMemoryLedger` (`src/infra/fakes/memory-stores.ts` ~1022), usado em `src/infra/container.ts` ~191 no modo e2e, é um só para o processo; com os limites de `config/llm-cotas.ts` (rpm 15) a cota acaba depois de 8 a 10 mensagens roteirizadas no mesmo minuto, e a tela mostra "Meu limite de conversas de hoje acabou" ou a resposta segura. Corrigir: no modo e2e, o ledger segue o mesmo isolamento por `x-ritu-e2e` que os stores já usam (procure como os stores escolhem o "banco" pelo header). Não mude os limites de `config/llm-cotas.ts`, nem o comportamento fora do modo e2e. Um teste sem header (o padrão) continua com um ledger só.
+- testes primeiro: com o container em modo e2e, dois ids de `x-ritu-e2e` diferentes têm cotas independentes (esgotar uma não esgota a outra); fora do e2e nada muda.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test -- --maxWorkers=3`, `npm run build`
+- pronto quando: testes verdes; build passa.
+- fora: rotas, telas, `e2e/*.spec.ts`.
+
+### C2 · Answer run_aberto with 409 when another run is running
+- nivel: nucleo
+- objetivo: com um run `running` aberto (roteiro `lento` numa aba), `POST /api/runs` de outra aba deve responder `409 { erro: "run_aberto" }` e não `500 erro_inesperado`.
+- arquivos: os que a causa exigir, entre `src/app/_lib/fluxo.ts`, `src/app/_rotas/fluxo-de-run.ts`, `src/infra/fakes/memory-stores.ts`, `src/core/runs/run-service.ts`, e os testes deles; diga quais tocou
+- depende de: C1
+- leitura: nenhuma
+- skills: nenhuma
+- referencia: nenhuma
+- contratos: suspeitas do E2E: (a) `src/app/_lib/fluxo.ts` (`descreverErro`, ~25) não reconhece o erro como `RituError` (por exemplo, erro embrulhado pela transação ou por `comSpanDoRun`); (b) `emTransacao` do fake (`memory-stores.ts` ~997) restaura `db.estado` no `catch` e pode sobrescrever o run em andamento de outro pedido. Ache a causa real com um teste que reproduza: dois `POST /api/runs` concorrentes da mesma conta pelo handler (`src/app/_rotas/fluxo-de-run.ts`) com o container e2e e o roteiro `lento`; o segundo responde 409 `run_aberto` em JSON e o primeiro termina normalmente, sem perder o run. Se a causa for o `emTransacao` restaurar estado de outro pedido, corrija o fake para não apagar escrita alheia (é defeito do fake, não do Postgres).
+- testes primeiro: o teste de concorrência acima.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test -- --maxWorkers=3`, `npm run build`
+- pronto quando: o teste passa; nada mais muda.
+- fora: telas, `e2e/*.spec.ts`.
+
+### C3 · Align the header with the body on desktop and keep the message box above the bar on mobile
+- nivel: tela
+- objetivo: corrigir dois defeitos de layout vistos nas screenshots da T19.
+- arquivos: `src/app/(app)/layout.tsx`, `src/components/ritu/conversa/caixa.tsx`, `src/components/ritu/conversa/conversa.tsx`, `src/components/tokens/tokens.css`
+- depende de: nenhuma
+- leitura: `.docs/DESIGN.md` §3 e §4; `.docs/DEVELOPMENT.md` §"UI"
+- skills: `frontend-design`, `web-design-guidelines`
+- referencia: nenhuma
+- contratos:
+  - Desktop (`.plans/018-resposta-bloco-light-desktop.png`): logo, menu e a faixa da demonstração ficam em x≈344–936 (`max-w-content`), e a lateral começa em x≈192 e o corpo em 448–1088. O cabeçalho e o corpo devem usar o mesmo envoltório e alinhar à esquerda com a lateral. Troque o `max-w-[59rem]` por um token novo de largura em `tokens.css` (por exemplo `--container-shell`, usado como `max-w-shell`), e o `main` continua com `max-w-content`.
+  - Celular (`.plans/018-pergunta-light-celular.png`): a caixa presa (atalhos, texto e Enviar) ocupa mais da metade da tela e o fim dela, com o Enviar, fica por baixo da barra inferior fixa. A caixa fica inteira acima da barra (`bottom` igual à altura da barra mais a safe area) e ocupa menos altura: os atalhos numa linha com rolagem horizontal (só nessa linha, sem rolagem horizontal da página), o campo começando com 2 a 3 linhas.
+  - Larguras arbitrárias de `conversa.tsx` (`max-w-[38rem]`) e `fala.tsx` passam a token, se houver um que sirva (`max-w-prose`/`max-w-content`); `fala.tsx` está fora desta tarefa: só `conversa.tsx`.
+  - Só tokens, sem `dark:`.
+- testes primeiro: nenhum Vitest; o guard continua verde.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npx vitest run src/components`, `npm run build`, `CI=1 npx playwright test e2e/entrada.spec.ts e2e/comecar.spec.ts e2e/marca.spec.ts` (antes, `lsof -nP -iTCP:3000 -sTCP:LISTEN`; ocupada, espere; não suba servidor próprio)
+- pronto quando: layout corrigido, E2E existentes verdes; diga como conferiu a caixa no celular (screenshot em 390×844 ou o projeto `celular` do Playwright).
+- fora: `e2e/conversa.spec.ts` (é da T19, em curso).
+
+### C4 · Keep the fixed panel from covering the conversation and fix the returns link target
+- nivel: tela
+- objetivo: corrigir os defeitos de tela que o E2E e as screenshots da T19 acharam depois da C3.
+- arquivos: `src/components/ritu/conversa/retornos.tsx`, `src/components/ritu/conversa/conversa.tsx`, `src/components/ritu/conversa/caixa.tsx`, `src/app/(app)/layout.tsx`, `src/components/ritu/demo-banner.tsx`
+- depende de: C3
+- leitura: `.docs/DESIGN.md` §3 (acessibilidade e conversa) e §4; `.docs/DEVELOPMENT.md` §"UI"
+- skills: `frontend-design`, `web-design-guidelines`
+- referencia: nenhuma
+- contratos:
+  - axe `target-size` (serious) no link do indicador de retornos ("N sugestões esperando seu retorno", `retornos.tsx`), dentro do painel fixo (`conversa.tsx` ~227): o alvo tem menos de 24 px de altura e fica colado no conteúdo. O link precisa de alvo de pelo menos 24×24 px com folga (por exemplo, `inline-flex items-center min-h-11` ou `min-h-6` com espaço em volta), sem mudar o texto.
+  - O painel fixo (retornos, atalhos, caixa) cobre o começo da resposta no desktop (`.plans/018-resposta-bloco-light-desktop.png`: cobre o primeiro cartão de sugestão) e cobre a pergunta no celular (`.plans/018-pergunta-light-celular.png`). Nada da conversa pode ficar escondido atrás do painel: a lista (`role="log"`) ganha espaço embaixo igual à altura do painel (meça o painel, por exemplo com `ResizeObserver` numa variável CSS, ou use um layout em que o painel não sobreponha a lista), e o `scrollIntoView` da resposta e o `scroll-margin` levam o painel em conta. No celular, diminua a altura do painel onde der sem perder função (por exemplo, menos espaço entre atalhos e campo, contador só quando aparece).
+  - A faixa da demonstração ("Você está no perfil de demonstração…", `DemoBanner`) continua no envoltório estreito (texto a partir de x≈344) e desalinhada do cabeçalho e do corpo, que agora usam `max-w-shell`: ela usa o mesmo envoltório.
+  - Só tokens, sem `dark:`; nenhum texto novo.
+- testes primeiro: nenhum Vitest; o guard continua verde.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npx vitest run src/components`, `npm run build`, `CI=1 npx playwright test e2e/conversa.spec.ts e2e/entrada.spec.ts e2e/comecar.spec.ts e2e/marca.spec.ts` (antes, `lsof -nP -iTCP:3000 -sTCP:LISTEN`; ocupada, espere; não suba servidor próprio fora do Playwright; sem `SCREENSHOTS=1`)
+- pronto quando: `conversa.spec.ts` verde nos dois projetos (inclusive o axe da "resposta com bloco" no desktop); os outros E2E verdes; diga como conferiu que nada fica atrás do painel.
+- fora: `e2e/conversa.spec.ts` (da T19, sem commit).
 
 ## Ondas
 
@@ -610,3 +683,8 @@ export function criarRotaDeFluxo<B>(
 | 8 | T16 | Depende de T15 (`runDaConta`) e T3 |
 | 9 | T18 | Depende de T15 e T16; mexe em `mapa.ts` |
 | 10 | T19 | E2E de tudo; mexe em `mapa.ts` depois da T18 |
+| 10a | C1, C3 | Defeitos achados pela T19: cota do modo e2e (núcleo) e layout (tela); sem arquivo em comum |
+| 10b | C2 | Pode tocar `memory-stores.ts` (como a C1) |
+| 10c | T19 | Volta ao E2E com as correções |
+| 10d | C4 | Defeitos de tela achados na 2ª rodada da T19 |
+| 10e | T19 | Fecha o E2E e as screenshots |

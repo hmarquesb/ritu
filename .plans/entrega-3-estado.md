@@ -95,22 +95,34 @@
 
 | Tarefa | Status | Commit |
 |---|---|---|
-| T1 · Add RunRepository.doDia and votos | pendente |  |
-| T2 · Add the conversation screen configs and texts | pendente |  |
-| T3 · Call aoCriar when conversar creates the run | pendente |  |
-| T4 · Add the E2E mode scripts, the fixed weather and wire them in the container | pendente |  |
-| T5 · Add the radio group and the toggle button to the base components | pendente |  |
-| T6 · Add the step sentences | pendente |  |
-| T7 · Add the signed-in navigation and the empty tab pages | pendente |  |
-| T8 · Add the run view projection | pendente |  |
-| T9 · Build the speech, steps, footer, returns indicator and message box | pendente |  |
-| T10 · Add the stream events codec | pendente |  |
-| T11 · Add the conversation of the day | pendente |  |
-| T12 · Add the streaming route helper and the error status map | pendente |  |
-| T13 · Add the screen state reducer and the useConversa hook | pendente |  |
-| T14 · Build the suggestion, ingredient, buy-later line, question and approval block | pendente |  |
-| T15 · Add the JSON routes of the conversation and the run | pendente |  |
-| T16 · Add the streaming run routes | pendente |  |
-| T17 · Build the conversation screen and page | pendente |  |
-| T18 · Add the conversation deterministic evals | pendente |  |
-| T19 · Write the conversation E2E and take the screenshots | pendente |  |
+| T1 · Add RunRepository.doDia and votos | concluida | 4730086 |
+| T2 · Add the conversation screen configs and texts | concluida | dd149d3 |
+| T3 · Call aoCriar when conversar creates the run | concluida | d9cf2e2 |
+| T4 · Add the E2E mode scripts, the fixed weather and wire them in the container | concluida | 36a2e83 |
+| T5 · Add the radio group and the toggle button to the base components | concluida | 3bea437 |
+| T6 · Add the step sentences | concluida | 5347ed3 |
+| T7 · Add the signed-in navigation and the empty tab pages | concluida | dab13d0 |
+| T8 · Add the run view projection | concluida | 36d24c4 |
+| T9 · Build the speech, steps, footer, returns indicator and message box | concluida | 9c77455 |
+| T10 · Add the stream events codec | concluida | df53f2c |
+| T11 · Add the conversation of the day | concluida | 569329d |
+| T12 · Add the streaming route helper and the error status map | concluida | a7530a8 |
+| T13 · Add the screen state reducer and the useConversa hook | concluida | 8442bc4 |
+| T14 · Build the suggestion, ingredient, buy-later line, question and approval block | concluida | 8d2573f |
+| T15 · Add the JSON routes of the conversation and the run | concluida | 025949e |
+| T16 · Add the streaming run routes | concluida | e2dff2b |
+| T17 · Build the conversation screen and page | concluida | 8dc9796 |
+| T18 · Add the conversation deterministic evals | concluida | 47a8622 |
+| T19 · Write the conversation E2E and take the screenshots | concluida | 9b018b4 |
+| C1 · Isolate the model quota per E2E test | concluida | a016c14 |
+| C3 · Align the header with the body on desktop and keep the message box above the bar on mobile | concluida | 8bef574 |
+| C4 · Keep the fixed panel from covering the conversation and fix the returns link target | concluida | ff430d3 |
+| C2 · Answer run_aberto with 409 when another run is running | concluida | 26b7595 |
+> 018 T9: uma reprovação (voto com tipo próprio em vez de `"up" | "down"`; envio duplo pelo submit e pelo `onPress`; `aria-disabled` não chega ao `textarea`). Devolvida ao implementador, que pode tocar `src/components/base/text-field.tsx`.
+> 018 T13: uma reprovação (conexão caída sem `fim` deixa a caixa travada; sem teste do caminho de consulta; R4: `use-conversa.ts` importa valor de `@/core/conversation/eventos`). Devolvida com A6 (`lerEventos` vai para `src/components/ritu/conversa/ler-eventos.ts`).
+> Para o fechamento da 018: o E2E da 017 regrava `.plans/017-*.png` a cada rodada (screenshots sem condição); larguras arbitrárias (`max-w-[59rem]`, `max-w-[38rem]`, `max-w-[26rem]`) fora dos tokens: avaliar um token `--container-shell` no fechamento.
+> Para o fechamento da 018 (T18): a linha nova do mapa "Visão do run sem campo interno" precisa entrar em `.docs/QA.md`; o `npm run eval:det:resumo` lê `.vitest/eval-det.json`, que o `npm run eval:det` não grava (só o comando da CI grava): a linha do AGENTS.md diz que o resumo "roda" os evals.
+> 018 T19: E2E escrito (`e2e/conversa.spec.ts`, mapa, 16 screenshots), sem commit; travado em defeitos de produto → C1 (cota do modo e2e compartilhada entre testes), C2 (run aberto responde 500), C3 (cabeçalho desalinhado no desktop; caixa sob a barra no celular). Servidor órfão (PID 5150, deste worktree) encerrado pelo orquestrador. Divergências aceitas no teste: "conta nova" é demonstração sem semente (o E2E não simula Google), então a caixa vem com a mensagem sugerida; Trocar no roteiro `troca` leva canela→cominho direto.
+> 018 C2: uma reprovação (`ehRituError` aceitava qualquer `Error` com `code`: erro do driver ou do Node viraria 400 com código interno, sem log). Devolvida com marca `Symbol.for("ritu.error")` na `RituError` (o `name` não serve: as subclasses o sobrescrevem). Causa do 500: no build, o container e2e no `globalThis` vem de outra cópia de `@/core/errors`, e o `instanceof` falha.
+> 018 T19 (2ª rodada): `conversa.spec.ts` 186/6/48 em `--repeat-each=3`; suíte inteira 161/2/25. Falha: axe `target-size` no link de retornos (desktop), painel fixo cobrindo a resposta (desktop) e a pergunta (celular), faixa da demonstração desalinhada → C4. Duas falhas do próprio teste corrigidas na T19 (seletor duplicado pela região `aria-live`; sincronização do "run aberto" pela 1ª etapa: era a intermitência do `:311`).
+> Para o relatório (018 T19): no desktop, a borda direita do cabeçalho (menu em x≈1100) e a do corpo da conversa (x≈1064) não coincidem (borda esquerda alinhada). No celular, o cabeçalho não é fixo e sai de vista ao rolar. No desktop e no celular, a parte de baixo de um cartão de sugestão fica sob o painel fixo até a pessoa rolar.

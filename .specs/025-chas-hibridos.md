@@ -1,6 +1,7 @@
 ---
 title: Chás híbridos
-status: approved
+status: implemented
+implemented: d4461e7
 entrega: 4
 created: 2026-11-17
 ---

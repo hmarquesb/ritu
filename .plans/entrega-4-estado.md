@@ -69,3 +69,23 @@ Plano em `.plans/022-producao-plan.md`. `c5-publico` adiado (022 A2).
 
 > 022 fechada em 2026-11-17 na trilha adiantada: gates 1 a 6, `dup` (0 clones) e `base:check` (49 `a_confirmar`, sem erros) verdes; spec `implemented`; ADRs 0046 a 0048. Pendente: `c5-publico` (022 A2, espera o `c4-site`); o que depende das contas da dona está em `.plans/BLOQUEIOS.md` (base, primeiro deploy, `painel:publicar`, `smoke:completo`, flags do `vercel` CLI). Sem push (pedido da dona). Pendências para a junção na `main`: `test:db` do `UsageLimiter` (021 A4) e do `container.saude()` com Postgres real; linhas de status de `AGENTS.md`, `ROADMAP.md` §0 e `.specs/README.md` ficam com a sessão principal.
 
+
+## 025 · Chás híbridos
+
+Plano em `.plans/025-chas-hibridos-plan.md`. Na `main`.
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Turn agua-morna-com-limao into a pratica | concluida | 5f77408 |
+| T2 · Add the cha field and derive single-herb teas | concluida | ccb364d |
+| T3 · Validate and mount the derived teas in the knowledge base | concluida | 8a56da9 |
+| T4 · Review the cha field of the six herbs and write rule R9 | concluida | 62cf4e5 |
+| T5 · Make the tea pattern generic | concluida | de64927 |
+| T6 · Seed the demo profile with the generic tea pattern | concluida | 0e01c99 |
+| T7 · Migrate the stored tea pattern keys | concluida | b98484a |
+| T8 · Add acompanhante.v7 | concluida | aa8c485 |
+| T9 · Add the deterministic evals for derived teas and the generic pattern | concluida | d4461e7 |
+| T10 · Add the c3 LLM cases for the tea pattern | concluida | 8d1d73f |
+| T11 · Close spec 025 | concluida | (commit de docs) |
+
+> 025 fechada em 2026-11-17 na `main`: gates 1 a 6, `dup` (0 clones), `base:check -- --producao` e `test:db` verdes (3433 testes, 1452 casos det, 187 e2e). ADR 0049. Decisões 025 A1 a A3. Pendente: push (o job `deploy` aplica a `0005` em produção) e a rodada nova do `c3-confiavel` com `c3-s23`/`c3-s24`.

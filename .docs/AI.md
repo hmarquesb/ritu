@@ -38,7 +38,7 @@ Um agente **decide o caminho**, **age**, **observa o resultado** e **corrige**. 
 
 O Intérprete usa o prompt `interprete.v2`: `estados` só com o que a pessoa disse que sente agora, sem deduzir, mas aceitando o jeito do dia a dia ("morta de cansaço", "exausta" e "sem pique" são `sem_energia`).
 
-O Acompanhante usa o prompt `acompanhante.v6`: além do contexto da v5, recebe `resumo_de_rotina` e `padroes` (os confirmados, até 10) e dá preferência ao padrão que fala do momento de agora quando o item está entre os candidatos. Resumo e padrões vão ao contexto neutralizados, como dados, e padrão não autoriza nada fora dos candidatos. O Memória só compacta: não escolhe o que anotar nem grava (regra 4).
+O Acompanhante usa o prompt `acompanhante.v7`: além do contexto da v5, recebe `resumo_de_rotina` e `padroes` (os confirmados, até 10) e dá preferência ao padrão que fala do momento de agora quando o que ele aponta está entre os candidatos; quando o padrão fala de "um chá", escolhe entre os chás candidatos o que casa com o momento e com a casa. Resumo e padrões vão ao contexto neutralizados, como dados, e padrão não autoriza nada fora dos candidatos. O Memória só compacta: não escolhe o que anotar nem grava (regra 4).
 
 O Juiz usa o prompt `juiz.v1`, sem tools, pela mesma chamada de apoio do Intérprete. **Ele só aponta; quem decide é o código**, por `config/juiz.ts`:
 
@@ -191,7 +191,7 @@ O validador recebe o clima só se `clima.agora` devolveu `ok` no run.
 | `memoria.propor` | Anotar o fato de rotina que o Intérprete apontou. O agente decide se propõe; o texto é a frase do Intérprete |
 | `lista.propor` | Pôr na lista "Para ter em casa" um alimento que a pessoa respondeu que não tem e que faltou para uma sugestão. No máximo um por resposta, e nunca quando há candidato a "vale ter em casa" |
 
-As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3) e devolvem `proposto: true` com a proposta ou `proposto: false` com um código de recusa, que não pausa o run e conta no teto de recusas do loop. `finalizar` recolhe as aceitas. O prompt `acompanhante.v6` diz quando propor, manda não falar do bloco no texto e diz quando registrar um retorno (`resultado.registrar`).
+As tools de proposta nunca gravam: validam o pedido contra os dados do run (§3) e devolvem `proposto: true` com a proposta ou `proposto: false` com um código de recusa, que não pausa o run e conta no teto de recusas do loop. `finalizar` recolhe as aceitas. O prompt `acompanhante.v7` diz quando propor, manda não falar do bloco no texto e diz quando registrar um retorno (`resultado.registrar`).
 
 - `memoria.propor` (só `tipo: rotina`) recusa com `com_incomodo`, `sem_fato` (o Intérprete não apontou fato de rotina), `fato_com_incomodo` (o fato traz palavra de incômodo da base), `ja_anotado` (já é uma nota ativa) e `rotina_cheia` (30 notas ativas).
 - `lista.propor` recusa com `com_incomodo`, `fora_da_base`, `sem_nao_tenho` (a pessoa não respondeu que não tem), `com_para_ter` (já há candidato a "vale ter em casa"), `fora_do_candidato` (o alimento não está no candidato indicado), `ja_na_lista`, `ja_recusado` e `filtrado` (o filtro da pessoa barra o alimento).
@@ -293,8 +293,8 @@ O prompt recebe contadores, não conteúdo: `mensagens_hoje` (só as da pessoa),
 
 - Um job diário em código procura regularidades nos **registros estruturados** dos últimos 60 dias (estados do momento, sugestão, resultado). Nunca lê texto livre nem incômodos, e não chama modelo.
 - Dois tipos: **o que ajuda em um estado**, por sugestão específica ("com frio e agitada → chá de gengibre com canela"), e **estados que andam juntos** ("pesada → sem energia").
-- A chave do padrão é o item e até 2 estados; a frase vem de um modelo em código, com o título da sugestão sem artigo e em minúscula. Critério: pelo menos 3 ocorrências e 75% de consistência. Em "o que ajuda", ocorrência é um "ajudou", e a consistência é a parte de "ajudou" entre "ajudou" e "não ajudou". Em "andam juntos", ocorrência é um dia.
-- A frase é montada por código, a partir de um modelo de frase: *"Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar."*
+- A chave do padrão é o item e até 2 estados; a frase vem de um modelo em código, com o título da sugestão sem artigo e em minúscula. Chá não tem item próprio: retornos de qualquer chá (fixo ou derivado) contam para a chave `<estados>|cha`, e a frase diz "um chá"; o padrão vale quando pelo menos um chá passa no filtro da pessoa, e o agente escolhe a erva. Critério: pelo menos 3 ocorrências e 75% de consistência. Em "o que ajuda", ocorrência é um "ajudou", e a consistência é a parte de "ajudou" entre "ajudou" e "não ajudou". Em "andam juntos", ocorrência é um dia.
+- A frase é montada por código, a partir de um modelo de frase: *"Quando você está com frio e pesada, mingau morno costuma te ajudar."* ou, para chá, *"Quando você está com frio e agitada, um chá costuma te ajudar."*
 - O padrão fica como **candidato** até a pessoa confirmar (até 3 candidatos por conta); recusado, não volta a ser proposto, e um item que já tem padrão guardado, em qualquer status, não ganha outro com os mesmos estados. Só o confirmado vai ao prompt. A pessoa também pode confirmar, recusar ou apagar um padrão sem passar pelo bloco (`ARCHITECTURE.md` §3).
 - Padrão de uma sugestão que o filtro da pessoa barra hoje ("evitar sempre", restrição, "não como", "não gosto") não é proposto nem vai ao prompt.
 

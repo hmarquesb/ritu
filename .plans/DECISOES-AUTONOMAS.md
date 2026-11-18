@@ -416,3 +416,24 @@
 - **Decidido:** o container repete a regra (`AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET` presentes) com `optionalEnv` (T8).
 - **Por quê:** evita o ciclo sem mexer na autenticação.
 - **Como desfazer:** mover a regra para um módulo sem dependência de `next-auth` e usá-lo nos dois lugares.
+
+## 025 · A1 · `agua-morna-com-limao` vira `pratica`
+
+- **Faltava:** a spec exige que toda prática `tipo: cha` tenha id `cha-…`, mas `agua-morna-com-limao` era `tipo: cha`.
+- **Decidido (pela dona, antes da construção):** a linha passa a `tipo: pratica`, com o mesmo id; `minPraticas` vira `{ cha: 19, oleo: 7, pratica: 18 }`. Ela não entra no padrão genérico de "um chá".
+- **Por quê:** água morna com limão é hábito da manhã, não chá de erva; trocar o tipo não muda id nem dado gravado.
+- **Como desfazer:** voltar o tipo e abrir exceção nomeada na regra 17.
+
+## 025 · A2 · Seed da demonstração com o padrão genérico
+
+- **Faltava:** a spec não cita o seed, e `seed/demo.yaml` grava justamente `com_frio+agitada|pratica:cha-gengibre-canela`, o padrão que a regra da base barra com `agitada`.
+- **Decidido:** o item do padrão do seed aceita `{ tipo: cha }`, e o seed passa a gravar `com_frio+agitada|cha` com a frase de "um chá" (T6).
+- **Por quê:** sem isso, a conta de demonstração nasceria com o padrão que a spec aposenta, e ele nunca valeria com `agitada`.
+- **Como desfazer:** voltar `seed/demo.yaml` ao item `pratica` e tirar a união do schema do seed.
+
+## 025 · A3 · Prakriti no eval de frio com agitada
+
+- **Faltava:** a spec pede `cha-louro` candidato com `com_frio + agitada` à tarde, sem dizer o perfil. Sem prakriti, a adequação do louro é 0 (+2 por `quente`, −2 porque `leve` é o oposto de `pesado`, que `agitada` busca) e ele não entra.
+- **Decidido:** o eval `cha-derivado-frio-agitada` usa prakriti com vata dominante (0,6/0,2/0,2); o louro entra pelo efeito (vata −1). O caso `c3-s23` já usa vata 0,45/pitta 0,45/kapha 0,1 e o louro entra com adequação 0,1, entre os 4 chás do contexto. Ranking e dados não mudaram.
+- **Por quê:** é o cenário real de quem fica agitada (vata); mudar a pontuação mexeria em todos os candidatos.
+- **Como desfazer:** se a dona quiser o louro candidato com qualquer perfil, uma spec de ranking (ex.: chás julgados por `favorece_estados`). A margem do `c3-s23` é fina: mudar `porPontoDeEfeito` ou o efeito do louro tira o louro do contexto.

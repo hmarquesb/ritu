@@ -56,6 +56,7 @@
 | [0046](0046-deploy-pela-ci-com-volta-automatica.md) | Deploy pela CI com volta automática | Aceito |
 | [0047](0047-producao-em-sao-paulo-com-neon.md) | Produção em São Paulo com Neon, pooler sem prepared statements e crons diários | Aceito |
 | [0048](0048-yaml-permitido-em-scripts.md) | `yaml` permitido em `scripts/` | Aceito |
+| [0049](0049-chas-derivados-e-padrao-de-cha.md) | Chás simples derivados das ervas e padrão de chá genérico | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

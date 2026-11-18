@@ -333,25 +333,6 @@
     - { ref: ritu-regras-da-base, campos: [gunas, favorece_estados, momento] }
     - { ref: ritu-textos-revisados, campos: [preparo, aviso] }
   confianca: media
-- id: agua-morna-com-limao
-  tipo: cha
-  nome: Água morna com limão
-  ingredientes: [limao]
-  preparo: "Ao acordar, esprema limão na água morna e beba devagar, antes do café da manhã."
-  gunas: [quente, leve]
-  favorece_estados: [pesada, sem_energia]
-  efeito: { vata: -1, pitta: 0, kapha: -1 }
-  momento: [manha]
-  contraindicacoes: []
-  nunca_sugerir_se: []
-  aviso: ""
-  fontes:
-    - { ref: banyan-sete-praticas-diarias, campos: [preparo, momento] }
-    - { ref: banyan-saude-figado, campos: [preparo, momento, gunas, efeito] }
-    - { ref: banyan-rotina-manha-energia, campos: [preparo] }
-    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: ritu-regras-da-base, campos: [favorece_estados] }
-  confianca: media
 - id: oleo-pes-gergelim
   tipo: oleo
   nome: Massagem nos pés com óleo de gergelim
@@ -477,6 +458,25 @@
     - { ref: banyan-automassagem-oleo, campos: [preparo, gunas, momento, aviso] }
     - { ref: ayurveda-com-rotina-diaria, campos: [preparo, efeito] }
     - { ref: banyan-equilibrar-pitta, campos: [favorece_estados, efeito] }
+  confianca: media
+- id: agua-morna-com-limao
+  tipo: pratica
+  nome: Água morna com limão
+  ingredientes: [limao]
+  preparo: "Ao acordar, esprema limão na água morna e beba devagar, antes do café da manhã."
+  gunas: [quente, leve]
+  favorece_estados: [pesada, sem_energia]
+  efeito: { vata: -1, pitta: 0, kapha: -1 }
+  momento: [manha]
+  contraindicacoes: []
+  nunca_sugerir_se: []
+  aviso: ""
+  fontes:
+    - { ref: banyan-sete-praticas-diarias, campos: [preparo, momento] }
+    - { ref: banyan-saude-figado, campos: [preparo, momento, gunas, efeito] }
+    - { ref: banyan-rotina-manha-energia, campos: [preparo] }
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: ritu-regras-da-base, campos: [favorece_estados] }
   confianca: media
 - id: agua-morna-ao-acordar
   tipo: pratica

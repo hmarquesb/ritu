@@ -186,7 +186,6 @@ const CHAS = [
   "cha-erva-cidreira",
   "cha-curcuma-gengibre",
   "cha-anis-estrelado",
-  "agua-morna-com-limao",
 ]
 
 const OLEOS = [
@@ -200,6 +199,7 @@ const OLEOS = [
 ]
 
 const PRATICAS = [
+  "agua-morna-com-limao",
   "agua-morna-ao-acordar",
   "agua-morna-ao-longo-do-dia",
   "caminhada-leve-apos-refeicao",

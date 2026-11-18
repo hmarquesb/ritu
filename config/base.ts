@@ -1,7 +1,7 @@
 export const base = {
   minAlimentos: 127,
   minPreparos: 30,
-  minPraticas: { cha: 20, oleo: 7, pratica: 17 },
+  minPraticas: { cha: 19, oleo: 7, pratica: 18 },
   minAlimentosPorVaga: 3,
   excecoesMinAlimentosPorVaga: [
     "leite-morno-com-especiaria:liquido",

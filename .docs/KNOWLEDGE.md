@@ -106,11 +106,14 @@ Vocabulário **fechado**: o agente só sugere alimentos de `alimentos.yaml`, pre
   marcas: []                    # fruta_azeda | fruta_doce | fermentado | estimulante (usadas em combinações e no "evitar" do momento)
   observacao: ""                # opcional, lida pela pessoa (ex.: "Prefira o prensado a frio.")
   grupos_evitar: []             # grupos de data/grupos_evitar.yaml a que pertence: amendoim | castanhas | leite | ovo | soja | trigo | gergelim | peixe | frutos_do_mar
+  # cha: { parte: folha }       # opcional, só em especiarias e bebidas: a erva vira um chá simples (R9)
   fontes:
     - { ref: lad-food-guidelines, campos: [efeito] }
   confianca: media              # alta | media | baixa
   notas: ""
 ```
+
+O campo `cha` marca a erva ou especiaria que vira um chá de uma erva só (§8.1, R9). Ele existe só nos grupos `especiarias` e `bebidas`. `parte` diz o que vai na água e decide o modo de preparo: `folha`, `flor`, `semente`, `casca`, `raiz` ou `bebida` (a erva que já é vendida como chá). `aviso` é opcional, tem até 200 caracteres, é lido pela pessoa e só existe com um cuidado que uma fonte registrada afirma; a fonte da erva cita então o campo `cha`. Têm `cha` o louro, o alecrim e o manjericão (`folha`) e o chá-preto, o chá-mate e o chá verde (`bebida`).
 
 ### 5.2 `data/preparos.yaml`
 
@@ -138,7 +141,7 @@ As qualidades de uma refeição são as dos alimentos somadas às do preparo. Co
 
 ### 5.3 `data/praticas.yaml`
 
-Chás, óleos e práticas. São 44: 20 chás, 7 de óleo e 17 práticas leves.
+Chás, óleos e práticas. `praticas.yaml` tem 44: 19 chás, 7 de óleo e 18 práticas leves. A base monta mais um chá simples por erva com o campo `cha` (6, pela R9 de §8.1), e são 50 no total. O chá fixo de `praticas.yaml` vence o derivado, e um id fixo igual ao de um derivado é erro de validação. Toda prática do `tipo: cha` tem id começado por `cha-`, e só ela. O preparo do chá simples sai da `parte` da erva, com os textos de `config/chas.ts`.
 
 ```yaml
 - id: cha-gengibre-canela
@@ -325,6 +328,8 @@ A temperatura das gunas segue o `virya` da linha. O efeito por dosha soma os sab
 **R7. Hábitos pelo calor e pela hora.** Prática com a qualidade `quente` não vai para quem está `com_calor`, como o chá de virya quente (R2). Os estados que ela favorece são os que pedem as qualidades dela (tabela de §3). Sem fonte de horário: hábito ligado à refeição vale nos momentos de refeição; hábito "ao longo do dia" vale de manhã, no almoço e à tarde; calor no corpo sem hora própria vale de manhã, à tarde e à noite.
 
 **R8. Farinha de mandioca.** A farinha herda o sabor da mandioca. Torrada, é seca e áspera, e por isso agrava vata (o semelhante aumenta).
+
+**R9. Chás simples pelas ervas.** Erva ou especiaria com o campo `cha` vira um chá de uma erva só, montado por código: gunas e efeito da erva (R1), contraindicação e momento pelo virya e pela marca `estimulante` (R2), e estados favorecidos pela tabela de §3, como nos hábitos (R7). O chá fixo de `praticas.yaml` vence o derivado.
 
 **Fontes mais fracas, aceitas pela dona.** Para itens sem página nas fontes de §7, valem Satyori e textos do Ask Ayurveda fora do formato "X in Ayurveda" (artigo ou resposta de médico na página): maracujá, acelga, mandioca, tapioca, abobrinha, cebolinha, erva-cidreira e chá-mate. Chuchu, jiló e mandioquinha não têm fonte nenhuma e ficam fora da base.
 

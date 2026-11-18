@@ -3,7 +3,7 @@ import type { Clock } from "@/core/clock"
 import type { DemoSeed } from "@/core/demo-seed"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { SugestaoRegistrada } from "@/core/memory-schemas"
-import { chaveDeAjuda, fraseDeAjuda } from "@/core/patterns/textos"
+import { chaveDeAjuda, fraseDeAjuda, fraseDeAjudaCha } from "@/core/patterns/textos"
 import type { Stores } from "@/core/stores"
 import { diaLocal, diasAtras } from "@/core/time/dia-local"
 
@@ -116,9 +116,10 @@ async function copiarConversa(
   return dia
 }
 
+type ItemNomeado = Exclude<DemoSeed["padrao"]["item"], { tipo: "cha" }>
+
 // O título é o da sugestão do retorno mais recente que usou o item do padrão.
-function tituloDoPadrao(seed: DemoSeed): string {
-  const { item } = seed.padrao
+function tituloDoPadrao(seed: DemoSeed, item: ItemNomeado): string {
   const recentes = [...seed.historico].sort((a, b) => a.dias_atras - b.dias_atras)
   for (const h of recentes) {
     const achada = h.saida.sugestoes.find((s) =>
@@ -127,6 +128,13 @@ function tituloDoPadrao(seed: DemoSeed): string {
     if (achada) return achada.titulo
   }
   return item.id
+}
+
+// O chá do padrão é genérico ("um chá"); os demais citam o título da prática ou do preparo.
+function fraseDoPadrao(seed: DemoSeed): string {
+  const { estados, item } = seed.padrao
+  if (item.tipo === "cha") return fraseDeAjudaCha(estados)
+  return fraseDeAjuda(estados, tituloDoPadrao(seed, item))
 }
 
 export async function copiarSeed(
@@ -161,7 +169,7 @@ export async function copiarSeed(
   await stores.patterns.propor(contaId, {
     tipo: "ajuda_em_estado",
     chave: chaveDeAjuda(seed.padrao.estados, seed.padrao.item),
-    frase: fraseDeAjuda(seed.padrao.estados, tituloDoPadrao(seed)),
+    frase: fraseDoPadrao(seed),
     ocorrencias: seed.padrao.ocorrencias,
   })
 }

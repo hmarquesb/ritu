@@ -1,4 +1,5 @@
 import { RituError } from "@/core/errors"
+import { derivarChas } from "./chas"
 import type {
   Alimento,
   Combinacao,
@@ -91,7 +92,12 @@ function indexarLinhas(d: DadosDaBase): Map<string, unknown> {
   return linhas
 }
 
-function montar(d: DadosDaBase): KnowledgeBase {
+function montar(base: DadosDaBase): KnowledgeBase {
+  // Os chás derivados entram depois das práticas fixas.
+  const d: DadosDaBase = {
+    ...base,
+    praticas: [...base.praticas, ...derivarChas(base.alimentos, base.estados)],
+  }
   const alimentos = indexar(d.alimentos)
   const preparos = indexar(d.preparos)
   const praticas = indexar(d.praticas)

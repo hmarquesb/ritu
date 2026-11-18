@@ -149,3 +149,59 @@ describe("KnowledgeBase.verbo", () => {
     expect(kb.verbo("aspero")).toBeNull()
   })
 })
+
+describe("chás derivados dos alimentos com cha", () => {
+  const comCha = (): DadosDaBase => ({
+    ...base(),
+    alimentos: [
+      alimento(),
+      alimento({ id: "gengibre", nome: "Gengibre", grupo: "especiarias", cha: { parte: "folha" } }),
+    ],
+    praticas: [
+      {
+        id: "cha-camomila",
+        tipo: "cha",
+        nome: "Chá de camomila",
+        ingredientes: ["gengibre"],
+        preparo: "Infunda.",
+        gunas: ["pesado"],
+        favorece_estados: ["com_frio"],
+        efeito: { vata: 0, pitta: 0, kapha: 0 },
+        momento: ["tarde"],
+        contraindicacoes: [],
+        nunca_sugerir_se: [],
+        aviso: "",
+        fontes: refs,
+        confianca: "media",
+      },
+    ],
+    estados: [
+      {
+        id: "com_frio",
+        rotulo: "Com frio",
+        emoji: "",
+        eixo: "temperatura",
+        presentes: [],
+        favorecer: ["pesado"],
+        evitar_gunas: [],
+        evitar_marcas: [],
+        evitar_texto: "",
+        fontes: refs,
+        confianca: "media",
+      },
+    ],
+  })
+
+  it("inclui o chá derivado com pratica(id) e linha, depois das práticas fixas", () => {
+    const kb = createKnowledgeBase(comCha(), semCobertura)
+    expect(kb.pratica("cha-gengibre")?.nome).toBe("Chá de gengibre")
+    expect(kb.praticas.map((p) => p.id)).toEqual(["cha-camomila", "cha-gengibre"])
+    expect(kb.linha("praticas:cha-gengibre")).toMatchObject({ tipo: "cha" })
+  })
+
+  it("mantém as práticas fixas acessíveis por id", () => {
+    const kb = createKnowledgeBase(comCha(), semCobertura)
+    expect(kb.pratica("cha-camomila")?.nome).toBe("Chá de camomila")
+    expect(kb.linha("praticas:cha-camomila")).toMatchObject({ tipo: "cha" })
+  })
+})

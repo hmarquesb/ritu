@@ -10,7 +10,7 @@ import {
   type MomentoDoDia,
 } from "./vocab"
 
-const PREFIXO_CHA = "cha-"
+export const PREFIXO_CHA = "cha-"
 const MOMENTOS_DO_ESTIMULANTE: MomentoDoDia[] = ["manha", "tarde"]
 
 export function idDoChaDerivado(erva: Alimento): string {

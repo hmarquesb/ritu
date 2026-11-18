@@ -355,12 +355,18 @@ describe("cenários de aprendizado (011)", () => {
       { intencoes: ["momento"], estados: ["com_frio"], evitar_da_mensagem: [] },
     )
     // A ordem completa (candidatos_completos) e o contexto põem o chá com dois "não ajudou" seguidos no fim dos chás.
-    // À noite, com frio, há só quatro chás possíveis (o corte por tipo), então ele segue no contexto, por último.
+    // Sem a ordem fixa da base: o chá com os "não ajudou" não vem antes de nenhum outro chá.
+    // Se ele entra no contexto (corte por tipo), também fica por último entre os chás de lá.
     const chasNaOrdem = dados.candidatos_completos.filter((id) => id.startsWith("cha-"))
     expect(chasNaOrdem.length).toBeGreaterThanOrEqual(2)
     expect(chasNaOrdem[chasNaOrdem.length - 1]).toBe("cha-gengibre")
     const chasNoContexto = dados.candidatos.map((c) => c.id).filter((id) => id.startsWith("cha-"))
-    expect(chasNoContexto[chasNoContexto.length - 1]).toBe("cha-gengibre")
+    expect(chasNoContexto.length).toBeGreaterThan(0)
+    const depoisDoGengibre = chasNoContexto.slice(chasNoContexto.indexOf("cha-gengibre") + 1)
+    expect(chasNoContexto.includes("cha-gengibre") ? depoisDoGengibre : []).toEqual([])
+    if (chasNoContexto.includes("cha-gengibre")) {
+      expect(chasNoContexto[chasNoContexto.length - 1]).toBe("cha-gengibre")
+    }
   })
 
   it("retorno-pelo-agente: o ajudou da mensagem fecha o pendente 1 com origem conversa", async () => {

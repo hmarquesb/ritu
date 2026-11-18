@@ -2485,6 +2485,7 @@
   restricoes: []
   grupos_evitar: []
   marcas: []
+  cha: { parte: folha }
   fontes:
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: banyan-sabor-doce, campos: [rasa] }
@@ -2718,6 +2719,7 @@
   restricoes: []
   grupos_evitar: []
   marcas: []
+  cha: { parte: folha }
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
     - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
@@ -2742,6 +2744,7 @@
   restricoes: []
   grupos_evitar: []
   marcas: []
+  cha: { parte: folha }
   fontes:
     - { ref: banyan-arte-especiarias, campos: [rasa, virya, gunas, efeito, como_equilibrar] }
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
@@ -3036,6 +3039,7 @@
   restricoes: []
   grupos_evitar: []
   marcas: [estimulante]
+  cha: { parte: bebida }
   fontes:
     - { ref: banyan-cafe, campos: [rasa, gunas, efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
@@ -3060,6 +3064,7 @@
   restricoes: []
   grupos_evitar: []
   marcas: [estimulante]
+  cha: { parte: bebida }
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: ea-avastha-paka, campos: [vipaka] }
@@ -3082,6 +3087,7 @@
   restricoes: []
   grupos_evitar: []
   marcas: [estimulante]
+  cha: { parte: bebida }
   fontes:
     - { ref: banyan-cafe, campos: [rasa, gunas, efeito] }
     - { ref: aa-cha-verde, campos: [rasa, virya] }

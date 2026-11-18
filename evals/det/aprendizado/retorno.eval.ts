@@ -140,6 +140,12 @@ async function preparoSeguinte(deps: DepsDoCenario, contaId: string) {
 // Os chás do preparo seguinte, na ordem do tipo: a posição fica em `candidatos_completos`, e `candidatos` traz o
 // que o corte de quatro chás deixa. À noite, com frio, a base tem só quatro chás possíveis, então o que vai para o
 // fim (no_fim) segue no contexto, por último. O corte que o tira fica em src/core/ranking/candidatos.test.ts.
+// Os chás que vêm depois de `id` na lista (vazio se `id` não está ou é o último).
+function apos(ids: readonly string[], id: string): string[] {
+  const i = ids.indexOf(id)
+  return i < 0 ? [] : ids.slice(i + 1)
+}
+
 function chasDoPreparo(dados: Awaited<ReturnType<typeof preparoSeguinte>>) {
   const completos = dados.candidatos_completos.filter((id) =>
     dados.candidatos_do_preparo.some((c) => c.tipo === "cha" && c.id === id),
@@ -177,9 +183,16 @@ describe("não ajudou seguido manda para o fim; um ajudou traz de volta", () => 
 
     expect(completos.at(-1)).toBe("cha-gengibre")
     expect(completos.indexOf("cha-gengibre")).toBeGreaterThan(0)
-    expect(noContexto.at(-1)?.id).toBe("cha-gengibre")
-    expect(noContexto.at(-1)?.no_fim).toBe(true)
-    expect(noContexto.slice(0, -1).some((x) => x.no_fim)).toBe(false)
+    const ids = noContexto.map((x) => x.id)
+    expect(ids.length).toBeGreaterThan(0)
+    expect(apos(ids, "cha-gengibre")).toEqual([])
+    expect(noContexto.filter((x) => x.no_fim).map((x) => x.id)).toEqual(
+      ids.includes("cha-gengibre") ? ["cha-gengibre"] : [],
+    )
+    if (ids.includes("cha-gengibre")) {
+      expect(noContexto.at(-1)?.id).toBe("cha-gengibre")
+      expect(noContexto.at(-1)?.no_fim).toBe(true)
+    }
   })
 
   it("um 'ajudou' depois dos dois: o chá sai do fim e volta à frente do tipo, no contexto", async () => {

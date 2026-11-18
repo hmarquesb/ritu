@@ -232,7 +232,8 @@ describe("base real: validação", () => {
     const { knowledge } = getContainer()
     expect(knowledge.alimentos.length).toBe(dados.alimentos.length)
     expect(knowledge.preparos.length).toBe(dados.preparos.length)
-    expect(knowledge.praticas.length).toBe(dados.praticas.length)
+    const chasDerivados = dados.alimentos.filter((a) => a.cha !== undefined).length
+    expect(knowledge.praticas.length).toBe(dados.praticas.length + chasDerivados)
   })
 })
 

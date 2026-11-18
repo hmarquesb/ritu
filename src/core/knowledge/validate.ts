@@ -1,5 +1,6 @@
 import { config } from "@config/index"
 import type { z } from "zod"
+import { derivarChas, idDoChaDerivado, PREFIXO_CHA } from "./chas"
 import { serveAVaga } from "./filtros"
 import {
   alimentoSchema,
@@ -54,6 +55,7 @@ type Tabela = {
 }
 
 const REF_A_CONFIRMAR = "a_confirmar"
+const GRUPOS_DE_CHA: readonly Grupo[] = ["especiarias", "bebidas"]
 
 const TABELAS: readonly Tabela[] = [
   { chave: "alimentos", arquivo: "alimentos", chaveId: "id", schema: alimentoSchema },
@@ -511,6 +513,44 @@ function avisosDe(d: DadosDaBase): string[] {
   ]
 }
 
+// Regra 14
+function regraChaEmGrupo(d: DadosDaBase): string[] {
+  return d.alimentos
+    .filter((alimento) => alimento.cha !== undefined)
+    .filter((alimento) => !GRUPOS_DE_CHA.includes(alimento.grupo))
+    .map((alimento) => `alimentos:${alimento.id}:cha só em especiarias ou bebidas`)
+}
+
+// Regra 15
+function regraColisaoDeCha(d: DadosDaBase, ids: Ids): string[] {
+  return d.alimentos
+    .filter((alimento) => alimento.cha !== undefined)
+    .filter((alimento) => ids.praticas.has(idDoChaDerivado(alimento)))
+    .map(
+      (alimento) =>
+        `alimentos:${alimento.id}:cha id "${idDoChaDerivado(alimento)}" já existe em praticas.yaml`,
+    )
+}
+
+// Regra 16
+function regraChaSemEstado(d: DadosDaBase): string[] {
+  return d.alimentos
+    .filter((alimento) => alimento.cha !== undefined)
+    .filter((alimento) => derivarChas([alimento], d.estados)[0]?.favorece_estados.length === 0)
+    .map((alimento) => `alimentos:${alimento.id}:cha favorece_estados vazio`)
+}
+
+// Regra 17
+function regraPrefixoDoCha(d: DadosDaBase): string[] {
+  return d.praticas.flatMap((pratica) => {
+    const comPrefixo = pratica.id.startsWith(PREFIXO_CHA)
+    if (pratica.tipo === "cha") {
+      return comPrefixo ? [] : [`praticas:${pratica.id}:id tipo cha sem prefixo "cha-"`]
+    }
+    return comPrefixo ? [`praticas:${pratica.id}:id prefixo "cha-" fora do tipo cha`] : []
+  })
+}
+
 export function analisarBase(dados: unknown, opcoes: OpcoesValidacao = {}): AnaliseBase {
   const erros: string[] = []
   const brutos = lerListas(dados, erros)
@@ -530,6 +570,10 @@ export function analisarBase(dados: unknown, opcoes: OpcoesValidacao = {}): Anal
     regraEstadosEGunas(d, ids),
     regraFontesComUrl(d),
     opcoes.cobertura === false ? [] : regraCobertura(d),
+    regraChaEmGrupo(d),
+    regraColisaoDeCha(d, ids),
+    regraChaSemEstado(d),
+    regraPrefixoDoCha(d),
   ]
   return {
     erros: [...erros, ...porRegras.flat()],

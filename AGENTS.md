@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 construída (008 a 015), com a tag `entrega-2`, e aprovada com correções no portão 2 (2026-11-17); as correções foram aplicadas na `main` (`.plans/portao-2-correcoes-plan.md`); falta a rodada nova do `c3-confiavel`, em outro dia. Entrega 3 (016 a 020) aprovada; 016 a 018 implementadas e juntadas na `main`; 019 implementada e 020 em construção na trilha adiantada (`entrega-3`).
+> **Status:** entregas 1 e 2 aprovadas (portão 2 com correções, já aplicadas na `main`). Entrega 3: 016 a 019 na `main`; 020 implementada na `entrega-3`, ainda não juntada. Entrega 4: 021 e 022 implementadas e produção no ar; 023 e 024 aprovadas. Spec 025 (chás híbridos) aprovada; é a próxima a construir, antes da 023.
 
 ## O que é o projeto
 

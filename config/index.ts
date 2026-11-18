@@ -3,6 +3,7 @@ import { app } from "./app"
 import { aprovacao } from "./aprovacao"
 import { base } from "./base"
 import { casa } from "./casa"
+import { textosChas } from "./chas"
 import { clima } from "./clima"
 import { conversa } from "./conversa"
 import { evals } from "./evals"
@@ -27,6 +28,7 @@ import { textosLimites } from "./textos-limites"
 import { toques } from "./toques"
 import { ui } from "./ui"
 
+export { textosChas } from "./chas"
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
 export { telaConversa } from "./tela-conversa"
@@ -57,6 +59,7 @@ export const config = {
   resposta,
   telaConversa,
   telemetria,
+  textosChas,
   textosCasa,
   textosComoFicou,
   textosConversa,

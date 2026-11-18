@@ -155,6 +155,33 @@ describe("alimentoSchema", () => {
   })
 })
 
+describe("cha no alimentoSchema", () => {
+  it("aceita um alimento sem cha", () => {
+    expect(alimentoSchema.safeParse(alimentoValido()).success).toBe(true)
+  })
+
+  it("aceita cha com parte válida e aviso", () => {
+    const cha = { parte: "folha", aviso: "Não passa de 3 xícaras por dia." }
+    expect(alimentoSchema.safeParse(alimentoValido({ cha })).success).toBe(true)
+  })
+
+  it("recusa parte fora da lista", () => {
+    expect(alimentoSchema.safeParse(alimentoValido({ cha: { parte: "fruto" } })).success).toBe(
+      false,
+    )
+  })
+
+  it("recusa chave extra dentro de cha", () => {
+    const cha = { parte: "bebida", dose: "2 xícaras" }
+    expect(alimentoSchema.safeParse(alimentoValido({ cha })).success).toBe(false)
+  })
+
+  it("recusa aviso com mais de 200 caracteres", () => {
+    const cha = { parte: "raiz", aviso: "a".repeat(201) }
+    expect(alimentoSchema.safeParse(alimentoValido({ cha })).success).toBe(false)
+  })
+})
+
 describe("fonteRefSchema e fonteSchema", () => {
   it("aceita ref a_confirmar e ref registrada", () => {
     expect(fonteRefSchema.safeParse({ ref: "a_confirmar", campos: ["gunas"] }).success).toBe(true)

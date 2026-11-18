@@ -9,7 +9,7 @@ import {
 } from "@/core/agents/interpreter/interpretacao"
 import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { MemoryAgent } from "@/core/agents/memory/memoria"
-import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
+import { acompanhanteV7 } from "@/core/agents/prompts/acompanhante.v7"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import { conferirEntrada } from "@/core/guardrails/entrada"
@@ -340,7 +340,7 @@ export function createConversation(deps: Deps) {
     telemetry.atribuirAoSpanAtual({
       "run.caminho": caminho,
       "run.intencoes": intencoes.join(","),
-      ...(caminho === "acompanhante" ? { "prompt.versao": acompanhanteV6.versao } : {}),
+      ...(caminho === "acompanhante" ? { "prompt.versao": acompanhanteV7.versao } : {}),
     })
     await stores.runs.atualizar(contaId, run.id, { caminho, intencoes })
     for (const intencao of intencoes) telemetry.contador("ritu_run_intencao_total", { intencao })

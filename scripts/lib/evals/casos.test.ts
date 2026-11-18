@@ -109,7 +109,7 @@ describe("listagem dos checkpoints", () => {
   it.each([
     ["c1-base", 12],
     ["c2-conversa", 54],
-    ["c3-confiavel", 84],
+    ["c3-confiavel", 86],
   ] as const)("lista %s com %i casos, contagens por tipo e total estimado", (nome, total) => {
     const casos = casosDoCheckpoint(nome)
     expect(casos).toHaveLength(total)

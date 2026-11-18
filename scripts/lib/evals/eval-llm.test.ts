@@ -264,7 +264,7 @@ describe("executarComando: recusa do dia por checkpoint", () => {
   it("rodada de c2 hoje não recusa a rodada nova de c3", async () => {
     const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c2-conversa", HOJE) } })
     expect(await executarComando(["--checkpoint", "c3-confiavel"], io)).toBe(0)
-    expect(io.chamados).toHaveLength(84)
+    expect(io.chamados).toHaveLength(86)
   })
 
   it("rodada de c3 hoje recusa a rodada nova de c3 com a mensagem do checkpoint", async () => {
@@ -279,13 +279,13 @@ describe("executarComando: recusa do dia por checkpoint", () => {
   it("rodada de c3 hoje não recusa com --extra", async () => {
     const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c3-confiavel", HOJE) } })
     expect(await executarComando(["--checkpoint", "c3-confiavel", "--extra"], io)).toBe(0)
-    expect(io.chamados).toHaveLength(84)
+    expect(io.chamados).toHaveLength(86)
   })
 
   it("--do-zero segue a mesma regra: c2 hoje não recusa c3", async () => {
     const io = criarIo({ arquivos: { [HISTORICO]: historicoDoDia("c2-conversa", HOJE) } })
     expect(await executarComando(["--checkpoint", "c3-confiavel", "--do-zero"], io)).toBe(0)
-    expect(io.chamados).toHaveLength(84)
+    expect(io.chamados).toHaveLength(86)
   })
 
   it("--do-zero recusa quando o mesmo checkpoint já rodou hoje", async () => {
@@ -421,7 +421,7 @@ describe("executarComando: --caso e --listar", () => {
   it.each([
     ["c1-base", 12],
     ["c2-conversa", 54],
-    ["c3-confiavel", 84],
+    ["c3-confiavel", 86],
   ])("--listar de %s mostra %i casos", async (nome, total) => {
     const io = criarIo()
     expect(await executarComando(["--checkpoint", nome, "--listar"], io)).toBe(0)

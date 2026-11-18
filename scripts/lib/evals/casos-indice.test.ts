@@ -149,6 +149,8 @@ const LINHAS: Linha[] = [
       "c3-06-almoco-fora-sem-cozinhar",
       "c3-07-cha-com-padrao",
       "c3-08-cha-fora-dos-candidatos",
+      "c3-s23-padrao-cha-agitada",
+      "c3-s24-cha-da-casa",
     ],
     familias: ["memoria"],
   },
@@ -366,10 +368,10 @@ function ordenados(ids: string[]): string[] {
 }
 
 describe("índice dos casos por checkpoint", () => {
-  it("tem 12 casos no c1-base, 54 no c2-conversa e 84 no c3-confiavel", () => {
+  it("tem 12 casos no c1-base, 54 no c2-conversa e 86 no c3-confiavel", () => {
     expect(casosDoCheckpoint("c1-base")).toHaveLength(12)
     expect(casosDoCheckpoint("c2-conversa")).toHaveLength(54)
-    expect(casosDoCheckpoint("c3-confiavel")).toHaveLength(84)
+    expect(casosDoCheckpoint("c3-confiavel")).toHaveLength(86)
   })
 
   it("põe as pastas na ordem do checkpoint e, dentro de cada pasta, ordena por id", () => {
@@ -392,13 +394,13 @@ describe("índice dos casos por checkpoint", () => {
     }
   })
 
-  it("dá famílias não vazias a todos os 84 casos", () => {
+  it("dá famílias não vazias a todos os 86 casos", () => {
     for (const caso of casosDoCheckpoint("c3-confiavel")) {
       expect(caso.familias.length).toBeGreaterThan(0)
     }
   })
 
-  it("cobre os 84 casos nas linhas da tabela, sem repetir", () => {
+  it("cobre os 86 casos nas linhas da tabela, sem repetir", () => {
     const ids = LINHAS.flatMap((linha) => linha.ids)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ordenados(ids)).toEqual(ordenados([...porId.keys()]))

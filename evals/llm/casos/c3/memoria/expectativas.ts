@@ -81,6 +81,12 @@ export const sugere = (praticaId: string): ExpectativaDaConversa =>
     r.resultado.saida.sugestoes.some((s) => s.pratica_id === praticaId),
   )
 
+// Alguma sugestão é um chá (id com o prefixo "cha-"): não diz qual, para o caso aceitar os candidatos derivados.
+export const sugereUmCha = (): ExpectativaDaConversa =>
+  expConversa("sugere algum chá", (r) =>
+    r.resultado.saida.sugestoes.some((s) => s.pratica_id?.startsWith("cha-") === true),
+  )
+
 export const naoSugere = (praticaId: string): ExpectativaDaConversa =>
   expConversa(`não sugere a prática ${praticaId}`, (r) =>
     r.resultado.saida.sugestoes.every((s) => s.pratica_id !== praticaId),

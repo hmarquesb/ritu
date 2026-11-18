@@ -43,6 +43,7 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: [
       "evals/det/acompanhante/preparo.eval.ts",
       "evals/det/base/candidatos.eval.ts",
+      "evals/det/base/chas-derivados.eval.ts",
       "evals/det/base/estados.eval.ts",
       "evals/det/pausas/variante.eval.ts",
     ],
@@ -624,6 +625,7 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: [
       "evals/det/rotina-e-padroes/job.eval.ts",
       "evals/det/rotina-e-padroes/ajuda-em-estado.eval.ts",
+      "evals/det/rotina-e-padroes/padrao-cha-generico.eval.ts",
     ],
     desde: 2,
   },

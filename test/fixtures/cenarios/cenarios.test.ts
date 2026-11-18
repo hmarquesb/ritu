@@ -391,8 +391,7 @@ describe("cenários de aprendizado (011)", () => {
 })
 
 // Os seis da 012 (rotina e padrões): cada um confere o que a coluna "Mostra" pede, nos stores, nas etapas, no bloco e no contexto.
-const FRASE_DO_CHA =
-  "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar."
+const FRASE_DO_CHA = "Quando você está com frio e agitada, um chá costuma te ajudar."
 
 async function rodarDeMemoria(nome: string) {
   const c = cenariosDeMemoria[nome]
@@ -455,7 +454,7 @@ describe("cenários de rotina e padrões (012)", () => {
     expect(rodada.bloco?.resultado.gravadas.map((p) => p.tool)).toEqual(["padrao.confirmar"])
     const padroes = await deps.stores.patterns.listar(contaId)
     expect(padroes.map((p) => [p.chave, p.status])).toEqual([
-      ["com_frio+agitada|pratica:cha-gengibre-canela", "confirmado"],
+      ["com_frio+agitada|cha", "confirmado"],
     ])
     expect(rodada.depois?.final.status).toBe("done")
     const dados = await preparoDaSegunda(deps, contaId)

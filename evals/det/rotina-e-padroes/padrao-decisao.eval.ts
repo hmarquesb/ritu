@@ -15,8 +15,8 @@ import type { Cenario } from "../../../test/fixtures/cenarios/tipos"
 // A decisão do padrão no bloco: sim confirma e a frase chega ao contexto; linha desligada com outra ligada recusa; "Agora não",
 // expiração e mensagem nova deixam candidato; decidirPadrao e apagarPadrao só aceitam padrão candidato da própria conta.
 
-const CHAVE = "com_frio+agitada|pratica:cha-gengibre-canela"
-const FRASE = "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar."
+const CHAVE = "com_frio+agitada|cha"
+const FRASE = "Quando você está com frio e agitada, um chá costuma te ajudar."
 const AGORA = "2026-11-15T18:00:00.000Z"
 
 type Contexto = { padroes?: string[] }

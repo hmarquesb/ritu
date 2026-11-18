@@ -109,6 +109,22 @@ describe("detectarAjudaEmEstado", () => {
     expect(saida[0]?.chave).toBe("com_frio+agitada|pratica:cha-gengibre-canela")
   })
 
+  it("chás diferentes viram um padrão só, com a frase de 'um chá'", () => {
+    const outro = { item: { tipo: "cha" } as ItemDoPadrao, titulo: "Chá de hortelã" }
+    const retornos = [
+      retorno("2026-10-01", [...FRIO_AGITADA], "ajudou", { item: { tipo: "cha" } }),
+      retorno("2026-10-02", [...FRIO_AGITADA], "ajudou", outro),
+      retorno("2026-10-03", [...FRIO_AGITADA], "ajudou", outro),
+    ]
+    const saida = detectarAjudaEmEstado(retornos)
+    expect(saida).toHaveLength(1)
+    expect(saida[0]).toMatchObject({
+      chave: "com_frio+agitada|cha",
+      frase: "Quando você está com frio e agitada, um chá costuma te ajudar.",
+      ocorrencias: 3,
+    })
+  })
+
   it("dá uma chave por sugestão (por item), em ordem de chave", () => {
     const retornos = [
       retorno("2026-10-01", ["com_frio"], "ajudou", { item: CHA }),

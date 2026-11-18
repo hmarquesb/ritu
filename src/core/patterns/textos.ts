@@ -2,7 +2,7 @@ import { config } from "@config/index"
 import { ESTADOS, type Estado } from "@/core/knowledge/vocab"
 import type { TipoPadrao } from "./ports"
 
-export type ItemDoPadrao = { tipo: "pratica" | "preparo"; id: string }
+export type ItemDoPadrao = { tipo: "pratica" | "preparo"; id: string } | { tipo: "cha" }
 
 const NA_FRASE: Record<Estado, string> = {
   com_frio: "com frio",
@@ -15,6 +15,7 @@ const NA_FRASE: Record<Estado, string> = {
 }
 
 const MODELO_AJUDA = "Quando você está {estados}, {titulo} costuma te ajudar."
+export const MODELO_AJUDA_CHA = "Quando você está {estados}, um chá costuma te ajudar."
 const MODELO_JUNTOS = "Quando você está {a}, costuma estar também {b}."
 const ARTIGO = /^(os|as|uma|um|o|a)\s+/i
 
@@ -22,8 +23,13 @@ function emOrdem(estados: Estado[]): Estado[] {
   return ESTADOS.filter((e) => estados.includes(e))
 }
 
+/** Chave do item dentro do padrão: `cha` sozinho, ou `<tipo>:<id>`. */
+export function chaveDoItem(item: ItemDoPadrao): string {
+  return item.tipo === "cha" ? "cha" : `${item.tipo}:${item.id}`
+}
+
 export function chaveDeAjuda(estados: Estado[], item: ItemDoPadrao): string {
-  return `${emOrdem(estados).join("+")}|${item.tipo}:${item.id}`
+  return `${emOrdem(estados).join("+")}|${chaveDoItem(item)}`
 }
 
 export function chaveDeJuntos(a: Estado, b: Estado): string {
@@ -45,6 +51,7 @@ function estadosValidos(texto: string): Estado[] | undefined {
 }
 
 function itemValido(texto: string): ItemDoPadrao | undefined {
+  if (texto === "cha") return { tipo: "cha" }
   const i = texto.indexOf(":")
   if (i < 0) return undefined
   const tipo = texto.slice(0, i)
@@ -94,6 +101,10 @@ export function fraseDeAjuda(estados: Estado[], titulo: string): string {
   return MODELO_AJUDA.replace("{estados}", () => textoDosEstados(estados)).replace("{titulo}", () =>
     semArtigo(titulo),
   )
+}
+
+export function fraseDeAjudaCha(estados: Estado[]): string {
+  return MODELO_AJUDA_CHA.replace("{estados}", () => textoDosEstados(estados))
 }
 
 export function fraseDeJuntos(a: Estado, b: Estado): string {

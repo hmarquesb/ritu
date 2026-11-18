@@ -4,7 +4,6 @@ import { RituError } from "@/core/errors"
 import type { Estado } from "@/core/knowledge/vocab"
 import type { Resultado } from "@/core/outcomes/ports"
 import { detectarPadroes, detectarPadroesDaConta } from "@/core/patterns/job"
-import type { ItemDoPadrao } from "@/core/patterns/textos"
 import { getContainer } from "@/infra/container"
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
@@ -19,17 +18,18 @@ import { padraoConfirmado } from "../../../test/fixtures/cenarios/padrao-confirm
 const kb = getContainer().knowledge
 const AGORA = "2026-06-03T20:00:00Z"
 const DIA_MS = 86_400_000
-const CHA: ItemDoPadrao = { tipo: "pratica", id: "cha-gengibre-canela" }
+type ItemDePratica = { tipo: "pratica"; id: string }
+const CHA: ItemDePratica = { tipo: "pratica", id: "cha-gengibre-canela" }
 const TITULO = "Chá de gengibre com canela"
 const PAR: Estado[] = ["com_frio", "agitada"]
 // Um estado sozinho: só a sugestão vira padrão (com dois estados juntos o par também viraria).
 const SOZINHO: Estado[] = ["com_frio"]
-const CHAVE_SOZINHO = "com_frio|pratica:cha-gengibre-canela"
+const CHAVE_SOZINHO = "com_frio|cha"
 
 type Dia = {
   diasAtras: number
   estados: Estado[]
-  item?: ItemDoPadrao
+  item?: ItemDePratica
   resultado?: Resultado
   incomodo?: boolean
 }
@@ -69,7 +69,7 @@ async function semear(m: Montagem, contaId: string, dias: Dia[]): Promise<void> 
 }
 
 // Três "ajudou" do item nos estados dados, em dias distintos a partir de `inicio` dias atrás.
-function ajudou(estados: Estado[], item: ItemDoPadrao = CHA, inicio = 2): Dia[] {
+function ajudou(estados: Estado[], item: ItemDePratica = CHA, inicio = 2): Dia[] {
   return [0, 1, 2].map((i) => ({
     diasAtras: inicio + i,
     estados,
@@ -100,32 +100,28 @@ describe("job: o que não se propõe de novo", () => {
     const m = montar()
     await m.stores.patterns.propor("c1", {
       tipo: "ajuda_em_estado",
-      chave: "com_frio|pratica:cha-gengibre-canela",
-      frase: "Quando você está com frio, chá de gengibre com canela costuma te ajudar.",
+      chave: "com_frio|cha",
+      frase: "Quando você está com frio, um chá costuma te ajudar.",
       ocorrencias: 3,
     })
     await semear(m, "c1", ajudou(["com_frio"]))
 
     expect(await detectarPadroesDaConta(m.deps, "c1")).toBe(0)
-    expect((await candidatos(m, "c1")).map((p) => p.chave)).toEqual([
-      "com_frio|pratica:cha-gengibre-canela",
-    ])
+    expect((await candidatos(m, "c1")).map((p) => p.chave)).toEqual(["com_frio|cha"])
   })
 
   it("controle: a mesma sugestão sem estado em comum com o guardado é proposta", async () => {
     const m = montar()
     await m.stores.patterns.propor("c1", {
       tipo: "ajuda_em_estado",
-      chave: "com_frio|pratica:cha-gengibre-canela",
-      frase: "Quando você está com frio, chá de gengibre com canela costuma te ajudar.",
+      chave: "com_frio|cha",
+      frase: "Quando você está com frio, um chá costuma te ajudar.",
       ocorrencias: 3,
     })
     await semear(m, "c1", ajudou(["agitada"]))
 
     expect(await detectarPadroesDaConta(m.deps, "c1")).toBe(1)
-    expect((await candidatos(m, "c1")).map((p) => p.chave)).toContain(
-      "agitada|pratica:cha-gengibre-canela",
-    )
+    expect((await candidatos(m, "c1")).map((p) => p.chave)).toContain("agitada|cha")
   })
 
   it("par já guardado não é proposto, nem no sentido guardado nem no contrário", async () => {
@@ -150,7 +146,12 @@ describe("job: o que não se propõe de novo", () => {
 describe("job: teto de candidatos abertos", () => {
   it("com mais padrões do que o teto, só o teto vira candidato; de novo, nenhum a mais", async () => {
     const m = montar()
-    const itens = ["cha-gengibre-canela", "cha-canela", "cha-cardamomo", "cha-erva-doce"]
+    const itens = [
+      "oleo-pes-gergelim",
+      "oleo-pes-coco",
+      "oleo-barriga-gergelim",
+      "oleo-corpo-gergelim",
+    ]
     for (const id of itens) {
       await semear(m, "c1", ajudou(["com_frio"], { tipo: "pratica", id }, 2))
     }
@@ -165,10 +166,10 @@ describe("job: teto de candidatos abertos", () => {
 })
 
 describe("job: o filtro da pessoa", () => {
-  it("item barrado pelo filtro (nao come o gengibre) não é proposto", async () => {
+  it("item barrado pelo filtro (nao come o óleo de gergelim) não é proposto", async () => {
     const m = montar()
-    await m.stores.profiles.definirNaoCome("c1", [{ tipo: "alimento", valor: "gengibre" }])
-    await semear(m, "c1", ajudou(SOZINHO))
+    await m.stores.profiles.definirNaoCome("c1", [{ tipo: "alimento", valor: "oleo-de-gergelim" }])
+    await semear(m, "c1", ajudou(SOZINHO, { tipo: "pratica", id: "oleo-pes-gergelim" }))
 
     expect(await detectarPadroesDaConta(m.deps, "c1")).toBe(0)
     expect(await candidatos(m, "c1")).toEqual([])

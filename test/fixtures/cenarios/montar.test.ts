@@ -159,7 +159,7 @@ const CHA_DO_HISTORICO = {
   alimentos: ["gengibre", "canela"],
   titulo: "Chá de gengibre com canela",
 }
-const CHAVE_DO_CHA = "com_frio+agitada|pratica:cha-gengibre-canela"
+const CHAVE_DO_CHA = "com_frio+agitada|cha"
 
 // Histórico do chá (mesmo formato do job.test.ts): 3 ajudou e 1 nao_ajudou juntos, e 4 dias sozinhos.
 function historicoDoCha(): NonNullable<Cenario["historico"]> {

@@ -51,6 +51,18 @@ describe("padraoVale", () => {
     ).toBe(false)
   })
 
+  it("o chá genérico vale com algum chá no filtro", () => {
+    const chave = chaveDeAjuda(["com_frio"], { tipo: "cha" })
+    expect(padraoVale({ tipo: "ajuda_em_estado", chave }, filtroVazio, kb)).toBe(true)
+  })
+
+  it("o chá genérico não vale quando todos os chás são barrados", () => {
+    const chave = chaveDeAjuda(["com_frio"], { tipo: "cha" })
+    const so = { ...kb, praticas: kb.praticas.filter((p) => p.id === "cha-gengibre") }
+    const filtro = com({ evitar: [{ tipo: "alimento", valor: "gengibre" }] })
+    expect(padraoVale({ tipo: "ajuda_em_estado", chave }, filtro, so)).toBe(false)
+  })
+
   it("item que não existe na base não vale", () => {
     const chave = chaveDeAjuda(["com_frio"], { tipo: "pratica", id: "nao-existe" })
     expect(padraoVale({ tipo: "ajuda_em_estado", chave }, filtroVazio, kb)).toBe(false)

@@ -18,6 +18,7 @@ const OUTRO: ItemDoPadrao = { tipo: "preparo", id: "oleo-gergelim-morno" }
 const TITULO = "Chá de gengibre com canela"
 const PAR: Estado[] = ["com_frio", "agitada"]
 const CHAVE_DO_PAR = "com_frio+agitada|pratica:cha-gengibre-canela"
+const CHAVE_DO_CHA = "com_frio+agitada|cha"
 
 let sequencia = 0
 function retorno(
@@ -165,7 +166,7 @@ async function semear(m: ReturnType<typeof montar>, contaId: string, dias: Dia[]
     if (d.resultado) {
       const sugestao = {
         tipo: "cha" as const,
-        pratica_id: CHA.id,
+        pratica_id: "cha-gengibre-canela",
         alimentos: [],
         titulo: d.titulo ?? TITULO,
       }
@@ -197,7 +198,7 @@ describe("ajuda em estado pelo job: o que não conta", () => {
       { diasAtras: 7, estados: PAR, resultado: "nao_fez" },
     ])
 
-    expect((await ajudas(m, "c1")).map((p) => p.chave)).toEqual([CHAVE_DO_PAR])
+    expect((await ajudas(m, "c1")).map((p) => p.chave)).toEqual([CHAVE_DO_CHA])
   })
 
   it("run com incômodo não conta: 3 'ajudou' nele não propõem o padrão", async () => {
@@ -215,7 +216,7 @@ describe("ajuda em estado pelo job: o que não conta", () => {
     const m = montar()
     await semear(m, "c1", HISTORICO_COM_PAR("ajudou"))
 
-    expect((await ajudas(m, "c1")).map((p) => p.chave)).toEqual([CHAVE_DO_PAR])
+    expect((await ajudas(m, "c1")).map((p) => p.chave)).toEqual([CHAVE_DO_CHA])
   })
 
   it("com o título do retorno mais recente, a frase do padrão usa esse título", async () => {
@@ -227,6 +228,6 @@ describe("ajuda em estado pelo job: o que não conta", () => {
     ])
 
     const [padrao] = await ajudas(m, "c1")
-    expect(padrao?.frase).toBe("Quando você está com frio e agitada, chá novo costuma te ajudar.")
+    expect(padrao?.frase).toBe("Quando você está com frio e agitada, um chá costuma te ajudar.")
   })
 })

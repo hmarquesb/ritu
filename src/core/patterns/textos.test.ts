@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { chaveDeAjuda, chaveDeJuntos, fraseDeAjuda, fraseDeJuntos, lerChave } from "./textos"
+import {
+  chaveDeAjuda,
+  chaveDeJuntos,
+  fraseDeAjuda,
+  fraseDeAjudaCha,
+  fraseDeJuntos,
+  lerChave,
+} from "./textos"
 
 const CHA = { tipo: "pratica", id: "cha-gengibre-canela" } as const
 
@@ -61,6 +68,23 @@ describe("chaves de padrão", () => {
     ["estados_juntos", ""],
   ] as const)("chave malformada devolve undefined: %s %s", (tipo, chave) => {
     expect(lerChave(tipo, chave)).toBeUndefined()
+  })
+})
+
+describe("padrão de chá", () => {
+  it("monta e lê a chave com_frio+agitada|cha", () => {
+    const chave = chaveDeAjuda(["agitada", "com_frio"], { tipo: "cha" })
+    expect(chave).toBe("com_frio+agitada|cha")
+    expect(lerChave("ajuda_em_estado", chave)).toEqual({
+      estados: ["com_frio", "agitada"],
+      item: { tipo: "cha" },
+    })
+  })
+
+  it("monta a frase do chá", () => {
+    expect(fraseDeAjudaCha(["com_frio", "agitada"])).toBe(
+      "Quando você está com frio e agitada, um chá costuma te ajudar.",
+    )
   })
 })
 

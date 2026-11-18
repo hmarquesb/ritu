@@ -4,7 +4,9 @@ import type { TipoPadrao } from "./ports"
 import {
   chaveDeAjuda,
   chaveDeJuntos,
+  chaveDoItem,
   fraseDeAjuda,
+  fraseDeAjudaCha,
   fraseDeJuntos,
   type ItemDoPadrao,
 } from "./textos"
@@ -95,7 +97,7 @@ function ehMelhorDoItem(a: GrupoDeAjuda, b: GrupoDeAjuda): boolean {
 function umGrupoPorItem(grupos: GrupoDeAjuda[]): GrupoDeAjuda[] {
   const porItem = new Map<string, GrupoDeAjuda>()
   for (const g of grupos) {
-    const chaveItem = `${g.item.tipo}:${g.item.id}`
+    const chaveItem = chaveDoItem(g.item)
     const atual = porItem.get(chaveItem)
     if (!atual || ehMelhorDoItem(g, atual)) porItem.set(chaveItem, g)
   }
@@ -106,7 +108,7 @@ function comoPadrao(g: GrupoDeAjuda): PadraoDetectado {
   return {
     tipo: "ajuda_em_estado",
     chave: chaveDeAjuda(g.estados, g.item),
-    frase: fraseDeAjuda(g.estados, g.titulo),
+    frase: g.item.tipo === "cha" ? fraseDeAjudaCha(g.estados) : fraseDeAjuda(g.estados, g.titulo),
     ocorrencias: g.ajudou,
   }
 }

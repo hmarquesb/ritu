@@ -14,7 +14,7 @@ import {
   type RetornoRegistrado,
 } from "./detectar"
 import type { Padrao } from "./ports"
-import { lerChave } from "./textos"
+import { chaveDoItem, type ItemDoPadrao, lerChave } from "./textos"
 import { padraoVale } from "./vale"
 
 type DepsDoJob = { stores: Stores; kb: KnowledgeBase; clock: Clock; telemetry: Telemetry }
@@ -35,8 +35,22 @@ function runsValidos(runs: Run[]): Map<string, Run> {
   return validos
 }
 
+function itemDaSugestao(
+  kb: KnowledgeBase,
+  sugestao: { pratica_id?: string | null; preparo_id?: string | null },
+): ItemDoPadrao | undefined {
+  if (sugestao.pratica_id) {
+    const pratica = kb.pratica(sugestao.pratica_id)
+    if (!pratica) return undefined
+    return pratica.tipo === "cha" ? { tipo: "cha" } : { tipo: "pratica", id: sugestao.pratica_id }
+  }
+  if (sugestao.preparo_id) return { tipo: "preparo", id: sugestao.preparo_id }
+  return undefined
+}
+
 async function retornosDosRuns(
   stores: Stores,
+  kb: KnowledgeBase,
   contaId: string,
   desde: Date,
   runs: Map<string, Run>,
@@ -46,11 +60,7 @@ async function retornosDosRuns(
     const run = runs.get(r.run_id)
     const { resultado, sugestao } = r
     if (!run?.momento || (resultado !== "ajudou" && resultado !== "nao_ajudou")) continue
-    const item = sugestao.pratica_id
-      ? { tipo: "pratica" as const, id: sugestao.pratica_id }
-      : sugestao.preparo_id
-        ? { tipo: "preparo" as const, id: sugestao.preparo_id }
-        : undefined
+    const item = itemDaSugestao(kb, sugestao)
     if (!item) continue
     saida.push({
       dia: run.dia,
@@ -82,7 +92,7 @@ function estadosPorItem(guardados: Padrao[]): Map<string, Set<string>> {
   for (const g of guardados) {
     const lida = g.tipo === "ajuda_em_estado" ? lerChave(g.tipo, g.chave) : undefined
     if (!lida?.item) continue
-    const k = `${lida.item.tipo}:${lida.item.id}`
+    const k = chaveDoItem(lida.item)
     const conjunto = mapa.get(k) ?? new Set<string>()
     for (const e of lida.estados) conjunto.add(e)
     mapa.set(k, conjunto)
@@ -97,7 +107,7 @@ function semOsGuardados(detectados: PadraoDetectado[], guardados: Padrao[]): Pad
     if (p.tipo === "estados_juntos") return !pares.has(p.chave)
     const lida = lerChave(p.tipo, p.chave)
     if (!lida?.item) return false
-    const jaTem = porItem.get(`${lida.item.tipo}:${lida.item.id}`)
+    const jaTem = porItem.get(chaveDoItem(lida.item))
     return !lida.estados.some((e) => jaTem?.has(e))
   })
 }
@@ -117,7 +127,7 @@ async function detectadosDaConta(deps: DepsDoJob, contaId: string): Promise<Padr
     dia: r.dia,
     estados: r.momento?.estados ?? [],
   }))
-  const retornos = await retornosDosRuns(stores, contaId, desde, runs)
+  const retornos = await retornosDosRuns(stores, kb, contaId, desde, runs)
   const detectados = [...detectarAjudaEmEstado(retornos), ...detectarEstadosJuntos(momentos)]
   if (detectados.length === 0) return []
   const [perfil, preferencias] = await Promise.all([

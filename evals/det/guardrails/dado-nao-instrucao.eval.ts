@@ -57,11 +57,8 @@ const roteiro: PassoRoteirizado[] = [
         nome: "finalizar",
         argumentos: {
           resposta: `Para hoje, vale uma refeição leve e morna. ${bruto("resp")}`,
-          explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
           sugestoes: [],
-          evitar: [],
           incertos: ["Não sei o que há na sua casa."],
-          citados: [],
         },
       },
     ],

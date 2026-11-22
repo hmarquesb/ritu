@@ -17,7 +17,7 @@ import {
 
 const DIA = "2026-06-15"
 
-// Uma recusa pela validação: prática fora da base (o validador recusa e o run pede correção).
+// Uma recusa pela validação: id fora dos candidatos (o validador recusa e o run pede correção).
 const recusa: Cenario["roteiro"][number] = {
   texto: "Vou montar a resposta com o chá.",
   chamadas: [
@@ -25,22 +25,14 @@ const recusa: Cenario["roteiro"][number] = {
       nome: "finalizar",
       argumentos: {
         resposta: "Um chá de hortelã morno ajuda a refrescar agora.",
-        explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
         sugestoes: [
           {
             tipo: "cha",
-            pratica_id: "cha-inexistente",
-            itens: [
-              { alimento_id: "hortela", contribui: ["frio"], linha_base: "alimentos:hortela" },
-            ],
+            id: "cha-inexistente",
             motivo: "Refresca o corpo quando há calor.",
-            linhas_base: ["praticas:cha-inexistente"],
-            novidade: false,
           },
         ],
-        evitar: [],
         incertos: [],
-        citados: [],
       },
     },
   ],
@@ -95,8 +87,8 @@ describe("entrega grava retornos aguardando, um por sugestão", () => {
 
     expect(retorno?.sugestao).toEqual({
       tipo: "cha",
-      pratica_id: "cha-gengibre-canela",
-      alimentos: ["gengibre", "canela"],
+      pratica_id: "cha-gengibre-limao-mel",
+      alimentos: ["gengibre", "limao", "mel"],
       titulo: cha?.titulo,
     })
   })
@@ -110,7 +102,7 @@ describe("entrega marca o já sugerido", () => {
     const sugeridoEm = (tipo: string, id: string) =>
       prefs.find((p) => p.item_tipo === tipo && p.item_id === id)?.ultima_sugestao_em
 
-    expect(sugeridoEm("pratica", "cha-gengibre-canela")).toBe(c.agora)
+    expect(sugeridoEm("pratica", "cha-gengibre-limao-mel")).toBe(c.agora)
     expect(sugeridoEm("preparo", "arroz-com-legume")).toBe(c.agora)
     expect(sugeridoEm("pratica", "comer-sentada-sem-tela")).toBe(c.agora)
     expect(sugeridoEm("alimento", "gengibre")).toBe(c.agora)

@@ -19,7 +19,7 @@ function cenario(nome: string): CenarioDeConversa {
   return c
 }
 
-// Entrega com um chá que não existe na base: o validador recusa dentro da nova tentativa.
+// Entrega com um id fora dos candidatos: a montagem recusa dentro da nova tentativa.
 const entregaRecusada: PassoRoteirizado = {
   texto: "Vou montar a resposta com o chá.",
   chamadas: [
@@ -27,22 +27,14 @@ const entregaRecusada: PassoRoteirizado = {
       nome: "finalizar",
       argumentos: {
         resposta: "Um chá de hortelã morno ajuda a refrescar agora.",
-        explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
         sugestoes: [
           {
             tipo: "cha",
-            pratica_id: "cha-inexistente",
-            itens: [
-              { alimento_id: "hortela", contribui: ["frio"], linha_base: "alimentos:hortela" },
-            ],
+            id: "cha-inexistente",
             motivo: "Refresca o corpo quando há calor.",
-            linhas_base: ["praticas:cha-inexistente"],
-            novidade: false,
           },
         ],
-        evitar: [],
         incertos: [],
-        citados: [],
       },
     },
   ],

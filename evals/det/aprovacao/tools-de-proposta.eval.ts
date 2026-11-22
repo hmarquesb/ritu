@@ -158,24 +158,18 @@ async function conteudosDoRun(deps: DepsDoCenario, contaId: string, runId: strin
 // Entrega com incerto, que vale como resposta (sem sugestão, o validador exige um incerto).
 const ENTREGA = {
   resposta: "Para agora, algo morno e simples. Se puder, sente-se para comer, sem tela.",
-  explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
   sugestoes: [],
-  evitar: [],
   incertos: ["Não sei o que há na sua casa."],
-  citados: [],
 }
 // Sem incerto e sem sugestão: o validador recusa com "vazia", e a entrega volta ao modelo.
 const ENTREGA_RECUSADA = { ...ENTREGA, incertos: [] }
 
-// Dor de cabeça com a entrega que o fixture usa (o aviso de incômodo vem no evitar).
+// Dor de cabeça com a entrega que o fixture usa (o aviso de incômodo vem do contexto, na montagem).
 const ENTREGA_DA_DOR = {
   resposta:
     "Com essa dor de cabeça latejante, vale evitar picantes, frituras e sol forte no almoço. Escolha algo leve e morno, e beba água aos goles. Se a dor for forte ou continuar, procure uma pessoa de saúde.",
-  explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio", "brando"] },
   sugestoes: [],
-  evitar: ["incomodos:dor-de-cabeca/latejante"],
   incertos: ["Não sei o que há na sua casa."],
-  citados: [],
 }
 
 describe("no run: o que chega ao bloco", () => {

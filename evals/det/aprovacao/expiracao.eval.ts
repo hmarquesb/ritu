@@ -26,11 +26,8 @@ const kb = getContainer().knowledge
 // Entrega sem sugestão: serve à segunda mensagem, sem repetir a refeição do dia; o incerto evita a violação "vazia".
 const ENTREGA_SEM_SUGESTAO = {
   resposta: "Para agora, vale algo morno e simples. Se puder, sente-se para comer, sem tela.",
-  explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
   sugestoes: [],
-  evitar: [],
   incertos: ["Não sei o que há na sua casa."],
-  citados: [],
 }
 
 function cenarioDeAprovacao(nome: string): CenarioDeConversa {

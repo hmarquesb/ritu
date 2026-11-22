@@ -8,7 +8,7 @@ function cenario(nome: string): Cenario {
   return c
 }
 
-// Entrega com uma prática que não existe na base: o validador recusa (fora_da_base).
+// Entrega com um id que não está nos candidatos: a montagem recusa (fora_dos_candidatos).
 const entregaRecusada: Cenario["roteiro"][number] = {
   texto: "Vou montar a resposta com o chá.",
   chamadas: [
@@ -16,22 +16,14 @@ const entregaRecusada: Cenario["roteiro"][number] = {
       nome: "finalizar",
       argumentos: {
         resposta: "Um chá de hortelã morno ajuda a refrescar agora.",
-        explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
         sugestoes: [
           {
             tipo: "cha",
-            pratica_id: "cha-inexistente",
-            itens: [
-              { alimento_id: "hortela", contribui: ["frio"], linha_base: "alimentos:hortela" },
-            ],
+            id: "cha-inexistente",
             motivo: "Refresca o corpo quando há calor.",
-            linhas_base: ["praticas:cha-inexistente"],
-            novidade: false,
           },
         ],
-        evitar: [],
         incertos: [],
-        citados: [],
       },
     },
   ],

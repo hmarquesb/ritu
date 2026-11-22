@@ -206,7 +206,7 @@ async function preparadaDosToques(): Promise<Preparada> {
   await deps.touches.trocarIngrediente(contaId, {
     runId: r.run_id,
     sugestao: 0,
-    alimento_id: "canela",
+    alimento_id: "gengibre",
     motivo: "trocar",
   })
   await deps.touches.tocarRetorno(contaId, retornoId, "ajudou")

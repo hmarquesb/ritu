@@ -22,13 +22,13 @@ function cenario(nome: string): CenarioDeConversa {
   return c
 }
 
-// Um retorno de chá de gengibre, há `dias` dias; a ordem dos semeados é a da lista.
+// Um retorno de chá de gengibre com limão e mel, há `dias` dias; a ordem dos semeados é a da lista.
 const cha = (dias: number) => ({
   sugestao: {
     tipo: "cha" as const,
-    pratica_id: "cha-gengibre",
-    alimentos: ["gengibre"],
-    titulo: "Chá de gengibre",
+    pratica_id: "cha-gengibre-limao-mel",
+    alimentos: ["gengibre", "limao", "mel"],
+    titulo: "Chá de gengibre com limão e mel",
   },
   diasAtras: dias,
 })
@@ -181,21 +181,21 @@ describe("não ajudou seguido manda para o fim; um ajudou traz de volta", () => 
     await rodarCenario(deps, contaId, c)
     const { completos, noContexto } = chasDoPreparo(await preparoSeguinte(deps, contaId))
 
-    expect(completos.at(-1)).toBe("cha-gengibre")
-    expect(completos.indexOf("cha-gengibre")).toBeGreaterThan(0)
+    expect(completos.at(-1)).toBe("cha-gengibre-limao-mel")
+    expect(completos.indexOf("cha-gengibre-limao-mel")).toBeGreaterThan(0)
     const ids = noContexto.map((x) => x.id)
     expect(ids.length).toBeGreaterThan(0)
-    expect(apos(ids, "cha-gengibre")).toEqual([])
+    expect(apos(ids, "cha-gengibre-limao-mel")).toEqual([])
     expect(noContexto.filter((x) => x.no_fim).map((x) => x.id)).toEqual(
-      ids.includes("cha-gengibre") ? ["cha-gengibre"] : [],
+      ids.includes("cha-gengibre-limao-mel") ? ["cha-gengibre-limao-mel"] : [],
     )
-    if (ids.includes("cha-gengibre")) {
-      expect(noContexto.at(-1)?.id).toBe("cha-gengibre")
+    if (ids.includes("cha-gengibre-limao-mel")) {
+      expect(noContexto.at(-1)?.id).toBe("cha-gengibre-limao-mel")
       expect(noContexto.at(-1)?.no_fim).toBe(true)
     }
   })
 
-  it("um 'ajudou' depois dos dois: o chá sai do fim e volta à frente do tipo, no contexto", async () => {
+  it("um 'ajudou' depois dos dois: o chá sai do fim do tipo e volta à ordem normal, no contexto", async () => {
     const c: CenarioDeConversa = {
       ...base,
       retornos,
@@ -205,9 +205,10 @@ describe("não ajudou seguido manda para o fim; um ajudou traz de volta", () => 
     const { contaId, deps } = await montarCenario(c)
     await rodarCenario(deps, contaId, c)
     const { completos, noContexto } = chasDoPreparo(await preparoSeguinte(deps, contaId))
-    const chaNoContexto = noContexto.find((x) => x.id === "cha-gengibre")
+    const chaNoContexto = noContexto.find((x) => x.id === "cha-gengibre-limao-mel")
 
-    expect(completos[0]).toBe("cha-gengibre")
+    expect(completos.at(-1)).not.toBe("cha-gengibre-limao-mel")
+    expect(completos).toContain("cha-gengibre-limao-mel")
     expect(chaNoContexto).toMatchObject({ no_fim: false, ajudou: 1 })
   })
 })

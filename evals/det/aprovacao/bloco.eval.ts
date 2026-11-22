@@ -246,11 +246,8 @@ describe("bloco: nada duplicado", () => {
             nome: "finalizar",
             argumentos: {
               resposta: "Anotado. Se puder, sente-se para comer, sem tela.",
-              explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
               sugestoes: [],
-              evitar: [],
               incertos: ["Não sei o que há na sua casa."],
-              citados: [],
             },
           },
         ],

@@ -7,7 +7,10 @@ import {
   type RodadaDoCenario,
   rodarCenario,
 } from "../../../test/fixtures/cenarios"
-import { padraoConfirmado } from "../../../test/fixtures/cenarios/padrao-confirmado"
+import {
+  padraoConfirmado,
+  roteiroDoJantar,
+} from "../../../test/fixtures/cenarios/padrao-confirmado"
 import type { Cenario } from "../../../test/fixtures/cenarios/tipos"
 
 // Padrão e filtro: um padrão confirmado ou candidato que a pessoa passou a barrar (evitar sempre, não como, não gosto,
@@ -103,7 +106,8 @@ function cenarioDoJantar(padrao: Padrao): Cenario {
     ...cenarioCom("candidato", padrao),
     mensagem: jantar.mensagem,
     interpretacao: jantar.interpretacao,
-    roteiro: jantar.roteiro,
+    // Arroz com legume segue entre os candidatos mesmo com a restrição vegana (legumes assados pedem gordura, e o ghee sai).
+    roteiro: roteiroDoJantar("arroz-com-legume"),
   }
 }
 

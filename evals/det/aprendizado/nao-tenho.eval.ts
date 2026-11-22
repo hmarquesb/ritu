@@ -21,7 +21,7 @@ function cenario(nome: string): CenarioDeConversa {
   return c
 }
 
-// O run do troca-por-toque sem toques: canela no chá, noz-moscada confirmada em casa.
+// O run do troca-por-toque sem toques: gengibre no chá, canela confirmada em casa.
 async function montarSemToque(extra: Partial<CenarioDeConversa> = {}) {
   const base = cenario("troca-por-toque")
   const c: CenarioDeConversa = { ...base, ...extra, toques: undefined }
@@ -35,7 +35,7 @@ async function saidaDo(deps: DepsDoCenario, contaId: string, runId: string) {
   return run?.saida as SaidaDoAcompanhante
 }
 
-// A canela do chá já trocada duas vezes: a noz-moscada atual é a terceira troca, e o teto não deixa mais.
+// A gengibre do chá já trocada duas vezes: a canela atual é a terceira troca, e o teto não deixa mais.
 function ateOTeto(saida: SaidaDoAcompanhante): SaidaDoAcompanhante {
   return {
     ...saida,
@@ -44,16 +44,16 @@ function ateOTeto(saida: SaidaDoAcompanhante): SaidaDoAcompanhante {
         ? {
             ...sg,
             itens: sg.itens.map((it) =>
-              it.alimento_id === "canela"
+              it.alimento_id === "gengibre"
                 ? {
                     ...it,
                     troca: {
-                      alimento_id: "noz-moscada",
-                      nome: "Noz-moscada",
+                      alimento_id: "canela",
+                      nome: "Canela",
                       contribui: ["quente"],
                       verbos: ["aquecem"],
-                      linha_base: "alimentos:noz-moscada",
-                      frase: "Troquei canela por noz-moscada.",
+                      linha_base: "alimentos:canela",
+                      frase: "Troquei gengibre por canela.",
                       anteriores: ["cardamomo", "louro"],
                     },
                   }
@@ -86,23 +86,23 @@ async function preparoSeguinte(deps: DepsDoCenario, contaId: string): Promise<Da
 }
 
 describe("não tenho: acabou, falta e troca no mesmo toque", () => {
-  it("canela acabou, entra na falta e sai por noz-moscada, que estava confirmada", async () => {
+  it("gengibre acabou, entra na falta e sai por canela, que estava confirmada", async () => {
     const { contaId, deps, runId } = await montarSemToque()
     const resultado = await deps.touches.trocarIngrediente(contaId, {
       runId,
       sugestao: 0,
-      alimento_id: "canela",
+      alimento_id: "gengibre",
       motivo: "nao_tenho",
     })
 
     expect(resultado.resultado).toBe("trocou")
     if (resultado.resultado !== "trocou") throw new Error("troca não aconteceu")
-    const item = resultado.sugestao.itens.find((i) => i.alimento_id === "canela")
-    expect(item?.troca?.alimento_id).toBe("noz-moscada")
+    const item = resultado.sugestao.itens.find((i) => i.alimento_id === "gengibre")
+    expect(item?.troca?.alimento_id).toBe("canela")
     const casa = await deps.stores.pantry.listar(contaId)
-    expect(casa.find((i) => i.alimento_id === "canela")?.estado).toBe("acabou")
+    expect(casa.find((i) => i.alimento_id === "gengibre")?.estado).toBe("acabou")
     const faltas = await deps.stores.shortages.diasComFalta(contaId, "2026-01-01")
-    expect(faltas.map((f) => f.alimento_id)).toContain("canela")
+    expect(faltas.map((f) => f.alimento_id)).toContain("gengibre")
   })
 
   it("a falta soma ritu_faltas_total com origem nao_tenho e a troca soma trocou, uma vez cada", async () => {
@@ -110,7 +110,7 @@ describe("não tenho: acabou, falta e troca no mesmo toque", () => {
     await deps.touches.trocarIngrediente(contaId, {
       runId,
       sugestao: 0,
-      alimento_id: "canela",
+      alimento_id: "gengibre",
       motivo: "nao_tenho",
     })
 
@@ -125,20 +125,20 @@ describe("não tenho: acabou, falta e troca no mesmo toque", () => {
 describe("não tenho sem substituto: a falta fica, a troca responde sem_substituto", () => {
   it("no teto de trocas, o não tenho grava a falta e a troca diz sem_substituto", async () => {
     const { contaId, deps, runId } = await montarSemToque()
-    // Três trocas já feitas no canela: a noz-moscada atual tem dois anteriores, então não há mais troca.
+    // Três trocas já feitas no gengibre: a canela atual tem dois anteriores, então não há mais troca.
     await deps.stores.runs.atualizar(contaId, runId, {
       saida: ateOTeto(await saidaDo(deps, contaId, runId)),
     })
     const resultado = await deps.touches.trocarIngrediente(contaId, {
       runId,
       sugestao: 0,
-      alimento_id: "noz-moscada",
+      alimento_id: "canela",
       motivo: "nao_tenho",
     })
 
     expect(resultado.resultado).toBe("sem_substituto")
     const casa = await deps.stores.pantry.listar(contaId)
-    expect(casa.find((i) => i.alimento_id === "noz-moscada")?.estado).toBe("acabou")
+    expect(casa.find((i) => i.alimento_id === "canela")?.estado).toBe("acabou")
     expect(metricas(deps, "ritu_faltas_total", { origem: "nao_tenho" })).toHaveLength(1)
     expect(
       metricas(deps, "ritu_troca_ingrediente_total", { resultado: "sem_substituto" }),
@@ -150,8 +150,8 @@ describe("a falta conta para o 'vale ter em casa'", () => {
   it("com faltas em dois dias antes, o não tenho de hoje põe o alimento no para_ter do preparo seguinte", async () => {
     const { contaId, deps, runId } = await montarSemToque({
       faltas: [
-        { alimento_id: "canela", diasAtras: 1 },
-        { alimento_id: "canela", diasAtras: 2 },
+        { alimento_id: "gengibre", diasAtras: 1 },
+        { alimento_id: "gengibre", diasAtras: 2 },
       ],
     })
     const antes = await preparoSeguinte(deps, contaId)
@@ -160,12 +160,12 @@ describe("a falta conta para o 'vale ter em casa'", () => {
     await deps.touches.trocarIngrediente(contaId, {
       runId,
       sugestao: 0,
-      alimento_id: "canela",
+      alimento_id: "gengibre",
       motivo: "nao_tenho",
     })
     const depois = await preparoSeguinte(deps, contaId)
 
-    expect(depois.para_ter?.alimento_id).toBe("canela")
+    expect(depois.para_ter?.alimento_id).toBe("gengibre")
     expect(depois.para_ter?.vezes).toBe(3)
   })
 })

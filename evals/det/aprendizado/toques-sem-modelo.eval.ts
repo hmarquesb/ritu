@@ -66,7 +66,7 @@ describe("toques gravam sem chamar modelo", () => {
     await deps.touches.trocarIngrediente(contaId, {
       runId,
       sugestao: 0,
-      alimento_id: "canela",
+      alimento_id: "gengibre",
       motivo: "trocar",
     })
 

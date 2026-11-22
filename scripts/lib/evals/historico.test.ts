@@ -162,6 +162,25 @@ describe("trocarEntrada", () => {
     expect(trocado.checkpoints[0]).toEqual(nova)
   })
 
+  it("c5-publico entra depois do c3-confiavel e c4-site fica entre os dois", () => {
+    const h = historicoCom("c1-base", "c2-conversa", "c3-confiavel")
+    const comC5 = trocarEntrada(h, entrada("c5-publico"))
+    expect(comC5.checkpoints.map((e) => e.checkpoint)).toEqual([
+      "c1-base",
+      "c2-conversa",
+      "c3-confiavel",
+      "c5-publico",
+    ])
+    const comC4 = trocarEntrada(comC5, entrada("c4-site"))
+    expect(comC4.checkpoints.map((e) => e.checkpoint)).toEqual([
+      "c1-base",
+      "c2-conversa",
+      "c3-confiavel",
+      "c4-site",
+      "c5-publico",
+    ])
+  })
+
   it("nome fora da lista de checkpoints vai ao fim", () => {
     const h = historicoCom("c1-base")
     const trocado = trocarEntrada(h, entrada("outro"))

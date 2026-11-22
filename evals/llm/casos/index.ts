@@ -18,7 +18,7 @@ const CASOS_DA_PASTA: Record<Pasta, CasoDeEval[]> = {
 
 // Os casos do checkpoint: na ordem das pastas de `checkpoints.ts` e, dentro da pasta, do id (D21).
 export function casosDoCheckpoint(nome: NomeDoCheckpoint): CasoDeEval[] {
-  const pastas: readonly Pasta[] = checkpoints[nome]
+  const pastas: readonly Pasta[] = checkpoints[nome].pastas
   return pastas.flatMap((pasta) =>
     [...CASOS_DA_PASTA[pasta]].sort((a, b) => a.id.localeCompare(b.id)),
   )

@@ -11,7 +11,7 @@ import {
   casosDoCheckpoint,
   type NomeDoCheckpoint,
 } from "../../../evals/llm/casos"
-import { checkpoints } from "../../../evals/llm/checkpoints"
+import { type AlvoDoCheckpoint, checkpoints } from "../../../evals/llm/checkpoints"
 import { FAMILIAS_MARCADAS, TITULO_DA_FAMILIA, type TipoDeCaso } from "../../../evals/llm/tipos"
 import { aplicarAvaliacao, avaliar, type DepsDoAvaliador, montarPerguntas } from "./avaliador"
 import { calcularAcertou, type ResultadoDoCaso } from "./resultado"
@@ -27,6 +27,15 @@ export const ehCheckpoint = (nome: string): nome is NomeDoCheckpoint =>
   Object.keys(checkpoints).includes(nome)
 
 export const nomesDeCheckpoint = (): string[] => Object.keys(checkpoints)
+
+export function alvoDoCheckpoint(nome: NomeDoCheckpoint): AlvoDoCheckpoint {
+  return checkpoints[nome].alvo
+}
+
+const TEXTO_DO_ALVO: Record<AlvoDoCheckpoint, string> = {
+  codigo: "código",
+  rotas: "rotas do site",
+}
 
 function temFamiliaDeAcompanhante(caso: CasoDeEval): boolean {
   const familias: readonly string[] = caso.familias
@@ -63,6 +72,7 @@ export function formatarListagem(checkpoint: NomeDoCheckpoint): string {
   const soma = casos.reduce((total, c) => total + chamadasEstimadasDoCaso(c), 0)
   return [
     `Casos do ${checkpoint}: ${casos.length}`,
+    `Alvo: ${TEXTO_DO_ALVO[alvoDoCheckpoint(checkpoint)]}`,
     ...secoes,
     porTipo,
     `Chamadas estimadas: ${soma}`,

@@ -18,6 +18,7 @@ import { createMemoryTelemetry } from "../../../src/infra/fakes/memory-telemetry
 import { createMiniKnowledge } from "../../../src/infra/fakes/mini-knowledge"
 import type { DepsDoAvaliador } from "./avaliador"
 import {
+  alvoDoCheckpoint,
   chamadasEstimadasDoCaso,
   criarRodarCaso,
   despachar,
@@ -99,18 +100,35 @@ afterEach(() => {
 })
 
 describe("listagem dos checkpoints", () => {
-  it("conhece os três checkpoints e recusa nome desconhecido", () => {
+  it("conhece os cinco checkpoints e recusa nome desconhecido", () => {
     expect(nomesDeCheckpoint()).toEqual(
-      expect.arrayContaining(["c1-base", "c2-conversa", "c3-confiavel"]),
+      expect.arrayContaining(["c1-base", "c2-conversa", "c3-confiavel", "c4-site", "c5-publico"]),
     )
     expect(ehCheckpoint("c3-confiavel")).toBe(true)
+    expect(ehCheckpoint("c5-publico")).toBe(true)
     expect(ehCheckpoint("nao-existe")).toBe(false)
+  })
+
+  it("devolve o alvo de cada checkpoint", () => {
+    expect(alvoDoCheckpoint("c1-base")).toBe("codigo")
+    expect(alvoDoCheckpoint("c2-conversa")).toBe("codigo")
+    expect(alvoDoCheckpoint("c3-confiavel")).toBe("codigo")
+    expect(alvoDoCheckpoint("c4-site")).toBe("rotas")
+    expect(alvoDoCheckpoint("c5-publico")).toBe("rotas")
+  })
+
+  it("mostra o alvo na listagem: código para o agente, rotas do site para o site", () => {
+    expect(formatarListagem("c3-confiavel")).toContain("Alvo: código")
+    expect(formatarListagem("c4-site")).toContain("Alvo: rotas do site")
+    expect(formatarListagem("c5-publico")).toContain("Alvo: rotas do site")
   })
 
   it.each([
     ["c1-base", 12],
     ["c2-conversa", 54],
     ["c3-confiavel", 86],
+    ["c4-site", 86],
+    ["c5-publico", 86],
   ] as const)("lista %s com %i casos, contagens por tipo e total estimado", (nome, total) => {
     const casos = casosDoCheckpoint(nome)
     expect(casos).toHaveLength(total)

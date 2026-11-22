@@ -1,6 +1,6 @@
 // Runners dos casos que rodam um run: acompanhante e conversa. Cada um monta o cenário, roda as pausas e
 // devolve o resultado e o colhido. Sem container: as dependências entram por parâmetro.
-import type { CasoC1 } from "../../../evals/llm/casos/c1"
+import type { CasoC1, ResultadoDoRun } from "../../../evals/llm/casos/c1"
 import type { CasoConversa } from "../../../evals/llm/casos/c2"
 import type { FamiliaMarcada, Marca, TipoDeCaso } from "../../../evals/llm/tipos"
 import type { RespostaDoRun } from "../../../src/core/agents/companion/responder"
@@ -27,6 +27,13 @@ import {
   usoDoRun,
   violacoesDaPrimeiraEntrega,
 } from "./colher"
+import {
+  classificarCaso,
+  type EntradaDaClassificacao,
+  fecharEstado,
+  type MetricaVista,
+  sinaisDeErroDoLlm,
+} from "./inconclusivo"
 import { type Checagem, type Colhido, calcularAcertou, type ResultadoDoCaso } from "./resultado"
 
 export type CasoRodado = { resultado: ResultadoDoCaso; colhido: Colhido }
@@ -39,14 +46,22 @@ type Corpo = {
   modelos: string[]
   latenciaMs: number
   erro?: string
+  /** O que o run colheu para classificar o caso quando ele não é conclusivo. */
+  entrada: Omit<EntradaDaClassificacao, "erro">
 }
 
-/** Monta o resultado com `acertou` calculado; `run` e `erro` só entram quando há.  */
+/** Monta o resultado com `estado` e `acertou` fechados; `run` e `erro` só entram quando há.  */
 function montar(
   caso: { id: string; titulo: string; familias: FamiliaMarcada[]; marcas?: Marca[] },
   tipo: TipoDeCaso,
   c: Corpo,
 ): ResultadoDoCaso {
+  const classe = fecharEstado(
+    calcularAcertou({ checagens: c.checagens, erro: c.erro }),
+    classificarCaso({ ...c.entrada, erro: c.erro }),
+  )
+  const inconclusivo =
+    classe.inconclusivo === undefined ? {} : { inconclusivo: classe.inconclusivo }
   return {
     id: caso.id,
     titulo: caso.titulo,
@@ -54,13 +69,38 @@ function montar(
     familias: caso.familias,
     marcas: caso.marcas ?? [],
     checagens: c.checagens,
-    acertou: calcularAcertou({ checagens: c.checagens, erro: c.erro }),
+    acertou: classe.estado === "acertou",
+    estado: classe.estado,
+    ...inconclusivo,
     ...(c.run === undefined ? {} : { run: c.run }),
     uso: c.uso,
     trocas: c.trocas,
     latenciaMs: c.latenciaMs,
     modelos: c.modelos,
     ...(c.erro === undefined ? {} : { erro: c.erro }),
+  }
+}
+
+/** Estado do Juiz no run: `indisponivel` quando a etapa falhou; senão, o veredito gravado no run. */
+function juizDoRun(etapas: RunEtapa[], run: Run): EntradaDaClassificacao["juiz"] {
+  if (etapas.some((e) => e.tipo === "juiz" && e.status === "falhou")) return "indisponivel"
+  if (run.juiz_aprovado === null) return undefined
+  return run.juiz_aprovado ? "aprovado" : "reprovado"
+}
+
+/** Sinais do run para classificar o caso. Sem `r` (pausa acima do teto), a entrega não foi validada. */
+function entradaDoRun(
+  metricas: MetricaVista[],
+  run: Run,
+  etapas: RunEtapa[],
+  r?: ResultadoDoRun,
+): Corpo["entrada"] {
+  return {
+    etapas,
+    ...sinaisDeErroDoLlm(metricas, run.status),
+    juiz: juizDoRun(etapas, run),
+    validouOk: r?.validacoes.includes("ok") ?? false,
+    chamadasDeDecisao: r?.chamadasDeModelo ?? 0,
   }
 }
 
@@ -148,6 +188,7 @@ export async function rodarAcompanhante(
     trocas: run.trocas_de_modelo,
     modelos: modelosDoRun(run.modelos),
     latenciaMs,
+    entrada: entradaDoRun(deps.telemetry.metricas, run, etapas, r),
   })
   const mensagem = cenario.mensagem?.texto ?? cenario.entrada?.texto
   return { resultado, colhido: colhidoDoRun(mensagem, saida, etapas) }
@@ -179,6 +220,7 @@ export async function rodarConversa(
         modelos: [],
         latenciaMs,
         erro: MOTIVO_PAUSA_ACIMA_DO_TETO,
+        entrada: entradaDoRun(deps.telemetry.metricas, run, etapas),
       }),
       colhido: colhidoSemSaida(mensagem, etapas),
     }
@@ -216,6 +258,7 @@ export async function rodarConversa(
     trocas: run.trocas_de_modelo,
     modelos: modelosDoRun(run.modelos),
     latenciaMs,
+    entrada: entradaDoRun(deps.telemetry.metricas, run, etapas, r),
   })
   return { resultado, colhido: colhidoDoRun(mensagem, saida, etapas) }
 }

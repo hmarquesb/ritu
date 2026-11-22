@@ -19,6 +19,7 @@ import {
 } from "../../../src/infra/fakes/memory-telemetry"
 import { createTeeTelemetry } from "../../../src/infra/fakes/tee-telemetry"
 import { conferir, retornosFalsos } from "./colher"
+import { classificarCaso, fecharEstado, type MetricaVista, sinaisDeErroDoLlm } from "./inconclusivo"
 import { type Checagem, type Colhido, calcularAcertou, type ResultadoDoCaso } from "./resultado"
 import type { CasoRodado } from "./rodar-run"
 
@@ -35,10 +36,36 @@ const DIA_EM_MS = 24 * 60 * 60 * 1000
 const falsas = (lista: "deve" | "nao_pode", expectativas: { descricao: string }[]): Checagem[] =>
   expectativas.map((e) => ({ lista, descricao: e.descricao, ok: false }))
 
-/** Monta o resultado com `acertou` calculado; `erro` só entra quando há erro. */
-function montar(base: Omit<ResultadoDoCaso, "acertou" | "erro">, erro?: string): ResultadoDoCaso {
-  const acertou = calcularAcertou({ checagens: base.checagens, erro })
-  return erro === undefined ? { ...base, acertou } : { ...base, acertou, erro }
+/**
+ * Monta o resultado com `estado` e `acertou` fechados; `erro` só entra quando há erro. Os sinais de LLM vêm das
+ * métricas do caso. O apoio não tem etapas nem validador: um erro sem sinal de banco ou cota é `sem_etapas`.
+ */
+function montar(
+  base: Omit<ResultadoDoCaso, "acertou" | "erro" | "estado" | "inconclusivo">,
+  metricas: MetricaVista[],
+  erro?: string,
+): ResultadoDoCaso {
+  const acertouDasChecagens = calcularAcertou({ checagens: base.checagens, erro })
+  const classe = fecharEstado(
+    acertouDasChecagens,
+    classificarCaso({
+      erro,
+      etapas: [],
+      validouOk: false,
+      chamadasDeDecisao: 0,
+      ...sinaisDeErroDoLlm(metricas),
+    }),
+  )
+  const inconclusivo =
+    classe.inconclusivo === undefined ? {} : { inconclusivo: classe.inconclusivo }
+  const comErro = erro === undefined ? {} : { erro }
+  return {
+    ...base,
+    acertou: classe.estado === "acertou",
+    estado: classe.estado,
+    ...inconclusivo,
+    ...comErro,
+  }
 }
 
 function telemetriaDoApoio(deps: DepsDeApoio): MemoryTelemetry {
@@ -87,6 +114,7 @@ export async function rodarInterprete(
           trocas: 0,
           modelos: [],
         },
+        telemetry.metricas,
         r.motivo,
       ),
       colhido: { mensagem: caso.mensagem, texto: "", etapas: [] },
@@ -97,18 +125,21 @@ export async function rodarInterprete(
     caminho: escolherCaminho(r.interpretacao).caminho,
   }
   return {
-    resultado: montar({
-      ...base,
-      checagens: [
-        ...conferir("deve", caso.deve, entrada),
-        ...conferir("nao_pode", caso.naoPode, entrada),
-      ],
-      uso: {
-        apoio: { chamadas: 1, tokens_entrada: r.tokens.entrada, tokens_saida: r.tokens.saida },
+    resultado: montar(
+      {
+        ...base,
+        checagens: [
+          ...conferir("deve", caso.deve, entrada),
+          ...conferir("nao_pode", caso.naoPode, entrada),
+        ],
+        uso: {
+          apoio: { chamadas: 1, tokens_entrada: r.tokens.entrada, tokens_saida: r.tokens.saida },
+        },
+        trocas: r.trocas,
+        modelos: [r.modelo],
       },
-      trocas: r.trocas,
-      modelos: [r.modelo],
-    }),
+      telemetry.metricas,
+    ),
     colhido: { mensagem: caso.mensagem, texto: "", etapas: [] },
   }
 }
@@ -123,26 +154,36 @@ function notasDoCaso(caso: CasoMemoria, clock: Clock): NotaParaResumo[] {
   }))
 }
 
-function resultadoDaMemoria(caso: CasoMemoria, resumo: ResumoFeito): ResultadoDoCaso {
+function resultadoDaMemoria(
+  caso: CasoMemoria,
+  resumo: ResumoFeito,
+  metricas: MetricaVista[],
+): ResultadoDoCaso {
   const alvo = { resumo, notas: caso.notas }
-  return montar({
-    id: caso.id,
-    titulo: caso.titulo,
-    tipo: "memoria",
-    familias: caso.familias,
-    marcas: caso.marcas ?? [],
-    checagens: [...conferir("deve", caso.deve, alvo), ...conferir("nao_pode", caso.naoPode, alvo)],
-    uso: {
-      apoio: {
-        chamadas: resumo.modelo !== undefined ? 1 : 0,
-        tokens_entrada: resumo.tokens.entrada,
-        tokens_saida: resumo.tokens.saida,
+  return montar(
+    {
+      id: caso.id,
+      titulo: caso.titulo,
+      tipo: "memoria",
+      familias: caso.familias,
+      marcas: caso.marcas ?? [],
+      checagens: [
+        ...conferir("deve", caso.deve, alvo),
+        ...conferir("nao_pode", caso.naoPode, alvo),
+      ],
+      uso: {
+        apoio: {
+          chamadas: resumo.modelo !== undefined ? 1 : 0,
+          tokens_entrada: resumo.tokens.entrada,
+          tokens_saida: resumo.tokens.saida,
+        },
       },
+      trocas: resumo.trocas,
+      latenciaMs: resumo.duracao_ms,
+      modelos: resumo.modelo !== undefined ? [resumo.modelo] : [],
     },
-    trocas: resumo.trocas,
-    latenciaMs: resumo.duracao_ms,
-    modelos: resumo.modelo !== undefined ? [resumo.modelo] : [],
-  })
+    metricas,
+  )
 }
 
 /** Um caso da Memória: o resumo das notas pelo agente, conferido por deve e naoPode. */
@@ -157,7 +198,7 @@ export async function rodarMemoria(caso: CasoMemoria, deps: DepsDeApoio): Promis
   })
   const resumo = await agente.resumir(notasDoCaso(caso, deps.clock))
   return {
-    resultado: resultadoDaMemoria(caso, resumo),
+    resultado: resultadoDaMemoria(caso, resumo, telemetry.metricas),
     colhido: { texto: resumo.texto, etapas: [] },
   }
 }
@@ -191,26 +232,30 @@ export async function rodarJuiz(caso: CasoJuiz, deps: DepsDeApoio): Promise<Caso
           trocas: 0,
           modelos: [],
         },
+        telemetry.metricas,
         v.motivo,
       ),
       colhido,
     }
   }
   return {
-    resultado: montar({
-      ...base,
-      checagens: [...conferir("deve", caso.deve, v), ...conferir("nao_pode", caso.naoPode, v)],
-      juiz: {
-        esperados: caso.motivos,
-        devolvidos: [...new Set([...v.graves, ...v.registros])],
-        aprovado: v.aprovado,
+    resultado: montar(
+      {
+        ...base,
+        checagens: [...conferir("deve", caso.deve, v), ...conferir("nao_pode", caso.naoPode, v)],
+        juiz: {
+          esperados: caso.motivos,
+          devolvidos: [...new Set([...v.graves, ...v.registros])],
+          aprovado: v.aprovado,
+        },
+        uso: {
+          apoio: { chamadas: 1, tokens_entrada: v.tokens.entrada, tokens_saida: v.tokens.saida },
+        },
+        trocas: v.trocas,
+        modelos: [v.modelo],
       },
-      uso: {
-        apoio: { chamadas: 1, tokens_entrada: v.tokens.entrada, tokens_saida: v.tokens.saida },
-      },
-      trocas: v.trocas,
-      modelos: [v.modelo],
-    }),
+      telemetry.metricas,
+    ),
     colhido,
   }
 }

@@ -18,6 +18,7 @@ function caso(extra: Partial<ResultadoDoCaso> = {}): ResultadoDoCaso {
     marcas: [],
     checagens: [],
     acertou: true,
+    estado: (extra.acertou ?? true) ? "acertou" : "falhou",
     uso: {},
     trocas: 0,
     latenciaMs: 100,

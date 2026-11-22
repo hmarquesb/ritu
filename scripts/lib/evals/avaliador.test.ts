@@ -244,6 +244,7 @@ function resultadoBase(parcial: Partial<ResultadoDoCaso> = {}): ResultadoDoCaso 
     marcas: [],
     checagens: [{ lista: "deve", descricao: "fala do momento", ok: true }],
     acertou: true,
+    estado: "acertou",
     uso: {},
     trocas: 0,
     latenciaMs: 10,

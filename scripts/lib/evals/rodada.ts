@@ -6,6 +6,7 @@ import type { Clock } from "../../../src/core/clock"
 import { SemModeloError } from "../../../src/core/llm/chamar"
 import { LlmError } from "../../../src/core/llm/errors"
 import type { Andamento } from "./andamento"
+import { classificarCaso } from "./inconclusivo"
 import { codigoDoErro, type ResultadoDoCaso } from "./resultado"
 
 export type MotivoDaParada = "cota" | "erros_seguidos"
@@ -43,8 +44,18 @@ function esperaDepois(r: ResultadoDoCaso, decorridoMs: number): number {
   return Math.max(evals.pausaMinimaMs, chamadasDoCaso(r) * evals.pausaPorChamadaMs - decorridoMs)
 }
 
-/** Caso que falhou por outro motivo: conta como errado, sem checagens, com só o código do erro. */
+/**
+ * Caso que falhou por outro motivo: sem checagens, com só o código do erro. Sem etapas, o erro é classificado
+ * pelo código: banco, cota e timeout são inconclusivos; o resto, `sem_etapas`.
+ */
 function resultadoDeErro(caso: CasoDeEval, codigo: string): ResultadoDoCaso {
+  const c = classificarCaso({
+    erro: codigo,
+    etapas: [],
+    houveCotaOu429: false,
+    validouOk: false,
+    chamadasDeDecisao: 0,
+  })
   return {
     id: caso.id,
     titulo: caso.titulo,
@@ -53,6 +64,8 @@ function resultadoDeErro(caso: CasoDeEval, codigo: string): ResultadoDoCaso {
     marcas: caso.marcas ?? [],
     checagens: [],
     acertou: false,
+    estado: c.estado,
+    ...(c.inconclusivo === undefined ? {} : { inconclusivo: c.inconclusivo }),
     uso: {},
     trocas: 0,
     latenciaMs: 0,

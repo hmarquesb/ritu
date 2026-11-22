@@ -51,6 +51,7 @@ function rodadoVazio(id: string): CasoRodado {
     marcas: [],
     checagens: [{ lista: "deve", descricao: "deve", ok: true }],
     acertou: true,
+    estado: "acertou",
     uso: {},
     trocas: 0,
     latenciaMs: 0,

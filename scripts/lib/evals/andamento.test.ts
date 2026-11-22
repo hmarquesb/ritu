@@ -25,6 +25,7 @@ const resultado: ResultadoDoCaso = {
   marcas: [],
   checagens: [{ lista: "deve", descricao: "cita um chá", ok: true }],
   acertou: true,
+  estado: "acertou",
   uso: {},
   trocas: 0,
   latenciaMs: 10,

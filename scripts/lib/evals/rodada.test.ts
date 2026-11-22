@@ -26,6 +26,7 @@ function ok(caso: CasoDeEval, extra: Partial<ResultadoDoCaso> = {}): ResultadoDo
     marcas: [],
     checagens: [{ lista: "deve", descricao: "cita um chá", ok: true }],
     acertou: true,
+    estado: "acertou",
     uso: {},
     trocas: 0,
     latenciaMs: 10,
@@ -245,5 +246,55 @@ describe("executarRodada", () => {
     await executarRodada({ ...t.params, casos: CASOS.slice(0, 3) })
 
     expect(t.esperas).toEqual([4000])
+  })
+})
+
+describe("resultado de erro classificado", () => {
+  it("erro de banco vira inconclusivo por banco, sem acertou", async () => {
+    const t = base({
+      casos: [PRIMEIRO],
+      rodarCaso: async () => {
+        throw new AggregateError([], "x")
+      },
+    })
+    const fim = await executarRodada(t.params)
+
+    expect(fim.andamento.resultados[0]).toMatchObject({
+      erro: "AggregateError",
+      acertou: false,
+      estado: "inconclusivo",
+      inconclusivo: "banco",
+    })
+  })
+
+  it("timeout sem decisão vira inconclusivo por timeout_sem_decisao", async () => {
+    const t = base({
+      casos: [PRIMEIRO],
+      rodarCaso: async () => {
+        throw new LlmError("timeout", "x")
+      },
+    })
+    const fim = await executarRodada(t.params)
+
+    expect(fim.andamento.resultados[0]).toMatchObject({
+      estado: "inconclusivo",
+      inconclusivo: "timeout_sem_decisao",
+    })
+  })
+
+  it("outro erro sem etapas vira inconclusivo por sem_etapas", async () => {
+    const t = base({
+      casos: [PRIMEIRO],
+      rodarCaso: async () => {
+        throw new TypeError("x")
+      },
+    })
+    const fim = await executarRodada(t.params)
+
+    expect(fim.andamento.resultados[0]).toMatchObject({
+      erro: "TypeError",
+      estado: "inconclusivo",
+      inconclusivo: "sem_etapas",
+    })
   })
 })

@@ -15,6 +15,16 @@ export type Checagem = {
   ok: boolean | null
 }
 
+export type EstadoDoCaso = "acertou" | "falhou" | "inconclusivo"
+
+/** Por que o caso não tem resposta conclusiva: o run não chegou a decidir, ou a cota, o banco ou o Juiz faltaram. */
+export type MotivoInconclusivo =
+  | "banco"
+  | "sem_etapas"
+  | "cota"
+  | "juiz_indisponivel"
+  | "timeout_sem_decisao"
+
 export type ResultadoDoCaso = {
   id: string
   titulo: string
@@ -22,8 +32,11 @@ export type ResultadoDoCaso = {
   familias: FamiliaMarcada[]
   marcas: Marca[]
   checagens: Checagem[]
-  /** Sem erro e nenhuma checagem `false`. */
+  /** Sem erro e nenhuma checagem `false`. `true` só com `estado` `acertou`. */
   acertou: boolean
+  estado: EstadoDoCaso
+  /** Só com `estado` `inconclusivo`. */
+  inconclusivo?: MotivoInconclusivo
   /** Tipos `acompanhante` e `conversa`. */
   run?: {
     origem: SaidaDoAcompanhante["origem"]

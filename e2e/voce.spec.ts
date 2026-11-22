@@ -43,6 +43,15 @@ async function assentar(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts.ready)
 }
 
+// Enter antes da hidratação se perde: espere o React ligar os manipuladores no elemento.
+async function hidratado(alvo: Locator): Promise<void> {
+  await expect
+    .poll(() =>
+      alvo.evaluate((el) => Object.keys(el).some((chave) => chave.startsWith("__reactProps$"))),
+    )
+    .toBe(true)
+}
+
 // O anúncio do botão pendente entra no DOM uns 100 ms depois do toque; espere ele chegar e sair.
 async function semAnuncioPendente(page: Page): Promise<void> {
   await page.waitForTimeout(300)
@@ -314,6 +323,7 @@ test.describe("tema, conta e segurança", () => {
   test("só com teclado: o foco chega à confirmação e Esc devolve", async ({ page }) => {
     await abrirVoce(page)
     const tirar = botao(page, "Tirar Castanhas")
+    await hidratado(tirar)
     await tirar.focus()
     await page.keyboard.press("Enter")
     await expect(confirmacao(page)).toBeVisible()

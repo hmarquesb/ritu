@@ -454,3 +454,38 @@
 - **Decidido:** o eval `cha-derivado-frio-agitada` usa prakriti com vata dominante (0,6/0,2/0,2); o louro entra pelo efeito (vata −1). O caso `c3-s23` já usa vata 0,45/pitta 0,45/kapha 0,1 e o louro entra com adequação 0,1, entre os 4 chás do contexto. Ranking e dados não mudaram.
 - **Por quê:** é o cenário real de quem fica agitada (vata); mudar a pontuação mexeria em todos os candidatos.
 - **Como desfazer:** se a dona quiser o louro candidato com qualquer perfil, uma spec de ranking (ex.: chás julgados por `favorece_estados`). A margem do `c3-s23` é fina: mudar `porPontoDeEfeito` ou o efeito do louro tira o louro do contexto.
+
+## Junção da entrega-3 (020) · J-A1 · ADRs da 019 e da 020 renumeradas
+
+- **Faltava:** a `entrega-3` numerou as ADRs da 019 e da 020 como 0045 e 0046, números que a `main` já usava (limites e deploy, das 021 e 022).
+- **Decidido:** as ADRs da trilha passam a 0050 (toques da casa) e 0051 (Você); o índice segue a ordem numérica.
+- **Por quê:** as da `main` já estão citadas em `.docs/` e em produção; renumerar as da trilha mexe em menos lugares.
+- **Como desfazer:** trocar os números de volta e renumerar as da `main`.
+
+## Junção da entrega-3 (020) · J-A2 · Migração da 020 vira 0006
+
+- **Faltava:** as duas branches criaram uma migração `0005` (`0005_padroes_de_cha.sql` na `main`, `0005_runs_fora_da_conversa.sql` na 020).
+- **Decidido:** a da 020 passa a `0006_runs_fora_da_conversa.sql`. A `0005` da `main` já foi aplicada em produção.
+- **Por quê:** o migrador aplica por ordem de nome; manter a ordem que produção já viu.
+- **Como desfazer:** —
+
+## Junção da entrega-3 (020) · J-A3 · Limite de toques no quiz, no Evitar e em Você (021 A1)
+
+- **Faltava:** a 021 pôs o aviso de limite (`avisarLimite`) no quiz e no Evitar do onboarding; a 020 tinha extraído os dois para `src/components/ritu/quiz/` e `src/components/ritu/evitar/`, reaproveitados em Você, e `useVoce` não tratava o 429.
+- **Decidido:** o `Quiz` extraído e `useVoce` chamam `avisarLimiteDeToque` (`src/components/ritu/limites.ts`, que a `main` já tinha); o `gravar` do `EscolherEvitar` passa a devolver `Promise<boolean>` (`false` = o passo fica, sem erro). As rotas `POST /api/perfil`, `POST /api/memoria` e `GET /api/voce` entram na lista de `evals/det/seguranca/limites.eval.ts`.
+- **Por quê:** fecha a pendência 021 A1 sem duplicar o tratamento do 429.
+- **Como desfazer:** voltar o `gravar` a `Promise<void>` e tirar as chamadas de `avisarLimiteDeToque`.
+
+## Junção da entrega-3 (020) · J-A4 · "Não como" livre em BUSINESS §8
+
+- **Faltava:** a 020 trazia "um nome que o Ritu não conhece é guardado como texto"; a correção P2-T5 do portão 2, na `main`, diz que ele não é guardado nem proposto.
+- **Decidido:** vale o texto da `main` (decisão posterior, pedida pela dona no portão 2).
+- **Por quê:** é o comportamento do código depois da junção.
+- **Como desfazer:** —
+
+## Fechamento da entrega 3 · J-A5 · `c4-site` não rodado
+
+- **Faltava:** `QA.md` põe o checkpoint `c4-site` ("todas as famílias, pelas rotas reais do site") no fim da entrega 3, mas ele não existe em `evals/llm/checkpoints.ts`, e nenhuma spec da entrega 3 o cria (022 A2 já esperava por ele).
+- **Decidido:** o portão 3 vai com a rodada nova do `c3-confiavel` (2026-11-22, mesmos casos, pelo `conversar`). O `c4-site` e o `c5-publico` ficam para uma tarefa ou spec própria, a decidir no portão.
+- **Por quê:** criar um checkpoint pede escolher o alvo (rotas reais × `conversar`) e as metas: decisão de produto, não de junção. E a cota do dia já foi para o `c3`.
+- **Como desfazer:** registrar o `c4-site` em `evals/llm/checkpoints.ts` e rodar `npm run eval:llm -- --checkpoint c4-site`.

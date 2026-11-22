@@ -156,12 +156,12 @@
       "uso": {
         "decisao": {
           "chamadas": 2,
-          "tokens_entrada": 8092,
-          "tokens_saida": 12
+          "tokens_entrada": 16311,
+          "tokens_saida": 41
         }
       },
       "trocas": 0,
-      "latenciaMs": 26717,
+      "latenciaMs": 12079,
       "modelos": [
         "gemini-3.5-flash-lite"
       ],
@@ -2291,42 +2291,43 @@
           "ok": true
         }
       ],
-      "acertou": false,
-      "estado": "inconclusivo",
-      "inconclusivo": "juiz_indisponivel",
+      "acertou": true,
+      "estado": "acertou",
       "run": {
         "origem": "segura",
         "caminho": "acompanhante",
         "trajetoriaOk": null,
         "chamadasDesnecessarias": 0,
-        "passos": 6,
+        "passos": 4,
         "validacoes": [
-          "recusado",
-          "recusado",
+          "ok",
           "ok"
         ],
-        "violacoesDa1a": [
-          "fora_de_casa"
-        ],
-        "perguntasFeitas": 2,
-        "perguntasRecusadas": 1,
+        "violacoesDa1a": [],
+        "perguntasFeitas": 1,
+        "perguntasRecusadas": 0,
         "propostasRecusadas": 0,
-        "juizAprovado": null
+        "juizAprovado": false
       },
       "uso": {
         "apoio": {
-          "chamadas": 1,
-          "tokens_entrada": 1260,
-          "tokens_saida": 75
+          "chamadas": 3,
+          "tokens_entrada": 3171,
+          "tokens_saida": 178
         },
         "decisao": {
-          "chamadas": 6,
-          "tokens_entrada": 52464,
-          "tokens_saida": 355
+          "chamadas": 3,
+          "tokens_entrada": 25482,
+          "tokens_saida": 287
+        },
+        "reforco": {
+          "chamadas": 1,
+          "tokens_entrada": 8897,
+          "tokens_saida": 1048
         }
       },
       "trocas": 0,
-      "latenciaMs": 39882,
+      "latenciaMs": 25201,
       "modelos": [
         "gemini-3.5-flash-lite"
       ]
@@ -2530,17 +2531,15 @@
           "ok": true
         }
       ],
-      "acertou": false,
-      "estado": "inconclusivo",
-      "inconclusivo": "cota",
+      "acertou": true,
+      "estado": "acertou",
       "run": {
         "origem": "segura",
         "caminho": "acompanhante",
         "trajetoriaOk": null,
         "chamadasDesnecessarias": 0,
-        "passos": 3,
+        "passos": 2,
         "validacoes": [
-          "ok",
           "ok"
         ],
         "violacoesDa1a": [],
@@ -2551,23 +2550,18 @@
       },
       "uso": {
         "apoio": {
-          "chamadas": 3,
-          "tokens_entrada": 3221,
-          "tokens_saida": 206
+          "chamadas": 2,
+          "tokens_entrada": 2238,
+          "tokens_saida": 113
         },
         "decisao": {
           "chamadas": 2,
-          "tokens_entrada": 8141,
-          "tokens_saida": 31
-        },
-        "reforco": {
-          "chamadas": 1,
-          "tokens_entrada": 8321,
-          "tokens_saida": 140
+          "tokens_entrada": 16360,
+          "tokens_saida": 171
         }
       },
-      "trocas": 1,
-      "latenciaMs": 23891,
+      "trocas": 0,
+      "latenciaMs": 46290,
       "modelos": [
         "gemini-3.5-flash-lite"
       ]
@@ -2869,9 +2863,8 @@
           "ok": true
         }
       ],
-      "acertou": false,
-      "estado": "inconclusivo",
-      "inconclusivo": "cota",
+      "acertou": true,
+      "estado": "acertou",
       "run": {
         "origem": "segura",
         "caminho": "acompanhante",
@@ -2891,22 +2884,22 @@
       "uso": {
         "apoio": {
           "chamadas": 3,
-          "tokens_entrada": 3166,
-          "tokens_saida": 191
+          "tokens_entrada": 3161,
+          "tokens_saida": 184
         },
         "decisao": {
           "chamadas": 2,
           "tokens_entrada": 15812,
-          "tokens_saida": 202
+          "tokens_saida": 210
         },
         "reforco": {
           "chamadas": 1,
-          "tokens_entrada": 8068,
-          "tokens_saida": 165
+          "tokens_entrada": 8084,
+          "tokens_saida": 631
         }
       },
-      "trocas": 1,
-      "latenciaMs": 21041,
+      "trocas": 0,
+      "latenciaMs": 15397,
       "modelos": [
         "gemini-3.5-flash-lite"
       ]
@@ -2950,54 +2943,50 @@
         }
       ],
       "acertou": false,
-      "estado": "inconclusivo",
-      "inconclusivo": "cota",
+      "estado": "falhou",
       "run": {
-        "origem": "agente",
+        "origem": "segura",
         "caminho": "acompanhante",
         "trajetoriaOk": null,
         "chamadasDesnecessarias": 0,
-        "passos": 4,
+        "passos": 3,
         "validacoes": [
-          "recusado",
           "ok",
           "ok"
         ],
-        "violacoesDa1a": [
-          "estrutura"
-        ],
+        "violacoesDa1a": [],
         "perguntasFeitas": 1,
         "perguntasRecusadas": 0,
         "propostasRecusadas": 0,
-        "juizAprovado": true
+        "juizAprovado": false
       },
       "uso": {
         "apoio": {
           "chamadas": 3,
-          "tokens_entrada": 3060,
-          "tokens_saida": 202
+          "tokens_entrada": 3125,
+          "tokens_saida": 224
         },
         "decisao": {
-          "chamadas": 3,
-          "tokens_entrada": 18670,
-          "tokens_saida": 401
+          "chamadas": 2,
+          "tokens_entrada": 12216,
+          "tokens_saida": 193
         },
         "reforco": {
           "chamadas": 1,
-          "tokens_entrada": 6591,
-          "tokens_saida": 180
+          "tokens_entrada": 0,
+          "tokens_saida": 0
         }
       },
-      "trocas": 1,
-      "latenciaMs": 17471,
+      "trocas": 0,
+      "latenciaMs": 16265,
       "modelos": [
         "gemini-3.5-flash-lite",
-        "gemini-3.1-flash-lite@1"
+        "gemini-3.1-flash-lite"
       ],
       "usoDoAvaliador": {
         "chamadas": 1,
-        "tokens_entrada": 428,
-        "tokens_saida": 12
+        "tokens_entrada": 186,
+        "tokens_saida": 33
       }
     },
     {
@@ -3149,17 +3138,15 @@
           "ok": true
         }
       ],
-      "acertou": false,
-      "estado": "inconclusivo",
-      "inconclusivo": "cota",
+      "acertou": true,
+      "estado": "acertou",
       "run": {
         "origem": "agente",
         "caminho": "acompanhante",
         "trajetoriaOk": null,
         "chamadasDesnecessarias": 0,
-        "passos": 3,
+        "passos": 2,
         "validacoes": [
-          "ok",
           "ok"
         ],
         "violacoesDa1a": [],
@@ -3170,23 +3157,18 @@
       },
       "uso": {
         "apoio": {
-          "chamadas": 3,
-          "tokens_entrada": 3152,
-          "tokens_saida": 221
+          "chamadas": 2,
+          "tokens_entrada": 2191,
+          "tokens_saida": 141
         },
         "decisao": {
           "chamadas": 2,
           "tokens_entrada": 12222,
-          "tokens_saida": 203
-        },
-        "reforco": {
-          "chamadas": 1,
-          "tokens_entrada": 6331,
-          "tokens_saida": 196
+          "tokens_saida": 191
         }
       },
-      "trocas": 1,
-      "latenciaMs": 10895,
+      "trocas": 0,
+      "latenciaMs": 5099,
       "modelos": [
         "gemini-3.5-flash-lite"
       ]
@@ -3398,22 +3380,17 @@
         }
       ],
       "acertou": false,
-      "estado": "inconclusivo",
-      "inconclusivo": "cota",
+      "estado": "falhou",
       "run": {
         "origem": "agente",
         "caminho": "acompanhante",
         "trajetoriaOk": null,
         "chamadasDesnecessarias": 0,
-        "passos": 4,
+        "passos": 2,
         "validacoes": [
-          "recusado",
-          "ok",
           "ok"
         ],
-        "violacoesDa1a": [
-          "estrutura"
-        ],
+        "violacoesDa1a": [],
         "perguntasFeitas": 0,
         "perguntasRecusadas": 0,
         "propostasRecusadas": 0,
@@ -3421,30 +3398,25 @@
       },
       "uso": {
         "apoio": {
-          "chamadas": 3,
-          "tokens_entrada": 2834,
-          "tokens_saida": 137
+          "chamadas": 2,
+          "tokens_entrada": 2199,
+          "tokens_saida": 77
         },
         "decisao": {
-          "chamadas": 3,
-          "tokens_entrada": 23777,
-          "tokens_saida": 303
-        },
-        "reforco": {
-          "chamadas": 1,
-          "tokens_entrada": 8171,
-          "tokens_saida": 114
+          "chamadas": 2,
+          "tokens_entrada": 15670,
+          "tokens_saida": 237
         }
       },
-      "trocas": 1,
-      "latenciaMs": 8643,
+      "trocas": 0,
+      "latenciaMs": 8235,
       "modelos": [
         "gemini-3.5-flash-lite",
-        "gemini-3.1-flash-lite@1"
+        "gemini-3.1-flash-lite"
       ],
       "usoDoAvaliador": {
         "chamadas": 1,
-        "tokens_entrada": 404,
+        "tokens_entrada": 546,
         "tokens_saida": 33
       }
     },

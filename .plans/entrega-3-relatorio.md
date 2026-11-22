@@ -1,5 +1,7 @@
 # Entrega 3 · Relatório do portão 3
 
+**Portão 3: aprovado com correções pela dona em 2026-11-22.** A conferência do roteiro (última seção) fica para depois da entrega 4: o que a dona encontrar entra na rodada de correções, junto com o portão 4. O eval do portão é a rodada do `c3-confiavel` com o `acompanhante.v8` (spec 026), retomada em 2026-11-22 (85 de 86 casos, 1 inconclusivo: `c1-02-calor-irritada`); as metas abaixo só avisam. `c4-site` e `c5-publico` (J-A5): a dona decidiu criar os dois pela spec 027 (entrega 4, antes da 023); o `c4-site` fica registrado e não é rodado, e a entrega 4 fecha com o `c5-publico`.
+
 Entrega 3: as telas do site (design system, entrada e contas, Conversa, Minha casa e Como ficou?, Você e Como pensei). Construída em trilha adiantada (`entrega-3`) e juntada na `main` em 2026-11-22 (`e1891a9`).
 
 ## O que foi construído

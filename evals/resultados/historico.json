@@ -381,14 +381,14 @@
           "total": 5
         },
         "propostas.corretas": {
-          "valor": 0.8,
-          "parte": 4,
-          "total": 5
+          "valor": 0.8333333333333334,
+          "parte": 5,
+          "total": 6
         },
         "para_ter.acerto": {
-          "valor": 0.5,
-          "parte": 1,
-          "total": 2
+          "valor": 0.6666666666666666,
+          "parte": 2,
+          "total": 3
         },
         "aprendizado.acerto": {
           "valor": 0.6,
@@ -396,9 +396,9 @@
           "total": 5
         },
         "memoria.acerto": {
-          "valor": 1,
+          "valor": 0.9,
           "parte": 9,
-          "total": 9
+          "total": 10
         },
         "conversa.acerto": {
           "valor": 0.6666666666666666,
@@ -416,9 +416,9 @@
           "total": 8
         },
         "incomodos.acerto": {
-          "valor": 1,
+          "valor": 0.75,
           "parte": 3,
-          "total": 3
+          "total": 4
         },
         "conteudo.deve": {
           "valor": 0.8181818181818182,
@@ -451,14 +451,14 @@
           "total": 5
         },
         "trajetoria.desnecessarias_por_run": {
-          "valor": 0.024390243902439025,
+          "valor": 0.02127659574468085,
           "parte": 1,
-          "total": 41
+          "total": 47
         },
         "autocorrecao.valida_na_1a": {
-          "valor": 0.6857142857142857,
-          "parte": 24,
-          "total": 35
+          "valor": 0.7317073170731707,
+          "parte": 30,
+          "total": 41
         },
         "autocorrecao.corrigiu": {
           "valor": 0.7272727272727273,
@@ -472,18 +472,18 @@
         },
         "perguntas.desnecessarias_evitadas": {
           "valor": 1,
-          "parte": 1,
-          "total": 1
+          "parte": 3,
+          "total": 3
         },
         "perguntas.recusadas_por_run": {
           "valor": 0,
           "parte": 0,
-          "total": 5
+          "total": 8
         },
         "propostas.recusadas_por_run": {
-          "valor": 0.4,
+          "valor": 0.3333333333333333,
           "parte": 2,
-          "total": 5
+          "total": 6
         },
         "conversa.passos_pergunta_simples": {
           "valor": 2
@@ -505,8 +505,8 @@
         },
         "incomodos.promessas_bloqueadas": {
           "valor": 1,
-          "parte": 2,
-          "total": 2
+          "parte": 3,
+          "total": 3
         },
         "juiz.acerto": {
           "valor": 0.7692307692307693,
@@ -519,45 +519,45 @@
           "total": 4
         },
         "custo.chamadas_decisao_por_run": {
-          "valor": 2.4634146341463414,
-          "parte": 101,
-          "total": 41
+          "valor": 2.425531914893617,
+          "parte": 114,
+          "total": 47
         },
         "custo.chamadas_apoio_por_run": {
-          "valor": 1.6097560975609757,
-          "parte": 66,
-          "total": 41
+          "valor": 1.7234042553191489,
+          "parte": 81,
+          "total": 47
         },
         "custo.chamadas_reforco_por_run": {
-          "valor": 0.07317073170731707,
-          "parte": 3,
-          "total": 41
+          "valor": 0.1276595744680851,
+          "parte": 6,
+          "total": 47
         },
         "custo.tokens_entrada_por_run": {
-          "valor": 18812.341463414636,
-          "parte": 771306,
-          "total": 41
+          "valor": 19194.340425531915,
+          "parte": 902134,
+          "total": 47
         },
         "custo.tokens_saida_por_run": {
-          "valor": 357.5121951219512,
-          "parte": 14658,
-          "total": 41
+          "valor": 394.531914893617,
+          "parte": 18543,
+          "total": 47
         },
         "custo.trocas": {
           "valor": 0,
           "parte": 0,
-          "total": 79
+          "total": 85
         },
         "custo.latencia_p50_ms": {
-          "valor": 5743
+          "valor": 7050
         },
         "custo.latencia_p95_ms": {
-          "valor": 37454
+          "valor": 37922
         }
       },
       "violacoes_da_1a": {
-        "estrutura": 15,
-        "fora_de_casa": 4,
+        "estrutura": 13,
+        "fora_de_casa": 3,
         "dosagem": 1
       },
       "abaixo_da_meta": [
@@ -571,6 +571,7 @@
         "para_ter.acerto",
         "aprendizado.acerto",
         "conversa.acerto",
+        "incomodos.acerto",
         "juiz.acerto",
         "custo.latencia_p95_ms"
       ],

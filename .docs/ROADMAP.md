@@ -6,10 +6,12 @@
 
 Entrega 1 (001 a 007) aprovada no portão 1, com a tag `entrega-1`. Entrega 2 (008 a 015) aprovada com correções no portão 2 (2026-11-17), com a tag `entrega-2`; as correções estão na `main` (`.plans/portao-2-correcoes-plan.md`). Base com 127 alimentos, nenhuma linha `a_confirmar`. Entrega 3 (016 a 020) na `main`, com a `entrega-3` juntada em 2026-11-22 (`e1891a9`) e a tag `entrega-3`, parada no portão 3: relatório e roteiro em `.plans/entrega-3-relatorio.md`, screenshots em `docs/screenshots/entrega-3/`. Entrega 4: 021 e 022 implementadas e produção no ar (migrações `0005` e `0006` aplicadas em 2026-11-22; a 020 está em produção); 023 e 024 aprovadas. Spec 025 (chás híbridos) implementada. Rodada `c3-confiavel` de 2026-11-22 completa (86/86), com 17 metas abaixo; `c3-s23` e `c3-s24` falharam (resposta `segura` depois de recusas do validador). Análise do portão 3: cerca de 16 das 29 falhas foram de infraestrutura (banco, cota, Juiz sem cota); o resto vem do `finalizar`, que pede ao modelo campos que o código já calculou (válida na 1ª tentativa em 15% desde o `c1`). Spec 026 implementada para isso (ADR 0052): `finalizar` recebe só a escolha do agente, `acompanhante.v8`, até três chaves do Gemini nos evals e casos inconclusivos fora das métricas.
 
+Portão 3 aprovado com correções em 2026-11-22, com a conferência do roteiro adiada para depois da entrega 4 (`.plans/entrega-3-relatorio.md`). Rodada `c3-confiavel` com o `acompanhante.v8` retomada: 85/86, 1 inconclusivo, 13 metas abaixo (só avisam).
+
 **Próximos passos, na ordem:**
-1. Retomar o `c3-confiavel` (`--retomar`) com a cota renovada, para os 7 inconclusivos da rodada com o `acompanhante.v8` (válida na 1ª tentativa em 69%).
-2. Portão 3: a dona confere o roteiro de `.plans/entrega-3-relatorio.md` com a rodada nova e decide o `c4-site` (DECISOES J-A5).
-3. Construir a 023 e a 024 → portão 4.
+1. Construir a 027, a 023 e a 024, nessa ordem (`/construir-entrega 4`), e fechar a entrega 4 com o `c5-publico` (pelas rotas, spec 027) e o `npm run readme` → portão 4. O `c4-site` fica registrado e não é rodado.
+2. A dona confere os roteiros do portão 3 e do portão 4.
+3. Rodada de correções: problemas dos dois portões e metas abaixo.
 
 ## 1. Entregas
 

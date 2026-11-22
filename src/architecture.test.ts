@@ -296,6 +296,18 @@ const RULE_R12: Rule = {
       : importedBy(file, (ctx) => isUnder(ctx.spec, E2E_DIR)),
 }
 
+// R13: pacotes do MCP só nas pastas do servidor MCP (infra e rota /api/mcp).
+const MCP_PACKAGES = ["mcp-handler", "@modelcontextprotocol"]
+const MCP_HOMES = ["src/infra/mcp/", "src/app/api/mcp/"]
+
+const RULE_R13: Rule = {
+  id: "R13",
+  check: (file) =>
+    MCP_HOMES.some((home) => file.path.startsWith(home))
+      ? []
+      : importedBy(file, (ctx) => MCP_PACKAGES.some((pkg) => isUnder(ctx.spec, pkg))),
+}
+
 const RULES: Rule[] = [
   RULE_R1,
   RULE_R2,
@@ -309,6 +321,7 @@ const RULES: Rule[] = [
   RULE_R10,
   RULE_R11,
   RULE_R12,
+  RULE_R13,
 ]
 
 const formatViolation = (path: string, id: string, detail: string): string =>
@@ -551,6 +564,28 @@ describe("R12 · src/infra/e2e só é importado pelo container", () => {
 
   it("os arquivos da própria pasta se importam", () => {
     expectClean("src/infra/e2e/roteiros.ts", `${IMPORT} { createClimaFixo } from "./clima"`)
+  })
+})
+
+describe("R13 · pacotes do MCP só em src/infra/mcp e src/app/api/mcp", () => {
+  it("mcp-handler fora dessas pastas é violação", () => {
+    expectOnly("src/app/x.ts", `${IMPORT} { createMcpHandler } from "mcp-handler"`, "R13")
+  })
+
+  it("@modelcontextprotocol/server fora dessas pastas é violação", () => {
+    expectOnly(
+      "src/infra/x.ts",
+      `${IMPORT} { McpServer } from "@modelcontextprotocol/server"`,
+      "R13",
+    )
+  })
+
+  it("os pacotes dentro de src/infra/mcp e src/app/api/mcp são válidos", () => {
+    expectClean(
+      "src/infra/mcp/server.ts",
+      `${IMPORT} { McpServer } from "@modelcontextprotocol/server"`,
+    )
+    expectClean("src/app/api/mcp/route.ts", `${IMPORT} { createMcpHandler } from "mcp-handler"`)
   })
 })
 

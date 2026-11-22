@@ -67,6 +67,40 @@ export const entregaDoModeloSchema = z.object({
 
 export type EntregaDoModelo = z.infer<typeof entregaDoModeloSchema>
 
+const escolhaDeVagaSchema = z.object({
+  funcao: funcaoSchema,
+  alimento_id: z.string().describe("Um alimento_id de opcoes[funcao] do candidato."),
+})
+
+const trocaSchema = z.object({
+  alimento_id: z.string().describe("Item da sugestão que está incerto em casa."),
+  se_faltar: z.string().describe("Substituto confirmado em casa."),
+})
+
+const sugestaoEscolhidaSchema = z.object({
+  tipo: z.enum(["cha", "refeicao", "oleo", "pratica"]),
+  id: z.string().describe("O id de um candidato do contexto."),
+  escolhas: z
+    .array(escolhaDeVagaSchema)
+    .optional()
+    .describe("Só refeição: troca o item padrão de uma vaga por uma das opcoes."),
+  trocas: z.array(trocaSchema).optional(),
+  motivo: z.string(),
+})
+
+// Entrada enxuta de finalizar: o modelo escolhe; o código monta o resto (completarEntrega).
+export const escolhaDoModeloSchema = z.object({
+  resposta: z.string(),
+  sugestoes: z.array(sugestaoEscolhidaSchema),
+  incertos: z.array(z.string()),
+  para_ter: z
+    .literal(true)
+    .optional()
+    .describe("true para mencionar o para_ter do contexto; omita se não houver ou não couber."),
+})
+
+export type EscolhaDoModelo = z.infer<typeof escolhaDoModeloSchema>
+
 export type Aviso = { tipo: "incomodo" | "geral"; texto: string }
 
 export type SugestaoEntregue = {

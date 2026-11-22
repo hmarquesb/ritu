@@ -7,6 +7,7 @@ import {
   type Anotacao,
   completarSaida,
   type EntregaDoModelo,
+  escolhaDoModeloSchema,
   type SugestaoEntregue,
   saidaDeCodigo,
   saidaDoAcompanhanteSchema,
@@ -405,5 +406,18 @@ describe("retorno_id e troca na saída", () => {
     expect(r.success && r.data.sugestoes).toEqual([base])
     expect(r.success && r.data.sugestoes.some((s) => "retorno_id" in s)).toBe(false)
     expect(r.success && r.data.sugestoes.some((s) => s.itens.some((i) => "troca" in i))).toBe(false)
+  })
+})
+
+describe("escolhaDoModeloSchema", () => {
+  it("aceita a escolha enxuta e recusa para_ter false", () => {
+    const base = {
+      resposta: "Oi",
+      sugestoes: [{ tipo: "cha", id: "cha-gengibre", motivo: "Aquece." }],
+      incertos: [],
+    }
+    expect(escolhaDoModeloSchema.safeParse(base).success).toBe(true)
+    expect(escolhaDoModeloSchema.safeParse({ ...base, para_ter: true }).success).toBe(true)
+    expect(escolhaDoModeloSchema.safeParse({ ...base, para_ter: false }).success).toBe(false)
   })
 })

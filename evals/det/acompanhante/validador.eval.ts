@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { completarEntrega } from "@/core/agents/companion/completar"
 import type { DadosDoPreparo } from "@/core/agents/companion/preparo"
 import type { EntregaDoModelo } from "@/core/agents/companion/saida"
 import { type CodigoDeViolacao, validarEntrega } from "@/core/agents/companion/validador"
@@ -149,7 +150,8 @@ const filtroCom = (parcial: Partial<DadosDoPreparo["filtro"]>): DadosDoPreparo["
 
 // Um caso por código: cada um é uma mudança sobre a entrega limpa, sobre a base real.
 // O tipo Record obriga a cobrir todos os códigos de CodigoDeViolacao.
-const CASOS: Record<CodigoDeViolacao, Mudanca> = {
+// fora_dos_candidatos nasce em completarEntrega (teste próprio abaixo).
+const CASOS: Record<Exclude<CodigoDeViolacao, "fora_dos_candidatos">, Mudanca> = {
   fora_da_base: { entrega: { sugestoes: [cha("cha-inexistente")] } },
   estrutura: { entrega: { sugestoes: [{ ...cha("cha-gengibre"), itens: [] }] } },
   fora_de_casa: { dados: { casa: { confirmados: [], incertos: [] } } },
@@ -207,5 +209,17 @@ describe("validador sobre a base real", () => {
 
   it.each(Object.entries(CASOS))("%s: a mudança aponta o código", (codigo, mudanca) => {
     expect(codigosDe(mudanca)).toContain(codigo)
+  })
+
+  it("fora_dos_candidatos: a montagem aponta o id que não é candidato", () => {
+    const m = completarEntrega(
+      {
+        resposta: "Um chá pode ajudar.",
+        sugestoes: [{ tipo: "cha", id: "cha-inexistente", motivo: "Aquece." }],
+        incertos: [],
+      },
+      { dados: dados(), kb },
+    )
+    expect(!m.ok && m.violacoes.map((v) => v.codigo)).toEqual(["fora_dos_candidatos"])
   })
 })

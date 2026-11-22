@@ -29,8 +29,26 @@ export type CodigoDeViolacao =
   | "tamanho"
   | "vazia"
   | "dosagem"
+  | "fora_dos_candidatos"
 
-export type Violacao = { codigo: CodigoDeViolacao; onde: string; mensagem: string }
+export type OrigemDaViolacao = "modelo" | "montagem"
+
+export type Violacao = {
+  codigo: CodigoDeViolacao
+  onde: string
+  mensagem: string
+  origem: OrigemDaViolacao
+}
+
+// Violações que o modelo não controla mais: o código monta o campo a partir do candidato.
+// "estrutura" de prática também é de montagem (os itens vêm dos ingredientes).
+export const DE_MONTAGEM: readonly CodigoDeViolacao[] = [
+  "qualidades",
+  "novidade",
+  "linha_base",
+  "para_ter",
+  "texto_sem_estrutura",
+]
 
 type Parametros = {
   dados: DadosDoPreparo
@@ -51,11 +69,18 @@ type Ctx = Parametros & {
 
 const LIMITE_DE_SUBSTITUTOS = 100
 
-function apontar(ctx: Ctx, codigo: CodigoDeViolacao, onde: string, mensagem: string): void {
+function apontar(
+  ctx: Ctx,
+  codigo: CodigoDeViolacao,
+  onde: string,
+  mensagem: string,
+  origem?: OrigemDaViolacao,
+): void {
   const chave = `${codigo}|${onde}|${mensagem}`
   if (ctx.chaves.has(chave)) return
   ctx.chaves.add(chave)
-  ctx.violacoes.push({ codigo, onde, mensagem })
+  const final = origem ?? (DE_MONTAGEM.includes(codigo) ? "montagem" : "modelo")
+  ctx.violacoes.push({ codigo, onde, mensagem, origem: final })
 }
 
 const intersecao = <T>(a: readonly T[], b: readonly T[]): T[] => a.filter((x) => b.includes(x))
@@ -110,7 +135,7 @@ function checarEstruturaDaPratica(ctx: Ctx, s: Sugestao, pratica: Pratica, onde:
     pratica.ingredientes.length === 0
       ? "deixe itens vazio, a prática não tem ingredientes"
       : `os itens devem ser exatamente ${pratica.ingredientes.join(", ")}`
-  apontar(ctx, "estrutura", onde, `${pratica.id}: ${esperado}`)
+  apontar(ctx, "estrutura", onde, `${pratica.id}: ${esperado}`, "montagem")
 }
 
 function checarItemDaRefeicao(ctx: Ctx, preparo: Preparo, item: Item, onde: string): void {
@@ -414,7 +439,7 @@ function checarParaTer(ctx: Ctx): void {
   checarFiltroDoAlimento(ctx, pt.alimento_id, "para_ter")
 }
 
-function idsEstruturados(entrega: EntregaDoModelo, kb: KnowledgeBase): Set<string> {
+export function idsEstruturados(entrega: EntregaDoModelo, kb: KnowledgeBase): Set<string> {
   const ids = new Set<string>()
   for (const s of entrega.sugestoes) {
     if (s.pratica_id) ids.add(`praticas:${s.pratica_id}`)
@@ -443,28 +468,36 @@ function citadoNoTexto(texto: string, nomes: string[]): boolean {
   return nomes.some((n) => n !== "" && texto.includes(` ${normalizar(n)} `))
 }
 
-function checarTextoSemEstrutura(ctx: Ctx): void {
-  const texto = textoLimpo(ctx.entrega.resposta)
-  const presentes = idsEstruturados(ctx.entrega, ctx.kb)
-  for (const a of ctx.kb.alimentos) {
+/** Linhas (alimentos:id, praticas:id) que a resposta cita e que não estão em `presentes`. */
+export function linhasSoNoTexto(
+  resposta: string,
+  presentes: Set<string>,
+  kb: KnowledgeBase,
+): string[] {
+  const texto = textoLimpo(resposta)
+  const linhas: string[] = []
+  for (const a of kb.alimentos) {
     if (!presentes.has(`alimentos:${a.id}`) && citadoNoTexto(texto, [a.nome, ...a.sinonimos])) {
-      apontar(
-        ctx,
-        "texto_sem_estrutura",
-        "resposta",
-        `${a.id} aparece no texto e não está na parte estruturada`,
-      )
+      linhas.push(`alimentos:${a.id}`)
     }
   }
-  for (const p of ctx.kb.praticas) {
+  for (const p of kb.praticas) {
     if (!presentes.has(`praticas:${p.id}`) && citadoNoTexto(texto, [p.nome])) {
-      apontar(
-        ctx,
-        "texto_sem_estrutura",
-        "resposta",
-        `${p.id} aparece no texto e não está na parte estruturada`,
-      )
+      linhas.push(`praticas:${p.id}`)
     }
+  }
+  return linhas
+}
+
+function checarTextoSemEstrutura(ctx: Ctx): void {
+  const presentes = idsEstruturados(ctx.entrega, ctx.kb)
+  for (const linha of linhasSoNoTexto(ctx.entrega.resposta, presentes, ctx.kb)) {
+    apontar(
+      ctx,
+      "texto_sem_estrutura",
+      "resposta",
+      `${linha.split(":")[1]} aparece no texto e não está na parte estruturada`,
+    )
   }
 }
 

@@ -5,7 +5,7 @@ import type { SinaisPessoa } from "@/core/knowledge/substitutos"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import type { DadosDoPreparo } from "./preparo"
 import type { EntregaDoModelo } from "./saida"
-import { type CodigoDeViolacao, validarEntrega } from "./validador"
+import { type CodigoDeViolacao, DE_MONTAGEM, validarEntrega } from "./validador"
 
 const kb = createMiniKnowledge()
 const CONFIRMADOS = ["gengibre", "canela", "cardamomo", "leite", "mel", "arroz-branco", "ghee"]
@@ -709,5 +709,40 @@ describe("dosagem", () => {
 
   it("entrega válida de hoje não aponta dosagem", () => {
     expect(dosagens(entrega())).toEqual([])
+  })
+})
+
+describe("origem das violações", () => {
+  const origemDe = (e: EntregaDoModelo, d: DadosDoPreparo = dados()) =>
+    validarEntrega(e, { dados: d, kb, sinais })
+
+  it("DE_MONTAGEM lista só os códigos de montagem", () => {
+    expect([...DE_MONTAGEM].sort()).toEqual(
+      ["linha_base", "novidade", "para_ter", "qualidades", "texto_sem_estrutura"].sort(),
+    )
+  })
+
+  it("qualidades e linha_base são de montagem; fora_de_casa e tamanho são do modelo", () => {
+    const e = entrega({
+      resposta: "",
+      explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["frio"] },
+      sugestoes: [{ ...cha, itens: [{ ...(cha.itens[0] as object), alimento_id: "limao" }] }],
+    } as never)
+    const v = origemDe(e, dados({ casa: { confirmados: [], incertos: [] } }))
+    const origem = (c: string) => v.find((x) => x.codigo === c)?.origem
+    expect(origem("qualidades")).toBe("montagem")
+    expect(origem("linha_base")).toBe("montagem")
+    expect(origem("fora_de_casa")).toBe("modelo")
+    expect(origem("tamanho")).toBe("modelo")
+  })
+
+  it("estrutura de prática é de montagem e de refeição é do modelo", () => {
+    const pratica = origemDe(entrega({ sugestoes: [{ ...cha, itens: [] }] }))
+    expect(pratica.find((x) => x.codigo === "estrutura")?.origem).toBe("montagem")
+    const semVaga = origemDe(
+      entrega({ sugestoes: [{ ...refeicao, itens: [] }] }),
+      dados({ candidatos: [{ ...candidato("leite-morno-com-especiaria"), tipo: "refeicao" }] }),
+    )
+    expect(semVaga.find((x) => x.codigo === "estrutura")?.origem).toBe("modelo")
   })
 })

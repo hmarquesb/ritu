@@ -4,7 +4,7 @@ import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { Judge, Veredito } from "@/core/agents/judge/julgar"
 import { createMemoryAgent } from "@/core/agents/memory/memoria"
-import { acompanhanteV7 } from "@/core/agents/prompts/acompanhante.v7"
+import { acompanhanteV8 } from "@/core/agents/prompts/acompanhante.v8"
 import { executarLimpeza } from "@/core/cleanup"
 import { RituError } from "@/core/errors"
 import { resolverEvitar } from "@/core/knowledge/identificar"
@@ -221,7 +221,7 @@ it("conversa com o Acompanhante: o span run leva prompt.versao, também ao pausa
   await m.conversation.conversar(m.conta.id, { atalhos: ["com_frio"] })
   const span = m.telemetry.spans.find((s) => s.nome === "run")
   expect(span?.atributos["run.caminho"]).toBe("acompanhante")
-  expect(span?.atributos["prompt.versao"]).toBe(acompanhanteV7.versao)
+  expect(span?.atributos["prompt.versao"]).toBe(acompanhanteV8.versao)
 })
 
 describe("conversar: atalhos e acompanhante", () => {

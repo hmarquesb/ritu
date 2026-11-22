@@ -1,4 +1,4 @@
-import { acompanhanteV7 } from "@/core/agents/prompts/acompanhante.v7"
+import { acompanhanteV8 } from "@/core/agents/prompts/acompanhante.v8"
 import { askUser } from "@/core/agents/tools/ask-user"
 import { ayurvedaTools } from "@/core/agents/tools/ayurveda"
 import { climaTools } from "@/core/agents/tools/clima"
@@ -12,9 +12,9 @@ import type { Tool } from "@/core/tools/tool"
 export function criarAcompanhante(): DefinicaoDoAgente {
   return {
     nome: "acompanhante",
-    instrucoes: acompanhanteV7.instrucoes,
-    prompt_versao: acompanhanteV7.versao,
-    lembreteDeEntrega: acompanhanteV7.lembreteDeEntrega,
+    instrucoes: acompanhanteV8.instrucoes,
+    prompt_versao: acompanhanteV8.versao,
+    lembreteDeEntrega: acompanhanteV8.lembreteDeEntrega,
     tools: [
       ...climaTools,
       ...memoriaTools,

@@ -164,6 +164,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 **Evals**
 - O mapa liga cada linha de evals determinísticos a um arquivo.
 - O registro dos casos com LLM tem ids únicos, famílias e marcas.
+- A checagem antes do 1º caso para sem Postgres e não lista modelos.
 
 **Telas (E2E)**
 

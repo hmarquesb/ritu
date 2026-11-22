@@ -17,11 +17,19 @@ import { interpreteV2 } from "@/core/agents/prompts/interprete.v2"
 import { juizV1 } from "@/core/agents/prompts/juiz.v1"
 import { memoriaV1 } from "@/core/agents/prompts/memoria.v1"
 import type { Clock } from "@/core/clock"
-import { type Container, getContainer } from "@/infra/container"
+import {
+  type Container,
+  chavesDoGemini,
+  consultarBanco,
+  getContainer,
+  listarModelosDaChave,
+  variavelDaChave,
+} from "@/infra/container"
 import { llmCotas } from "../config/llm-cotas"
 import { avaliadorV1 } from "../evals/llm/avaliador.v1"
 import type { CasoDeEval } from "../evals/llm/casos"
 import { criarRodarCaso, type Rodadores } from "./lib/evals/casos"
+import type { ChecagemPrevia } from "./lib/evals/checagem-previa"
 import { executarComando, type IoDoComando } from "./lib/evals/comando"
 import { rodarInterprete, rodarJuiz, rodarMemoria } from "./lib/evals/rodar-apoio"
 import { type CasoRodado, rodarAcompanhante, rodarConversa } from "./lib/evals/rodar-run"
@@ -74,6 +82,17 @@ async function rodarCaso(caso: CasoDeEval): Promise<CasoRodado> {
   return rodarCasoDoEval(caso)
 }
 
+// As mesmas chaves do container (chavesDoGemini); banco e listagem vêm do container, o único que liga à infra.
+function checagemDoEval(): ChecagemPrevia {
+  return {
+    banco: consultarBanco,
+    chaves: chavesDoGemini().map((n) => ({
+      variavel: variavelDaChave(n),
+      listar: () => listarModelosDaChave(n),
+    })),
+  }
+}
+
 const io: IoDoComando = {
   ler: async (caminho) => {
     try {
@@ -107,6 +126,9 @@ const io: IoDoComando = {
   },
   papeis: llmCotas.papeis,
   rodarCaso,
+  get checagem(): ChecagemPrevia {
+    return checagemDoEval()
+  },
 }
 
 async function main(): Promise<number> {

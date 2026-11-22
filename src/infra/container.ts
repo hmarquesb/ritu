@@ -43,6 +43,7 @@ import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createGeminiClient } from "@/infra/gemini/client"
+import { listarModelos } from "@/infra/gemini/listar-modelos"
 import { loadKnowledgeBase, readDadosDaBase } from "@/infra/knowledge/yaml-knowledge"
 import { loadDemoSeed } from "@/infra/knowledge/yaml-seed"
 import { createMastraRuntime } from "@/infra/mastra/runtime"
@@ -148,14 +149,34 @@ const VARIAVEL_DA_CHAVE: Record<number, string> = {
 }
 
 /** Chaves do Gemini configuradas: a 1 sempre; a 2 e a 3 só se a variável existir. */
-function chavesDoGemini(): number[] {
+export function chavesDoGemini(): number[] {
   return [1, 2, 3].filter(
     (n) => n === 1 || optionalEnv(VARIAVEL_DA_CHAVE[n] as string) !== undefined,
   )
 }
 
-function chaveDoGemini(chave: number): string {
+export function chaveDoGemini(chave: number): string {
   return requireEnv(VARIAVEL_DA_CHAVE[chave] ?? "GEMINI_API_KEY")
+}
+
+/** Nome da variável da chave n: a checagem de eval a usa na mensagem de falha. */
+export function variavelDaChave(chave: number): string {
+  return VARIAVEL_DA_CHAVE[chave] ?? "GEMINI_API_KEY"
+}
+
+/** Postgres para a checagem de eval: `select 1` numa conexão própria, fechada logo depois. Sem DATABASE_URL, lança. */
+export async function consultarBanco(): Promise<void> {
+  const banco = createDbClient()
+  try {
+    await banco.sql`select 1`
+  } finally {
+    await banco.close()
+  }
+}
+
+/** Lista os modelos com a chave n: a checagem de eval chama uma vez por chave configurada. */
+export function listarModelosDaChave(chave: number): Promise<void> {
+  return listarModelos(chaveDoGemini(chave))
 }
 
 function routerDoModo(puro: ModelRouter, e2e: boolean): ModelRouter {

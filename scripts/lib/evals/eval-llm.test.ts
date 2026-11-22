@@ -5,6 +5,7 @@ import { SemModeloError } from "../../../src/core/llm/chamar"
 import { LlmError } from "../../../src/core/llm/errors"
 import { createFixedClock } from "../../../src/infra/fakes/fixed-clock"
 import { type Andamento, arquivoDoAndamento, assinar } from "./andamento"
+import type { ChecagemPrevia } from "./checagem-previa"
 import { executarComando, type IoDoComando } from "./comando"
 import type { Colhido, ResultadoDoCaso } from "./resultado"
 import type { CasoRodado } from "./rodar-run"
@@ -94,6 +95,7 @@ type Preparo = {
   arquivos?: Record<string, string>
   rodarCaso?: (c: CasoDeEval) => Promise<CasoRodado>
   falhaAoGravar?: string
+  checagem?: ChecagemPrevia
 }
 
 function criarIo(p: Preparo = {}) {
@@ -101,17 +103,26 @@ function criarIo(p: Preparo = {}) {
   const logs: string[] = []
   const erros: string[] = []
   const chamados: string[] = []
+  const checagens: string[] = []
   const clock = createFixedClock(AGORA)
   const io: IoDoComando & {
     arquivos: Map<string, string>
     logs: string[]
     erros: string[]
     chamados: string[]
+    checagens: string[]
   } = {
     arquivos,
     logs,
     erros,
     chamados,
+    checagens,
+    checagem: p.checagem ?? {
+      banco: async () => {
+        checagens.push("banco")
+      },
+      chaves: [],
+    },
     ler: async (caminho) => arquivos.get(caminho),
     gravar: async (caminho, texto) => {
       if (caminho === p.falhaAoGravar) throw new Error("disco cheio")
@@ -194,6 +205,51 @@ describe("executarComando: recusas e erros de argumento (código 1)", () => {
     const io = criarIo()
     expect(await executarComando(["--checkpoint", "c1-base", "--retomar", "--extra"], io)).toBe(1)
     expect(io.erros[0]).toContain("--extra só vale para rodada nova ou --do-zero")
+  })
+})
+
+describe("executarComando: checagem antes do 1º caso", () => {
+  it("Postgres fora do ar: a rodada sai com 2, não cria andamento nem chama caso", async () => {
+    const io = criarIo({
+      checagem: { banco: async () => Promise.reject(new Error("ECONNREFUSED")), chaves: [] },
+    })
+    expect(await executarComando(["--checkpoint", "c1-base"], io)).toBe(2)
+    expect(io.erros[0]).toBe("Postgres não respondeu (docker compose up -d)")
+    expect(io.arquivos.has(ANDAMENTO)).toBe(false)
+    expect(io.arquivos.has(FALHAS)).toBe(false)
+    expect(io.chamados).toEqual([])
+  })
+
+  it("chave 2 que não responde: a rodada sai com 2 e nomeia a variável", async () => {
+    const io = criarIo({
+      checagem: {
+        banco: async () => {},
+        chaves: [
+          { variavel: "GEMINI_API_KEY", listar: async () => {} },
+          {
+            variavel: "GEMINI_API_KEY_2",
+            listar: async () => Promise.reject(new Error("401")),
+          },
+        ],
+      },
+    })
+    expect(await executarComando(["--checkpoint", "c1-base"], io)).toBe(2)
+    expect(io.erros[0]).toBe("GEMINI_API_KEY_2 não respondeu à listagem de modelos")
+    expect(io.arquivos.has(ANDAMENTO)).toBe(false)
+    expect(io.chamados).toEqual([])
+  })
+
+  it("--listar não chama a checagem", async () => {
+    const io = criarIo()
+    expect(await executarComando(["--checkpoint", "c1-base", "--listar"], io)).toBe(0)
+    expect(io.checagens).toEqual([])
+  })
+
+  it("rodada com tudo ok chama a checagem antes do 1º caso", async () => {
+    const io = criarIo()
+    await executarComando(["--checkpoint", "c1-base"], io)
+    expect(io.checagens[0]).toBe("banco")
+    expect(io.chamados.length).toBeGreaterThan(0)
   })
 })
 

@@ -847,4 +847,10 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/evals-llm/registro.eval.ts"],
     desde: 2,
   },
+  {
+    grupo: "Evals",
+    linha: "A checagem antes do 1º caso para sem Postgres e não lista modelos",
+    arquivos: ["evals/det/evals-llm/checagem-previa.eval.ts"],
+    desde: 2,
+  },
 ]

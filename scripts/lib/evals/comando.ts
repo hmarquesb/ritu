@@ -9,6 +9,7 @@ import type { Clock } from "../../../src/core/clock"
 import { diaDaCota } from "../../../src/core/llm/janelas"
 import { type Andamento, arquivoDoAndamento, assinar, lerAndamento } from "./andamento"
 import { ehCheckpoint, formatarListagem, nomesDeCheckpoint } from "./casos"
+import { type ChecagemPrevia, checarAntes } from "./checagem-previa"
 import { gerarComparacao } from "./comparacao"
 import { cabecalhoDasFalhas, formatarFalha } from "./falhas-locais"
 import {
@@ -37,6 +38,7 @@ export type IoDoComando = {
   prompts: Record<string, string> // acompanhante, interprete, memoria, juiz, avaliador → versão
   papeis: typeof llmCotas.papeis
   rodarCaso(caso: CasoDeEval): Promise<CasoRodado> // já com o avaliador (criarRodarCaso)
+  checagem: ChecagemPrevia // Postgres e chaves, checados antes do 1º caso de `--caso` e de rodada
 }
 
 const HISTORICO = "evals/resultados/historico.json"
@@ -167,8 +169,18 @@ function linhasDoCaso(rodado: CasoRodado): string[] {
   ]
 }
 
+/** Antes do 1º caso: `undefined` quando tudo responde; senão, imprime o motivo e devolve o código de saída. */
+async function recusaDaChecagem(io: IoDoComando): Promise<number | undefined> {
+  const checada = await checarAntes(io.checagem)
+  if (checada.ok) return undefined
+  io.erro(checada.mensagem)
+  return 2
+}
+
 /** `--caso`: roda um caso e imprime; não grava arquivo nem andamento. */
 async function rodarUmCaso(caso: CasoDeEval, io: IoDoComando): Promise<number> {
+  const recusa = await recusaDaChecagem(io)
+  if (recusa !== undefined) return recusa
   let rodado: CasoRodado
   try {
     rodado = await io.rodarCaso(caso)
@@ -348,6 +360,11 @@ async function rodarCheckpoint(o: Opcoes, casos: CasoDeEval[], io: IoDoComando):
       io.erro(recusa)
       return 1
     }
+  }
+  const recusaPrevia = await recusaDaChecagem(io)
+  if (recusaPrevia !== undefined) return recusaPrevia
+  if (!o.retomar) {
+    const hoje = diaDaCota(io.clock.now())
     await io.apagar(caminho)
     await io.gravar(falhasDo(cp), cabecalhoDasFalhas(cp, hoje))
   }

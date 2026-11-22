@@ -14,12 +14,9 @@ function cenario(nome: string): CenarioDeConversa {
 
 const ENTREGA = {
   resposta: "Respire devagar por um minuto. Se puder, sente-se para comer, sem tela.",
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
   sugestoes: [],
-  evitar: [],
   // Sem sugestão, a entrega precisa registrar um incerto quando há candidatos no momento.
   incertos: ["Não sei o que há na sua casa."],
-  citados: [],
 }
 const fin = (): PassoRoteirizado => ({
   texto: "Vou responder sem perguntar.",
@@ -70,11 +67,6 @@ describe("limite de perguntas: a variante conta como uma pergunta", () => {
           nome: "finalizar",
           argumentos: {
             ...ENTREGA,
-            explicacao: {
-              qualidades_do_momento: ["quente"],
-              qualidades_buscadas: ["frio", "brando"],
-            },
-            evitar: ["incomodos:dor-de-cabeca/latejante"],
           },
         },
       ],

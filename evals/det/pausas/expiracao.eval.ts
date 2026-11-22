@@ -92,11 +92,8 @@ const DUAS_PERGUNTAS: CenarioDeConversa = {
           nome: "finalizar",
           argumentos: {
             resposta: "Escolha algo morno e cozido, e coma sentada, sem tela.",
-            explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
             sugestoes: [],
-            evitar: [],
             incertos: ["Não sei o que há na sua casa."],
-            citados: [],
           },
         },
       ],

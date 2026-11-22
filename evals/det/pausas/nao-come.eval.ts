@@ -31,38 +31,22 @@ const PERGUNTA_CASA: PassoRoteirizado = {
 const SEM_OVO = {
   resposta:
     "Para este fim de tarde frio, uma comida morna ajuda a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
   sugestoes: [],
-  evitar: [],
   incertos: ["Não sei o que há na sua casa."],
-  citados: [],
 }
 
 // Entrega que sugere ovo mexido, como o modelo escreveria se não soubesse da recusa.
 const COM_OVO = {
   resposta:
     "Um ovo mexido morno ajuda a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
   sugestoes: [
     {
       tipo: "refeicao",
-      preparo_id: "ovo-mexido",
-      itens: [
-        {
-          alimento_id: "ovo",
-          funcao: "proteina",
-          contribui: [],
-          linha_base: "alimentos:ovo",
-        },
-      ],
+      id: "ovo-mexido",
       motivo: "Ovo mexido morno, com o que a pessoa tem em casa.",
-      linhas_base: ["preparos:ovo-mexido"],
-      novidade: false,
     },
   ],
-  evitar: [],
   incertos: [],
-  citados: [],
 }
 
 const finalizar = (argumentos: unknown): PassoRoteirizado => ({
@@ -142,8 +126,8 @@ describe("não como: a resposta vai para o filtro do checkpoint, não para o per
   })
 })
 
-describe("não como: a entrega com ovo é recusada por nao_come", () => {
-  it("finalizar com ovo recebe a violação nao_come e a entrega sem ovo passa", async () => {
+describe("não como: a escolha com ovo é recusada por fora_dos_candidatos", () => {
+  it("o filtro tira o ovo-mexido dos candidatos; a escolha dele é recusada e a entrega sem ovo passa", async () => {
     const c: CenarioDeConversa = {
       ...base,
       respostas: [{ tipo: "come", resposta: "nao_como" }, { tipo: "pular" }],
@@ -154,8 +138,12 @@ describe("não como: a entrega com ovo é recusada por nao_come", () => {
     const rodada = await rodarCenario(deps, contaId, c)
 
     const resultadoDoFinalizar = resultadoDoFinalizarNas(runtime.pedidos.at(-1)?.mensagens ?? [])
+    const run = await deps.stores.runs.buscar(contaId, rodada.final.run_id)
+    const dados = dadosDoPreparoSchema.parse((run?.checkpoint as { dados?: unknown } | null)?.dados)
+    // Por construção, o filtro nao_come tira o ovo-mexido dos candidatos: a escolha dele não tem onde ser aceita.
+    expect(dados.candidatos.map((c) => c.id)).not.toContain("ovo-mexido")
     expect(resultadoDoFinalizar?.violacoes).toContainEqual(
-      expect.objectContaining({ codigo: "nao_come" }),
+      expect.objectContaining({ codigo: "fora_dos_candidatos" }),
     )
     expect(rodada.final.status).toBe("waiting_for_approval")
     expect(

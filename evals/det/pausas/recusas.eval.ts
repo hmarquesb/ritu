@@ -21,12 +21,9 @@ const base: CenarioDeConversa = { ...cenario("casa-vazia"), respostas: [] }
 
 const ENTREGA = {
   resposta: "Respire devagar por um minuto. Se puder, sente-se para comer, sem tela.",
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
   sugestoes: [],
-  evitar: [],
   // Sem sugestão, a entrega precisa registrar um incerto quando há candidatos no momento.
   incertos: ["Não sei o que há na sua casa."],
-  citados: [],
 }
 const fin = (): PassoRoteirizado => ({
   texto: "Vou responder sem perguntar.",

@@ -26,11 +26,8 @@ const FIN: PassoRoteirizado = {
       nome: "finalizar",
       argumentos: {
         resposta: "Escolha algo leve e morno, e coma sentada, sem tela.",
-        explicacao: { qualidades_do_momento: ["pesado"], qualidades_buscadas: ["leve"] },
         sugestoes: [],
-        evitar: [],
         incertos: ["Não sei o que há na sua casa."],
-        citados: [],
       },
     },
   ],

@@ -48,27 +48,15 @@ function entregaCom(alimento_id: string, preparo_id: string, funcao: string): Pa
         argumentos: {
           resposta:
             "Para um jantar frio, uma refeição morna ajuda a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-          explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
           sugestoes: [
             {
               tipo: "refeicao",
-              preparo_id,
-              itens: [
-                {
-                  alimento_id,
-                  funcao,
-                  contribui: [],
-                  linha_base: `alimentos:${alimento_id}`,
-                },
-              ],
+              id: preparo_id,
+              escolhas: [{ funcao, alimento_id }],
               motivo: "Uma comida morna e cozida, com o que você tem em casa.",
-              linhas_base: [`preparos:${preparo_id}`],
-              novidade: false,
             },
           ],
-          evitar: ["estados:com_frio"],
           incertos: [],
-          citados: [],
         },
       },
     ],
@@ -121,10 +109,10 @@ describe("pausa de casa: a tool e o validador recebem os dados atualizados", () 
     })
   })
 
-  it("entrega com couve, que saiu de casa, é recusada como fora_de_casa; com abóbora, é aceita", async () => {
+  it("entrega com couve, que saiu de casa, é recusada; com abóbora, é aceita", async () => {
     const roteiro = [
       ...casaIncerta.roteiro.slice(0, 2),
-      entregaCom("couve", "salada-crua", "folha"),
+      entregaCom("couve", "caldo", "folha"),
       entregaCom("abobora", "legumes-no-vapor", "legume"),
     ]
     const c: CenarioDeConversa = { ...casaIncerta, roteiro }
@@ -135,13 +123,10 @@ describe("pausa de casa: a tool e o validador recebem os dados atualizados", () 
       violacoes?: { codigo: string }[]
     }
 
-    // A couve sai da entrega porque saiu de casa; outras violações do mesmo texto não contam aqui.
-    expect(violacoes.violacoes).toContainEqual(
-      expect.objectContaining({
-        codigo: "fora_de_casa",
-        mensagem: expect.stringContaining("couve não está confirmado"),
-      }),
-    )
+    // A escolha só pode vir das opcoes do candidato: a couve não está entre as da vaga "folha" do caldo
+    // confirmadas em casa, e o caldo não tem item incerto para trocar por ela (trocas), então a
+    // recusa é estrutura, e não fora_de_casa. outras violações do mesmo texto não contam aqui.
+    expect(violacoes.violacoes).toContainEqual(expect.objectContaining({ codigo: "estrutura" }))
     expect(rodada.final.status).toBe("done")
     expect(rodada.final.saida?.sugestoes.flatMap((s) => s.itens.map((i) => i.alimento_id))).toEqual(
       ["abobora"],

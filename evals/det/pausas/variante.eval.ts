@@ -22,7 +22,7 @@ function comIncomodo(c: CenarioDeConversa, incomodo: { id: string; variante?: st
 }
 
 // Roteiro curto: clima e uma resposta final que evita a variante dada.
-function roteiroDaVariante(variante: string): PassoRoteirizado[] {
+function roteiroDaVariante(): PassoRoteirizado[] {
   return [
     {
       texto: "Vou ver o clima de agora antes de responder.",
@@ -36,14 +36,8 @@ function roteiroDaVariante(variante: string): PassoRoteirizado[] {
           argumentos: {
             resposta:
               "Com essa dor de cabeça, escolha algo leve e morno e beba água aos goles. Se a dor for forte ou continuar, procure uma pessoa de saúde.",
-            explicacao: {
-              qualidades_do_momento: ["quente"],
-              qualidades_buscadas: ["frio", "brando"],
-            },
             sugestoes: [],
-            evitar: [`incomodos:dor-de-cabeca/${variante}`],
             incertos: ["Não sei o que há na sua casa."],
-            citados: [],
           },
         },
       ],
@@ -66,14 +60,8 @@ function roteiroSemVariante(): PassoRoteirizado[] {
           argumentos: {
             resposta:
               "Escolha algo quente e seco, e beba água aos goles. Se a dor for forte ou continuar, procure uma pessoa de saúde.",
-            explicacao: {
-              qualidades_do_momento: ["frio", "oleoso"],
-              qualidades_buscadas: ["quente", "seco"],
-            },
             sugestoes: [],
-            evitar: [],
             incertos: ["Não sei o que há na sua casa."],
-            citados: [],
           },
         },
       ],
@@ -121,7 +109,7 @@ describe("cada variante muda os candidatos", () => {
       const c: CenarioDeConversa = {
         ...comIncomodo(base, { id: "dor-de-cabeca", variante }),
         respostas: [],
-        roteiro: roteiroDaVariante(variante),
+        roteiro: roteiroDaVariante(),
       }
       const { contaId, deps, runtime } = await montar(c)
       await deps.conversation.conversar(contaId, c.mensagem)
@@ -170,7 +158,7 @@ describe("incômodo sem pergunta de variante não pausa", () => {
     const c: CenarioDeConversa = {
       ...comIncomodo(base, { id: "dor-de-cabeca", variante: "latejante" }),
       respostas: [],
-      roteiro: roteiroDaVariante("latejante"),
+      roteiro: roteiroDaVariante(),
     }
     const { contaId, deps, runtime } = await montar(c)
 

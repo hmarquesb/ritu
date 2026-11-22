@@ -28,6 +28,8 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - Restrições, "não como" e "não gosto" removem os itens certos antes do agente.
 - **Evitar sempre:** grupo e alimento removem alimentos, preparos e práticas de óleo que os contêm; vale para trocas, `para_ter` e lista; item vindo do Intérprete filtra no mesmo run e fica até o fim do dia; o executor recusa remoção vinda do agente; registro mais recente (gosto, casa, retorno) não tira o item; nenhum motivo é gravado.
 - Preparo: momento + incômodo → qualidades e candidatos esperados; cada variante de incômodo dá o resultado esperado.
+- **Finalizar enxuto** (`evals/det/acompanhante/montagem.eval.ts`): cada candidato de cada fixture do preparo vira entrega sem violação de montagem; id fora dos candidatos, vaga fora das opções e `para_ter` sem o do contexto são apontados; `citados` vem da fala e `evitar` vem do preparo.
+- **Prompt v8** (`evals/det/acompanhante/prompt-v8.eval.ts`): o prompt não cita `qualidades.`, e cada `momento.*` que cita existe no JSON de `montarMensagemInicial`.
 - Sinal de alerta no texto encerra o run antes do agente; alerta emocional devolve o texto fixo com o CVV, e a mensagem não entra em nenhuma memória.
 - Ofensa sozinha recebe a resposta fixa sem chamar o Acompanhante.
 - O validador aponta cada tipo de violação de `AI.md` §4.
@@ -82,6 +84,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 **Modelos e cotas**
 - Cada papel pede o modelo principal enquanto há cota.
 - Cota do minuto ou do dia esgotada, ou erro 429, leva ao próximo modelo da lista do papel.
+- Com várias chaves, o 429 passa para a chave seguinte do mesmo modelo antes de trocar de modelo (`evals/det/modelos/varias-chaves.eval.ts`).
 - A segunda tentativa depois de reprovação do Juiz usa o papel `reforco`.
 - Sem modelo para `decisao`: resposta montada por código. Sem modelo para o Juiz: resposta segura.
 - O registro de uso vira o dia à meia-noite do Pacífico.
@@ -165,6 +168,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - O mapa liga cada linha de evals determinísticos a um arquivo.
 - O registro dos casos com LLM tem ids únicos, famílias e marcas.
 - A checagem antes do 1º caso para sem Postgres e não lista modelos.
+- Um caso por motivo de inconclusivo; inconclusivo nunca vira acertou, e as métricas saem iguais às de sem ele (`evals/det/evals-llm/inconclusivos.eval.ts`).
 
 **Telas (E2E)**
 

@@ -853,4 +853,28 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/evals-llm/checagem-previa.eval.ts"],
     desde: 2,
   },
+  {
+    grupo: "Base e tools",
+    linha: "Finalizar enxuto: cada candidato de cada fixture do preparo",
+    arquivos: ["evals/det/acompanhante/montagem.eval.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Base e tools",
+    linha: "Prompt v8: o prompt não cita qualidades.* e cada momento.* existe",
+    arquivos: ["evals/det/acompanhante/prompt-v8.eval.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Modelos e cotas",
+    linha: "Com várias chaves, o 429 passa para a chave seguinte",
+    arquivos: ["evals/det/modelos/varias-chaves.eval.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Evals",
+    linha: "Um caso por motivo de inconclusivo; inconclusivo nunca vira",
+    arquivos: ["evals/det/evals-llm/inconclusivos.eval.ts"],
+    desde: 2,
+  },
 ]

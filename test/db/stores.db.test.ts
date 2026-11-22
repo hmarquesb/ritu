@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readdir, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { createPgBastidores } from "@/infra/db/bastidores"
 import { createDbClient, type DbClient } from "@/infra/db/client"
 import { createPgLimiter } from "@/infra/db/limits"
 import { migrate } from "@/infra/db/migrate"
@@ -9,6 +10,7 @@ import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { accountsContract } from "../contracts/accounts.contract"
+import { bastidoresContract } from "../contracts/bastidores.contract"
 import { deleteAccountContract } from "../contracts/delete-account.contract"
 import { type ContractEnv, contractStoreOpts, criarDuasContas } from "../contracts/env"
 import { runLimitsContract } from "../contracts/limits.contract"
@@ -82,6 +84,10 @@ describe("stores Postgres", () => {
   proposalsContract(make)
   transactorContract(make)
   deleteAccountContract(make)
+  bastidoresContract(() => {
+    const env = make()
+    return { ...env, bastidores: createPgBastidores(cliente.sql) }
+  })
 })
 
 runUsageLedgerContract("Postgres", (clock) => ({

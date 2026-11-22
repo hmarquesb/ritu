@@ -36,7 +36,10 @@ type Falta = {
 
 type EvitarDoDia = { conta_id: string; dia: string; item: ItemTemporario }
 
-type Voto = { conta_id: string; run_id: string; voto: "up" | "down" }
+type Voto = { conta_id: string; run_id: string; voto: "up" | "down"; criado_em: string }
+
+/** Sinais do dia gravados pela limpeza (spec 023); sem conta, sobrevivem ao apagar a conta. */
+type SinalDoDia = { dia: string; sinal: string; total: number }
 
 type Estado = {
   contas: Conta[]
@@ -56,10 +59,20 @@ type Estado = {
   etapas: RunEtapa[]
   votos: Voto[]
   propostas: Proposta[]
+  sinaisDia: SinalDoDia[]
 }
 
 /** Guarda o estado atual. A transação troca o estado por uma cópia e volta se falhar. */
-type Db = { estado: Estado }
+export type Db = { estado: Estado }
+
+/** Banco de cada fake de stores, para os outros fakes do mesmo estado (Bastidores). */
+const BANCOS = new WeakMap<object, Db>()
+
+export function bancoDaMemoria(stores: object): Db {
+  const db = BANCOS.get(stores)
+  if (!db) throw new Error("stores que não são da memória")
+  return db
+}
 
 type Ref = { alimento: string } | { livre: string }
 
@@ -87,6 +100,7 @@ function estadoVazio(): Estado {
     etapas: [],
     votos: [],
     propostas: [],
+    sinaisDia: [],
   }
 }
 
@@ -938,7 +952,7 @@ function criarRuns(db: Db, clock: Clock): RunRepository {
         existente.voto = voto
         return anterior
       }
-      db.estado.votos.push({ conta_id: contaId, run_id: runId, voto })
+      db.estado.votos.push({ conta_id: contaId, run_id: runId, voto, criado_em: agoraIso(clock) })
       return null
     },
     async expirarEmEsperaAntesDe(limite) {
@@ -1028,7 +1042,7 @@ export function createMemoryStores(clock: Clock, opts: OpcoesMemoria = {}): Stor
     proposals: criarProposals(db, clock),
   }
 
-  return {
+  const porta: Stores & Transactor = {
     ...stores,
     async emTransacao<T>(fn: (s: Stores) => Promise<T>): Promise<T> {
       const antes = copia(db.estado)
@@ -1040,6 +1054,8 @@ export function createMemoryStores(clock: Clock, opts: OpcoesMemoria = {}): Stor
       }
     },
   }
+  BANCOS.set(porta, db)
+  return porta
 }
 
 type LinhaDeUso = {

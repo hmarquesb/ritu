@@ -1,11 +1,13 @@
 import { z } from "zod"
+import { completarEntrega, emTermosDaEscolha } from "@/core/agents/companion/completar"
 import { type DadosDoPreparo, dadosDoPreparoSchema } from "@/core/agents/companion/preparo"
+import type { EntregaDoModelo } from "@/core/agents/companion/saida"
 import {
   completarSaida,
-  type EntregaDoModelo,
-  entregaDoModeloSchema,
+  type EscolhaDoModelo,
+  escolhaDoModeloSchema,
 } from "@/core/agents/companion/saida"
-import { validarEntrega } from "@/core/agents/companion/validador"
+import { type Violacao, validarEntrega } from "@/core/agents/companion/validador"
 import { gunaSchema } from "@/core/knowledge/vocab"
 import { propostasDoAgente } from "@/core/proposals/montar"
 import type { ToolDeControle } from "@/core/runs/agente"
@@ -30,32 +32,45 @@ export function resumoDaValidacao(violacoes: { codigo: string }[]): string {
   return [...new Set(violacoes.map((v) => v.codigo))].join(",")
 }
 
-export const finalizar: ToolDeControle<EntregaDoModelo> = {
+type Conferida =
+  | { tipo: "ok"; entrega: EntregaDoModelo }
+  | { tipo: "montagem"; violacoes: Violacao[] }
+  | { tipo: "modelo"; violacoes: Violacao[] }
+
+export const finalizar: ToolDeControle<EscolhaDoModelo> = {
   name: "finalizar",
   description:
-    "Entrega a resposta à pessoa. Confere a resposta antes: se devolver violações, corrija e chame de novo.",
-  input: entregaDoModeloSchema,
-  async tratar(entrada, ctx, estado) {
+    "Entrega a resposta à pessoa. Confere a escolha antes: se devolver violações, corrija e chame de novo.",
+  input: escolhaDoModeloSchema,
+  async tratar(escolha, ctx, estado) {
     const dados: DadosDoPreparo = dadosDoPreparoSchema.parse(estado.dados)
     const clima = climaDoRun(estado)
-    const violacoes = await ctx.telemetry.span(
+    const contexto = { dados, ...(clima ? { clima } : {}), kb: ctx.kb }
+    const conferida = await ctx.telemetry.span(
       "validacao",
       { "validacao.tentativa": estado.entregas_recusadas + 1 },
-      async (s) => {
-        const v = validarEntrega(entrada, {
-          dados,
-          ...(clima ? { clima } : {}),
-          kb: ctx.kb,
-          sinais: ctx.sinais,
-        })
+      async (s): Promise<Conferida> => {
+        const m = completarEntrega(escolha, contexto)
+        const v = m.ok
+          ? validarEntrega(m.entrega, { ...contexto, sinais: ctx.sinais })
+          : m.violacoes
         s.atribuir({ "validacao.ok": v.length === 0, "validacao.violacoes": v.length })
-        return v
+        for (const x of v) {
+          ctx.telemetry.contador("ritu_validacao_violacoes_total", { violacao: x.codigo })
+        }
+        if (v.some((x) => x.origem === "montagem")) return { tipo: "montagem", violacoes: v }
+        if (!m.ok) return { tipo: "modelo", violacoes: v }
+        if (v.length > 0) {
+          return { tipo: "modelo", violacoes: emTermosDaEscolha(v, escolha, m.entrega) }
+        }
+        return { tipo: "ok", entrega: m.entrega }
       },
     )
-    if (violacoes.length > 0) {
-      for (const v of violacoes) {
-        ctx.telemetry.contador("ritu_validacao_violacoes_total", { violacao: v.codigo })
-      }
+    if (conferida.tipo === "montagem") {
+      return { tipo: "encerrar", codigo: "montagem", resumo: "erro_de_montagem" }
+    }
+    if (conferida.tipo === "modelo") {
+      const { violacoes } = conferida
       return {
         tipo: "recusar",
         resultado: { entregue: false, violacoes },
@@ -63,7 +78,7 @@ export const finalizar: ToolDeControle<EntregaDoModelo> = {
       }
     }
     const propostas = propostasDoAgente(estado.mensagens)
-    const saida = completarSaida(entrada, dados, ctx.kb)
+    const saida = completarSaida(conferida.entrega, dados, ctx.kb)
     return {
       tipo: "entregar",
       resumo: resumoDaValidacao([]),

@@ -93,6 +93,14 @@ const finalizarResumo: ToolDeControle<unknown> = {
     return { tipo: "recusar", resultado: { entregue: false }, resumo: "a,b" }
   },
 }
+const encerrar: ToolDeControle<unknown> = {
+  name: "encerrar",
+  description: "encerra com erro",
+  input: z.object({}),
+  async tratar() {
+    return { tipo: "encerrar", codigo: "montagem", resumo: "erro_de_montagem" }
+  },
+}
 const aprovar: ToolDeControle<unknown> = {
   name: "aprovar",
   description: "aprovação",
@@ -107,7 +115,7 @@ const agente: DefinicaoDoAgente = {
   instrucoes: "instr",
   prompt_versao: "v1",
   tools: [toolA, toolB, toolQuebra, toolGrande, toolComResumo] as never,
-  controle: [finalizar, perguntar, perguntarComResumo, finalizarResumo, aprovar],
+  controle: [finalizar, perguntar, perguntarComResumo, finalizarResumo, encerrar, aprovar],
   lembreteDeEntrega: "entregue por finalizar",
 }
 
@@ -456,6 +464,15 @@ describe("executarTrecho", () => {
     expect(m.etapas.filter((e) => e.tipo === "validacao").map((e) => e.resumo)).toEqual([
       "a,b",
       null,
+    ])
+  })
+
+  it("controle encerrar fecha o trecho com erro e a etapa validacao falhou", async () => {
+    const m = montar([{ chamadas: [{ nome: "encerrar", argumentos: {} }] }])
+    const { fim } = await executarTrecho(agente, inicio(), ctx, m.deps)
+    expect(fim).toEqual({ tipo: "erro", codigo: "montagem" })
+    expect(m.etapas.filter((e) => e.tipo === "validacao")).toEqual([
+      expect.objectContaining({ nome: "encerrar", status: "falhou", resumo: "erro_de_montagem" }),
     ])
   })
 

@@ -94,6 +94,10 @@ function despachoDeControle(r: ResultadoDeControle, nome: string): Despacho {
   if (r.tipo === "recusar") {
     return despacho("validacao", nome, "recusado", r.resultado, r.resumo?.slice(0, RESUMO_MAX), r)
   }
+  if (r.tipo === "encerrar") {
+    const resultado = { erro: r.codigo }
+    return despacho("validacao", nome, "falhou", resultado, r.resumo?.slice(0, RESUMO_MAX), r)
+  }
   const tipo = r.pendencia.tipo === "pergunta" ? "pergunta" : "proposta"
   return despacho(tipo, nome, "ok", null, r.resumo?.slice(0, 80), r)
 }
@@ -179,6 +183,7 @@ function aplicarControle(
 ): FimDoTrecho | undefined {
   const c = d.controle
   if (c?.tipo === "entregar") return { tipo: "entregue", saida: c.saida }
+  if (c?.tipo === "encerrar") return { tipo: "erro", codigo: c.codigo }
   if (c?.tipo === "recusar") amb.estado.entregas_recusadas += 1
   if (c?.tipo !== "pausar") return undefined
   amb.deps.telemetry.evento("pausa", { "pausa.tipo": c.pendencia.tipo })

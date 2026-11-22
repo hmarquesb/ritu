@@ -276,6 +276,20 @@ describe("criarFimDoRun.tratar · resposta_segura", () => {
     expect(motivos(m.telemetry)).toEqual(["indisponivel"])
   })
 
+  it("erro de montagem loga montagem e fecha o run como failed", async () => {
+    const m = await montar()
+    const r = await m.fim.tratar(
+      m.conta.id,
+      { run: m.run, fim: { tipo: "erro", codigo: "montagem" } },
+      m.dados,
+      m.perfil,
+      {},
+    )
+    expect(motivos(m.telemetry)).toEqual(["montagem"])
+    expect(r).toMatchObject({ fim: "erro", motivo: "montagem" })
+    expect(r.saida?.origem).toBe("segura")
+  })
+
   it("pausa com conteúdo inválido loga pausa_invalida", async () => {
     const m = await montar()
     await m.fim.tratar(m.conta.id, m.pausa({ origem: "desconhecida" }), m.dados, m.perfil, {})

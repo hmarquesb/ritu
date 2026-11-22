@@ -127,4 +127,11 @@ export const cenariosDeTelemetria: Record<string, CenarioDeConversa> = {
 }
 
 export { type DepsDoCenario, montarCenario, type OpcoesDoCenario } from "./montar"
-export { type RodadaDoCenario, rodarCenario } from "./rodar"
+export { type OpcoesDaRodada, type RodadaDoCenario, rodarCenario } from "./rodar"
+export {
+  containerDoCenario,
+  type PassoDeRota,
+  type RodadaPelasRotas,
+  RotaFalhouError,
+  rodarCenarioPelasRotas,
+} from "./rotas"

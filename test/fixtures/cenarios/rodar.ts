@@ -36,7 +36,7 @@ export type RodadaDoCenario = {
   depois?: RodadaDoCenario
 }
 
-type OpcoesDaRodada = {
+export type OpcoesDaRodada = {
   aoVivo?: (e: EventoAoVivo) => void
   responder?: (p: Pergunta, i: number) => Promise<RespostaDaPessoa>
   // Decide o bloco de aprovação (ids aprovados); tem prioridade sobre `c.aprovacao`.

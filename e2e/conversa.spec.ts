@@ -459,7 +459,21 @@ for (const tema of TEMAS) {
       await usarTema(context, tema)
       await entrarNaDemo(page)
       await enviarTexto(page, MSG_PERGUNTA_CASA)
-      await expect(page.getByRole("radiogroup", { name: "Couve" })).toBeVisible()
+      const grupo = page.getByRole("radiogroup", { name: "Couve" })
+      await expect(grupo).toBeVisible()
+      // A lista rola com animação até a pergunta: o axe só roda com a rolagem parada e o grupo
+      // inteiro acima do painel fixo (alvo parcialmente coberto falha o target-size).
+      await esperarRolagemParar(page)
+      await expect
+        .poll(() =>
+          grupo.evaluate((el) => {
+            const painel = document.querySelector("textarea")?.closest(".sticky")
+            const topo = painel ? painel.getBoundingClientRect().top : window.innerHeight
+            return el.getBoundingClientRect().bottom <= topo
+          }),
+        )
+        .toBe(true)
+      await esperarRolagemParar(page)
       await expectSemViolacoes(page)
     })
 

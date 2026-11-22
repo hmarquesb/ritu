@@ -282,7 +282,7 @@ async function interrompida(
   return 2
 }
 
-/** Rodada completa: relatório, JSON, histórico e comparação; só então apaga o andamento. */
+/** Rodada completa: relatório, JSON, histórico e comparação; só então apaga o andamento, se não há inconclusivos. */
 async function concluir(
   o: Opcoes,
   total: number,
@@ -335,8 +335,13 @@ async function concluir(
     )
     return 1
   }
-  await io.apagar(arquivoDoAndamento(cp))
   io.log(`Relatório gravado em ${relatorioDo(cp)}`)
+  const inconclusivos = resultados.filter((r) => r.estado === "inconclusivo").length
+  if (inconclusivos > 0) {
+    io.log(`${inconclusivos} inconclusivos: rode de novo com --retomar para refazê-los.`)
+    return 0
+  }
+  await io.apagar(arquivoDoAndamento(cp))
   return 0
 }
 

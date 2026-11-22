@@ -396,6 +396,71 @@ describe("executarComando: rodada completa", () => {
   })
 })
 
+describe("executarComando: inconclusivos mantêm o andamento", () => {
+  const DICA_DE_INCONCLUSIVOS = (n: number): string =>
+    `${n} inconclusivos: rode de novo com --retomar para refazê-los.`
+
+  function inconclusivo(c: CasoDeEval): CasoRodado {
+    const r = rodado(c, false)
+    return {
+      ...r,
+      resultado: { ...r.resultado, estado: "inconclusivo", inconclusivo: "sem_etapas" },
+    }
+  }
+
+  it("rodada com um inconclusivo mantém o andamento e imprime a dica", async () => {
+    const io = criarIo({
+      rodarCaso: async (c) => (c.id === IDS_C1[0] ? inconclusivo(c) : rodado(c)),
+    })
+    expect(await executarComando(["--checkpoint", "c1-base"], io)).toBe(0)
+    expect(io.arquivos.has(ANDAMENTO)).toBe(true)
+    expect(io.logs).toContain(DICA_DE_INCONCLUSIVOS(1))
+    expect(io.logs.filter((l) => l.includes("inconclusivos:"))).toHaveLength(1)
+  })
+
+  it("rodada sem inconclusivo apaga o andamento e não imprime a dica", async () => {
+    const io = criarIo()
+    expect(await executarComando(["--checkpoint", "c1-base"], io)).toBe(0)
+    expect(io.arquivos.has(ANDAMENTO)).toBe(false)
+    expect(io.logs.some((l) => l.includes("inconclusivos"))).toBe(false)
+  })
+
+  it("retomada que zera os inconclusivos apaga o andamento e deixa uma só entrada no histórico", async () => {
+    const primeira = criarIo({
+      rodarCaso: async (c) =>
+        c.id === IDS_C1[0] || c.id === IDS_C1[1] ? inconclusivo(c) : rodado(c),
+    })
+    expect(await executarComando(["--checkpoint", "c1-base"], primeira)).toBe(0)
+    expect(primeira.arquivos.has(ANDAMENTO)).toBe(true)
+
+    const retomada = criarIo({ arquivos: Object.fromEntries(primeira.arquivos) })
+    expect(await executarComando(["--checkpoint", "c1-base", "--retomar"], retomada)).toBe(0)
+    expect(retomada.chamados).toEqual([IDS_C1[0], IDS_C1[1]])
+    expect(retomada.arquivos.has(ANDAMENTO)).toBe(false)
+    expect(retomada.logs.some((l) => l.includes("inconclusivos"))).toBe(false)
+    const historico = JSON.parse(retomada.arquivos.get(HISTORICO) ?? "{}")
+    expect(historico.checkpoints).toHaveLength(1)
+    expect(historico.checkpoints[0].casos).toBe(12)
+  })
+
+  it("retomada com inconclusivo que continua mantém o andamento e não duplica a rodada", async () => {
+    const primeira = criarIo({
+      rodarCaso: async (c) => (c.id === IDS_C1[0] ? inconclusivo(c) : rodado(c)),
+    })
+    expect(await executarComando(["--checkpoint", "c1-base"], primeira)).toBe(0)
+
+    const retomada = criarIo({
+      arquivos: Object.fromEntries(primeira.arquivos),
+      rodarCaso: async (c) => inconclusivo(c),
+    })
+    expect(await executarComando(["--checkpoint", "c1-base", "--retomar"], retomada)).toBe(0)
+    expect(retomada.arquivos.has(ANDAMENTO)).toBe(true)
+    expect(retomada.logs).toContain(DICA_DE_INCONCLUSIVOS(1))
+    const historico = JSON.parse(retomada.arquivos.get(HISTORICO) ?? "{}")
+    expect(historico.checkpoints).toHaveLength(1)
+  })
+})
+
 describe("executarComando: interrompida", () => {
   it("SemModeloError sai com 2, imprime a linha exata e não grava relatório", async () => {
     let n = 0

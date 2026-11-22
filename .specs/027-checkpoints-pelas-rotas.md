@@ -1,6 +1,7 @@
 ---
 title: Checkpoints pelas rotas do site (c4-site e c5-publico)
-status: approved
+status: implemented
+implemented: 87a2bc2
 entrega: 4
 created: 2026-11-22
 ---

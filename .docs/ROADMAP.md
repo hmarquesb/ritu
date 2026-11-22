@@ -9,7 +9,7 @@ Entrega 1 (001 a 007) aprovada no portão 1, com a tag `entrega-1`. Entrega 2 (0
 Portão 3 aprovado com correções em 2026-11-22, com a conferência do roteiro adiada para depois da entrega 4 (`.plans/entrega-3-relatorio.md`). Rodada `c3-confiavel` com o `acompanhante.v8` retomada: 85/86, 1 inconclusivo, 13 metas abaixo (só avisam).
 
 **Próximos passos, na ordem:**
-1. Construir a 027, a 023 e a 024, nessa ordem (`/construir-entrega 4`), e fechar a entrega 4 com o `c5-publico` (pelas rotas, spec 027) e o `npm run readme` → portão 4. O `c4-site` fica registrado e não é rodado.
+1. Spec 027 implementada (ADR 0053): `c4-site` e `c5-publico` registrados com alvo `rotas`. Construir a 023 e a 024, nessa ordem (`/construir-entrega 4`), e fechar a entrega 4 com o `c5-publico` (pelas rotas, spec 027) e o `npm run readme` → portão 4. O `c4-site` fica registrado e não é rodado.
 2. A dona confere os roteiros do portão 3 e do portão 4.
 3. Rodada de correções: problemas dos dois portões e metas abaixo.
 

@@ -401,6 +401,8 @@
 
 ## 022 · A2 · `c5-publico` adiado
 
+> Resolvida pela spec 027: `c5-publico` registrado com as pastas do `c3-confiavel` e alvo `rotas`.
+
 - **Faltava:** a spec manda registrar o `c5-publico` com os mesmos casos e o mesmo alvo do `c4-site`, mas o `c4-site` ainda não existe em `evals/llm/checkpoints.ts`: ele nasce no fechamento da entrega 3.
 - **Decidido:** o registro do `c5-publico` fica para a junção com o `c4-site`; o resto da 022 segue.
 - **Por quê:** copiar um checkpoint que não existe obrigaria a inventar o alvo.
@@ -485,6 +487,8 @@
 
 ## Fechamento da entrega 3 · J-A5 · `c4-site` não rodado
 
+> Resolvida pela spec 027: `c4-site` registrado (alvo `rotas`), sem rodada; a entrega 4 fecha com o `c5-publico`.
+
 - **Faltava:** `QA.md` põe o checkpoint `c4-site` ("todas as famílias, pelas rotas reais do site") no fim da entrega 3, mas ele não existe em `evals/llm/checkpoints.ts`, e nenhuma spec da entrega 3 o cria (022 A2 já esperava por ele).
 - **Decidido:** o portão 3 vai com a rodada nova do `c3-confiavel` (2026-11-22, mesmos casos, pelo `conversar`). O `c4-site` e o `c5-publico` ficam para uma tarefa ou spec própria, a decidir no portão.
 - **Por quê:** criar um checkpoint pede escolher o alvo (rotas reais × `conversar`) e as metas: decisão de produto, não de junção. E a cota do dia já foi para o `c3`.
@@ -507,3 +511,23 @@
 - **Decidido:** `para_ter: z.boolean().optional()`; só `true` menciona, `false` vale como omitido (T14).
 - **Por quê:** a intenção da spec (mencionar ou não é julgamento do agente) fica igual; o literal só tirava do modelo um jeito natural de dizer "não".
 - **Como desfazer:** voltar ao `z.literal(true).optional()`.
+
+## 027 A1 · Acompanhante pelas rotas
+
+- **Faltava:** os casos de acompanhante (c1) entram por `entrada` estruturada, e nenhuma rota a recebe; a spec proíbe rota nova e mudança de handler.
+- **Decidido:** pelas rotas, a primeira chamada desses casos segue em `companion.responder` (sem passo de rota); as pausas passam pela rota de resposta. Caso sem passo de rota não tem checagem `rota` e fica fora do "M" de "Fluxo pelas rotas". Toque de gosto em item que não é alimento também vai direto (a rota de preferências só recebe alimento).
+- **Por quê:** é o mais conservador: não muda caso, prompt, handler nem rota.
+- **Desfazer:** converter os casos c1 em mensagem (muda o caso) ou criar rota de entrada estruturada (spec nova).
+
+## 027 A2 · Rota com status diferente de 200
+
+- **Faltava:** o que fazer com a rodada quando uma rota responde erro no meio.
+- **Decidido:** a rodada para com `RotaFalhouError` (passos até ali); o caso fica `falhou`, nunca inconclusivo, com as expectativas não cumpridas e a checagem de status falsa.
+- **Por quê:** a spec trata 429 e run aberto como falha de ligação; sem `final` não há o que conferir.
+- **Desfazer:** seguir a rodada com o que veio e checar só o que der.
+
+## 027 A3 · Run conferido nas checagens de rota
+
+- **Faltava:** com segunda mensagem há dois runs; a checagem de `run_id` e de texto recebe um só.
+- **Decidido:** valem para a primeira parte da rodada (da mensagem até antes da segunda mensagem), que é o run que o caso avalia.
+- **Desfazer:** passar os dois runs a `checagensDeRota`.

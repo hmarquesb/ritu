@@ -89,3 +89,17 @@ Plano em `.plans/025-chas-hibridos-plan.md`. Na `main`.
 | T11 · Close spec 025 | concluida | (commit de docs) |
 
 > 025 fechada em 2026-11-17 na `main`: gates 1 a 6, `dup` (0 clones), `base:check -- --producao` e `test:db` verdes (3433 testes, 1452 casos det, 187 e2e). ADR 0049. Decisões 025 A1 a A3. Pendente: push (o job `deploy` aplica a `0005` em produção) e a rodada nova do `c3-confiavel` com `c3-s23`/`c3-s24`.
+
+## 027 · Checkpoints pelas rotas
+
+Plano em `.plans/027-checkpoints-pelas-rotas-plan.md`. Na `main` (entrega 4, depois do portão 3). Branch `entrega-4` já juntada (sem commit além da `main`).
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Give each checkpoint a target and register c4-site and c5-publico | concluida | 81ad2fd |
+| T2 · Run a scenario through the site route handlers | concluida | 14c274e |
+| T3 · Add the route checks list and the target lines to the report | concluida | 4c6f61b |
+| T4 · Run the run cases through the routes and check the route flow | concluida | 340784a |
+| T5 · Pick the case runner by the checkpoint target | concluida | 87a2bc2 |
+
+> 027 fechada em 2026-11-22 na `main`: ADR 0053; decisões 027 A1 a A3; 022 A2 e J-A5 resolvidas. `c5-publico` fica para o fechamento da entrega 4, depois da 024.

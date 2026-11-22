@@ -193,3 +193,17 @@ Decisões do plano (registradas em `DECISOES-AUTONOMAS.md`, 027 A1 a A3):
 | 3 | T5 | Liga tudo no comando e no script; toca `comando.ts` e `casos.ts`, de T1 |
 
 Fechamento (orquestrador): gates 1 a 6 e `dup`; `QA.md` (tabela de checkpoints); `DECISOES-AUTONOMAS.md` (022 · A2 e J-A5 resolvidas, 027 A1 a A3); ADR do alvo `rotas`; `AGENTS.md` (comando `eval:llm` com o alvo); spec `implemented`.
+
+### T6 · Keep the route flush off in the scenario container (correção)
+- nivel: nucleo
+- objetivo: a rodada pelas rotas não chama o `after()` do Next fora de uma requisição quando o ambiente tem a telemetria ligada.
+- arquivos: `test/fixtures/cenarios/rotas.ts`, `test/fixtures/cenarios/rotas.test.ts`
+- depende de: T2
+- leitura: nenhuma
+- skills: nenhuma
+- contexto: a fumaça `npm run eval:llm -- --checkpoint c5-publico --caso c2-p01-frio-so-incertos` falhou com "`after` was called outside a request scope" em `descarregarDepois` (`src/app/_apoio/descarregar.ts`), chamado no `finally` de `criarRotaDeFluxo` (`src/app/_lib/fluxo.ts:104`). `descarregarDepois` só agenda se `container.telemetriaLigada`; o `containerDoCenario` usa `createContainer(...)`, que liga a flag pelo ambiente (`OTEL_EXPORTER_OTLP_ENDPOINT`). No eval, quem descarrega a telemetria é o próprio script, no fim (`container.encerrar()` de `scripts/eval-llm.ts`).
+- contratos: `containerDoCenario(deps).container.telemetriaLigada === false` sempre, qualquer que seja o ambiente. Não mude `src/`.
+- testes primeiro: com `vi.stubEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")`, `containerDoCenario(deps).container.telemetriaLigada` é `false`, e uma rodada de um cenário de conversa por `rodarCenarioPelasRotas` termina sem lançar.
+- comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npx vitest run test/fixtures/cenarios`
+- pronto quando: testes verdes; nenhum arquivo de `src/` mudou.
+- fora: `src/`, `scripts/`.

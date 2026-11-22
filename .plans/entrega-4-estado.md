@@ -103,3 +103,9 @@ Plano em `.plans/027-checkpoints-pelas-rotas-plan.md`. Na `main` (entrega 4, dep
 | T5 · Pick the case runner by the checkpoint target | concluida | 87a2bc2 |
 
 > 027 fechada em 2026-11-22 na `main`: ADR 0053; decisões 027 A1 a A3; 022 A2 e J-A5 resolvidas. `c5-publico` fica para o fechamento da entrega 4, depois da 024.
+
+| Tarefa (027, correção) | Status | Commit |
+|---|---|---|
+| T6 · Keep the route flush off in the scenario container | concluida | 293e8f8 |
+
+> Fumaça ⚠️ do fechamento da 027 (2026-11-22): `--checkpoint c5-publico --caso c2-p01-frio-so-incertos` acertou, com pausa pela rota de resposta e as 5 checagens `rota` ok. A 1ª tentativa achou o `after()` do Next fora de requisição (telemetria ligada pelo ambiente): corrigido na T6.

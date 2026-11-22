@@ -13,7 +13,7 @@ ROTAS DO SERVIDOR (Next.js na Vercel)
    ├── POST /api/runs/:id/continue    resposta a uma pergunta do agente
    ├── POST /api/runs/:id/approve     aprovação das propostas → executor em código
    ├── toques (sem LLM): retorno, trocar ingrediente, gosto, casa, 👍/👎
-   └── perfil, cidade, quiz, o que sei sobre você, bastidores (sem LLM)
+   └── Você (perfil, memória), cidade, quiz, bastidores (sem LLM)
           │
           ▼
    INTÉRPRETE (intenções) → o código escolhe o caminho
@@ -107,24 +107,31 @@ O run segue até o fim mesmo que a pessoa saia da tela: a rota não liga o `requ
 
 | Ação | Rota | O que grava |
 |---|---|---|
-| Retorno com um toque | `POST /api/retornos/:id` | `retornos` e o contador em `preferencias` |
+| Retorno com um toque | `POST /api/retornos/:id` | `retornos` e o contador em `preferencias`. Devolve o retorno e quantos ainda esperam; retorno já respondido volta como está |
 | Trocar ingrediente | `POST /api/runs/:id/troca` | A sugestão do run e o retorno dela, com o substituto e o motivo; confere as combinações com os outros itens. "Não tenho" e "Não gosto" também gravam a falta e o gosto |
 | Não gosto · Gosto | `POST /api/preferencias` | `preferencias` |
-| Não tenho · Ainda tenho · Sempre tenho · adicionar · tirar | `POST /api/casa` | `casa`. "Não tenho" também grava uma falta em `faltas`. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa` |
-| Tirar um item da lista "Para ter em casa" | `POST /api/lista` | `lista_ter_em_casa` |
+| Minha casa: adicionar (da base ou texto livre) · Ainda tenho · Acabou · Sempre tenho · tirar | `POST /api/casa` (`acao` em união discriminada) | `casa`. "Acabou" pela tela não grava falta. Registrar um alimento apaga as faltas dele e o tira de `lista_ter_em_casa`. Devolve a casa inteira (`CasaNaTela`) |
+| Pôr na lista ou tirar da lista "Para ter em casa" | `POST /api/lista` (`acao`: `por` ou `tirar`) | `lista_ter_em_casa`; `por` grava o motivo `pessoa`; `tirar` também apaga as faltas do alimento. Devolve a casa inteira |
+| Ler a casa · ler o que espera retorno | `GET /api/casa` · `GET /api/retornos` | Nada; devolvem `CasaNaTela` e `ComoFicouNaTela` |
 | 👍 / 👎 na resposta | `POST /api/runs/:id/voto` | `feedback` |
-| Confirmar ou recusar um padrão · apagar um padrão | `POST /api/padroes/:id` | `padroes` |
+| Ler "Você" (carta do dosha, fixos, memória por nível, conta) | `GET /api/voce` | Nada; devolve `VoceNaTela` |
+| Perfil: dosha · quiz · cidade · evitar sempre (acrescentar, tirar) · restrições · "não como" (acrescentar, tirar) | `POST /api/perfil` (`acao` em união discriminada: `dosha`, `quiz`, `cidade`, `evitar_acrescentar`, `evitar_tirar`, `restricoes`, `nao_come_acrescentar`, `nao_come_tirar`) | `perfis`. `evitar_tirar` só passa com `confirmado: true`. Devolve `Você` inteiro; o quiz devolve também o resultado |
+| Memória: gosto · esquecer um item · apagar falta · corrigir ou apagar nota de rotina · confirmar, recusar ou apagar padrão · apagar a conversa de um dia | `POST /api/memoria` (`acao` em união discriminada: `gosto`, `esquecer`, `falta_apagar`, `nota_corrigir`, `nota_apagar`, `padrao_decidir`, `padrao_apagar`, `conversa_apagar`) | `preferencias`, `faltas`, `rotina_notas`, `padroes`, `mensagens` e `runs.fora_da_conversa`. Devolve `Você` inteiro |
 
-Todo `POST` com conta, exceto `POST /api/runs`, é um toque e passa pelo limite de toques dentro de `criarRota` e `criarRotaDeFluxo`, pelo método e não por uma lista de rotas: depois da sessão, da conta e do corpo válidos, e antes de a função da rota rodar. Os `GET`, a limpeza e `/api/auth/*` não contam. Barrado: `429 { erro: "limite_toques" }` com `Retry-After` em segundos (até o próximo minuto ou até a meia-noite local) e nada gravado. Quem decide é `consumirToque`: tester segue; o minuto da conta é consumido antes do dia da conta e do IP, e cada consumo é atômico. As rotas só autenticam, validam a entrada e chamam funções do core, em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
+Todo `POST` com conta, exceto `POST /api/runs`, é um toque e passa pelo limite de toques dentro de `criarRota` e `criarRotaDeFluxo`, pelo método e não por uma lista de rotas: depois da sessão, da conta e do corpo válidos, e antes de a função da rota rodar. Os `GET`, a limpeza e `/api/auth/*` não contam. Barrado: `429 { erro: "limite_toques" }` com `Retry-After` em segundos (até o próximo minuto ou até a meia-noite local) e nada gravado. Quem decide é `consumirToque`: tester segue; o minuto da conta é consumido antes do dia da conta e do IP, e cada consumo é atômico. As rotas só autenticam, validam a entrada e chamam funções do core (a lógica de cada rota fica em `src/app/_rotas/`, e cada `route.ts` só liga as dependências reais), em `src/core/touches/` (ADR 0036). Todas recebem a `contaId` da sessão, rodam em transação e não chamam modelo:
 
 | Função | Rota | O que faz |
 |---|---|---|
 | `tocarRetorno(deps, contaId, retornoId, resultado)` | `/api/retornos/:id` | Fecha o retorno com origem `toque`. Retorno que não existe, é de outra conta ou já foi respondido: `toque_invalido` |
 | `tocarGosto(deps, contaId, item, gosto)` | `/api/preferencias` | Grava `gosta`, `nao_gosta` ou limpa (`null`). Item fora da base: `toque_invalido` |
+| `tocarCasa(deps, contaId, acao)` | `/api/casa` | Aplica a ação na casa. Item que não é da conta ou alimento fora da base: `toque_invalido`. Texto livre passa antes por `identificarAlimento` |
+| `tocarLista(deps, contaId, acao)` | `/api/lista` | Põe na lista com motivo `pessoa` (já na lista: não muda) ou tira e apaga as faltas. Alimento fora da base: `toque_invalido` |
+| `tocarPerfil(deps, contaId, acao)` | `/api/perfil` | Aplica a ação no perfil. Alimento fora da base ou tirar sem confirmação: `toque_invalido`. Conta uma edição de nível `fixos` |
+| `tocarMemoria(deps, contaId, acao)` | `/api/memoria` | Aplica a ação na memória. Apagar a conversa de um dia apaga as mensagens dele e tira os runs fechados dele da conversa (`fora_da_conversa`); fora dos últimos 7 dias: `toque_invalido`; com run aberto no dia: `conversa_em_andamento` |
 | `trocarIngrediente(deps, contaId, { runId, sugestao, alimento_id, motivo })` | `/api/runs/:id/troca` | Com motivo `trocar`, `nao_tenho` ou `nao_gosto`: anota o que o motivo pede e devolve `trocou` (com a sugestão nova), `perguntar` (com a pergunta sobre o substituto mais próximo) ou `sem_substituto` |
 | `responderTroca(deps, contaId, { runId, sugestao, alimento_id, candidato, resposta })` | `/api/runs/:id/troca/resposta` | Resposta `tenho` (registra em casa e troca) ou `nao_tenho` (anota a falta e devolve `sem_substituto`) |
 
-Rotina e padrões têm funções do core que as rotas de "O que sei sobre você" chamam, em `src/core/routine/` e `src/core/patterns/`. Também recebem a `contaId` da sessão e confirmam que o item é da conta; item que não existe ou não é dela: `nota_invalida` ou `padrao_invalido`.
+Rotina e padrões têm funções do core que `tocarMemoria` chama, em `src/core/routine/` e `src/core/patterns/`. Também recebem a `contaId` da sessão e confirmam que o item é da conta; item que não existe ou não é dela: `nota_invalida` ou `padrao_invalido`.
 
 | Função | O que faz |
 |---|---|
@@ -190,11 +197,11 @@ A montagem acontece num único composition root (`src/infra/container.ts`). O te
 | `rotina_resumos` | `conta_id`, `versao`, `texto` (até 1200 caracteres), `criado_em` |
 | `padroes` | `id`, `conta_id`, `tipo`, `chave`, `frase`, `ocorrencias`, `status` (candidato, confirmado, recusado), `criado_em`, `decidido_em`. Um por conta, tipo e chave |
 | `mensagens` | `id`, `conta_id`, `run_id`, `autor` (pessoa, agente), `texto`, `com_incomodo`, `dia`, `criado_em` (apagadas depois de 7 dias; as de run com incômodo, no dia seguinte) |
-| `runs` | `id`, `conta_id`, `caminho` (acompanhante, casa, retorno, evitar, ajuda, ofensa, alerta, fora, sem_modelo), `intencoes[]`, `status`, `checkpoint`, `pendencia` (pergunta com `origem` agente ou código e as anotações da mensagem), `momento` (campos estruturados, sem incômodo), `com_incomodo`, `clima_usado`, `saida`, `passos`, `tokens_entrada`, `tokens_saida`, `latencia_ms`, `modelos` (por papel), `trocas_de_modelo`, `prompt_versao`, `juiz_tentativas`, `juiz_aprovado`, `trace_id`, `dia`, `criado_em`, `atualizado_em`. No máximo um run aberto (`running`, `waiting_for_input`, `waiting_for_approval`) por conta |
+| `runs` | `id`, `conta_id`, `fora_da_conversa` (verdadeiro quando a pessoa apagou o dia: o run sai da conversa e fica só no rastro, sem texto), `caminho` (acompanhante, casa, retorno, evitar, ajuda, ofensa, alerta, fora, sem_modelo), `intencoes[]`, `status`, `checkpoint`, `pendencia` (pergunta com `origem` agente ou código e as anotações da mensagem), `momento` (campos estruturados, sem incômodo), `com_incomodo`, `clima_usado`, `saida`, `passos`, `tokens_entrada`, `tokens_saida`, `latencia_ms`, `modelos` (por papel), `trocas_de_modelo`, `prompt_versao`, `juiz_tentativas`, `juiz_aprovado`, `trace_id`, `dia`, `criado_em`, `atualizado_em`. No máximo um run aberto (`running`, `waiting_for_input`, `waiting_for_approval`) por conta |
 | `run_etapas` | `run_id`, `ordem`, `tipo`, `nome`, `resumo`, `status`, `duracao_ms`, `modelo`, `tokens_entrada`, `tokens_saida` |
 | `propostas` | `id`, `run_id`, `conta_id`, `tool`, `conteudo`, `decisao` (pendente, aprovada, recusada, expirada), `decidida_em` |
 | `faltas` | `conta_id`, `alimento_id`, `dia`, `origem` (teria_entrado, nao_tenho), `run_id`. Uma linha por conta, alimento e dia; apagadas depois de 30 dias |
-| `lista_ter_em_casa` | `conta_id`, `alimento_id`, `motivo` (faltou_hoje, fez_falta), `detalhe` (a sugestão de hoje, ou o número de faltas), `criado_em` |
+| `lista_ter_em_casa` | `conta_id`, `alimento_id`, `motivo` (faltou_hoje, fez_falta, pessoa), `detalhe` (a sugestão de hoje, ou o número de faltas), `criado_em` |
 | `feedback` | `run_id`, `conta_id`, `voto` (up, down), `criado_em`. Um voto por run |
 | `alimentos_desconhecidos` | `nome`, `vezes` (sem `conta_id`; candidatos a entrar na base) |
 | `llm_uso` | `modelo`, `janela` (minuto ou dia), `inicio`, `pedidos`, `tokens` |
@@ -230,6 +237,7 @@ src/
       chamada-de-apoio.ts    # a chamada do papel apoio, dividida por Intérprete e Juiz
       tools/                 # catálogo fechado: leitura, controle, escrita
       prompts/               # prompts versionados
+    como-pensei/             # linha-do-tempo.ts (frases por código a partir das etapas) e ler.ts (a leitura do run para a tela)
     runs/                    # estados, checkpoint, etapas, loop, caminhos por intenção, aprovação
     telemetry/               # porta Telemetry e nomes de spans e métricas
   infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth (Auth.js, token, IP em HMAC), otel
@@ -248,7 +256,7 @@ src/
     theme/                   # cookie ritu_theme e seletor de tema
     base/                    # componentes base sobre React Aria
     brand/                   # Logo e DoshaBlot
-    ritu/                    # telas do Ritu: abas.tsx (barra de navegação) e conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts)
+    ritu/                    # telas do Ritu: abas.tsx (barra de navegação), conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts), casa/ (Minha casa, use-casa.ts), como-ficou/, voce/ (carta do dosha, fixos, memória, conta) e como-pensei/ (a linha do tempo)
 config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas)
 public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
 scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts, env-producao.ts, painel-publicar.ts; ci-workflow.test.ts trava o workflow

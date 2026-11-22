@@ -1,50 +1,21 @@
 "use client"
 
+import { config } from "@config/index"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { enviarPasso } from "@/app/(comecar)/_lib/enviar-passo"
 import { Button } from "@/components/base/button"
 import { ToggleChip } from "@/components/base/chip"
-import { ComboBox, ComboBoxItem } from "@/components/base/combo-box"
 import { cx } from "@/components/cx"
+import { BuscaDeCidade } from "@/components/ritu/cidade/busca-de-cidade"
+import type { Cidade } from "@/components/ritu/cidade/use-busca-de-cidade"
 
 type Dosha = "vata" | "pitta" | "kapha"
 type Modo = "quiz" | "sei" | "adiar"
-type Cidade = {
-  nome: string
-  regiao?: string
-  pais: string
-  lat: number
-  lon: number
-  fuso: string
-}
-type Item = Cidade & { id: string }
-
 type Props = {
   opcoes: { quiz: string; sei: string; adiar: string }
   doshas: { id: Dosha; nome: string }[]
   cidade: { titulo: string; apoio: string }
-}
-
-const MINIMO_BUSCA = 2
-const rotuloDe = (c: Cidade) => [c.nome, c.regiao, c.pais].filter(Boolean).join(", ")
-const idDe = (c: Cidade) => `${c.lat},${c.lon}`
-
-type Resultado = { itens: Item[]; indisponivel: boolean }
-
-async function buscarCidades(termo: string, signal: AbortSignal): Promise<Resultado> {
-  try {
-    const resposta = await fetch(`/api/cidades?q=${encodeURIComponent(termo)}`, { signal })
-    if (resposta.status === 401) {
-      window.location.href = "/"
-      return { itens: [], indisponivel: false }
-    }
-    if (!resposta.ok) return { itens: [], indisponivel: true }
-    const { cidades } = (await resposta.json()) as { cidades: Cidade[] }
-    return { itens: cidades.map((c) => ({ ...c, id: idDe(c) })), indisponivel: false }
-  } catch {
-    return { itens: [], indisponivel: !signal.aborted }
-  }
 }
 
 function Opcao(props: {
@@ -77,55 +48,6 @@ function Opcao(props: {
   )
 }
 
-function useBuscaDeCidade() {
-  const [busca, setBusca] = useState("")
-  const [achadas, setAchadas] = useState<Item[]>([])
-  const [buscando, setBuscando] = useState(false)
-  const [indisponivel, setIndisponivel] = useState(false)
-  const [escolhida, setEscolhida] = useState<Item | null>(null)
-  const pedido = useRef(0)
-
-  useEffect(() => {
-    const termo = busca.trim()
-    if (escolhida || termo.length < MINIMO_BUSCA) {
-      setAchadas([])
-      setBuscando(false)
-      return
-    }
-    const numero = ++pedido.current
-    const controle = new AbortController()
-    setBuscando(true)
-    const espera = setTimeout(async () => {
-      const r = await buscarCidades(termo, controle.signal)
-      if (numero !== pedido.current) return
-      setAchadas(r.itens)
-      setIndisponivel(r.indisponivel)
-      setBuscando(false)
-    }, 250)
-    return () => {
-      clearTimeout(espera)
-      controle.abort()
-    }
-  }, [busca, escolhida])
-
-  function digitar(valor: string) {
-    setBusca(valor)
-    if (escolhida && valor !== rotuloDe(escolhida)) setEscolhida(null)
-  }
-  function escolher(id: string | number | null) {
-    const achada = achadas.find((c) => c.id === id)
-    if (!achada) return
-    setEscolhida(achada)
-    setBusca(rotuloDe(achada))
-  }
-  function limpar() {
-    setEscolhida(null)
-    setBusca("")
-    setAchadas([])
-  }
-  return { busca, achadas, buscando, indisponivel, escolhida, digitar, escolher, limpar }
-}
-
 export function EscolherDosha({ opcoes, doshas, cidade }: Props) {
   const router = useRouter()
   const [modo, setModo] = useState<Modo | null>(null)
@@ -133,7 +55,7 @@ export function EscolherDosha({ opcoes, doshas, cidade }: Props) {
   const [mistos, setMistos] = useState<Dosha[]>([])
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState(false)
-  const c = useBuscaDeCidade()
+  const [escolhida, setEscolhida] = useState<Cidade | null>(null)
 
   const doshaPronto =
     modo === "quiz" ||
@@ -158,7 +80,6 @@ export function EscolherDosha({ opcoes, doshas, cidade }: Props) {
     if (enviando || !doshaPronto) return
     setEnviando(true)
     setErro(false)
-    const { escolhida } = c
     const corpo = {
       dosha: valorDoDosha(),
       cidade: escolhida
@@ -247,38 +168,12 @@ export function EscolherDosha({ opcoes, doshas, cidade }: Props) {
           </h2>
           <p className="text-prose text-ink-muted">{cidade.apoio}</p>
         </div>
-        <ComboBox<Item>
-          label="Buscar cidade"
-          emptyText={
-            c.busca.trim().length < MINIMO_BUSCA
-              ? `Digite ${MINIMO_BUSCA} letras ou mais`
-              : "Nenhuma cidade encontrada"
-          }
-          isLoading={c.buscando}
-          items={c.achadas}
-          inputValue={c.busca}
-          onInputChange={c.digitar}
-          selectedKey={c.escolhida?.id ?? null}
-          onSelectionChange={c.escolher}
-          menuTrigger="input"
-        >
-          {(item) => <ComboBoxItem id={item.id}>{rotuloDe(item)}</ComboBoxItem>}
-        </ComboBox>
-        {c.indisponivel && !c.escolhida ? (
-          <p role="status" className="text-sm text-ink-muted">
-            Não consegui buscar a cidade agora. Você pode seguir sem ela.
-          </p>
-        ) : null}
-        <div>
-          <Button variant="quiet" size="sm" onPress={c.limpar}>
-            Pular a cidade
-          </Button>
-        </div>
+        <BuscaDeCidade aoMudar={setEscolhida} comPular />
       </section>
 
       {erro ? (
         <p role="alert" className="text-sm text-danger">
-          Não consegui salvar agora. Suas escolhas continuam aqui; toque de novo para tentar.
+          {config.textosEntrada.componentes.erroSalvar}
         </p>
       ) : null}
 

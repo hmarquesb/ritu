@@ -70,6 +70,7 @@ const run: Run = {
   juiz_aprovado: true,
   trace_id: null,
   dia: "2026-06-15",
+  fora_da_conversa: false,
   criado_em: AGORA,
   atualizado_em: AGORA,
 }

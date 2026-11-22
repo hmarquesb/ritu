@@ -85,6 +85,14 @@ const perguntarComResumo: ToolDeControle<unknown> = {
     }
   },
 }
+const finalizarResumo: ToolDeControle<unknown> = {
+  name: "finalizar_resumo",
+  description: "recusa com resumo",
+  input: z.object({}),
+  async tratar() {
+    return { tipo: "recusar", resultado: { entregue: false }, resumo: "a,b" }
+  },
+}
 const aprovar: ToolDeControle<unknown> = {
   name: "aprovar",
   description: "aprovação",
@@ -99,7 +107,7 @@ const agente: DefinicaoDoAgente = {
   instrucoes: "instr",
   prompt_versao: "v1",
   tools: [toolA, toolB, toolQuebra, toolGrande, toolComResumo] as never,
-  controle: [finalizar, perguntar, perguntarComResumo, aprovar],
+  controle: [finalizar, perguntar, perguntarComResumo, finalizarResumo, aprovar],
   lembreteDeEntrega: "entregue por finalizar",
 }
 
@@ -437,6 +445,18 @@ describe("executarTrecho", () => {
     const sem = montar([{ chamadas: [{ nome: "perguntar", argumentos: {} }] }])
     await executarTrecho(agente, inicio(), ctx, sem.deps)
     expect(sem.etapas.find((e) => e.tipo === "pergunta")?.resumo).toBeNull()
+  })
+
+  it("o resumo de entregar e de recusar vai para a etapa validacao", async () => {
+    const m = montar([
+      { chamadas: [{ nome: "finalizar_resumo", argumentos: {} }] },
+      { chamadas: [fin] },
+    ])
+    await executarTrecho(agente, inicio(), ctx, m.deps)
+    expect(m.etapas.filter((e) => e.tipo === "validacao").map((e) => e.resumo)).toEqual([
+      "a,b",
+      null,
+    ])
   })
 
   it("resume com 80 caracteres no máximo", async () => {

@@ -160,6 +160,7 @@ export type RunRow = {
   juiz_aprovado: boolean | null
   trace_id: string | null
   dia: string
+  fora_da_conversa: boolean
   criado_em: Date
   atualizado_em: Date
 }
@@ -348,6 +349,7 @@ export function runDe(row: RunRow): Run {
     juiz_aprovado: row.juiz_aprovado,
     trace_id: row.trace_id,
     dia: row.dia,
+    fora_da_conversa: row.fora_da_conversa,
     criado_em: row.criado_em.toISOString(),
     atualizado_em: row.atualizado_em.toISOString(),
   }

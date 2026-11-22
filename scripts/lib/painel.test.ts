@@ -56,6 +56,16 @@ describe("painel do Grafana gerado", () => {
     expect(desconhecidas).toEqual([])
   })
 
+  it("a linha do agente tem os painéis de edição da memória e de contas apagadas", () => {
+    const linhaDoAgente = PAINEL.linhas.find((linha) => linha.titulo === "2. Agente")
+    const titulos = linhaDoAgente?.paineis.map((painel) => painel.titulo) ?? []
+    expect(titulos).toContain("Edições da memória pela pessoa")
+    expect(titulos).toContain("Contas apagadas")
+    const expressoes = consultasDoPainel.join("\n")
+    expect(expressoes).toContain("ritu_memoria_edicoes_total")
+    expect(expressoes).toContain("ritu_conta_apagada_total")
+  })
+
   it("toda expressão de alerta só cita métricas de METRICAS", () => {
     const desconhecidas = expressoesDeAlerta
       .flatMap(seriesCitadas)

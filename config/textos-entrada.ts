@@ -17,6 +17,7 @@ export const textosEntrada = {
     demo_limite_global: "As demonstrações de hoje acabaram. Entre com Google ou volte amanhã.",
     demo_expirou: "Sua demonstração expirou. Você pode abrir outra.",
     erro_google: "Não consegui entrar com o Google agora. Tente de novo.",
+    dados_apagados: "Seus dados foram apagados.",
   },
   avisoInicial: {
     titulo: "Antes de começar",
@@ -58,6 +59,33 @@ export const textosEntrada = {
   quiz: {
     progresso: "Pergunta {n} de 8",
     resultado: "Seu dosha é {nome}",
+  },
+  componentes: {
+    buscaMinima: "Digite {n} letras ou mais",
+    erroSalvar:
+      "Não consegui salvar agora. Suas escolhas continuam aqui; toque de novo para tentar.",
+    evitar: {
+      grupos: "Grupos de alimentos",
+      buscar: "Buscar um alimento",
+      nenhumAlimento: "Nenhum alimento encontrado",
+      outro: "Outro alimento",
+      adicionar: "Adicionar",
+      escolhidos: "Escolhidos ({n} de {max})",
+      nadaEscolhido: "Nada escolhido ainda.",
+    },
+    cidade: {
+      buscar: "Buscar cidade",
+      nenhuma: "Nenhuma cidade encontrada",
+      indisponivel: "Não consegui buscar a cidade agora. Você pode seguir sem ela.",
+      pular: "Pular a cidade",
+    },
+    quiz: {
+      erro: "Não consegui calcular agora. Suas respostas continuam aqui; toque de novo para tentar.",
+      voltar: "Voltar",
+      proxima: "Próxima",
+      verResultado: "Ver resultado",
+      continuar: "Continuar",
+    },
   },
   faixa: {
     botao: "Criar meu perfil",

@@ -31,6 +31,7 @@ function run(over: Partial<Run> = {}): Run {
     juiz_aprovado: null,
     trace_id: null,
     dia: "2026-06-15",
+    fora_da_conversa: false,
     criado_em: ha(5),
     atualizado_em: ha(5),
     ...over,

@@ -3,12 +3,14 @@ export type AvisoDaEntrada =
   | "demo_limite_global"
   | "demo_expirou"
   | "erro_google"
+  | "dados_apagados"
 
 const AVISOS: readonly AvisoDaEntrada[] = [
   "demo_limite_ip",
   "demo_limite_global",
   "demo_expirou",
   "erro_google",
+  "dados_apagados",
 ]
 
 // Estado da tela de entrada. Teto global atingido força o aviso de limite global; aviso desconhecido é ignorado;

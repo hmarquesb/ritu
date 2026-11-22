@@ -14,7 +14,7 @@ import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 import { createScriptedRuntime, type PassoRoteirizado } from "@/infra/fakes/scripted-runtime"
-import { finalizar } from "./finalizar"
+import { finalizar, resumoDaValidacao } from "./finalizar"
 import { listaPropor, memoriaPropor } from "./propostas"
 
 const kb = createMiniKnowledge()
@@ -191,6 +191,19 @@ describe("finalizar", () => {
     )
     const span = telemetry.spans.find((s) => s.nome === "validacao")
     expect(span?.atributos["validacao.ok"]).toBe(false)
+  })
+
+  it("o resumo da validação é ok ao aprovar e os códigos ao recusar", async () => {
+    const ok = await finalizar.tratar(entrega(), ctx().c, estado())
+    const no = await finalizar.tratar(entrega({ resposta: "" }), ctx().c, estado())
+    expect(ok.tipo === "entregar" && ok.resumo).toBe("ok")
+    expect(no.tipo === "recusar" && no.resumo).toBe("tamanho")
+  })
+
+  it("resumoDaValidacao tira repetidas e mantém a ordem", () => {
+    const v = ["fora_de_casa", "evitar_sempre", "fora_de_casa"].map((codigo) => ({ codigo }))
+    expect(resumoDaValidacao(v)).toBe("fora_de_casa,evitar_sempre")
+    expect(resumoDaValidacao([])).toBe("ok")
   })
 
   it("clima ok mais recente vale para as qualidades; sem ele a entrega é recusada", async () => {

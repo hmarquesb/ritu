@@ -110,6 +110,37 @@ export function messagesContract(make: () => Promise<ContractEnv> | ContractEnv)
       expect((await messages.doDia(a, DIA)).map((m) => m.texto)).toEqual(["incomodo de hoje"])
     })
 
+    it("contarPorDia conta as mensagens de cada dia desde a data, do mais recente, só dias com mensagem", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { messages } = env.stores
+      await messages.gravar(a, entrada("hoje 1"))
+      await messages.gravar(a, entrada("hoje 2", { autor: "agente" }))
+      await messages.gravar(a, entrada("dia 10", { dia: "2026-01-10" }))
+      await messages.gravar(a, entrada("dia 05", { dia: "2026-01-05" }))
+      await messages.gravar(b, entrada("de outra conta"))
+
+      expect(await messages.contarPorDia(a, "2026-01-10")).toEqual([
+        { dia: DIA, total: 2 },
+        { dia: "2026-01-10", total: 1 },
+      ])
+      expect(await messages.contarPorDia(a, DIA)).toEqual([{ dia: DIA, total: 2 }])
+      expect(await messages.contarPorDia(b, "2026-01-01")).toEqual([{ dia: DIA, total: 1 }])
+    })
+
+    it("apagarDoDia apaga só as mensagens da conta no dia e devolve a contagem", async () => {
+      const { a, b } = await criarDuasContas(env.stores)
+      const { messages } = env.stores
+      await messages.gravar(a, entrada("hoje 1"))
+      await messages.gravar(a, entrada("hoje 2", { autor: "agente" }))
+      await messages.gravar(a, entrada("outro dia", { dia: "2026-01-14" }))
+      await messages.gravar(b, entrada("outra conta"))
+
+      expect(await messages.apagarDoDia(a, DIA)).toBe(2)
+      expect(await messages.doDia(a, DIA)).toEqual([])
+      expect((await messages.doDia(a, "2026-01-14")).map((m) => m.texto)).toEqual(["outro dia"])
+      expect((await messages.doDia(b, DIA)).map((m) => m.texto)).toEqual(["outra conta"])
+    })
+
     it("conta B não lê nem marca as mensagens da conta A", async () => {
       const { a, b } = await criarDuasContas(env.stores)
       const { messages } = env.stores

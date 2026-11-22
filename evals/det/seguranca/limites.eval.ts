@@ -8,6 +8,7 @@ import { rotasDaCasa } from "@/app/_rotas/casa"
 import { rotasDaConversa } from "@/app/_rotas/conversa"
 import { rotasDeFluxoDeRun } from "@/app/_rotas/fluxo-de-run"
 import { rotasDeOnboarding } from "@/app/_rotas/onboarding"
+import { rotasDoVoce } from "@/app/_rotas/voce"
 import { copiarSeed } from "@/core/accounts/copiar-seed"
 import { entrarComGoogle } from "@/core/accounts/entrar"
 import type { Conta } from "@/core/accounts/types"
@@ -528,6 +529,7 @@ function tabela(deps: DepsDaRota, runId: string): Rota[] {
   const onboarding = rotasDeOnboarding(deps)
   const busca = rotasDeBusca(deps)
   const casa = rotasDaCasa(deps)
+  const voce = rotasDoVoce(deps)
   const params = { params: Promise.resolve({ id: runId }) }
   const quiz = deps.container.knowledge.quiz.map((p) => ({ pergunta_id: p.id, dosha: "vata" }))
   const AUTH = "Auth.js: entrada com Google, fora do limite de toque"
@@ -631,6 +633,20 @@ function tabela(deps: DepsDaRota, runId: string): Rota[] {
       chamar: (r) => casa.responderRetorno(r, params),
     },
     {
+      arquivo: "src/app/api/perfil/route.ts",
+      metodo: "POST",
+      nome: "POST /api/perfil",
+      corpo: { acao: "dosha", doshas: ["vata"] },
+      chamar: voce.tocarPerfil,
+    },
+    {
+      arquivo: "src/app/api/memoria/route.ts",
+      metodo: "POST",
+      nome: "POST /api/memoria",
+      corpo: { acao: "falta_apagar", alimento_id: "gengibre" },
+      chamar: voce.tocarMemoria,
+    },
+    {
       arquivo: "src/app/api/auth/[...nextauth]/route.ts",
       metodo: "POST",
       nome: "POST /api/auth",
@@ -691,6 +707,12 @@ function tabela(deps: DepsDaRota, runId: string): Rota[] {
       chamar: casa.lerRetornos,
     },
     {
+      arquivo: "src/app/api/voce/route.ts",
+      metodo: "GET",
+      nome: "GET /api/voce",
+      chamar: voce.lerVoce,
+    },
+    {
       arquivo: "src/app/api/auth/[...nextauth]/route.ts",
       metodo: "GET",
       nome: "GET /api/auth",
@@ -731,6 +753,8 @@ function espioesDeEscrita(c: Container) {
     vi.spyOn(c.touches, "tocarLista"),
     vi.spyOn(c.touches, "tocarGosto"),
     vi.spyOn(c.touches, "tocarRetorno"),
+    vi.spyOn(c.touches, "tocarPerfil"),
+    vi.spyOn(c.touches, "tocarMemoria"),
     vi.spyOn(c.stores.accounts, "marcar"),
     vi.spyOn(c.stores.profiles, "acrescentarEvitarSempre"),
     vi.spyOn(c.stores.profiles, "definirCidade"),

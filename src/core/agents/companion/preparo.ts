@@ -30,7 +30,7 @@ import { escolherParaTer, faltasDoRun } from "@/core/ranking/faltas"
 import type { Candidato, ParaTer, Sinais } from "@/core/ranking/tipos"
 import type { Stores } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
-import { diaLocal, diasAtras } from "@/core/time/dia-local"
+import { diaLocal, diasAtras, diasEntre } from "@/core/time/dia-local"
 import { horaLocal } from "@/core/weather/hora-local"
 import {
   casaDaMensagemSchema,
@@ -672,10 +672,6 @@ function retornosPendentes(
     titulo: r.sugestao.titulo,
     ha_dias: diasEntre(diaLocal(new Date(r.criado_em), fuso ?? undefined), dia),
   }))
-}
-
-function diasEntre(de: string, ate: string): number {
-  return Math.round((Date.parse(ate) - Date.parse(de)) / 86_400_000)
 }
 
 function nomesDaCasaDaMensagem(

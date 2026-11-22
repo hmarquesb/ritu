@@ -106,6 +106,8 @@ async function copiarConversa(
     contaId,
     run.id,
     h.saida.sugestoes.map(sugestaoRegistrada),
+    // Meio-dia UTC cai no mesmo dia local em qualquer fuso do Brasil.
+    { criadoEm: new Date(`${dia}T12:00:00Z`) },
   )
   for (const [i, retorno] of retornos.entries()) {
     const resultado = h.resultados[i]

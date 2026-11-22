@@ -136,6 +136,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - O padrão só vai ao prompt depois do sim; "Agora não" deixa para depois; ignorado, aparece no máximo uma vez por dia e até 3 vezes.
 - Incômodo não aparece em nenhuma tabela de memória.
 - Mensagens com mais de 7 dias são apagadas pela limpeza.
+- Memória no preparo seguinte: evitar sempre, não como e restrição tiram alimentos; nota apagada sai; padrão confirmado entra e recusado não volta; esquecer e apagar a conversa de hoje valem (`evals/det/memoria/efeito.eval.ts`).
 
 **Segurança e privacidade**
 - O guardrail de entrada neutraliza as mensagens de injection do conjunto de testes.
@@ -146,6 +147,8 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - Nota de rotina, mensagem anterior e "evitar sempre" em texto livre com instrução embutida chegam ao prompt delimitados e com `<` e `>` neutralizados.
 - POST com `Origin` de outro site → `403`; toda resposta tem a CSP e os headers de `ARCHITECTURE.md` §4.
 - Rotas de toque respeitam o limite próprio; a 31ª demonstração do dia é recusada.
+- Você: rota sem sessão → `401`; nota, padrão e conversa de outra conta → recusa e nada gravado; `apagarConta` não deixa nada da conta (`evals/det/seguranca/voce.eval.ts`).
+
 - **Limites de mensagem e de toque** (`evals/det/seguranca/limites.eval.ts`): a 31ª mensagem de uma conta Google é recusada com `limite_mensagens`, a 13ª da demonstração com `limite_demo` (também depois da meia-noite) e, com 60 do mesmo IP somando contas, a seguinte com `limite_ip`, sempre antes de abrir o fluxo, sem run nem mensagem gravados; o que o IP barra não soma na conta, e o inverso; `409 run_aberto`, cota de IA do dia esgotada e tester não gastam o limite.
 - **Depois do limite:** só atalhos seguem com `semModelo: "limite"` (práticas por código, sem chamar o `LlmClient`, sem contar, sem somar `ritu_fallback_sem_llm_total`); alerta físico e emocional recebem o texto de alerta sem contar e sem modelo, e "quero um chá" é recusada.
 - **Toques:** o 61º no minuto e o 301º no dia recebem `429 limite_toques` com `Retry-After` até o próximo minuto e até a meia-noite local, sem gravar; o limite por IP vale com teto reduzido; todo `POST` com conta, menos `POST /api/runs`, conta um toque, e nenhum `GET` conta.
@@ -155,6 +158,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 **Telemetria**
 - Todo span, métrica e log da lista fechada é emitido por algum cenário, com os atributos e rótulos declarados.
 - O painel cobre todas as métricas.
+- Como pensei: cada run dos cenários 008 a 013 vira linha do tempo sem passo vazio, com `fim` por último; nenhuma frase é o `resumo` cru (`evals/det/conversa/como-pensei.eval.ts`).
 - O toque de voto soma 👍/👎 só quando o voto é novo ou mudou.
 
 **Evals**
@@ -163,15 +167,15 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 
 **Telas (E2E)**
 
-Os cenários da Conversa estão em `e2e/conversa.spec.ts`.
+Os cenários da Conversa estão em `e2e/conversa.spec.ts`; os de Minha casa, em `e2e/casa.spec.ts`; os de Como ficou?, em `e2e/como-ficou.spec.ts`; os de Você, em `e2e/voce.spec.ts`; os de Como pensei, em `e2e/como-pensei.spec.ts`. O servidor do E2E roda com o relógio às 01h do fuso padrão, e os testes de unidade que dependem do momento do dia fixam o relógio.
 
 - Caminho da demonstração: da Entrada à primeira resposta só com cliques.
 - Mensagem livre → pergunta do agente → resposta em texto com sugestões.
 - Trocar um ingrediente mostra o substituto e o motivo.
 - Bloco de aprovação: aprovar um item e recusar outro.
 - Resposta com "vale ter em casa": aprovar a proposta e ver o item, com o motivo, na lista de Minha casa.
-- Minha casa: resolver um item de "Ainda tem?" e marcar um "sempre tenho".
-- Como ficou?: responder um retorno com um toque.
+- Minha casa: resolver os itens de "Ainda tem?"; na folha do item, marcar "sempre tenho" e gosto e tirar da casa; adicionar pela busca e por texto livre; "Comprei" num item da lista o põe na prateleira; "Pôr na lista" num item que acabou; toque com `Origin` de outro site recusado; caminho só com teclado; 200% de zoom sem rolagem horizontal.
+- Como ficou?: as sugestões da demonstração aparecem sob "Ontem"; responder com um toque mostra "Anotado"; recarregar mostra a área vazia; o indicador da Conversa some.
 - O que sei sobre você: apagar um item de cada nível.
 - Como pensei mostra as etapas na ordem.
 - Resposta do agente com `<script>` aparece como texto.

@@ -5,10 +5,10 @@ import { type Conexao, numaTransacao, type RetornoRow, retornoDe } from "./mappe
 
 export function createPgOutcomes(sql: Conexao, clock: Clock): OutcomeStore {
   return {
-    async criar(contaId, runId, sugestoes) {
+    async criar(contaId, runId, sugestoes, opts) {
       // Valida tudo antes de gravar: uma sugestão inválida não deixa nada no banco.
       const validas: SugestaoRegistrada[] = sugestoes.map((s) => sugestaoRegistradaSchema.parse(s))
-      const agora = clock.now()
+      const agora = opts?.criadoEm ?? clock.now()
       return numaTransacao(sql, async (tx) => {
         const criados: Retorno[] = []
         for (const sugestao of validas) {

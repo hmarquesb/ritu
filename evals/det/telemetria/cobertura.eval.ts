@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
+import { apagarConta } from "@/core/accounts/apagar"
 import { criarDemonstracao, entrarComGoogle } from "@/core/accounts/entrar"
 import type { Conta } from "@/core/accounts/types"
 import { consumirToque } from "@/core/limits/toques"
@@ -130,6 +131,24 @@ async function detectarComHistorico(coleta: Coleta): Promise<void> {
   juntar(coleta, deps)
 }
 
+// Os toques de memória (tocarMemoria soma `ritu_memoria_edicoes_total`) e a conta apagada (apagarConta soma
+// `ritu_conta_apagada_total`): os dois emissores da 020.
+async function tocarMemoriaEApagar(coleta: Coleta): Promise<void> {
+  const c = cenarios["frio-agitada"]
+  if (!c) throw new Error("cenário frio-agitada ausente")
+  const { contaId, deps } = await montarCenario(c)
+  await deps.touches.tocarMemoria(contaId, {
+    acao: "gosto",
+    item_tipo: "alimento",
+    item_id: "gengibre",
+    gosto: "gosta",
+  })
+  const conta = await deps.stores.accounts.buscar(contaId)
+  if (!conta) throw new Error("conta do cenário ausente")
+  await apagarConta({ stores: deps.stores, telemetry: deps.telemetry }, conta)
+  juntar(coleta, deps)
+}
+
 // Entrada: a demonstração e a conta Google, pelo caminho real, com stores e limitador em memória.
 async function entrar(coleta: Coleta): Promise<void> {
   vi.stubEnv("RITU_MODO", "e2e")
@@ -226,6 +245,7 @@ describe("cobertura da telemetria pelos cenários", () => {
     await rodarComErroDoModelo(coleta)
     await tocarRunEntregue(coleta)
     await detectarComHistorico(coleta)
+    await tocarMemoriaEApagar(coleta)
     await entrar(coleta)
     await barrarToque(coleta)
   }, 180_000)

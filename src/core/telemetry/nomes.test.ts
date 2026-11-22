@@ -54,8 +54,8 @@ describe("nomes da telemetria", () => {
     }
   })
 
-  it("tem 28 métricas, todas com tipo e rótulos", () => {
-    expect(Object.keys(METRICAS)).toHaveLength(29)
+  it("tem 31 métricas, todas com tipo e rótulos", () => {
+    expect(Object.keys(METRICAS)).toHaveLength(31)
     for (const definicao of Object.values(METRICAS)) {
       expect(["contador", "histograma", "medidor"]).toContain(definicao.tipo)
       expect(Array.isArray(definicao.rotulos)).toBe(true)
@@ -137,5 +137,19 @@ describe("nomes da telemetria", () => {
   it("METRICAS e ATRIBUTOS_PERMITIDOS têm a entrada", () => {
     expect(METRICAS).toHaveProperty("ritu_entrada_total")
     expect(ATRIBUTOS_PERMITIDOS).toContain("entrada.resultado")
+  })
+
+  it("METRICAS tem as edições da memória e as contas apagadas, com os rótulos da spec", () => {
+    expect(METRICAS.ritu_memoria_edicoes_total).toEqual({
+      tipo: "contador",
+      rotulos: ["nivel", "acao"],
+    })
+    expect(METRICAS.ritu_conta_apagada_total).toEqual({ tipo: "contador", rotulos: ["tipo"] })
+  })
+
+  it("ATRIBUTOS_PERMITIDOS tem nivel e acao, e SPANS.toque não exige acao", () => {
+    expect(ATRIBUTOS_PERMITIDOS).toContain("nivel")
+    expect(ATRIBUTOS_PERMITIDOS).toContain("acao")
+    expect(SPANS.toque).toEqual(["tipo"])
   })
 })

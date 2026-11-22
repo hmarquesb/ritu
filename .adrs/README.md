@@ -57,6 +57,8 @@
 | [0047](0047-producao-em-sao-paulo-com-neon.md) | Produção em São Paulo com Neon, pooler sem prepared statements e crons diários | Aceito |
 | [0048](0048-yaml-permitido-em-scripts.md) | `yaml` permitido em `scripts/` | Aceito |
 | [0049](0049-chas-derivados-e-padrao-de-cha.md) | Chás simples derivados das ervas e padrão de chá genérico | Aceito |
+| [0050](0050-toques-da-casa-por-uma-rota-visao-devolvida-e-relogio-noturno-no-e2e.md) | Toques da casa por uma rota, visão devolvida pela rota e relógio noturno no modo E2E | Aceito |
+| [0051](0051-voce-numa-pagina-rotas-de-memoria-e-conversa-apagada-fora-da-conversa.md) | "Você" numa página, duas rotas de escrita da memória e conversa apagada fora da conversa | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

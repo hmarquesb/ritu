@@ -80,6 +80,11 @@ test.describe("demonstração", () => {
     await expect(page.getByRole("status")).toContainText("5 demonstrações")
   })
 
+  test("dados apagados: a Entrada mostra o aviso em role=status", async ({ page }) => {
+    await page.goto("/?aviso=dados_apagados")
+    await expect(page.getByRole("status")).toContainText("Seus dados foram apagados.")
+  })
+
   test("sem Google, o botão não aparece", async ({ page }) => {
     await page.goto("/")
     await expect(page.getByRole("button", { name: BOTAO_DEMO })).toBeVisible()
@@ -143,6 +148,13 @@ for (const tema of TEMAS) {
     test("Entrada", async ({ context, page }) => {
       await usarTema(context, tema)
       await page.goto("/")
+      await expectSemViolacoes(page)
+    })
+
+    test("Entrada com aviso de dados apagados", async ({ context, page }) => {
+      await usarTema(context, tema)
+      await page.goto("/?aviso=dados_apagados")
+      await expect(page.getByRole("status")).toContainText("Seus dados foram apagados.")
       await expectSemViolacoes(page)
     })
 

@@ -1,9 +1,14 @@
 import { type AppConfig, config } from "@config/index"
+import { apagarConta } from "@/core/accounts/apagar"
+import { fusoDaConta } from "@/core/accounts/fuso"
+import type { Conta } from "@/core/accounts/types"
 import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import { createJudge, type Judge } from "@/core/agents/judge/julgar"
 import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memoria"
 import type { Clock } from "@/core/clock"
+import { lerComoPensei as lerComoPenseiDoCore } from "@/core/como-pensei/ler"
+import type { LinhaDoTempo } from "@/core/como-pensei/linha-do-tempo"
 import { createConversation } from "@/core/conversation/conversar"
 import type { DemoSeed } from "@/core/demo-seed"
 import { RituError } from "@/core/errors"
@@ -13,6 +18,7 @@ import type { UsageLimiter } from "@/core/limits/ports"
 import type { LlmClient } from "@/core/llm/client"
 import type { UsageLedger } from "@/core/llm/ledger"
 import { createModelRouter, type ModelRouter } from "@/core/llm/router"
+import { lerVoce as lerVoceDoCore, type VoceNaTela } from "@/core/memory/ler"
 import { type ComoFicouNaTela, visaoComoFicou } from "@/core/outcomes/visao"
 import { lerCasa as lerCasaDoCore } from "@/core/pantry/ler"
 import type { CasaNaTela } from "@/core/pantry/visao"
@@ -73,6 +79,9 @@ export type Container = {
   patterns: ReturnType<typeof createPatterns>
   lerCasa(contaId: string): Promise<CasaNaTela>
   lerComoFicou(contaId: string): Promise<ComoFicouNaTela>
+  lerVoce(conta: Conta): Promise<VoceNaTela>
+  lerComoPensei(contaId: string, runId: string): Promise<LinhaDoTempo | undefined>
+  accounts: { apagarConta(conta: Conta): Promise<void> }
   telemetriaLigada: boolean
   saude(): Promise<Saude>
   iniciarTelemetria(): Promise<void>
@@ -356,6 +365,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
         kb: container.knowledge,
         clock,
         telemetry: container.telemetry,
+        routine: container.routine,
+        patterns: container.patterns,
       })
       return touches
     },
@@ -384,7 +395,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
       return lerCasaDoCore(
         { stores: container.stores, kb: container.knowledge, clock },
         contaId,
-        await fusoDaConta(container, contaId),
+        await fusoDaConta(container.stores, contaId),
       )
     },
     async lerComoFicou(contaId) {
@@ -393,8 +404,29 @@ export function createContainer(overrides?: Partial<Container>): Container {
         retornos,
         kb: container.knowledge,
         agora: clock.now(),
-        fuso: await fusoDaConta(container, contaId),
+        fuso: await fusoDaConta(container.stores, contaId),
       })
+    },
+    // Você e Como pensei: o fuso vem do perfil, como em Minha casa.
+    async lerVoce(conta) {
+      return lerVoceDoCore(
+        { stores: container.stores, kb: container.knowledge, clock },
+        conta,
+        await fusoDaConta(container.stores, conta.id),
+      )
+    },
+    async lerComoPensei(contaId, runId) {
+      return lerComoPenseiDoCore(
+        { stores: container.stores, kb: container.knowledge, clock },
+        contaId,
+        runId,
+        await fusoDaConta(container.stores, contaId),
+      )
+    },
+    // Apagar a conta: a cascata e a métrica ficam em `core/accounts/apagar.ts`.
+    accounts: {
+      apagarConta: (conta) =>
+        apagarConta({ stores: container.stores, telemetry: container.telemetry }, conta),
     },
     // SDK de Node para scripts: só com endpoint e fora do Next (lá quem registra é instrumentation.ts).
     async iniciarTelemetria() {
@@ -445,11 +477,6 @@ function depsDaSaude(container: Container, e2e: boolean): DepsDaSaude {
       optionalEnv("AUTH_GOOGLE_ID") !== undefined &&
       optionalEnv("AUTH_GOOGLE_SECRET") !== undefined,
   }
-}
-
-async function fusoDaConta(container: Container, contaId: string): Promise<string> {
-  const perfil = await container.stores.profiles.ler(contaId)
-  return perfil?.cidade_fuso ?? config.clima.fusoPadrao
 }
 
 let instance: Container | undefined

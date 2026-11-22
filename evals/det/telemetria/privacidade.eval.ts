@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { DepsDaRota } from "@/app/_lib/rota"
 import { rotasDaConversa } from "@/app/_rotas/conversa"
 import { rotasDeFluxoDeRun } from "@/app/_rotas/fluxo-de-run"
+import { apagarConta } from "@/core/accounts/apagar"
 import type { Conta } from "@/core/accounts/types"
 import { normalizar } from "@/core/knowledge/identificar"
 import { decidirMensagem } from "@/core/limits/mensagens"
@@ -190,7 +191,7 @@ function cenarioBase(nome: string): Cenario {
   return c
 }
 
-// Os quatro toques sobre um run entregue (chá do frio-agitada), mais os da casa e da lista, como na cobertura.
+// Os quatro toques sobre um run entregue (chá do frio-agitada), mais os da casa, da lista e da memória, como na cobertura.
 async function preparadaDosToques(): Promise<Preparada> {
   const c = plantar(cenarioBase("frio-agitada"))
   if (!c.entrada) throw new Error("frio-agitada sem entrada")
@@ -212,8 +213,39 @@ async function preparadaDosToques(): Promise<Preparada> {
   await deps.touches.tocarCasa(contaId, { acao: "adicionar_texto", texto: CANARIO_TEXTO })
   await deps.touches.tocarLista(contaId, { acao: "por", alimento_id: "gengibre" })
   await deps.touches.tocarLista(contaId, { acao: "tirar", alimento_id: "gengibre" })
+  await tocarMemoriaComCanario(deps, contaId)
   const respostas = [normalizar(r.saida.resposta ?? "")].filter((t) => t !== "")
   return { contaId, deps, textos: { entradas: textosDaEntrada(c), respostas } }
+}
+
+// Os toques de memória da 020: a nota corrigida leva o canário no texto, e o gosto e o esquecer usam um alimento da base.
+async function tocarMemoriaComCanario(deps: DepsDoCenario, contaId: string): Promise<void> {
+  const nota = await deps.stores.routine.anotar(contaId, `${CANARIO_NOME} em casa`)
+  await deps.touches.tocarMemoria(contaId, {
+    acao: "nota_corrigir",
+    nota_id: nota.id,
+    texto: `${CANARIO_TEXTO} em casa`,
+  })
+  await deps.touches.tocarMemoria(contaId, {
+    acao: "gosto",
+    item_tipo: "alimento",
+    item_id: "gengibre",
+    gosto: "gosta",
+  })
+  await deps.touches.tocarMemoria(contaId, {
+    acao: "esquecer",
+    item_tipo: "alimento",
+    item_id: "gengibre",
+  })
+}
+
+// Apagar a conta: a telemetria dela (`ritu_conta_apagada_total`) leva só o tipo, sem nada da pessoa.
+async function preparadaDaContaApagada(): Promise<Preparada> {
+  const preparada = await preparadaDoCenario(cenarioBase("frio-agitada"))
+  const conta = await preparada.deps.stores.accounts.buscar(preparada.contaId)
+  if (!conta) throw new Error("conta do cenário ausente")
+  await apagarConta({ stores: preparada.deps.stores, telemetry: preparada.deps.telemetry }, conta)
+  return preparada
 }
 
 // Troca de modelo: o papel de decisão com o principal esgotado.
@@ -264,6 +296,7 @@ FLUXOS.set("toques (frio-agitada)", () => medir(preparadaDosToques))
 FLUXOS.set("troca de modelo (frio-agitada)", () => medir(preparadaDaTroca))
 FLUXOS.set("erro na chamada do modelo (llm-erro)", () => medir(preparadaDoErroDoModelo))
 FLUXOS.set("detecção de padrões (padrao-confirmado)", () => medir(preparadaDaDeteccao))
+FLUXOS.set("conta apagada (frio-agitada)", () => medir(preparadaDaContaApagada))
 
 const cache = new Map<string, Promise<Execucao>>()
 

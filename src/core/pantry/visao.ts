@@ -4,7 +4,7 @@ import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { GRUPOS, type Grupo } from "@/core/knowledge/vocab"
 import type { Preferencia } from "@/core/preferences/ports"
 import type { ItemDaLista, MotivoDaLista } from "@/core/shortages/ports"
-import { diaLocal } from "@/core/time/dia-local"
+import { diaLocal, diasEntre } from "@/core/time/dia-local"
 import { type EstadoCalculado, estadoDoItem } from "./estado"
 import type { ItemDaCasa } from "./types"
 
@@ -43,8 +43,6 @@ type EntradaDaCasa = {
   agora: Date
   fuso: string
 }
-
-const DIA_EM_MS = 86_400_000
 
 export function visaoDaCasa(p: EntradaDaCasa): CasaNaTela {
   const naLista = new Set(p.lista.map((item) => item.alimento_id))
@@ -123,10 +121,6 @@ function listaNaTela(lista: ItemDaLista[], kb: KnowledgeBase): ItemDaListaNaTela
         },
       ]
     })
-}
-
-function diasEntre(de: string, ate: string): number {
-  return Math.round((Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de}T00:00:00Z`)) / DIA_EM_MS)
 }
 
 function porNome(a: ItemNaCasa, b: ItemNaCasa): number {

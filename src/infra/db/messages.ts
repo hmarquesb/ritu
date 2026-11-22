@@ -22,6 +22,21 @@ export function createPgMessages(sql: Conexao, clock: Clock): MessageRepository 
       return linhas.map(mensagemDe)
     },
 
+    async contarPorDia(contaId, desdeDia) {
+      return sql<{ dia: string; total: number }[]>`
+        select dia::text as dia, count(*)::int as total
+        from mensagens
+        where conta_id = ${contaId} and dia >= ${desdeDia}::date
+        group by dia
+        order by dia desc`
+    },
+
+    async apagarDoDia(contaId, dia) {
+      const apagadas = await sql`
+        delete from mensagens where conta_id = ${contaId} and dia = ${dia}::date`
+      return apagadas.count
+    },
+
     async marcarIncomodoDoRun(contaId, runId) {
       await sql`
         update mensagens set com_incomodo = true

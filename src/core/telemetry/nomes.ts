@@ -59,6 +59,8 @@ export const METRICAS = {
   ritu_faltas_total: { tipo: "contador", rotulos: ["origem"] },
   ritu_para_ter_total: { tipo: "contador", rotulos: ["etapa"] },
   ritu_entrada_total: { tipo: "contador", rotulos: ["conta.tipo", "entrada.resultado"] },
+  ritu_memoria_edicoes_total: { tipo: "contador", rotulos: ["nivel", "acao"] },
+  ritu_conta_apagada_total: { tipo: "contador", rotulos: ["tipo"] },
 } as const satisfies Record<
   string,
   { tipo: "contador" | "histograma" | "medidor"; rotulos: readonly AtributoPermitido[] }
@@ -151,6 +153,8 @@ export const ATRIBUTOS_PERMITIDOS = [
   "origem",
   "gosto",
   "etapa",
+  "nivel",
+  "acao",
   // extras
   "erro.codigo",
   "trace_id",

@@ -95,18 +95,18 @@ Meta: **primeira resposta em menos de 1 minuto, sem preencher nenhum campo.**
 | **Entrada** | O que é, aviso de que não é orientação médica, demonstração em destaque e Google |
 | **Aviso inicial** | O aviso de §12 e, para conta nova, a pergunta do dosha e da cidade. Uma vez só |
 | **Conversa** (tela inicial depois de entrar) | Mensagens do dia; caixa de texto; atalhos de check-in; etapas do agente ao vivo; pergunta do agente; resposta em texto com sugestões de apoio; indicação de "vale ter em casa"; o que o agente propõe anotar; indicador discreto de "Como ficou?" |
-| **Minha casa** (aba) | O que a pessoa tem, por grupo; itens "sempre tenho"; seção **"Ainda tem?"** com o que ficou incerto; gosto por item; lista **"Para ter em casa"**, com o motivo de cada item |
+| **Minha casa** (aba) | Uma página: seção **"Ainda tem?"** no topo, com o que ficou incerto; o que a pessoa tem em **prateleiras** por grupo, com os itens como rótulos ("sempre tenho" e gosto marcados no rótulo; um toque abre as opções); prateleira **"Acabou"**; lista **"Para ter em casa"**, com o motivo de cada item |
 | **Como ficou?** | Sugestões recebidas que ainda não têm retorno. Um toque em cada: Ajudou · Não ajudou · Não fiz |
-| **Painel do dosha** (em Você) | Dosha, características, o que desequilibra e o que equilibra. Sem dosha: "Descubra seu dosha" |
+| **Carta do dosha** (no topo de Você) | Dosha, características, o que desequilibra e o que equilibra. Dosha misto: uma aba por dosha; a proporção só aparece para quem fez o quiz. Sem dosha: "Descubra seu dosha" |
 | **Evitar sempre** (passo do onboarding) | "Tem algum alimento que você nunca pode comer?" Grupos para tocar, busca de alimento, Nenhum · Pular (§13) |
 | **Quiz** | As 8 perguntas do dosha |
-| **Como pensei** | Linha do tempo do rastro: o que o agente entendeu, consultou, corrigiu, perguntou e propôs, e o que o juiz disse |
-| **O que sei sobre você** (em Você) | Tudo o que o Ritu guarda, por nível (§11), editável e apagável item por item |
-| **Perfil** (em Você) | Conta, dosha, cidade, **evitar sempre**, restrições, "não como", **apagar meus dados** |
+| **Como pensei** | Linha do tempo do rastro: o que o agente entendeu, consultou, corrigiu, perguntou e propôs, e o que o juiz disse. Os detalhes técnicos (modelo, tokens, tempo) ficam recolhidos, por passo e no total |
+| **O que sei sobre você** (em Você) | Tudo o que o Ritu guarda, por nível (§11), editável e apagável item por item. Os fixos (dosha, cidade, **evitar sempre**, restrições, "não como") mudam aqui mesmo |
+| **Conta** (em Você) | Como a pessoa entrou (Google ou demonstração, com "Criar meu perfil"), tema, **Sair** e **Apagar meus dados** |
 | **Bastidores** (pública) | Números agregados do agente e a evolução dos evals (`OBSERVABILITY.md` §4) |
 | **Sobre** | O projeto, privacidade, link do repositório |
 
-Quem entrou navega por quatro destinos: **Conversa**, **Minha casa**, **Como ficou?** e **Você**. A barra fica embaixo no celular e na lateral no desktop. **Você** junta o Perfil, o que o Ritu sabe sobre a pessoa e o painel do dosha.
+Quem entrou navega por quatro destinos: **Conversa**, **Minha casa**, **Como ficou?** e **Você**. A barra fica embaixo no celular e na lateral no desktop. **Você** junta a carta do dosha, o que o Ritu sabe sobre a pessoa e a Conta.
 
 ## 8. A conversa
 
@@ -121,7 +121,7 @@ Qualquer coisa. O agente entende a intenção de cada mensagem, e uma mensagem p
 | Algo sobre a casa ("fui à feira, trouxe abóbora e couve", "acabou o arroz") | Propõe atualizar Minha casa |
 | Um retorno ("tomei o chá e melhorei") | Registra o resultado e ajusta as próximas sugestões. Se não ajudou, convida a contar como está agora. Se não der para saber de qual sugestão ela fala, não registra e aponta "Como ficou?" |
 | Algo que nunca pode comer ("não posso comer camarão"), que não come ("não como coentro") ou uma restrição ("sou vegetariana") | Para de sugerir na hora, pelo resto do dia, e propõe guardar (§11) |
-| Uma dúvida sobre o próprio Ritu ("como apago meus dados?", "o que você sabe de mim?") | Resposta curta que aponta onde fica: "O que sei sobre você", Perfil ou Minha casa |
+| Uma dúvida sobre o próprio Ritu ("como apago meus dados?", "o que você sabe de mim?") | Resposta curta que aponta onde fica: "O que sei sobre você", a Conta ou Minha casa |
 | Algo da vida ("essa semana vou almoçar fora todo dia") | Acolhe, usa na resposta e pode propor anotar a rotina |
 | Um incômodo leve ("tô com dor de cabeça, o que como no almoço?") | Recomenda conforto, com aviso reforçado (§12) |
 | Um sinal de alerta, físico ou emocional | Não recomenda; encaminha para um profissional, urgência ou CVV (§12) |
@@ -224,7 +224,7 @@ Como a casa é atualizada:
 
 - **Pela conversa:** "comprei…", "acabou…". O agente propõe e a pessoa aprova.
 - **Respondendo a uma pergunta do agente:** Tenho, Não tenho e Não gosto são gravados na hora, antes de o agente retomar; o toque é o consentimento. "Não como", na pergunta sobre um alimento, vale no mesmo run e vira proposta de anotação.
-- **Pela aba Minha casa:** a pessoa adiciona, tira, marca "sempre tenho" e resolve a seção "Ainda tem?" com um toque por item.
+- **Pela aba Minha casa:** a pessoa adiciona (pela busca ou por texto livre), tira, marca "sempre tenho", marca "acabou" e resolve a seção "Ainda tem?" com um toque por item. **"Acabou" pela aba não é falta:** o item vai para a prateleira "Acabou", de onde a pessoa marca "Tenho de novo" ou o põe na lista. Falta é só o que fez falta para uma sugestão.
 - **Alimento que a base não conhece:** fica guardado na casa com a marca *"ainda não conheço este alimento"*. O agente não o usa em sugestões e diz isso quando for o caso.
 
 ### Trocar um ingrediente
@@ -288,16 +288,18 @@ Fica na aba Minha casa. É um lembrete para a pessoa. Cada item mostra por que e
 |---|---|
 | Faltou para uma sugestão de hoje, e a pessoa respondeu "Não tenho" quando o Ritu perguntou | "Faltou para o chá de gengibre com canela" |
 | Fez falta várias vezes (indicação de "vale ter em casa") | "Fez falta 4 vezes nos últimos 30 dias" |
+| A pessoa pôs na lista por conta própria | "Você pôs na lista" |
 
-Os dois caminhos passam pela aprovação da pessoa. Recusada a proposta (linha desligada ou "Agora não"), o Ritu não propõe nem indica esse alimento de novo, **para sempre**; ela pode pôr na lista por conta própria. Proposta que expira sem resposta não conta como recusa, e o alimento pode voltar. Ela pode tirar um item da lista quando quiser. Quando registra o alimento em casa, ele sai da lista.
+Os dois caminhos passam pela aprovação da pessoa. Recusada a proposta (linha desligada ou "Agora não"), o Ritu não propõe nem indica esse alimento de novo, **para sempre**; ela pode pôr na lista por conta própria. Proposta que expira sem resposta não conta como recusa, e o alimento pode voltar. Ela pode tirar um item da lista quando quiser; tirar também apaga as faltas daquele alimento, para o Ritu não indicá-lo de novo na resposta seguinte. Quando registra o alimento em casa ("Comprei"), ele sai da lista.
 
 ## 10. Como ficou?
 
-- Toda sugestão entregue entra nesta área, da mais recente para a mais antiga.
+- Toda sugestão entregue entra nesta área enquanto espera retorno, agrupada por dia (Hoje, Ontem, Há 3 dias), da mais recente para a mais antiga.
 - A pessoa responde **se quiser**, com um toque: **Ajudou · Não ajudou · Não fiz**. O toque é gravado na hora, por código.
 - Quem quiser pode escrever mais ("ajudou, mas achei forte"). Aí o agente lê, registra e pode ajustar as próximas sugestões.
 - O retorno também pode vir pela conversa ("tomei o chá e melhorei"): o agente liga o comentário à sugestão certa e o registro vale como a resposta da pessoa. Se não dá para saber de qual sugestão ela fala, o Ritu diz que ela pode marcar em "Como ficou?" e não anota nada. O resultado ("ajudou", "não ajudou", "não fiz") é o que a pessoa disse, nunca uma dedução.
 - Cada retorno vale uma vez. Se o toque e a conversa chegam ao mesmo tempo, só o primeiro conta.
+- Depois do toque, a sugestão mostra "Anotado: ajudou." e fica na tela até a pessoa sair; na visita seguinte ela já não aparece. A área não vira histórico: o que funcionou aparece no efeito das sugestões.
 - Sugestão sem retorno sai da área depois de **7 dias**, sem contar como "não fiz".
 - O produto não cobra. A tela Conversa só mostra um indicador discreto: *"3 sugestões esperando seu retorno"*.
 - O texto da área explica para que serve: *"Seu retorno me ajuda a acertar mais nas próximas vezes."*
@@ -314,11 +316,12 @@ A memória tem níveis. Cada nível aparece na página **"O que sei sobre você"
 | **O que fez falta** | Alimentos que teriam entrado numa resposta e não estavam em casa (§9) | "Cardamomo: fez falta 4 vezes nos últimos 30 dias" | Automático, por código; apagado depois de 30 dias |
 | **Rotina** | Fatos da vida que mudam a recomendação (até 30 notas ativas; o Ritu usa um resumo delas) | "Almoça fora durante a semana", "Acorda às 5 h às terças" | Só com aprovação; a pessoa corrige ou apaga cada nota |
 | **Padrões** | Regularidades que o Ritu percebeu nos registros | "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar" | O Ritu pergunta *"Notei isto. Está certo?"*; só vale depois do sim. Sem resposta, a pergunta volta no máximo uma vez por dia e até 3 vezes |
-| **Conversa** | As mensagens dos últimos 7 dias | — | Automático; apagado depois de 7 dias |
+| **Conversa** | As mensagens dos últimos 7 dias | — | Automático; apagado depois de 7 dias, ou antes, quando a pessoa apaga um dia |
 
 Regras da memória:
 
 - **Rotina, casa, fixos e padrões só são gravados com aprovação** ou quando a própria pessoa edita.
+- **Apagar a conversa de um dia** (os últimos 7) apaga as mensagens dele e tira os runs dele da conversa; o rastro fica em Como pensei, que avisa que a conversa foi apagada. Não apaga com uma resposta em andamento naquele dia.
 - **Toques diretos** (Não gosto, Não tenho, Ajudou) são gravados na hora: o toque é o consentimento.
 - **Faltas** são anotadas por código, sem pergunta: guardam só o alimento e o dia. Pôr o alimento na lista "Para ter em casa" pede aprovação.
 - **Incômodos de saúde nunca entram na memória.** O agente usa na resposta daquela mensagem e não anota. A mensagem em que o incômodo aparece e a resposta do agente ficam na conversa do dia e são apagadas no dia seguinte.
@@ -327,9 +330,9 @@ Regras da memória:
 
 ### Evitar sempre
 
-- Vem do passo do onboarding (§13), do Perfil ou da conversa ("não posso comer camarão", "amendoim me faz mal").
+- Vem do passo do onboarding (§13), de "O que sei sobre você" ou da conversa ("não posso comer camarão", "amendoim me faz mal").
 - **Pela conversa, vale na hora:** a resposta daquela mensagem já exclui o alimento, e ele continua excluído até o fim do dia mesmo sem aprovação. Para ficar guardado, entra no bloco "Posso anotar isto?" como qualquer fixo. Recusado ou expirado, deixa de valer no dia seguinte.
-- **Sair da lista pede confirmação explícita.** Só pelo Perfil ou por "O que sei sobre você", com a frase *"Tirar amendoim de Evitar sempre? O Ritu vai voltar a sugerir."* Se a pessoa disser na conversa que já pode comer, o agente não tira: mostra o caminho no Perfil. Nenhum registro mais recente (gosto, "tenho em casa", retorno) tira um item daqui.
+- **Sair da lista pede confirmação explícita.** Só em "O que sei sobre você", com a frase *"Tirar amendoim de Evitar sempre? O Ritu vai voltar a sugerir."* Se a pessoa disser na conversa que já pode comer, o agente não tira: mostra o caminho em "O que sei sobre você". Nenhum registro mais recente (gosto, "tenho em casa", retorno) tira um item daqui.
 - Vale para tudo: alimentos, ingredientes de chás e refeições, **óleos de massagem e práticas na pele**, trocas, "vale ter em casa" e lista "Para ter em casa". Item de "evitar sempre" que esteja em Minha casa nunca entra numa sugestão.
 - Guarda só o alimento ou o grupo, sem o motivo. O Ritu não pergunta por quê.
 
@@ -351,11 +354,11 @@ Regras da memória:
 
 | Dado | Quando aparece |
 |---|---|
-| **Evitar sempre** | Logo depois do aviso, para toda conta nova, antes do dosha e mesmo para quem não fizer o quiz: *"Tem algum alimento que você nunca pode comer?"* Grupos para tocar (amendoim, castanhas, leite, ovo, soja, trigo, gergelim, peixe, frutos do mar), busca de alimento e campo livre. Botões: Pronto · Nenhum · Pular. Quem pula vê, uma única vez, na primeira resposta com sugestão de alimento: *"Se tiver algo que você não pode comer, me conta."* Muda no Perfil |
+| **Evitar sempre** | Logo depois do aviso, para toda conta nova, antes do dosha e mesmo para quem não fizer o quiz: *"Tem algum alimento que você nunca pode comer?"* Grupos para tocar (amendoim, castanhas, leite, ovo, soja, trigo, gergelim, peixe, frutos do mar), busca de alimento e campo livre. Botões: Pronto · Nenhum · Pular. Quem pula vê, uma única vez, na primeira resposta com sugestão de alimento: *"Se tiver algo que você não pode comer, me conta."* Muda em Você |
 | **Dosha** | Depois do passo "Evitar sempre", só para conta nova: "Quer descobrir seu dosha?" → Fazer o quiz · Já sei meu dosha (Vata · Pitta · Kapha · Misto, escolhendo dois) · Agora não. Depois, a qualquer momento, pelo painel do dosha |
 | **Quiz** | Dentro do onboarding: **8 perguntas**, uma por vez, 3 opções cada, uma por dosha. Temas: corpo, pele, apetite e digestão, sono, clima que incomoda, reação ao estresse, ritmo e energia, padrão de peso. **Resultado dual** quando os dois primeiros doshas ficam a até `config.quiz.diferencaDual` respostas de distância. O texto fica em `data/quiz.yaml` |
-| **Cidade** | Junto com o dosha: a pessoa busca a cidade pelo nome. Pode pular; sem cidade, o agente responde sem o clima e avisa. Muda no Perfil |
-| **Restrições e "não como"** | No Perfil, pela conversa, ou quando o agente pergunta antes de sugerir algo que dependa disso |
+| **Cidade** | Junto com o dosha: a pessoa busca a cidade pelo nome. Pode pular; sem cidade, o agente responde sem o clima e avisa. Muda em Você |
+| **Restrições e "não como"** | Em Você, pela conversa, ou quando o agente pergunta antes de sugerir algo que dependa disso |
 | **Minha casa** | Começa vazia. Na primeira conversa, o agente pergunta o básico que precisa; o resto vem com o uso |
 
 Quem escolhe "Agora não" não é perguntado de novo: o lembrete fica no botão do painel ("Descubra seu dosha") e na frase da resposta geral.
@@ -382,7 +385,7 @@ O texto vem de `data/doshas.yaml`, com fonte, em linguagem leve.
 - **Faixa da cota de IA:** quando a cota **do dia** do modelo acaba, a Conversa abre com uma faixa que diz a hora em que volta (a virada é a meia-noite do Pacífico, mostrada no fuso da cidade da pessoa ou no padrão, por exemplo "5h"). Enviar continua possível e cai na resposta por código. A cota do minuto volta sozinha em segundos e não gera faixa.
 - **Quando a cota de IA acaba:** a tela avisa com a faixa e continua funcionando no que não depende do modelo: Minha casa, Como ficou?, trocas, painel do dosha e práticas gerais para os atalhos de check-in, montadas por código.
 - **Clima:** da cidade escolhida pela pessoa, consultado na hora, com cache curto. O produto nunca usa GPS nem localização do aparelho.
-- **Privacidade (LGPD):** guarda o id da conta, o perfil, a cidade escolhida, a casa, os gostos, as faltas dos últimos 30 dias, os retornos, a rotina, os padrões confirmados, as mensagens dos últimos 7 dias e os runs. O e-mail do Google serve **só para entrar**. Nada de telefone. A página "O que sei sobre você" mostra tudo; "Apagar meus dados" apaga tudo. A telemetria nunca leva texto da pessoa.
+- **Privacidade (LGPD):** guarda o id da conta, o perfil, a cidade escolhida, a casa, os gostos, as faltas dos últimos 30 dias, os retornos, a rotina, os padrões confirmados, as mensagens dos últimos 7 dias e os runs. O e-mail do Google serve **só para entrar**. Nada de telefone. A página "Você" mostra tudo; "Apagar meus dados" apaga tudo. A telemetria nunca leva texto da pessoa.
 - **Aviso sobre o provedor de IA:** no plano gratuito, o provedor pode usar as mensagens para melhorar os produtos dele. O Aviso inicial e a tela Sobre dizem isso com clareza.
 - **Demonstração:** as contas expiram em 24 h e são apagadas.
 

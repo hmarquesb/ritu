@@ -19,7 +19,7 @@ Junção na `main`: `28770c2` (main → entrega-3, conflitos), `03d0431` (J1, E2
 - `npm test`: 3596 testes (244 arquivos). `eval:det`: 1579 casos (125 arquivos). `npm run dup`: 0 clones.
 - E2E (`CI=1`): 291 passaram, 69 pulados (screenshots e testes de um projeto só), 0 falhas. Com `SCREENSHOTS=1`: 354 passaram, 1 falha intermitente conhecida (`marca.spec.ts` › abas trocam com as setas, desktop, sob carga).
 - ⚠️ `test:db` contra o Postgres local: 152/152, incluindo os contratos que ficaram pendentes desde a 017 (`limites`, `semear`, `RunRepository.doDia`, `votos`).
-- Produção: migração `0005_padroes_de_cha.sql` aplicada pelo job `deploy` em 2026-11-22; smoke todo `ok`. A `0006_runs_fora_da_conversa.sql` (020) vai no próximo deploy.
+- Produção: migração `0005_padroes_de_cha.sql` aplicada pelo job `deploy` em 2026-11-22; smoke todo `ok`. A `0006_runs_fora_da_conversa.sql` (020) foi aplicada no deploy da junção (`1841d7b`), com o smoke `ok`: a entrega 3 está em produção.
 
 ### ⚠️ Rodada `c3-confiavel` de 2026-11-22 (86/86 casos)
 

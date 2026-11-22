@@ -4,13 +4,12 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Entrega 1 (001 a 007) aprovada no portão 1, com a tag `entrega-1`. Entrega 2 (008 a 015) aprovada com correções no portão 2 (2026-11-17), com a tag `entrega-2`; as correções estão na `main` (`.plans/portao-2-correcoes-plan.md`). Segunda rodada da base concluída e commitada (127 alimentos, nenhuma linha `a_confirmar`). Entrega 3: 016 a 019 implementadas na `main`; 020 implementada na `entrega-3` (`50f0ec4`, ADR 0046), ainda não juntada. Entrega 4: 021 e 022 implementadas, `entrega-4` juntada na `main` e produção no ar; 023 e 024 aprovadas. Spec 025 (chás híbridos) implementada na `main` (ADR 0049); a migração `0005` vai à produção pelo job `deploy` da CI no push.
+Entrega 1 (001 a 007) aprovada no portão 1, com a tag `entrega-1`. Entrega 2 (008 a 015) aprovada com correções no portão 2 (2026-11-17), com a tag `entrega-2`; as correções estão na `main` (`.plans/portao-2-correcoes-plan.md`). Base com 127 alimentos, nenhuma linha `a_confirmar`. Entrega 3 (016 a 020) na `main`, com a `entrega-3` juntada em 2026-11-22 (`e1891a9`) e a tag `entrega-3`, parada no portão 3: relatório e roteiro em `.plans/entrega-3-relatorio.md`, screenshots em `docs/screenshots/entrega-3/`. Entrega 4: 021 e 022 implementadas e produção no ar (migração `0005` aplicada em 2026-11-22; a `0006` da 020 vai no próximo deploy); 023 e 024 aprovadas. Spec 025 (chás híbridos) implementada. Rodada `c3-confiavel` de 2026-11-22 completa (86/86), com 17 metas abaixo; `c3-s23` e `c3-s24` falharam (resposta `segura` depois de recusas do validador).
 
 **Próximos passos, na ordem:**
-1. Push da `main` com a 025 (o job `deploy` aplica a `0005` em produção) e conferir o smoke.
-2. ⚠️ Rodada nova do `c3-confiavel`, com o modelo estável (já inclui os casos `c3-s23` e `c3-s24` da 025).
-3. `/construir-entrega 3`: juntar a `entrega-3` (020) na `main` → portão 3.
-4. Construir a 023 e a 024 → portão 4.
+1. Portão 3: a dona confere o roteiro de `.plans/entrega-3-relatorio.md` e decide o `c4-site` (DECISOES J-A5) e a queda da autocorreção no `c3-confiavel`.
+2. Ajustes do portão 3, se houver (spec nova ou tarefa de correção).
+3. Construir a 023 e a 024 → portão 4.
 
 ## 1. Entregas
 

@@ -1,6 +1,7 @@
 // Tabela de evolução dos evals com LLM, gerada só a partir de `historico.json` (spec 014).
 import { TITULO_DA_FAMILIA } from "../../../evals/llm/tipos"
-import type { EntradaDoHistorico, Historico } from "./historico"
+import type { Historico } from "../../../src/core/evals/historico"
+import type { EntradaDoHistorico } from "./historico"
 import { DEFINICAO_DAS_METRICAS, type Forma, type Medida, type MetricaId } from "./metricas"
 
 const TITULO = "# Evolução dos evals com LLM"

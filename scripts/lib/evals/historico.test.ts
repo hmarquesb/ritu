@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest"
+import { type Historico, historicoSchema } from "../../../src/core/evals/historico"
 import {
   anteriorA,
   entradaDaRodada,
   formatarHistorico,
-  type Historico,
-  historicoSchema,
   lerHistorico,
   trocarEntrada,
 } from "./historico"

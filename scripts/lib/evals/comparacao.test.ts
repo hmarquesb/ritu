@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { TITULO_DA_FAMILIA } from "../../../evals/llm/tipos"
+import type { Historico } from "../../../src/core/evals/historico"
 import { gerarComparacao } from "./comparacao"
-import type { EntradaDoHistorico, Historico } from "./historico"
+import type { EntradaDoHistorico } from "./historico"
 import { DEFINICAO_DAS_METRICAS, type MetricaId } from "./metricas"
 
 const RODAPE =

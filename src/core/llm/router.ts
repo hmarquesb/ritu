@@ -5,10 +5,18 @@ import type { Telemetry } from "@/core/telemetry/ports"
 import type { LlmError } from "./errors"
 import type { FornecedorDeModelo } from "./fornecedor"
 import type { Limites, UsageLedger, UsoDoModelo } from "./ledger"
+import { rotaDe, separarRota } from "./rota"
 
 export { diaDaCota, janelaDoMinuto } from "./janelas"
 
-export type Troca = { papel: Papel; de: string; para: string; motivo: "cota" | "429" }
+export type Troca = {
+  papel: Papel
+  de: string
+  para: string
+  motivo: "cota" | "429"
+  chave_de?: number
+  chave_para?: number
+}
 
 export interface ModelRouter {
   paraPapel(
@@ -25,6 +33,8 @@ type Deps = {
   clock: Clock
   telemetry: Telemetry
   cotas?: typeof llmCotas
+  /** Chaves configuradas, na ordem de uso. Padrão: [1]. */
+  chaves?: readonly number[]
 }
 
 function temVaga(uso: UsoDoModelo | undefined, l: Limites): boolean {
@@ -37,6 +47,7 @@ function temVaga(uso: UsoDoModelo | undefined, l: Limites): boolean {
 export function createModelRouter(deps: Deps): ModelRouter {
   const { ledger, telemetry } = deps
   const cotas = deps.cotas ?? llmCotas
+  const chaves = deps.chaves ?? [1]
   const modelos: Record<string, Limites> = cotas.modelos
 
   for (const [papel, lista] of Object.entries(cotas.papeis)) {
@@ -47,19 +58,47 @@ export function createModelRouter(deps: Deps): ModelRouter {
     }
   }
 
-  function medirCota(modelo: string, uso: UsoDoModelo[]): void {
-    const u = uso.find((x) => x.modelo === modelo)
-    const l = modelos[modelo]
+  function rotasDe(modelo: string): string[] {
+    return chaves.map((c) => rotaDe(modelo, c, chaves.length))
+  }
+
+  function limitesDa(rota: string): Limites | undefined {
+    return modelos[separarRota(rota).modelo]
+  }
+
+  function filaDo(papel: Papel): string[] {
+    return cotas.papeis[papel].flatMap(rotasDe)
+  }
+
+  function medirCota(rota: string, uso: UsoDoModelo[]): void {
+    const u = uso.find((x) => x.modelo === rota)
+    const l = limitesDa(rota)
+    const modelo = separarRota(rota).modelo
     if (!u || !l) return
     telemetry.medidor("ritu_llm_cota_usada", u.minuto.pedidos / l.rpm, { modelo, janela: "minuto" })
     telemetry.medidor("ritu_llm_cota_usada", u.dia.pedidos / l.rpd, { modelo, janela: "dia" })
   }
 
-  async function reservarEMedir(modelo: string): Promise<boolean> {
-    const limites = modelos[modelo]
-    if (!limites || !(await ledger.reservar(modelo, limites))) return false
-    medirCota(modelo, await ledger.uso())
+  async function reservarEMedir(rota: string): Promise<boolean> {
+    const limites = limitesDa(rota)
+    if (!limites || !(await ledger.reservar(rota, limites))) return false
+    medirCota(rota, await ledger.uso())
     return true
+  }
+
+  function trocaEntre(papel: Papel, de: string, para: string, motivo: "cota" | "429"): Troca {
+    const a = separarRota(de)
+    const b = separarRota(para)
+    const troca: Troca = { papel, de: a.modelo, para: b.modelo, motivo }
+    if (a.modelo === b.modelo) return { ...troca, chave_de: a.chave, chave_para: b.chave }
+    return troca
+  }
+
+  function inicioDe(lista: readonly string[], preferir?: string): string[] {
+    if (!preferir) return []
+    if (lista.includes(preferir)) return [preferir]
+    const pura = lista.filter((r) => separarRota(r).modelo === preferir)
+    return pura
   }
 
   function anunciarTroca(t: Troca, aoTrocar?: (t: Troca) => void): void {
@@ -71,29 +110,30 @@ export function createModelRouter(deps: Deps): ModelRouter {
 
   return {
     paraPapel(papel, opts = {}) {
-      const lista: readonly string[] = cotas.papeis[papel]
-      const inicio = opts.preferir && lista.includes(opts.preferir) ? [opts.preferir] : []
+      const lista = filaDo(papel)
+      const inicio = inicioDe(lista, opts.preferir)
       let anterior = inicio[0] ?? lista[0] ?? ""
       let houve429 = false
 
       return {
         async proximo() {
           const tentativas = [...new Set([...inicio, ...lista])]
-          for (const modelo of tentativas) {
-            if (!(await reservarEMedir(modelo))) continue
-            if (modelo === anterior) return { modelo }
+          for (const rota of tentativas) {
+            if (!(await reservarEMedir(rota))) continue
+            if (rota === anterior) return { modelo: rota }
             const de = anterior
             const motivo = houve429 ? "429" : "cota"
             houve429 = false
-            anterior = modelo
-            anunciarTroca({ papel, de, para: modelo, motivo }, opts.aoTrocar)
-            return { modelo, troca: { de, motivo } }
+            anterior = rota
+            anunciarTroca(trocaEntre(papel, de, rota, motivo), opts.aoTrocar)
+            return { modelo: rota, troca: { de, motivo } }
           }
           telemetry.log("sem_modelo", { papel })
           return null
         },
-        async usou(modelo, tokens, duracaoMs) {
-          await ledger.registrarTokens(modelo, tokens.entrada + tokens.saida)
+        async usou(rota, tokens, duracaoMs) {
+          const { modelo } = separarRota(rota)
+          await ledger.registrarTokens(rota, tokens.entrada + tokens.saida)
           telemetry.contador("ritu_llm_chamadas_total", { modelo, papel })
           telemetry.contador(
             "ritu_tokens_total",
@@ -103,9 +143,10 @@ export function createModelRouter(deps: Deps): ModelRouter {
           telemetry.contador("ritu_tokens_total", { modelo, papel, direcao: "saida" }, tokens.saida)
           telemetry.histograma("ritu_llm_duracao_ms", duracaoMs, { modelo, papel })
         },
-        async falhou(modelo, erro: LlmError) {
+        async falhou(rota, erro: LlmError) {
+          const { modelo } = separarRota(rota)
           if (erro.code === "rate_limit") {
-            await ledger.registrarRateLimit(modelo)
+            await ledger.registrarRateLimit(rota)
             houve429 = true
           }
           const rotulos = { modelo, papel, codigo: erro.code }
@@ -117,19 +158,19 @@ export function createModelRouter(deps: Deps): ModelRouter {
 
     async temModelo(papel) {
       const uso = await ledger.uso()
-      return cotas.papeis[papel].some((m) =>
+      return filaDo(papel).some((r) =>
         temVaga(
-          uso.find((u) => u.modelo === m),
-          modelos[m] as Limites,
+          uso.find((u) => u.modelo === r),
+          limitesDa(r) as Limites,
         ),
       )
     },
 
     async cotaDoDiaEsgotada(papel) {
       const uso = await ledger.uso()
-      return cotas.papeis[papel].every((m) => {
-        const u = uso.find((x) => x.modelo === m)
-        const diaCheio = (u?.dia.pedidos ?? 0) >= (modelos[m] as Limites).rpd
+      return filaDo(papel).every((r) => {
+        const u = uso.find((x) => x.modelo === r)
+        const diaCheio = (u?.dia.pedidos ?? 0) >= (limitesDa(r) as Limites).rpd
         return u?.esgotado_ate === "dia" || diaCheio
       })
     },

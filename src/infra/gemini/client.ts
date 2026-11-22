@@ -3,6 +3,7 @@ import { type GenerateContentParameters, GoogleGenAI } from "@google/genai"
 import { z } from "zod"
 import type { LlmClient } from "@/core/llm/client"
 import { LlmError } from "@/core/llm/errors"
+import { separarRota } from "@/core/llm/rota"
 
 type Resposta = {
   text?: string
@@ -41,15 +42,31 @@ function lerJson<T>(texto: string | undefined, schema: z.ZodType<T>): T {
   return lido.data
 }
 
-export function createGeminiClient(deps: { apiKey: () => string; sdk?: GeminiSdk }): LlmClient {
-  let sdk = deps.sdk
+export function createGeminiClient(deps: {
+  apiKey: (chave: number) => string
+  sdk?: GeminiSdk
+  /** Só para teste: fabrica o SDK de uma chave. */
+  criarSdk?: (apiKey: string) => GeminiSdk
+}): LlmClient {
+  const porChave = new Map<number, GeminiSdk>()
+  const criar = deps.criarSdk ?? ((apiKey: string) => new GoogleGenAI({ apiKey }))
+  function sdkDa(chave: number): GeminiSdk {
+    if (deps.sdk) return deps.sdk
+    let sdk = porChave.get(chave)
+    if (!sdk) {
+      sdk = criar(deps.apiKey(chave))
+      porChave.set(chave, sdk)
+    }
+    return sdk
+  }
   return {
     async gerar<T>(p: Parameters<LlmClient["gerar"]>[0] & { schema: z.ZodType<T> }) {
-      sdk ??= new GoogleGenAI({ apiKey: deps.apiKey() })
+      const { modelo, chave } = separarRota(p.modelo)
+      const sdk = sdkDa(chave)
       let resposta: Resposta
       try {
         resposta = await sdk.models.generateContent({
-          model: p.modelo,
+          model: modelo,
           contents: p.entrada,
           config: {
             systemInstruction: p.instrucoes,

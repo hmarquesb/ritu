@@ -34,6 +34,20 @@ export const ENV_VARS: readonly EnvVar[] = [
     descricao: "Em produção, a chave do projeto de produção",
   },
   {
+    name: "GEMINI_API_KEY_2",
+    entrega: 3,
+    obrigatoria: false,
+    producao: "local",
+    descricao: "Chave de outro projeto do Google, só para os evals com LLM",
+  },
+  {
+    name: "GEMINI_API_KEY_3",
+    entrega: 3,
+    obrigatoria: false,
+    producao: "local",
+    descricao: "Chave de outro projeto do Google, só para os evals com LLM",
+  },
+  {
     name: "AUTH_SECRET",
     entrega: 3,
     obrigatoria: true,

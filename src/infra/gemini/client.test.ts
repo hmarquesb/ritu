@@ -84,4 +84,25 @@ describe("createGeminiClient", () => {
 
     expect(apiKey).not.toHaveBeenCalled()
   })
+
+  it("a rota m@2 usa a chave 2 e o modelo m", async () => {
+    const chaves: string[] = []
+    const modelos: string[] = []
+    const generate = vi.fn().mockImplementation(async (p: { model: string }) => {
+      modelos.push(p.model)
+      return { text: '{"ok":true}' }
+    })
+    const client = createGeminiClient({
+      apiKey: (n) => `k${n}`,
+      criarSdk: (k) => {
+        chaves.push(k)
+        return sdkCom(generate)
+      },
+    })
+    await client.gerar({ ...pedido, modelo: "modelo-a@2" })
+    await client.gerar({ ...pedido, modelo: "modelo-a@2" })
+    await client.gerar({ ...pedido, modelo: "modelo-a" })
+    expect(modelos).toEqual(["modelo-a", "modelo-a", "modelo-a"])
+    expect(chaves).toEqual(["k2", "k1"])
+  })
 })

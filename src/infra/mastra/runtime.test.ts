@@ -204,4 +204,17 @@ describe("createMastraRuntime", () => {
     }
     expect(saidas).toEqual([])
   })
+
+  it("a rota m@2 resolve o modelo m com a chave 2", async () => {
+    const vistos: [string, string][] = []
+    const runtime = createMastraRuntime({
+      apiKey: (n) => `chave${n}`,
+      modeloDe: (modelo, apiKey) => {
+        vistos.push([modelo, apiKey])
+        return modeloFalso(partesDeTool(), []) as never
+      },
+    })
+    await runtime.passo(pedido({ modelo: "m@2" }))
+    expect(vistos).toEqual([["m", "chave2"]])
+  })
 })

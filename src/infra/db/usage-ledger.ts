@@ -96,7 +96,12 @@ export function createPgUsageLedger(sql: Conexao, clock: Clock): UsageLedger {
       const linhas = await sql<(LinhaRow & { modelo: string })[]>`
         select modelo, janela, pedidos, tokens, rate_limits, esgotado from llm_uso
         where (janela = 'minuto' and inicio = ${c.minuto}) or (janela = 'dia' and inicio = ${c.dia})`
-      return Object.keys(llmCotas.modelos).map((modelo): UsoDoModelo => {
+      // Além dos modelos, os ids de rota (`<modelo>@<n>`) que já têm registro.
+      const rotas = linhas
+        .map((l) => l.modelo)
+        .filter((id) => id.includes("@") && !(id in llmCotas.modelos))
+      const ids = [...new Set([...Object.keys(llmCotas.modelos), ...rotas])]
+      return ids.map((modelo): UsoDoModelo => {
         const minuto = linhas.find((l) => l.modelo === modelo && l.janela === "minuto")
         const dia = linhas.find((l) => l.modelo === modelo && l.janela === "dia")
         const item: UsoDoModelo = {

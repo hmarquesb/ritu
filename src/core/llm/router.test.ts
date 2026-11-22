@@ -5,6 +5,7 @@ import { createFixedClock } from "@/infra/fakes/fixed-clock"
 import { createMemoryLedger } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { LlmError } from "./errors"
+import type { UsageLedger } from "./ledger"
 import { createModelRouter } from "./router"
 
 const [decisao0, decisao1] = llmCotas.papeis.decisao
@@ -254,5 +255,160 @@ describe("cotaDoDiaEsgotada", () => {
     const { router, ledger } = setup()
     for (const m of llmCotas.papeis.decisao) await ledger.registrarRateLimit(m)
     expect(await router.cotaDoDiaEsgotada("decisao")).toBe(false)
+  })
+})
+
+// Ledger mínimo que conta por id de rota (o `uso()` dos ledgers reais lista só os modelos).
+function ledgerPorRota(): UsageLedger {
+  const pedidos = new Map<string, number>()
+  const rateLimits = new Set<string>()
+  return {
+    async reservar(rota, limites) {
+      const n = pedidos.get(rota) ?? 0
+      if (rateLimits.has(rota) || n >= limites.rpm) return false
+      pedidos.set(rota, n + 1)
+      return true
+    },
+    async registrarTokens() {},
+    async registrarRateLimit(rota) {
+      rateLimits.add(rota)
+    },
+    async uso() {
+      return [...pedidos].map(([modelo, n]) => ({
+        modelo,
+        minuto: { pedidos: n, tokens: 0 },
+        dia: { pedidos: n, tokens: 0, rate_limits: 0 },
+      }))
+    },
+    async apagarAntigas() {
+      return 0
+    },
+  }
+}
+
+describe("createModelRouter com várias chaves", () => {
+  function setupChaves() {
+    const clock = createFixedClock("2026-06-01T20:00:10Z")
+    const ledger = ledgerPorRota()
+    const telemetry = createMemoryTelemetry()
+    const router = createModelRouter({ ledger, clock, telemetry, chaves: [1, 2, 3] })
+    return { ledger, telemetry, router }
+  }
+
+  it("a rota leva o sufixo da chave e o ledger recebe a rota", async () => {
+    const { router, ledger } = setupChaves()
+    const f = router.paraPapel("decisao")
+    expect(await f.proximo()).toEqual({ modelo: `${decisao0}@1` })
+    expect((await ledger.uso()).map((u) => u.modelo)).toEqual([`${decisao0}@1`])
+  })
+
+  it("429 na chave 1 passa para a chave 2 do mesmo modelo, com chave_de e chave_para", async () => {
+    const { router, telemetry } = setupChaves()
+    const trocas: unknown[] = []
+    const f = router.paraPapel("decisao", { aoTrocar: (t) => trocas.push(t) })
+    await f.proximo()
+    await f.falhou(`${decisao0}@1`, new LlmError("rate_limit", "x"))
+    const r = await f.proximo()
+    expect(r?.modelo).toBe(`${decisao0}@2`)
+    expect(trocas).toEqual([
+      { papel: "decisao", de: decisao0, para: decisao0, motivo: "429", chave_de: 1, chave_para: 2 },
+    ])
+    expect(telemetry.metricas.find((m) => m.nome === "ritu_llm_cota_usada")?.rotulos.modelo).toBe(
+      decisao0,
+    )
+  })
+
+  it("cota esgotada nas três chaves passa para o modelo seguinte", async () => {
+    const { router, ledger } = setupChaves()
+    for (const n of [1, 2, 3]) {
+      for (let i = 0; i < llmCotas.modelos[decisao0 as keyof typeof llmCotas.modelos].rpm; i++) {
+        await ledger.reservar(`${decisao0}@${n}`, llmCotas.modelos[decisao0])
+      }
+    }
+    const r = await router.paraPapel("decisao").proximo()
+    expect(r?.modelo).toBe(`${decisao1}@1`)
+  })
+
+  it("preferir aceita modelo puro e id de rota", async () => {
+    const { router } = setupChaves()
+    expect((await router.paraPapel("decisao", { preferir: decisao1 }).proximo())?.modelo).toBe(
+      `${decisao1}@1`,
+    )
+    expect(
+      (await router.paraPapel("decisao", { preferir: `${decisao1}@2` }).proximo())?.modelo,
+    ).toBe(`${decisao1}@2`)
+  })
+
+  it("usou() mede com o modelo sem sufixo", async () => {
+    const { router, telemetry } = setupChaves()
+    const f = router.paraPapel("decisao")
+    await f.usou(`${decisao0}@2`, { entrada: 1, saida: 1 }, 5)
+    const m = telemetry.metricas.find((x) => x.nome === "ritu_llm_chamadas_total")
+    expect(m?.rotulos).toEqual({ modelo: decisao0, papel: "decisao" })
+  })
+
+  it("sem chaves, o ledger recebe o modelo puro", async () => {
+    const { router, ledger } = setup()
+    await router.paraPapel("decisao").proximo()
+    const usados = (await ledger.uso()).filter((u) => u.dia.pedidos > 0)
+    expect(usados.map((u) => u.modelo)).toEqual([decisao0])
+  })
+
+  describe("com o ledger em memória real", () => {
+    function setupReal() {
+      const clock = createFixedClock("2026-06-01T20:00:10Z")
+      const ledger = createMemoryLedger(clock)
+      const router = createModelRouter({
+        ledger,
+        clock,
+        telemetry: createMemoryTelemetry(),
+        chaves: [1, 2, 3],
+      })
+      return { ledger, router }
+    }
+
+    it("temModelo vê a cota de cada rota", async () => {
+      const { router, ledger } = setupReal()
+      const todas = llmCotas.papeis.reforco.flatMap((m) => [1, 2, 3].map((n) => `${m}@${n}`))
+      for (const rota of todas) await ledger.registrarRateLimit(rota)
+      expect(await router.temModelo("reforco")).toBe(false)
+      const livre = `${llmCotas.papeis.reforco[0]}@3`
+      const { ledger: outro, router: r2 } = setupReal()
+      for (const rota of todas.filter((r) => r !== livre)) await outro.registrarRateLimit(rota)
+      expect(await r2.temModelo("reforco")).toBe(true)
+    })
+
+    async function esgotarDia(ledger: UsageLedger, chaves: number[]) {
+      for (const m of llmCotas.papeis.reforco) {
+        for (const n of chaves) {
+          for (let i = 0; i < llmCotas.rateLimitsParaEsgotarODia; i++) {
+            await ledger.registrarRateLimit(`${m}@${n}`)
+          }
+        }
+      }
+    }
+
+    it("cotaDoDiaEsgotada só vale com as três chaves de todo modelo cheias no dia", async () => {
+      const cheio = setupReal()
+      await esgotarDia(cheio.ledger, [1, 2, 3])
+      expect(await cheio.router.cotaDoDiaEsgotada("reforco")).toBe(true)
+      const parcial = setupReal()
+      await esgotarDia(parcial.ledger, [1, 2])
+      expect(await parcial.router.cotaDoDiaEsgotada("reforco")).toBe(false)
+    })
+
+    it("a métrica de cota sai com o modelo sem sufixo", async () => {
+      const clock = createFixedClock("2026-06-01T20:00:10Z")
+      const telemetry = createMemoryTelemetry()
+      const router = createModelRouter({
+        ledger: createMemoryLedger(clock),
+        clock,
+        telemetry,
+        chaves: [1, 2, 3],
+      })
+      await router.paraPapel("decisao").proximo()
+      const m = telemetry.metricas.find((x) => x.nome === "ritu_llm_cota_usada")
+      expect(m?.rotulos.modelo).toBe(decisao0)
+    })
   })
 })

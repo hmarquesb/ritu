@@ -141,6 +141,23 @@ function routerE2e(puro: ModelRouter): ModelRouter {
   }
 }
 
+const VARIAVEL_DA_CHAVE: Record<number, string> = {
+  1: "GEMINI_API_KEY",
+  2: "GEMINI_API_KEY_2",
+  3: "GEMINI_API_KEY_3",
+}
+
+/** Chaves do Gemini configuradas: a 1 sempre; a 2 e a 3 só se a variável existir. */
+function chavesDoGemini(): number[] {
+  return [1, 2, 3].filter(
+    (n) => n === 1 || optionalEnv(VARIAVEL_DA_CHAVE[n] as string) !== undefined,
+  )
+}
+
+function chaveDoGemini(chave: number): string {
+  return requireEnv(VARIAVEL_DA_CHAVE[chave] ?? "GEMINI_API_KEY")
+}
+
 function routerDoModo(puro: ModelRouter, e2e: boolean): ModelRouter {
   return e2e ? routerE2e(puro) : puro
 }
@@ -259,14 +276,19 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     get router() {
       router ??= routerDoModo(
-        createModelRouter({ ledger: container.ledger, clock, telemetry: container.telemetry }),
+        createModelRouter({
+          ledger: container.ledger,
+          clock,
+          telemetry: container.telemetry,
+          chaves: chavesDoGemini(),
+        }),
         e2e,
       )
       return router
     },
     // A chave do Gemini só é lida na primeira chamada.
     get llm() {
-      llm ??= e2e ? llmE2e() : createGeminiClient({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      llm ??= e2e ? llmE2e() : createGeminiClient({ apiKey: chaveDoGemini })
       return llm
     },
     // OTel só com endpoint; sem ele, a telemetria nula. O SDK de Node não entra por aqui.
@@ -283,9 +305,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // A chave do modelo só é lida na primeira chamada de passo.
     get runtime() {
-      runtime ??= e2e
-        ? runtimeE2e()
-        : createMastraRuntime({ apiKey: () => requireEnv("GEMINI_API_KEY") })
+      runtime ??= e2e ? runtimeE2e() : createMastraRuntime({ apiKey: chaveDoGemini })
       return runtime
     },
     get runs() {

@@ -3,6 +3,7 @@ import { noopLogger } from "@mastra/core/logger"
 import { createTool } from "@mastra/core/tools"
 import { RituError } from "@/core/errors"
 import { LlmError } from "@/core/llm/errors"
+import { separarRota } from "@/core/llm/rota"
 import type {
   AgentRuntime,
   MensagemDoLoop,
@@ -14,7 +15,7 @@ type ModeloDaBiblioteca = ConstructorParameters<typeof Agent>[0]["model"]
 type MensagemDaBiblioteca = { role: string; content: unknown }
 
 export type DepsDoRuntimeMastra = {
-  apiKey: () => string
+  apiKey: (chave: number) => string
   /** Só para teste: troca o modelo resolvido pelo roteador da biblioteca. */
   modeloDe?: (modelo: string, apiKey: string) => ModeloDaBiblioteca
 }
@@ -159,6 +160,7 @@ export function createMastraRuntime(deps: DepsDoRuntimeMastra): AgentRuntime {
     async passo(p: PedidoDePasso): Promise<ResultadoDePasso> {
       // Falha de programação (nomes que colidem): sai antes do try, sem virar erro de modelo.
       const tools = declararTools(p.tools)
+      const rota = separarRota(p.modelo)
       const controle = new AbortController()
       let abortou = false
       const relogio = setTimeout(() => {
@@ -170,7 +172,7 @@ export function createMastraRuntime(deps: DepsDoRuntimeMastra): AgentRuntime {
           id: "ritu",
           name: "ritu",
           instructions: p.instrucoes,
-          model: resolverModelo(p.modelo, deps.apiKey()),
+          model: resolverModelo(rota.modelo, deps.apiKey(rota.chave)),
           tools,
         })
         // O logger padrão imprime o erro do provedor, que carrega o prompt: fica mudo.

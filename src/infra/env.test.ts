@@ -79,7 +79,7 @@ describe("envStatus", () => {
   const status = envStatus({ DATABASE_URL: "x", EXTRA: "y" })
 
   it("lista só as variáveis do catálogo, sem as de fora", () => {
-    expect(status).toHaveLength(20)
+    expect(status).toHaveLength(22)
     expect(status.map((item) => item.name)).not.toContain("EXTRA")
   })
 
@@ -155,6 +155,8 @@ const USOS: readonly UsoEmProducao[] = [
 const TABELA_PRODUCAO: readonly [string, UsoEmProducao, string][] = [
   ["DATABASE_URL", "obrigatoria", "Postgres. Em produção, a URL do Neon com pooler"],
   ["GEMINI_API_KEY", "obrigatoria", "Em produção, a chave do projeto de produção"],
+  ["GEMINI_API_KEY_2", "local", "Chave de outro projeto do Google, só para os evals com LLM"],
+  ["GEMINI_API_KEY_3", "local", "Chave de outro projeto do Google, só para os evals com LLM"],
   ["AUTH_SECRET", "obrigatoria", "Sessão."],
   ["IP_HMAC_SECRET", "obrigatoria", "HMAC do IP nos limites."],
   ["CRON_SECRET", "obrigatoria", "Autenticação do cron."],

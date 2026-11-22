@@ -137,5 +137,15 @@ export function runUsageLedgerContract(
       // sai: dia de b
       expect(await ledger.apagarAntigas()).toBe(1)
     })
+
+    it("uso lista também os ids de rota que já têm registro", async () => {
+      expect((await ledger.uso()).map((u) => u.modelo)).not.toContain(`${M}@2`)
+      expect(await ledger.reservar(`${M}@2`, folgado)).toBe(true)
+      await ledger.registrarTokens(`${M}@2`, 5)
+      const uso = await usoDe(`${M}@2`)
+      expect(uso?.dia.pedidos).toBe(1)
+      expect(uso?.minuto.tokens).toBe(5)
+      expect((await usoDe(M))?.dia.pedidos).toBe(0)
+    })
   })
 }

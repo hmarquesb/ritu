@@ -1122,7 +1122,12 @@ export function createMemoryLedger(
     },
 
     async uso() {
-      return Object.keys(llmCotas.modelos).map((modelo): UsoDoModelo => {
+      // Além dos modelos, os ids de rota (`<modelo>@<n>`) que já têm registro.
+      const rotas = [...minutos.keys(), ...dias.keys()]
+        .map((k) => k.split("\u0000")[0] ?? "")
+        .filter((id) => id.includes("@") && !(id in llmCotas.modelos))
+      const ids = [...new Set([...Object.keys(llmCotas.modelos), ...rotas])]
+      return ids.map((modelo): UsoDoModelo => {
         const { kMinuto, kDia } = correntes(modelo)
         const min = minutos.get(kMinuto) ?? vazia()
         const dia = dias.get(kDia) ?? vazia()

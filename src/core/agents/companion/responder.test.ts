@@ -22,20 +22,13 @@ const TEXTO_DA_PESSOA = "texto secreto da pessoa"
 
 const entregaOk = {
   resposta: "Respire devagar por um minuto.",
-  explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
   sugestoes: [],
-  evitar: [],
   incertos: [],
-  citados: [],
 }
-const entregaRuim = {
-  ...entregaOk,
-  explicacao: { qualidades_do_momento: [], qualidades_buscadas: ["quente"] },
-}
+const entregaRuim = { ...entregaOk, resposta: "" }
 const entregaDoMomento = {
   ...entregaOk,
   incertos: ["Não sei o que há na sua casa."],
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
 }
 const finalizar = (argumentos: unknown): PassoRoteirizado => ({
   chamadas: [{ nome: "finalizar", argumentos }],
@@ -341,29 +334,12 @@ const pedirCasa = (): PassoRoteirizado => ({
 const entregaComLegume = (legume: string, extra: Record<string, unknown> = {}) => ({
   ...entregaOk,
   resposta: "Um arroz bem cozido com legume deixa o corpo aquecido e firme.",
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
   sugestoes: [
     {
       tipo: "refeicao",
-      preparo_id: "arroz-com-legume",
-      itens: [
-        {
-          alimento_id: "arroz-branco",
-          funcao: "base",
-          contribui: [],
-          linha_base: "alimentos:arroz-branco",
-        },
-        { alimento_id: legume, funcao: "legume", contribui: [], linha_base: `alimentos:${legume}` },
-        { alimento_id: "ghee", funcao: "gordura", contribui: [], linha_base: "alimentos:ghee" },
-      ],
+      id: "arroz-com-legume",
+      escolhas: [{ funcao: "legume", alimento_id: legume }],
       motivo: "Nutre e aquece.",
-      linhas_base: [
-        "preparos:arroz-com-legume",
-        `alimentos:${legume}`,
-        "alimentos:arroz-branco",
-        "alimentos:ghee",
-      ],
-      novidade: false,
     },
   ],
   ...extra,

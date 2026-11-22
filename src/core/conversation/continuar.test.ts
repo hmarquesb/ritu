@@ -33,11 +33,8 @@ const base = {
 }
 const entregaOk = {
   resposta: "Respire devagar por um minuto.",
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
   sugestoes: [],
-  evitar: [],
   incertos: ["Não sei o que há na sua casa."],
-  citados: [],
 }
 const askCasa: PassoRoteirizado = {
   chamadas: [{ nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["abobora", "cenoura"] } }],

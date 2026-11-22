@@ -42,16 +42,12 @@ const saida = (parcial: Record<string, unknown>) => ({ ...base, ...parcial })
 
 const entregaOk = {
   resposta: "Respire devagar por um minuto.",
-  explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
   sugestoes: [],
-  evitar: [],
   incertos: [],
-  citados: [],
 }
 const entregaDoMomento = {
   ...entregaOk,
   incertos: ["Não sei o que há na sua casa."],
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
 }
 const finalizar = (argumentos: unknown = entregaOk): PassoRoteirizado => ({
   chamadas: [{ nome: "finalizar", argumentos }],
@@ -842,7 +838,6 @@ describe("conversar: pausas", () => {
       roteiro: [
         finalizar({
           ...entregaDoMomento,
-          explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
         }),
       ],
     })
@@ -991,7 +986,6 @@ describe("conversar: fim do run com o bloco de aprovação", () => {
       roteiro: [
         finalizar({
           ...entregaDoMomento,
-          explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
         }),
       ],
     })
@@ -1086,34 +1080,12 @@ const reprovado = (): Veredito =>
 const comSugestao = {
   ...entregaOk,
   resposta: "Um arroz bem cozido com legume deixa o corpo aquecido e firme.",
-  explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
   sugestoes: [
     {
       tipo: "refeicao",
-      preparo_id: "arroz-com-legume",
-      itens: [
-        {
-          alimento_id: "arroz-branco",
-          funcao: "base",
-          contribui: [],
-          linha_base: "alimentos:arroz-branco",
-        },
-        {
-          alimento_id: "abobora",
-          funcao: "legume",
-          contribui: [],
-          linha_base: "alimentos:abobora",
-        },
-        { alimento_id: "ghee", funcao: "gordura", contribui: [], linha_base: "alimentos:ghee" },
-      ],
+      id: "arroz-com-legume",
+      escolhas: [{ funcao: "legume", alimento_id: "abobora" }],
       motivo: "Nutre e aquece.",
-      linhas_base: [
-        "preparos:arroz-com-legume",
-        "alimentos:abobora",
-        "alimentos:arroz-branco",
-        "alimentos:ghee",
-      ],
-      novidade: false,
     },
   ],
 }
@@ -1122,7 +1094,7 @@ const proporRotina: PassoRoteirizado = {
 }
 const interpretacaoDoMomento = saida({
   intencoes: ["momento", "casa"],
-  estados: ["com_frio"],
+  estados: ["com_frio", "agitada"],
   itens_casa: [{ nome: "abóbora", acao: "tem" }],
   fato_de_rotina: "acordo cedo",
 })

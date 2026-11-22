@@ -18,7 +18,7 @@ import { criarAcompanhante } from "./agente"
 import { contextoDoRun } from "./contexto-do-run"
 import { criarJuizDoRun } from "./juiz-do-run"
 import type { DadosDoPreparo } from "./preparo"
-import type { EntregaDoModelo, SaidaDoAcompanhante } from "./saida"
+import type { EscolhaDoModelo, SaidaDoAcompanhante } from "./saida"
 
 const kb = createMiniKnowledge()
 const CONFIRMADOS = ["gengibre", "canela", "cardamomo", "leite", "mel", "arroz-branco", "ghee"]
@@ -51,7 +51,15 @@ function dados(): DadosDoPreparo {
         tipo: "cha",
         id: "cha-gengibre",
         nome: "cha-gengibre",
-        itens: [],
+        itens: [
+          {
+            alimento_id: "gengibre",
+            nome: "gengibre",
+            casa: "confirmado",
+            contribui: ["quente"],
+            linha_base: "alimentos:gengibre",
+          },
+        ],
         contribui: ["quente"],
         linha_base: "praticas:cha-gengibre",
         adequacao: 1,
@@ -90,30 +98,16 @@ function dados(): DadosDoPreparo {
   }
 }
 
-function entrega(mudar: Partial<EntregaDoModelo> = {}): EntregaDoModelo {
+function entrega(mudar: Partial<EscolhaDoModelo> = {}): EscolhaDoModelo {
   return {
     resposta: "Um chá morno pode ajudar você a se sentir mais aquecida agora.",
-    explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
-    sugestoes: [
-      {
-        tipo: "cha",
-        pratica_id: "cha-gengibre",
-        itens: [
-          { alimento_id: "gengibre", contribui: ["quente"], linha_base: "alimentos:gengibre" },
-        ],
-        motivo: "Aquece o corpo.",
-        linhas_base: ["praticas:cha-gengibre", "alimentos:gengibre"],
-        novidade: false,
-      },
-    ],
-    evitar: [],
+    sugestoes: [{ tipo: "cha", id: "cha-gengibre", motivo: "Aquece o corpo." }],
     incertos: [],
-    citados: [],
     ...mudar,
   }
 }
 
-const finalizar = (e: EntregaDoModelo = entrega()): PassoRoteirizado => ({
+const finalizar = (e: EscolhaDoModelo = entrega()): PassoRoteirizado => ({
   chamadas: [{ nome: "finalizar", argumentos: e }],
 })
 const proporRotina: PassoRoteirizado = {

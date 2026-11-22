@@ -49,11 +49,8 @@ describe("resultado.registrar e finalizar no mesmo passo", () => {
     if (!pendente) throw new Error("retorno não criado")
     const entrega = {
       resposta: "Que bom que ajudou.",
-      explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
       sugestoes: [],
-      evitar: [],
       incertos: [],
-      citados: [],
     }
     const runtime = createScriptedRuntime(
       [

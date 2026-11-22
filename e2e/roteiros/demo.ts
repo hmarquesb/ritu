@@ -22,68 +22,21 @@ export function roteiroDemo(mensagem: string): Roteiro {
             nome: "finalizar",
             argumentos: {
               resposta:
-                "Para uma manhã fria e agitada, um chá quente de gengibre com canela e uma refeição morna de arroz com abóbora e ghee ajudam a aquecer e a assentar. Se puder, sente-se para comer, sem tela.",
-              explicacao: {
-                qualidades_do_momento: ["frio", "movel"],
-                qualidades_buscadas: ["quente", "estavel", "pesado"],
-              },
+                "Para uma manhã fria e agitada, uma refeição morna de caldo e um banho morno ajudam a aquecer e a assentar. Se puder, sente-se para comer, sem tela.",
               sugestoes: [
                 {
-                  tipo: "cha",
-                  pratica_id: "cha-gengibre-canela",
-                  itens: [
-                    {
-                      alimento_id: "gengibre",
-                      contribui: ["quente"],
-                      linha_base: "alimentos:gengibre",
-                    },
-                    {
-                      alimento_id: "canela",
-                      contribui: ["quente"],
-                      linha_base: "alimentos:canela",
-                    },
-                  ],
+                  tipo: "pratica",
+                  id: "banho-morno",
                   motivo: "Aquece o corpo logo cedo, com o que você tem em casa.",
-                  linhas_base: ["praticas:cha-gengibre-canela"],
-                  novidade: false,
                 },
                 {
                   tipo: "refeicao",
-                  preparo_id: "arroz-com-legume",
-                  itens: [
-                    {
-                      alimento_id: "arroz-branco",
-                      funcao: "base",
-                      contribui: ["pesado"],
-                      linha_base: "alimentos:arroz-branco",
-                    },
-                    {
-                      alimento_id: "abobora",
-                      funcao: "legume",
-                      contribui: [],
-                      linha_base: "alimentos:abobora",
-                    },
-                    {
-                      alimento_id: "ghee",
-                      funcao: "gordura",
-                      contribui: ["pesado"],
-                      linha_base: "alimentos:ghee",
-                    },
-                  ],
+                  id: "caldo",
                   motivo: "Uma comida morna e cozida, que assenta bem no frio.",
-                  linhas_base: ["preparos:arroz-com-legume"],
-                  novidade: false,
                 },
               ],
-              evitar: ["estados:com_frio"],
               incertos: [],
-              citados: [],
-              para_ter: {
-                alimento_id: "cardamomo",
-                vezes: 3,
-                contribui: ["quente"],
-                linha_base: "alimentos:cardamomo",
-              },
+              para_ter: true,
             },
           },
         ],

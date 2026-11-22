@@ -11,12 +11,12 @@ const MSG_PERGUNTA_CASA = "fui à feira ontem, o que faço pro jantar?"
 const MSG_TROCA = "quero um chá quente agora"
 const MSG_TEXTO_CRU = "mostra um texto estranho"
 const MSG_LENTO = "demora um pouco"
-const FRASE_DA_TROCA = /Troquei canela por cominho/
+const FRASE_DA_TROCA = /Troquei gengibre por canela/
 
 const RESPOSTA_DEMO = "Para uma manhã fria e agitada"
-const RESPOSTA_PERGUNTA_CASA = "uma refeição morna de abóbora cozida no vapor"
-const RESPOSTA_TROCA = "Um chá quente de canela aquece sem pesar"
-const RESPOSTA_LENTO = "Um chá quente de gengibre com canela ajuda a aquecer"
+const RESPOSTA_PERGUNTA_CASA = "uma refeição morna de caldo"
+const RESPOSTA_TROCA = "Um chá quente de gengibre aquece sem pesar"
+const RESPOSTA_LENTO = "Um chá quente de gengibre ajuda a aquecer"
 
 const caixaDe = (page: Page) => page.getByRole("textbox", { name: T.caixa.rotulo })
 const enviarDe = (page: Page) => page.getByRole("button", { name: T.caixa.enviar })
@@ -101,7 +101,7 @@ test.describe("demonstração até a resposta", () => {
     await enviarDe(page).click()
 
     await expect(noLog(page).getByText(RESPOSTA_DEMO)).toBeVisible()
-    await expect(page.getByRole("heading", { name: "Chá de gengibre com canela" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Banho morno" })).toBeVisible()
     await expect(page.getByText(formatar(T.paraTer.rotulo, { item: "cardamomo" }))).toBeVisible()
     await expect(page.getByRole("heading", { name: T.bloco.titulo })).toBeVisible()
     await expect(page.getByText(T.rodape.aviso)).toBeVisible()
@@ -246,20 +246,20 @@ test.describe("troca e voto", () => {
     await entrarNaDemo(page)
     await enviarTexto(page, MSG_TROCA)
     await expect(noLog(page).getByText(RESPOSTA_TROCA)).toBeVisible()
-    await menuDe(page, "Canela").click()
+    await menuDe(page, "Gengibre").click()
     await page.getByRole("menuitem", { name: "Trocar" }).click()
-    await expect(menuDe(page, "Cominho")).toBeVisible()
+    await expect(menuDe(page, "Canela")).toBeVisible()
     await expect(page.getByText(FRASE_DA_TROCA)).toBeVisible()
-    await expect(menuDe(page, "Canela")).toHaveCount(0)
+    await expect(menuDe(page, "Gengibre")).toHaveCount(0)
   })
 
   test("Não tenho abre a pergunta da troca", async ({ page }) => {
     await entrarNaDemo(page)
     await enviarTexto(page, MSG_TROCA)
     await expect(noLog(page).getByText(RESPOSTA_TROCA)).toBeVisible()
-    await menuDe(page, "Canela").click()
+    await menuDe(page, "Gengibre").click()
     await page.getByRole("menuitem", { name: "Trocar" }).click()
-    await expect(menuDe(page, "Cominho")).toBeVisible()
+    await expect(menuDe(page, "Canela")).toBeVisible()
     // Cada "Não tenho" no substituto atual leva ao próximo da casa, até sobrar um que a pessoa ainda não confirmou.
     const pergunta = page.getByText(/^Você tem .+\?$/)
     const chip = page.getByRole("button", { name: /^Opções para / }).first()
@@ -302,12 +302,12 @@ test.describe("troca e voto", () => {
     await entrarNaDemo(page)
     await enviarTexto(page, MSG_TROCA)
     await expect(noLog(page).getByText(RESPOSTA_TROCA)).toBeVisible()
-    await menuDe(page, "Canela").click()
+    await menuDe(page, "Gengibre").click()
     await page.getByRole("menuitem", { name: "Trocar" }).click()
     await expect(page.getByText(FRASE_DA_TROCA)).toBeVisible()
     await page.reload()
     await expect(noLog(page).getByText(RESPOSTA_TROCA)).toBeVisible()
-    await expect(menuDe(page, "Cominho")).toBeVisible()
+    await expect(menuDe(page, "Canela")).toBeVisible()
     await expect(page.getByText(FRASE_DA_TROCA)).toBeVisible()
   })
 })

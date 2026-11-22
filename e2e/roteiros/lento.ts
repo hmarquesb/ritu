@@ -25,33 +25,15 @@ export const roteiroLento: Roteiro = {
         {
           nome: "finalizar",
           argumentos: {
-            resposta:
-              "Um chá quente de gengibre com canela ajuda a aquecer sem pesar. Beba morno, devagar.",
-            explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
+            resposta: "Um chá quente de gengibre ajuda a aquecer sem pesar. Beba morno, devagar.",
             sugestoes: [
               {
                 tipo: "cha",
-                pratica_id: "cha-gengibre-canela",
-                itens: [
-                  {
-                    alimento_id: "gengibre",
-                    contribui: ["quente"],
-                    linha_base: "alimentos:gengibre",
-                  },
-                  {
-                    alimento_id: "canela",
-                    contribui: ["quente"],
-                    linha_base: "alimentos:canela",
-                  },
-                ],
+                id: "cha-gengibre",
                 motivo: "Aquece o corpo, com o que você tem em casa.",
-                linhas_base: ["praticas:cha-gengibre-canela"],
-                novidade: false,
               },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

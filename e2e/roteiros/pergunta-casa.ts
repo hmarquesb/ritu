@@ -21,31 +21,15 @@ export const roteiroPerguntaCasa: Roteiro = {
           nome: "finalizar",
           argumentos: {
             resposta:
-              "Para o jantar, uma refeição morna de abóbora cozida no vapor é simples e assenta bem. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: ["frio", "movel"],
-              qualidades_buscadas: ["quente", "estavel", "pesado"],
-            },
+              "Para o jantar, uma refeição morna de caldo é simples e assenta bem. Se puder, sente-se para comer, sem tela.",
             sugestoes: [
               {
                 tipo: "refeicao",
-                preparo_id: "legumes-no-vapor",
-                itens: [
-                  {
-                    alimento_id: "abobora",
-                    funcao: "legume",
-                    contribui: [],
-                    linha_base: "alimentos:abobora",
-                  },
-                ],
-                motivo: "Uma comida morna e cozida, com a abóbora que você tem.",
-                linhas_base: ["preparos:legumes-no-vapor"],
-                novidade: false,
+                id: "caldo",
+                motivo: "Uma comida morna e cozida, com o que você tem.",
               },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

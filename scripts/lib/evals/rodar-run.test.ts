@@ -99,6 +99,7 @@ describe("runner da conversa com LLM falso", () => {
     expect(resultado.checagens.map((c) => c.ok)).toEqual([true, true])
     expect(resultado.checagens.map((c) => c.lista)).toEqual(["deve", "nao_pode"])
     expect(resultado.acertou).toBe(true)
+    expect(resultado.estado).toBe("acertou")
     expect(colhido.texto.length).toBeGreaterThan(0)
     expect(colhido.etapas.length).toBeGreaterThan(0)
   })
@@ -328,6 +329,7 @@ describe("pausas acima do teto de retomadas", () => {
       { lista: "deve", descricao: "uma expectativa qualquer", ok: false },
     ])
     expect(falho.acertou).toBe(false)
+    expect(falho.estado).toBe("falhou")
     expect(colhido.texto).toBe("")
 
     const { resultado: seguinte } = await rodarConversa(
@@ -480,11 +482,8 @@ describe("runner do acompanhante com pausa", () => {
           nome: "finalizar",
           argumentos: {
             resposta: "Um chá morno de gengibre ajuda a aquecer, sem pesar.",
-            explicacao: { qualidades_do_momento: ["frio"], qualidades_buscadas: ["quente"] },
             sugestoes: [],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

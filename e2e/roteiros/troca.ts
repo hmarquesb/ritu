@@ -1,6 +1,6 @@
 import { type Roteiro, SEM_NADA } from "./tipos"
 
-// Chá de canela, que está em casa: trocar a canela abre a pergunta do substituto (cardamomo ou cravo, que não estão em casa).
+// Chá de gengibre, que está em casa: a troca do gengibre abre a pergunta do substituto.
 export const roteiroTroca: Roteiro = {
   nome: "troca",
   mensagem: "quero um chá quente agora",
@@ -17,30 +17,15 @@ export const roteiroTroca: Roteiro = {
           nome: "finalizar",
           argumentos: {
             resposta:
-              "Um chá quente de canela aquece sem pesar. Ferva um pau de canela por alguns minutos, coe e beba morno.",
-            explicacao: {
-              qualidades_do_momento: ["frio"],
-              qualidades_buscadas: ["quente"],
-            },
+              "Um chá quente de gengibre aquece sem pesar. Ferva as fatias por alguns minutos, coe e beba morno.",
             sugestoes: [
               {
                 tipo: "cha",
-                pratica_id: "cha-canela",
-                itens: [
-                  {
-                    alimento_id: "canela",
-                    contribui: ["quente"],
-                    linha_base: "alimentos:canela",
-                  },
-                ],
-                motivo: "Quente e leve, com a canela que você tem em casa.",
-                linhas_base: ["praticas:cha-canela"],
-                novidade: false,
+                id: "cha-gengibre",
+                motivo: "Quente e leve, com o gengibre que você tem em casa.",
               },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

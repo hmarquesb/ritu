@@ -37,8 +37,8 @@ describe("modo e2e: roteiros", () => {
     expect(tipos).toContain("lista.propor")
     expect(tipos).toContain("padrao.confirmar")
     expect(r.saida?.sugestoes.map((s) => s.pratica_id ?? s.preparo_id)).toEqual([
-      "cha-gengibre-canela",
-      "arroz-com-legume",
+      "banho-morno",
+      "caldo",
     ])
   })
 
@@ -72,7 +72,7 @@ describe("modo e2e: roteiros", () => {
     expect(depois.saida?.sugestoes).toHaveLength(1)
   })
 
-  it("troca: entrega um chá de canela e a troca da canela pergunta pelo substituto", async () => {
+  it("troca: entrega um chá de gengibre e a troca do gengibre pergunta pelo substituto", async () => {
     const { container, contaId } = await novoContainer()
 
     const r = await container.conversation.conversar(contaId, {
@@ -81,11 +81,11 @@ describe("modo e2e: roteiros", () => {
     })
 
     const sugestao = r.saida?.sugestoes[0]
-    expect(sugestao?.itens.map((i) => i.alimento_id)).toEqual(["canela"])
+    expect(sugestao?.itens.map((i) => i.alimento_id)).toEqual(["gengibre"])
     const troca = await container.touches.trocarIngrediente(contaId, {
       runId: r.run_id,
       sugestao: 0,
-      alimento_id: "canela",
+      alimento_id: "gengibre",
       motivo: "trocar",
     })
     expect(["trocou", "perguntar"]).toContain(troca.resultado)

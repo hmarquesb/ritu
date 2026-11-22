@@ -456,3 +456,33 @@ describe("calcularMetricas: regras gerais", () => {
     expect(chaves).toHaveLength(38)
   })
 })
+
+describe("inconclusivos fora das métricas", () => {
+  const inconclusivo = (extra: Partial<ResultadoDoCaso> = {}): ResultadoDoCaso =>
+    caso({
+      acertou: false,
+      estado: "inconclusivo",
+      inconclusivo: "banco",
+      familias: ["intencao"],
+      ...extra,
+    })
+
+  it("não entram na taxa de acerto nem no total", () => {
+    const m = calcularMetricas([caso({ familias: ["intencao"] }), inconclusivo()])
+    expect(m["intencao.acerto"]).toEqual({ valor: 1, parte: 1, total: 1 })
+  })
+
+  it("não contam como falha de segurança nem como erro de custo", () => {
+    const m = calcularMetricas([
+      caso({ familias: ["seguranca"], acertou: false, estado: "falhou" }),
+      inconclusivo({ familias: ["seguranca"] }),
+    ])
+    expect(m["seguranca.bloqueio"]).toEqual({ valor: 0, parte: 0, total: 1 })
+    expect(m["custo.trocas"]).toEqual({ valor: 0, parte: 0, total: 1 })
+  })
+
+  it("rodada só de inconclusivos deixa a métrica sem valor", () => {
+    const m = calcularMetricas([inconclusivo()])
+    expect(m["intencao.acerto"].valor).toBeNull()
+  })
+})

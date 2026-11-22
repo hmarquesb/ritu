@@ -114,7 +114,7 @@ export async function executarRodada(p: ParametrosDaRodada): Promise<FimDaRodada
   let errosSeguidos = 0
   for (const [indice, caso] of p.casos.entries()) {
     const feito = porId.get(caso.id)
-    if (feito && feito.erro === undefined) continue
+    if (feito && feito.erro === undefined && feito.estado !== "inconclusivo") continue
 
     const medido = await rodarMedido(p, caso)
     if ("cota" in medido)

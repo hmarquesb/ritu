@@ -96,3 +96,24 @@ describe("arquivoDoAndamento", () => {
     expect(arquivoDoAndamento("c1-base")).toBe("evals/local/andamento-c1-base.json")
   })
 })
+
+describe("lerAndamento com estado", () => {
+  it("andamento antigo sem estado: acertou vira acertou e o resto vira falhou", () => {
+    const antigo = (r: Partial<ResultadoDoCaso>) => {
+      const { estado: _, ...semEstado } = { ...resultado, ...r }
+      return semEstado
+    }
+    const texto = JSON.stringify({
+      versao: 1,
+      checkpoint: "c1-base",
+      assinatura: "a",
+      iniciada_em: "2026-06-01T10:00:00.000Z",
+      resultados: [
+        antigo({ acertou: true }),
+        antigo({ id: "c1-02-calor-irritada", acertou: false }),
+      ],
+    })
+    const lido = lerAndamento(texto)
+    expect(lido.ok && lido.andamento.resultados.map((r) => r.estado)).toEqual(["acertou", "falhou"])
+  })
+})

@@ -298,3 +298,32 @@ describe("resultado de erro classificado", () => {
     })
   })
 })
+
+describe("retomada refaz inconclusivos", () => {
+  it("refaz o inconclusivo e os que faltam; os conclusivos ficam", async () => {
+    const chamados: string[] = []
+    const anterior: Andamento = {
+      versao: 1,
+      checkpoint: "c1-base",
+      assinatura: "assinatura-1",
+      iniciada_em: "2026-06-01T10:00:00.000Z",
+      resultados: [
+        ok(PRIMEIRO),
+        { ...ok(SEGUNDO), acertou: false, estado: "inconclusivo", inconclusivo: "cota" },
+        errado(TERCEIRO),
+      ],
+    }
+    const t = base({
+      anterior,
+      rodarCaso: async (caso) => {
+        chamados.push(caso.id)
+        return ok(caso)
+      },
+    })
+    const fim = await executarRodada(t.params)
+
+    expect(chamados).toEqual([SEGUNDO.id, QUARTO.id])
+    expect(fim.andamento.resultados.find((r) => r.id === TERCEIRO.id)?.acertou).toBe(false)
+    expect(fim.andamento.resultados.find((r) => r.id === SEGUNDO.id)?.estado).toBe("acertou")
+  })
+})

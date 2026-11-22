@@ -90,6 +90,14 @@ export function linhaDeResumo(m: Record<MetricaId, Medida>): string {
   ].join(" · ")
 }
 
+const inconclusivosDe = (resultados: ResultadoDoCaso[]): ResultadoDoCaso[] =>
+  resultados.filter((resultado) => resultado.estado === "inconclusivo")
+
+function situacaoDaRodada(resultados: ResultadoDoCaso[]): string {
+  const total = inconclusivosDe(resultados).length
+  return total === 0 ? "rodada completa" : `rodada incompleta: ${total} inconclusivos`
+}
+
 function cabecalhoDoRelatorio(p: Relatorio): string[] {
   const prompts = Object.entries(p.prompts).map(([chave, versao]) => `${chave}: ${versao}`)
   return [
@@ -99,6 +107,7 @@ function cabecalhoDoRelatorio(p: Relatorio): string[] {
     `- Prompts: ${prompts.length === 0 ? TRACO : prompts.join(", ")}`,
     `- Modelos: ${p.modelos.length === 0 ? TRACO : p.modelos.join(", ")}`,
     `- Casos rodados: ${p.resultados.length} de ${p.totalDeCasos}`,
+    `- Situação: ${situacaoDaRodada(p.resultados)}`,
   ]
 }
 
@@ -218,6 +227,7 @@ function secaoCusto(resultados: ResultadoDoCaso[]): string[] {
 }
 
 function situacaoDoCaso(resultado: ResultadoDoCaso): string {
+  if (resultado.estado === "inconclusivo") return "inconclusivo"
   if (resultado.erro !== undefined) return "erro"
   return resultado.acertou ? "certo" : "errado"
 }
@@ -252,6 +262,15 @@ function secaoFalhas(resultados: ResultadoDoCaso[]): string[] {
   return secao("Falhas", linhas.length === 0 ? NENHUMA : linhas)
 }
 
+function secaoInconclusivos(resultados: ResultadoDoCaso[]): string[] | undefined {
+  const lista = inconclusivosDe(resultados)
+  if (lista.length === 0) return undefined
+  return secao(
+    "Inconclusivos",
+    lista.map((r) => `- ${r.id}: ${r.inconclusivo ?? TRACO}`),
+  )
+}
+
 function secaoErros(resultados: ResultadoDoCaso[]): string[] {
   const linhas = resultados.flatMap((r) => (r.erro === undefined ? [] : [`- ${r.id}: ${r.erro}`]))
   return secao("Erros", linhas.length === 0 ? NENHUM : linhas)
@@ -271,6 +290,7 @@ export function formatarRelatorio(p: Relatorio): string {
     secaoCasos(p.resultados),
     secaoFalhas(p.resultados),
     secaoErros(p.resultados),
+    secaoInconclusivos(p.resultados),
   ]
   const presentes = blocos.filter((bloco): bloco is string[] => bloco !== undefined)
   return `${presentes.map((bloco) => bloco.join("\n")).join("\n\n")}\n`

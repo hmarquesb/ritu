@@ -314,3 +314,30 @@ describe("formatarRelatorio: conteúdo", () => {
     expect(texto).toContain("| avaliador | 1 | 50 | 5 |")
   })
 })
+
+describe("situação da rodada e inconclusivos", () => {
+  const inconclusivo = caso({
+    id: "c1-09-sem-resposta",
+    acertou: false,
+    estado: "inconclusivo",
+    inconclusivo: "cota",
+  })
+
+  it("diz rodada completa sem inconclusivos", () => {
+    expect(relatorio()).toContain("- Situação: rodada completa")
+    expect(relatorio()).not.toContain("Inconclusivos")
+  })
+
+  it("diz rodada incompleta com a contagem e lista cada caso com o motivo", () => {
+    const texto = relatorio({ resultados: [caso(), inconclusivo] })
+    expect(texto).toContain("- Situação: rodada incompleta: 1 inconclusivos")
+    expect(texto).toContain("## Inconclusivos")
+    expect(texto).toContain("- c1-09-sem-resposta: cota")
+  })
+
+  it("na tabela de casos, o inconclusivo sai como inconclusivo", () => {
+    const texto = relatorio({ resultados: [inconclusivo] })
+    expect(texto).toContain("| c1-09-sem-resposta |")
+    expect(texto).toMatch(/\| inconclusivo \|/)
+  })
+})

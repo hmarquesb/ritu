@@ -49,6 +49,14 @@ export function assinar(p: {
   return createHash("sha256").update(entrada).digest("hex")
 }
 
+/** Andamento gravado antes do `estado`: `acertou: true` vira `acertou`, o resto vira `falhou`. */
+function completarEstado(
+  resultado: Omit<ResultadoDoCaso, "estado"> & { estado?: ResultadoDoCaso["estado"] },
+): ResultadoDoCaso {
+  const estado = resultado.estado ?? (resultado.acertou ? "acertou" : "falhou")
+  return { ...resultado, estado }
+}
+
 /** JSON inválido ou fora do schema (inclusive `versao` diferente de 1): o andamento não serve. */
 export function lerAndamento(texto: string): { ok: true; andamento: Andamento } | { ok: false } {
   let bruto: unknown
@@ -58,7 +66,9 @@ export function lerAndamento(texto: string): { ok: true; andamento: Andamento } 
     return { ok: false }
   }
   const lido = andamentoSchema.safeParse(bruto)
-  return lido.success ? { ok: true, andamento: lido.data } : { ok: false }
+  if (!lido.success) return { ok: false }
+  const { resultados, ...resto } = lido.data
+  return { ok: true, andamento: { ...resto, resultados: resultados.map(completarEstado) } }
 }
 
 export const arquivoDoAndamento = (checkpoint: string): string =>

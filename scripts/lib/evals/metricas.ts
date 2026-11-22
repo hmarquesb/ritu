@@ -328,16 +328,18 @@ function metricasDeCusto(casos: ResultadoDoCaso[]) {
   }
 }
 
+/** Inconclusivo não tem resposta: fica fora de todas as métricas (o relatório conta e lista à parte). */
 export function calcularMetricas(resultados: ResultadoDoCaso[]): Record<MetricaId, Medida> {
+  const conclusivos = resultados.filter((caso) => caso.estado !== "inconclusivo")
   return {
-    ...metricasDeAcerto(resultados),
-    ...metricasDeConteudo(resultados),
-    ...metricasDeFidelidade(resultados),
-    ...metricasDeExplicacaoETrajetoria(resultados),
-    ...metricasDeAutocorrecao(resultados),
-    ...metricasDePerguntasEPropostas(resultados),
-    ...metricasDeSegurancaELinguagem(resultados),
-    ...metricasDeIncomodosEJuiz(resultados),
-    ...metricasDeCusto(resultados),
+    ...metricasDeAcerto(conclusivos),
+    ...metricasDeConteudo(conclusivos),
+    ...metricasDeFidelidade(conclusivos),
+    ...metricasDeExplicacaoETrajetoria(conclusivos),
+    ...metricasDeAutocorrecao(conclusivos),
+    ...metricasDePerguntasEPropostas(conclusivos),
+    ...metricasDeSegurancaELinguagem(conclusivos),
+    ...metricasDeIncomodosEJuiz(conclusivos),
+    ...metricasDeCusto(conclusivos),
   }
 }

@@ -271,7 +271,9 @@ describe("migração 0005 (padrões de chá)", () => {
           values (${conta}, ${tipo}, ${chave}, 'antiga', ${oc}, ${status}, ${criado}, ${decidido})`
       }
 
-      expect(await migrate(cli.sql, clock)).toEqual([todas.find((n) => n.startsWith("0005")) ?? ""])
+      // As migrações depois da 0005 também entram; a 0005 é a primeira a rodar sobre os dados antigos.
+      const aplicadas = await migrate(cli.sql, clock)
+      expect(aplicadas[0]).toBe(todas.find((n) => n.startsWith("0005")) ?? "")
 
       const lidas =
         await cli.sql`select conta_id, tipo, chave, frase, ocorrencias, status, criado_em, decidido_em

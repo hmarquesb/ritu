@@ -4,11 +4,12 @@ import { parseArgs } from "node:util"
 import { evals } from "../../../config/evals"
 import type { llmCotas } from "../../../config/llm-cotas"
 import { type CasoDeEval, casosDoCheckpoint, type NomeDoCheckpoint } from "../../../evals/llm/casos"
+import type { AlvoDoCheckpoint } from "../../../evals/llm/checkpoints"
 import { TITULO_DA_FAMILIA } from "../../../evals/llm/tipos"
 import type { Clock } from "../../../src/core/clock"
 import { diaDaCota } from "../../../src/core/llm/janelas"
 import { type Andamento, arquivoDoAndamento, assinar, lerAndamento } from "./andamento"
-import { ehCheckpoint, formatarListagem, nomesDeCheckpoint } from "./casos"
+import { alvoDoCheckpoint, ehCheckpoint, formatarListagem, nomesDeCheckpoint } from "./casos"
 import { type ChecagemPrevia, checarAntes } from "./checagem-previa"
 import { gerarComparacao } from "./comparacao"
 import { cabecalhoDasFalhas, formatarFalha } from "./falhas-locais"
@@ -37,7 +38,7 @@ export type IoDoComando = {
   esperar(ms: number): Promise<void>
   prompts: Record<string, string> // acompanhante, interprete, memoria, juiz, avaliador → versão
   papeis: typeof llmCotas.papeis
-  rodarCaso(caso: CasoDeEval): Promise<CasoRodado> // já com o avaliador (criarRodarCaso)
+  rodarCaso(caso: CasoDeEval, alvo: AlvoDoCheckpoint): Promise<CasoRodado> // já com o avaliador (criarRodarCaso)
   checagem: ChecagemPrevia // Postgres e chaves, checados antes do 1º caso de `--caso` e de rodada
 }
 
@@ -178,12 +179,16 @@ async function recusaDaChecagem(io: IoDoComando): Promise<number | undefined> {
 }
 
 /** `--caso`: roda um caso e imprime; não grava arquivo nem andamento. */
-async function rodarUmCaso(caso: CasoDeEval, io: IoDoComando): Promise<number> {
+async function rodarUmCaso(
+  caso: CasoDeEval,
+  alvo: AlvoDoCheckpoint,
+  io: IoDoComando,
+): Promise<number> {
   const recusa = await recusaDaChecagem(io)
   if (recusa !== undefined) return recusa
   let rodado: CasoRodado
   try {
-    rodado = await io.rodarCaso(caso)
+    rodado = await io.rodarCaso(caso, alvo)
   } catch (erro) {
     if (ehParada(erro)) {
       io.erro("sem modelo")
@@ -247,11 +252,12 @@ const formatarAndamento = (a: Andamento): string => `${JSON.stringify(a, null, 2
 function anotarFalhas(
   io: IoDoComando,
   caminho: string,
+  alvo: AlvoDoCheckpoint,
 ): (caso: CasoDeEval) => Promise<ResultadoDoCaso> {
   return async (caso) => {
     let rodado: CasoRodado
     try {
-      rodado = await io.rodarCaso(caso)
+      rodado = await io.rodarCaso(caso, alvo)
     } catch (erro) {
       if (!ehParada(erro)) {
         await io.anexar(
@@ -321,6 +327,7 @@ async function concluir(
         avaliacao,
         metas: evals.metas,
         anterior: anteriorA(lido.historico, cp),
+        alvo: alvoDoCheckpoint(cp),
       }),
     )
     await io.gravar(
@@ -378,7 +385,7 @@ async function rodarCheckpoint(o: Opcoes, casos: CasoDeEval[], io: IoDoComando):
     casos,
     assinatura,
     anterior: partida.anterior,
-    rodarCaso: anotarFalhas(io, falhasDo(cp)),
+    rodarCaso: anotarFalhas(io, falhasDo(cp), alvoDoCheckpoint(cp)),
     salvar: (a) => io.gravar(caminho, formatarAndamento(a)),
     esperar: (ms) => io.esperar(ms),
     clock: io.clock,
@@ -411,7 +418,7 @@ export async function executarComando(args: string[], io: IoDoComando): Promise<
         )
         return 1
       }
-      return rodarUmCaso(caso, io)
+      return rodarUmCaso(caso, alvoDoCheckpoint(o.checkpoint), io)
     }
     if (o.listar) {
       io.log(formatarListagem(o.checkpoint))

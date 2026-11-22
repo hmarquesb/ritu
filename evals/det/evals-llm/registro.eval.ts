@@ -14,10 +14,12 @@ const MARCAS_VALIDAS: ReadonlySet<string> = new Set(MARCAS)
 const todos = casosDoCheckpoint("c3-confiavel")
 
 describe("registro dos casos com LLM", () => {
-  it("os checkpoints têm 12, 54 e 86 casos", () => {
+  it("os checkpoints têm 12, 54, 86 casos; c4-site e c5-publico têm os 86 de c3-confiavel", () => {
     expect(casosDoCheckpoint("c1-base")).toHaveLength(12)
     expect(casosDoCheckpoint("c2-conversa")).toHaveLength(54)
     expect(todos).toHaveLength(86)
+    expect(casosDoCheckpoint("c4-site").map((c) => c.id)).toEqual(todos.map((c) => c.id))
+    expect(casosDoCheckpoint("c5-publico").map((c) => c.id)).toEqual(todos.map((c) => c.id))
   })
 
   it("os ids são únicos em c3-confiavel", () => {

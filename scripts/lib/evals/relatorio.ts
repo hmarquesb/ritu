@@ -1,5 +1,6 @@
 // Relatório de uma rodada do eval com LLM (spec 014). Só recebe resultados dos casos: nenhum texto de resposta entra aqui.
 import type { Papel } from "../../../config/llm-cotas"
+import type { AlvoDoCheckpoint } from "../../../evals/llm/checkpoints"
 import { TITULO_DA_FAMILIA } from "../../../evals/llm/tipos"
 import type { MotivoDoJuiz } from "../../../src/core/agents/judge/saida"
 import type { EntradaDoHistorico } from "./historico"
@@ -22,7 +23,7 @@ type Relatorio = {
   metas: Record<string, Meta>
   anterior?: EntradaDoHistorico
   /** Ausente vale `codigo`. */
-  alvo?: "codigo" | "rotas"
+  alvo?: AlvoDoCheckpoint
 }
 
 function numeroTexto(valor: number, forma: Forma): string {

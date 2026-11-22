@@ -28,10 +28,12 @@ import {
 import { llmCotas } from "../config/llm-cotas"
 import { avaliadorV1 } from "../evals/llm/avaliador.v1"
 import type { CasoDeEval } from "../evals/llm/casos"
+import type { AlvoDoCheckpoint } from "../evals/llm/checkpoints"
 import { criarRodarCaso, type Rodadores } from "./lib/evals/casos"
 import type { ChecagemPrevia } from "./lib/evals/checagem-previa"
 import { executarComando, type IoDoComando } from "./lib/evals/comando"
 import { rodarInterprete, rodarJuiz, rodarMemoria } from "./lib/evals/rodar-apoio"
+import { rodarAcompanhantePelasRotas, rodarConversaPelasRotas } from "./lib/evals/rodar-rotas"
 import { type CasoRodado, rodarAcompanhante, rodarConversa } from "./lib/evals/rodar-run"
 
 const ausente = (erro: unknown): boolean => (erro as NodeJS.ErrnoException).code === "ENOENT"
@@ -50,26 +52,36 @@ function iniciarTelemetriaDoEval(): Promise<void> {
   return telemetriaIniciada
 }
 
-function rodadoresDo(c: Container): Rodadores {
+// Acompanhante e conversa: pelo código do agente (`codigo`) ou pelas rotas do site (`rotas`). Intérprete, memória e juiz são iguais nos dois.
+function rodadoresDo(c: Container, alvo: AlvoDoCheckpoint): Rodadores {
   const deps = { client: c.llm, kb: c.knowledge, clock: c.clock, telemetria: c.telemetry }
+  const pelasRotas = alvo === "rotas"
+  const opts = { runtime: c.runtime, telemetria: c.telemetry }
   return {
     acompanhante: (caso) =>
-      rodarAcompanhante(caso, { runtime: c.runtime, telemetria: c.telemetry }),
+      pelasRotas ? rodarAcompanhantePelasRotas(caso, opts) : rodarAcompanhante(caso, opts),
     interprete: (caso) => rodarInterprete(caso, deps),
     conversa: (caso) =>
-      rodarConversa(caso, { runtime: c.runtime, llm: c.llm, telemetria: c.telemetry }),
+      pelasRotas
+        ? rodarConversaPelasRotas(caso, { ...opts, llm: c.llm })
+        : rodarConversa(caso, { ...opts, llm: c.llm }),
     memoria: (caso) => rodarMemoria(caso, deps),
     juiz: (caso) => rodarJuiz(caso, deps),
   }
 }
 
-let rodarCasoDoEval: ((caso: CasoDeEval) => Promise<CasoRodado>) | undefined
-async function rodarCaso(caso: CasoDeEval): Promise<CasoRodado> {
+// Um rodador de caso por alvo, criado na primeira vez que o alvo aparece.
+const rodadoresDeCasoPorAlvo = new Map<
+  AlvoDoCheckpoint,
+  (caso: CasoDeEval) => Promise<CasoRodado>
+>()
+async function rodarCaso(caso: CasoDeEval, alvo: AlvoDoCheckpoint): Promise<CasoRodado> {
   await iniciarTelemetriaDoEval()
-  if (rodarCasoDoEval === undefined) {
+  let rodarDoAlvo = rodadoresDeCasoPorAlvo.get(alvo)
+  if (rodarDoAlvo === undefined) {
     const c = containerDoEval()
-    rodarCasoDoEval = criarRodarCaso({
-      rodadores: rodadoresDo(c),
+    rodarDoAlvo = criarRodarCaso({
+      rodadores: rodadoresDo(c, alvo),
       avaliador: {
         router: c.router,
         client: c.llm,
@@ -78,8 +90,9 @@ async function rodarCaso(caso: CasoDeEval): Promise<CasoRodado> {
         kb: c.knowledge,
       },
     })
+    rodadoresDeCasoPorAlvo.set(alvo, rodarDoAlvo)
   }
-  return rodarCasoDoEval(caso)
+  return rodarDoAlvo(caso)
 }
 
 // As mesmas chaves do container (chavesDoGemini); banco e listagem vêm do container, o único que liga à infra.

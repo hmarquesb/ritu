@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { llmCotas } from "../../../config/llm-cotas"
 import { type CasoDeEval, casosDoCheckpoint } from "../../../evals/llm/casos"
+import type { AlvoDoCheckpoint } from "../../../evals/llm/checkpoints"
 import { SemModeloError } from "../../../src/core/llm/chamar"
 import { LlmError } from "../../../src/core/llm/errors"
 import { createFixedClock } from "../../../src/infra/fakes/fixed-clock"
@@ -103,6 +104,7 @@ function criarIo(p: Preparo = {}) {
   const logs: string[] = []
   const erros: string[] = []
   const chamados: string[] = []
+  const alvos: AlvoDoCheckpoint[] = []
   const checagens: string[] = []
   const clock = createFixedClock(AGORA)
   const io: IoDoComando & {
@@ -110,12 +112,14 @@ function criarIo(p: Preparo = {}) {
     logs: string[]
     erros: string[]
     chamados: string[]
+    alvos: AlvoDoCheckpoint[]
     checagens: string[]
   } = {
     arquivos,
     logs,
     erros,
     chamados,
+    alvos,
     checagens,
     checagem: p.checagem ?? {
       banco: async () => {
@@ -144,8 +148,9 @@ function criarIo(p: Preparo = {}) {
     esperar: async () => {},
     prompts: PROMPTS,
     papeis: llmCotas.papeis,
-    rodarCaso: async (c) => {
+    rodarCaso: async (c, alvo) => {
       chamados.push(c.id)
+      alvos.push(alvo)
       return p.rodarCaso ? p.rodarCaso(c) : rodado(c)
     },
   }
@@ -548,6 +553,64 @@ describe("executarComando: --caso e --listar", () => {
     const io = criarIo()
     expect(await executarComando(["--checkpoint", nome, "--listar"], io)).toBe(0)
     expect(io.logs[0]).toContain(`Casos do ${nome}: ${total}`)
+  })
+})
+
+describe("executarComando: alvo do checkpoint", () => {
+  it.each([
+    ["c3-confiavel", "codigo"],
+    ["c4-site", "rotas"],
+    ["c5-publico", "rotas"],
+  ])("a rodada de %s passa o alvo %s a cada caso", async (nome, alvo) => {
+    const io = criarIo()
+    expect(await executarComando(["--checkpoint", nome], io)).toBe(0)
+    expect(io.alvos).toHaveLength(86)
+    expect(new Set(io.alvos)).toEqual(new Set([alvo]))
+  })
+
+  it("--caso com c5-publico passa rotas", async () => {
+    const io = criarIo()
+    const id = casosDoCheckpoint("c5-publico")[0]?.id as string
+    expect(await executarComando(["--checkpoint", "c5-publico", "--caso", id], io)).toBe(0)
+    expect(io.alvos).toEqual(["rotas"])
+  })
+
+  it("--retomar de c5-publico passa rotas aos casos que faltam", async () => {
+    const casos = casosDoCheckpoint("c5-publico")
+    const assinatura = assinar({
+      ids: casos.map((c) => c.id),
+      prompts: PROMPTS,
+      papeis: llmCotas.papeis,
+    })
+    const andamento = {
+      versao: 1,
+      checkpoint: "c5-publico",
+      assinatura,
+      iniciada_em: AGORA,
+      resultados: casos.slice(0, 2).map((c) => rodado(c).resultado),
+    }
+    const io = criarIo({
+      arquivos: { [arquivoDoAndamento("c5-publico")]: JSON.stringify(andamento) },
+    })
+    expect(await executarComando(["--checkpoint", "c5-publico", "--retomar"], io)).toBe(0)
+    expect(io.alvos).toHaveLength(84)
+    expect(new Set(io.alvos)).toEqual(new Set(["rotas"]))
+  })
+
+  it("o relatório de c5-publico diz o alvo e traz o fluxo pelas rotas", async () => {
+    const io = criarIo()
+    expect(await executarComando(["--checkpoint", "c5-publico"], io)).toBe(0)
+    const relatorio = io.arquivos.get("evals/resultados/c5-publico.md") ?? ""
+    expect(relatorio).toContain("- Alvo: rotas do site")
+    expect(relatorio).toContain("Fluxo pelas rotas:")
+  })
+
+  it("o relatório de c3-confiavel diz o alvo código e não traz o fluxo pelas rotas", async () => {
+    const io = criarIo()
+    expect(await executarComando(["--checkpoint", "c3-confiavel"], io)).toBe(0)
+    const relatorio = io.arquivos.get("evals/resultados/c3-confiavel.md") ?? ""
+    expect(relatorio).toContain("- Alvo: código")
+    expect(relatorio).not.toContain("Fluxo pelas rotas:")
   })
 })
 

@@ -38,6 +38,6 @@ export const padraoAgoraNao: Cenario = {
       restricoes: [],
       suspeito: false,
     },
-    roteiro: roteiroDoJantar,
+    roteiro: roteiroDoJantar(),
   },
 }

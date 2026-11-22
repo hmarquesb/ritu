@@ -1,4 +1,4 @@
-import { frioAgitada } from "./frio-agitada"
+import { frioAgitada, roteiroSemParaTer } from "./frio-agitada"
 import type { Cenario } from "./tipos"
 
 // Erro do modelo no Intérprete (015 T19): o eval põe o cliente com rate_limit antes da resposta (opts.llm), e o log llm_erro e a troca de modelo saem.
@@ -24,5 +24,5 @@ export const llmErro: Cenario = {
     restricoes: [],
     suspeito: false,
   },
-  roteiro: frioAgitada.roteiro,
+  roteiro: roteiroSemParaTer,
 }

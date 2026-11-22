@@ -1,4 +1,4 @@
-import { frioAgitada } from "./frio-agitada"
+import { frioAgitada, roteiroSemParaTer } from "./frio-agitada"
 import type { Cenario } from "./tipos"
 
 // Fonte de clima fora do ar (015 T19): clima.agora volta indisponível, sai o log clima_indisponivel e a resposta segue sem o clima.
@@ -24,5 +24,5 @@ export const climaForaDoAr: Cenario = {
     restricoes: [],
     suspeito: false,
   },
-  roteiro: frioAgitada.roteiro,
+  roteiro: roteiroSemParaTer,
 }

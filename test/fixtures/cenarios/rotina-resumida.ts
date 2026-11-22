@@ -47,11 +47,8 @@ export const rotinaResumida: Cenario = {
           argumentos: {
             resposta:
               "Com o almoço em casa de volta, vale deixar à mão o que você já tem. Se puder, sente-se para comer, sem tela.",
-            explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
             sugestoes: [],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],
@@ -69,6 +66,6 @@ export const rotinaResumida: Cenario = {
       restricoes: [],
       suspeito: false,
     },
-    roteiro: roteiroDoJantar,
+    roteiro: roteiroDoJantar(),
   },
 }

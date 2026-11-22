@@ -29,64 +29,25 @@ export const roteiroDoMomento: PassoRoteirizado[] = [
         nome: "finalizar",
         argumentos: {
           resposta:
-            "Para este fim de tarde frio e úmido, um chá quente de gengibre com canela e uma refeição morna de arroz com abóbora ajudam a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-          explicacao: {
-            qualidades_do_momento: ["frio"],
-            qualidades_buscadas: ["quente", "estavel", "pesado"],
-          },
+            "Para este fim de tarde frio e úmido, um chá quente de gengibre com limão e mel e uma refeição morna de arroz com abóbora ajudam a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
           sugestoes: [
             {
               tipo: "cha",
-              pratica_id: "cha-gengibre-canela",
-              itens: [
-                {
-                  alimento_id: "gengibre",
-                  contribui: ["quente"],
-                  linha_base: "alimentos:gengibre",
-                },
-                {
-                  alimento_id: "canela",
-                  contribui: ["quente"],
-                  linha_base: "alimentos:canela",
-                },
-              ],
+              id: "cha-gengibre-limao-mel",
               motivo: "Aquece o corpo no fim do dia, com o que você tem em casa.",
-              linhas_base: ["praticas:cha-gengibre-canela"],
-              novidade: false,
             },
             {
               tipo: "refeicao",
-              preparo_id: "arroz-com-legume",
-              itens: [
-                {
-                  alimento_id: "arroz-branco",
-                  funcao: "base",
-                  contribui: ["pesado"],
-                  linha_base: "alimentos:arroz-branco",
-                },
-                {
-                  alimento_id: "abobora",
-                  funcao: "legume",
-                  contribui: [],
-                  linha_base: "alimentos:abobora",
-                },
-              ],
+              id: "arroz-com-legume",
               motivo: "Uma comida morna e cozida, que assenta bem no frio.",
-              linhas_base: ["preparos:arroz-com-legume"],
-              novidade: false,
             },
             {
               tipo: "pratica",
-              pratica_id: "comer-sentada-sem-tela",
-              itens: [],
+              id: "comer-sentada-sem-tela",
               motivo: "Comer com calma ajuda a sentir o corpo assentar.",
-              linhas_base: ["praticas:comer-sentada-sem-tela"],
-              novidade: false,
             },
           ],
-          evitar: ["estados:com_frio"],
           incertos: [],
-          citados: [],
         },
       },
     ],
@@ -94,7 +55,7 @@ export const roteiroDoMomento: PassoRoteirizado[] = [
 ]
 
 // A segunda mensagem sem estados (o jantar): legumes no vapor, como o `depois` de vegetariana (não repete o arroz da primeira resposta).
-export const roteiroDoJantar: PassoRoteirizado[] = [
+export const roteiroDoJantar = (id = "legumes-assados"): PassoRoteirizado[] => [
   {
     texto: "Vou montar o jantar com legumes.",
     chamadas: [
@@ -103,27 +64,14 @@ export const roteiroDoJantar: PassoRoteirizado[] = [
         argumentos: {
           resposta:
             "Para o jantar, legumes cozidos no vapor com abóbora ajudam a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-          explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
           sugestoes: [
             {
               tipo: "refeicao",
-              preparo_id: "legumes-no-vapor",
-              itens: [
-                {
-                  alimento_id: "abobora",
-                  funcao: "legume",
-                  contribui: [],
-                  linha_base: "alimentos:abobora",
-                },
-              ],
+              id,
               motivo: "Legumes cozidos no vapor, para o jantar.",
-              linhas_base: ["preparos:legumes-no-vapor"],
-              novidade: false,
             },
           ],
-          evitar: [],
           incertos: [],
-          citados: [],
         },
       },
     ],
@@ -186,6 +134,6 @@ export const padraoConfirmado: Cenario = {
       restricoes: [],
       suspeito: false,
     },
-    roteiro: roteiroDoJantar,
+    roteiro: roteiroDoJantar(),
   },
 }

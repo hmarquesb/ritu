@@ -70,36 +70,14 @@ export const doisNaoAjudou: Cenario = {
             argumentos: {
               resposta:
                 "Para depois do jantar, uma refeição morna de arroz com abóbora assenta bem no frio. Se puder, sente-se para comer, sem tela.",
-              explicacao: {
-                qualidades_do_momento: ["frio"],
-                qualidades_buscadas: ["quente"],
-              },
               sugestoes: [
                 {
                   tipo: "refeicao",
-                  preparo_id: "arroz-com-legume",
-                  itens: [
-                    {
-                      alimento_id: "arroz-branco",
-                      funcao: "base",
-                      contribui: [],
-                      linha_base: "alimentos:arroz-branco",
-                    },
-                    {
-                      alimento_id: "abobora",
-                      funcao: "legume",
-                      contribui: [],
-                      linha_base: "alimentos:abobora",
-                    },
-                  ],
+                  id: "arroz-com-legume",
                   motivo: "Uma comida morna e cozida, que assenta bem no frio.",
-                  linhas_base: ["preparos:arroz-com-legume"],
-                  novidade: false,
                 },
               ],
-              evitar: [],
               incertos: [],
-              citados: [],
             },
           },
         ],
@@ -115,23 +93,14 @@ export const doisNaoAjudou: Cenario = {
           argumentos: {
             resposta:
               "Para agora, o mais simples é sentar, respirar e comer com calma. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: ["frio"],
-              qualidades_buscadas: ["quente"],
-            },
             sugestoes: [
               {
                 tipo: "pratica",
-                pratica_id: "comer-sentada-sem-tela",
-                itens: [],
+                id: "comer-sentada-sem-tela",
                 motivo: "Comer com calma ajuda a sentir o corpo assentar.",
-                linhas_base: ["praticas:comer-sentada-sem-tela"],
-                novidade: false,
               },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

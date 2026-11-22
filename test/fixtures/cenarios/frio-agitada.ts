@@ -3,7 +3,7 @@ import type { Cenario } from "./tipos"
 export const frioAgitada: Cenario = {
   nome: "frio-agitada",
   descricao:
-    "Momento com texto, Vata-Pitta, Rio com frio e úmido, casa com abóbora, arroz, ghee, gengibre e canela, cardamomo com falta em 3 dias",
+    "Momento com texto, Vata-Pitta, Rio com frio e úmido, casa com abóbora, arroz, ghee, gengibre, canela, limão e mel, cardamomo com falta em 3 dias",
   agora: "2026-06-15T22:00:00.000Z",
   perfil: {
     prakriti: { vata: 0.45, pitta: 0.45, kapha: 0.1 },
@@ -15,6 +15,8 @@ export const frioAgitada: Cenario = {
     { alimento_id: "ghee" },
     { alimento_id: "gengibre" },
     { alimento_id: "canela" },
+    { alimento_id: "limao" },
+    { alimento_id: "mel" },
   ],
   faltas: [
     { alimento_id: "cardamomo", diasAtras: 1 },
@@ -53,73 +55,39 @@ export const frioAgitada: Cenario = {
           nome: "finalizar",
           argumentos: {
             resposta:
-              "Para este fim de tarde frio e úmido, um chá quente de gengibre com canela e uma refeição morna de arroz com abóbora ajudam a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: ["frio"],
-              qualidades_buscadas: ["quente", "estavel", "pesado"],
-            },
+              "Para este fim de tarde frio e úmido, um chá quente de gengibre com limão e mel e uma refeição morna de arroz com abóbora ajudam a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
             sugestoes: [
               {
                 tipo: "cha",
-                pratica_id: "cha-gengibre-canela",
-                itens: [
-                  {
-                    alimento_id: "gengibre",
-                    contribui: ["quente"],
-                    linha_base: "alimentos:gengibre",
-                  },
-                  {
-                    alimento_id: "canela",
-                    contribui: ["quente"],
-                    linha_base: "alimentos:canela",
-                  },
-                ],
+                id: "cha-gengibre-limao-mel",
                 motivo: "Aquece o corpo no fim do dia, com o que você tem em casa.",
-                linhas_base: ["praticas:cha-gengibre-canela"],
-                novidade: false,
               },
               {
                 tipo: "refeicao",
-                preparo_id: "arroz-com-legume",
-                itens: [
-                  {
-                    alimento_id: "arroz-branco",
-                    funcao: "base",
-                    contribui: ["pesado"],
-                    linha_base: "alimentos:arroz-branco",
-                  },
-                  {
-                    alimento_id: "abobora",
-                    funcao: "legume",
-                    contribui: [],
-                    linha_base: "alimentos:abobora",
-                  },
-                ],
+                id: "arroz-com-legume",
                 motivo: "Uma comida morna e cozida, que assenta bem no frio.",
-                linhas_base: ["preparos:arroz-com-legume"],
-                novidade: false,
               },
               {
                 tipo: "pratica",
-                pratica_id: "comer-sentada-sem-tela",
-                itens: [],
+                id: "comer-sentada-sem-tela",
                 motivo: "Comer com calma ajuda a sentir o corpo assentar.",
-                linhas_base: ["praticas:comer-sentada-sem-tela"],
-                novidade: false,
               },
             ],
-            evitar: ["estados:com_frio"],
             incertos: [],
-            citados: [],
-            para_ter: {
-              alimento_id: "cardamomo",
-              vezes: 3,
-              contribui: ["quente"],
-              linha_base: "alimentos:cardamomo",
-            },
+            para_ter: true,
           },
         },
       ],
     },
   ],
 }
+
+// O mesmo roteiro sem `para_ter`: a conversa pela mensagem não traz as faltas do cenário.
+export const roteiroSemParaTer = frioAgitada.roteiro.map((passo) => ({
+  ...passo,
+  chamadas: passo.chamadas?.map((chamada) => {
+    if (chamada.nome !== "finalizar") return chamada
+    const { para_ter: _, ...resto } = chamada.argumentos as Record<string, unknown>
+    return { ...chamada, argumentos: resto }
+  }),
+}))

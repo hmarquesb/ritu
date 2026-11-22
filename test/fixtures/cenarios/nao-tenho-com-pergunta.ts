@@ -2,11 +2,11 @@ import { frioAgitada } from "./frio-agitada"
 import type { Cenario } from "./tipos"
 import { trocaPorToque } from "./troca-por-toque"
 
-// Gengibre sem substituto confirmado: Não tenho no gengibre pergunta pelo candidato nunca registrado, que também não tem.
+// Mel sem substituto confirmado: Não tenho no mel pergunta pelo candidato nunca registrado, que também não tem.
 export const naoTenhoComPergunta: Cenario = {
   nome: "nao-tenho-com-pergunta",
   descricao:
-    "Momento do frio-agitada; toque Não tenho no gengibre: gengibre acabou, pergunta pelo candidato nunca registrado, Não tenho nele, semSubstituto",
+    "Momento do frio-agitada; toque Não tenho no mel: mel acabou, pergunta pelo candidato nunca registrado, Não tenho nele, semSubstituto",
   agora: frioAgitada.agora,
   perfil: frioAgitada.perfil,
   casa: frioAgitada.casa,
@@ -29,7 +29,7 @@ export const naoTenhoComPergunta: Cenario = {
     {
       tipo: "troca",
       sugestao: 0,
-      alimento_id: "gengibre",
+      alimento_id: "mel",
       motivo: "nao_tenho",
       resposta: "nao_tenho",
     },

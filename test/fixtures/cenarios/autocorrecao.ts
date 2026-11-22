@@ -29,26 +29,10 @@ export const autocorrecao: Cenario = {
           nome: "finalizar",
           argumentos: {
             resposta: "Um chá de capim-limão bem gelado agora ajuda a refrescar.",
-            explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
             sugestoes: [
-              {
-                tipo: "cha",
-                pratica_id: "cha-capim-limao",
-                itens: [
-                  {
-                    alimento_id: "capim-limao",
-                    contribui: ["frio"],
-                    linha_base: "alimentos:capim-limao",
-                  },
-                ],
-                motivo: "Refresca o corpo quando há calor.",
-                linhas_base: ["praticas:cha-capim-limao"],
-                novidade: false,
-              },
+              { tipo: "cha", id: "cha-capim-limao", motivo: "Refresca o corpo quando há calor." },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],
@@ -60,26 +44,14 @@ export const autocorrecao: Cenario = {
           nome: "finalizar",
           argumentos: {
             resposta: "Um chá de hortelã morno, sem gelo, ajuda a refrescar agora. Beba devagar.",
-            explicacao: { qualidades_do_momento: ["quente"], qualidades_buscadas: ["frio"] },
             sugestoes: [
               {
                 tipo: "cha",
-                pratica_id: "cha-hortela",
-                itens: [
-                  {
-                    alimento_id: "hortela",
-                    contribui: ["frio"],
-                    linha_base: "alimentos:hortela",
-                  },
-                ],
+                id: "cha-hortela",
                 motivo: "Refresca o corpo quando há calor, com o que você tem em casa.",
-                linhas_base: ["praticas:cha-hortela"],
-                novidade: false,
               },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

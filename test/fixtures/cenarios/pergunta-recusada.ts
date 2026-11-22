@@ -34,30 +34,14 @@ export const perguntaRecusada: Cenario = {
           argumentos: {
             resposta:
               "Para um jantar frio, uma refeição morna de abóbora cozida no vapor ajuda a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: ["frio"],
-              qualidades_buscadas: ["quente"],
-            },
             sugestoes: [
               {
                 tipo: "refeicao",
-                preparo_id: "legumes-no-vapor",
-                itens: [
-                  {
-                    alimento_id: "abobora",
-                    funcao: "legume",
-                    contribui: [],
-                    linha_base: "alimentos:abobora",
-                  },
-                ],
+                id: "legumes-no-vapor",
                 motivo: "Uma comida morna e cozida, com a abóbora que já está em casa.",
-                linhas_base: ["preparos:legumes-no-vapor"],
-                novidade: false,
               },
             ],
-            evitar: ["estados:com_frio"],
             incertos: [],
-            citados: [],
           },
         },
       ],

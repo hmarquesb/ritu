@@ -27,11 +27,8 @@ export const estomagoPesado: Cenario = {
           argumentos: {
             resposta:
               "Com o estômago pesado, vale descansar, beber água morna aos goles e comer algo leve e morno na próxima refeição. Ainda não sei o que há na sua casa, então não sugiro nada específico agora.",
-            explicacao: { qualidades_do_momento: ["pesado"], qualidades_buscadas: ["leve"] },
             sugestoes: [],
-            evitar: ["incomodos:estomago-pesado/unica"],
             incertos: ["Não sei o que há na sua casa."],
-            citados: [],
           },
         },
       ],

@@ -36,14 +36,8 @@ export const dorDeCabeca: Cenario = {
           argumentos: {
             resposta:
               "Com essa dor de cabeça latejante, vale evitar picantes, frituras e sol forte no almoço. Escolha algo leve e morno, e beba água aos goles. Se a dor for forte ou continuar, procure uma pessoa de saúde.",
-            explicacao: {
-              qualidades_do_momento: ["quente"],
-              qualidades_buscadas: ["frio", "brando"],
-            },
             sugestoes: [],
-            evitar: ["incomodos:dor-de-cabeca/latejante"],
             incertos: ["Não sei o que há na sua casa."],
-            citados: [],
           },
         },
       ],

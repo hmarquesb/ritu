@@ -15,7 +15,7 @@ export const juizBarra: Cenario = {
     passoDoClima,
     entregaDoCha(RESPOSTA_COM_PROMESSA),
     entregaDoCha(
-      "Um chá quente de gengibre com canela acaba com a dor no estômago e aquece o corpo. Se puder, sente-se para beber, sem pressa.",
+      "Um chá quente de gengibre com limão e mel acaba com a dor no estômago e aquece o corpo. Se puder, sente-se para beber, sem pressa.",
     ),
   ],
 }

@@ -15,35 +15,15 @@ const roteiroDaPesada: PassoRoteirizado[] = [
         nome: "finalizar",
         argumentos: {
           resposta:
-            "Para agora, um chá quente de gengibre com canela ajuda a sentir o corpo mais leve. Se puder, sente-se para comer, sem tela.",
-          explicacao: {
-            qualidades_do_momento: ["pesado"],
-            qualidades_buscadas: ["quente", "leve"],
-          },
+            "Para agora, um chá quente de gengibre com limão e mel ajuda a sentir o corpo mais leve. Se puder, sente-se para comer, sem tela.",
           sugestoes: [
             {
               tipo: "cha",
-              pratica_id: "cha-gengibre-canela",
-              itens: [
-                {
-                  alimento_id: "gengibre",
-                  contribui: ["quente"],
-                  linha_base: "alimentos:gengibre",
-                },
-                {
-                  alimento_id: "canela",
-                  contribui: ["quente"],
-                  linha_base: "alimentos:canela",
-                },
-              ],
+              id: "cha-gengibre-limao-mel",
               motivo: "Aquece e ajuda a digestão quando o corpo está pesado.",
-              linhas_base: ["praticas:cha-gengibre-canela"],
-              novidade: false,
             },
           ],
-          evitar: [],
           incertos: [],
-          citados: [],
         },
       },
     ],

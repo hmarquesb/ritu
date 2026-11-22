@@ -30,31 +30,15 @@ export const gostoEscrito: Cenario = {
           nome: "finalizar",
           argumentos: {
             resposta:
-              "Para agora, um chá quente de gengibre com canela aquece sem pesar. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: ["frio"],
-              qualidades_buscadas: ["quente"],
-            },
+              "Para agora, um chá quente de gengibre com limão e mel aquece sem pesar. Se puder, sente-se para comer, sem tela.",
             sugestoes: [
               {
                 tipo: "cha",
-                pratica_id: "cha-gengibre-canela",
-                itens: [
-                  {
-                    alimento_id: "gengibre",
-                    contribui: ["quente"],
-                    linha_base: "alimentos:gengibre",
-                  },
-                  { alimento_id: "canela", contribui: ["quente"], linha_base: "alimentos:canela" },
-                ],
+                id: "cha-gengibre-limao-mel",
                 motivo: "Aquece o corpo no fim do dia, com o que você tem em casa.",
-                linhas_base: ["praticas:cha-gengibre-canela"],
-                novidade: false,
               },
             ],
-            evitar: ["estados:com_frio"],
             incertos: [],
-            citados: [],
           },
         },
       ],

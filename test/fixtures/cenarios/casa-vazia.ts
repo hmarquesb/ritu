@@ -60,30 +60,14 @@ export const casaVazia: Cenario = {
           argumentos: {
             resposta:
               "Para este fim de tarde frio, um purê de mandioca morno ajuda a aquecer sem pesar demais. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: ["frio"],
-              qualidades_buscadas: ["quente", "estavel", "pesado"],
-            },
             sugestoes: [
               {
                 tipo: "refeicao",
-                preparo_id: "pure-de-raiz",
-                itens: [
-                  {
-                    alimento_id: "mandioca",
-                    funcao: "base",
-                    contribui: ["pesado"],
-                    linha_base: "alimentos:mandioca",
-                  },
-                ],
+                id: "pure-de-raiz",
                 motivo: "Uma comida morna e cozida, com a mandioca que você tem em casa.",
-                linhas_base: ["preparos:pure-de-raiz"],
-                novidade: false,
               },
             ],
-            evitar: ["estados:com_frio"],
             incertos: [],
-            citados: [],
           },
         },
       ],

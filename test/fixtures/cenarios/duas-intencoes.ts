@@ -34,36 +34,14 @@ export const duasIntencoes: Cenario = {
           argumentos: {
             resposta:
               "Com a abóbora que você trouxe, uma refeição morna de arroz com abóbora cai bem hoje. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: [],
-              qualidades_buscadas: [],
-            },
             sugestoes: [
               {
                 tipo: "refeicao",
-                preparo_id: "arroz-com-legume",
-                itens: [
-                  {
-                    alimento_id: "arroz-branco",
-                    funcao: "base",
-                    contribui: [],
-                    linha_base: "alimentos:arroz-branco",
-                  },
-                  {
-                    alimento_id: "abobora",
-                    funcao: "legume",
-                    contribui: [],
-                    linha_base: "alimentos:abobora",
-                  },
-                ],
+                id: "arroz-com-legume",
                 motivo: "Uma comida morna e cozida, com a abóbora que você acabou de trazer.",
-                linhas_base: ["preparos:arroz-com-legume"],
-                novidade: false,
               },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

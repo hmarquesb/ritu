@@ -31,36 +31,14 @@ export const vegetariana: Cenario = {
           argumentos: {
             resposta:
               "Para agora, uma refeição morna de arroz com abóbora fica bem e segue o que você disse. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: [],
-              qualidades_buscadas: [],
-            },
             sugestoes: [
               {
                 tipo: "refeicao",
-                preparo_id: "arroz-com-legume",
-                itens: [
-                  {
-                    alimento_id: "arroz-branco",
-                    funcao: "base",
-                    contribui: [],
-                    linha_base: "alimentos:arroz-branco",
-                  },
-                  {
-                    alimento_id: "abobora",
-                    funcao: "legume",
-                    contribui: [],
-                    linha_base: "alimentos:abobora",
-                  },
-                ],
+                id: "arroz-com-legume",
                 motivo: "Uma comida morna e cozida, sem carne nem peixe.",
-                linhas_base: ["preparos:arroz-com-legume"],
-                novidade: false,
               },
             ],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],
@@ -87,30 +65,14 @@ export const vegetariana: Cenario = {
             argumentos: {
               resposta:
                 "Para o jantar, legumes cozidos no vapor com abóbora ajudam a aquecer sem pesar. Se puder, sente-se para comer, sem tela.",
-              explicacao: {
-                qualidades_do_momento: [],
-                qualidades_buscadas: [],
-              },
               sugestoes: [
                 {
                   tipo: "refeicao",
-                  preparo_id: "legumes-no-vapor",
-                  itens: [
-                    {
-                      alimento_id: "abobora",
-                      funcao: "legume",
-                      contribui: [],
-                      linha_base: "alimentos:abobora",
-                    },
-                  ],
+                  id: "legumes-assados",
                   motivo: "Legumes cozidos no vapor, sem carne nem peixe.",
-                  linhas_base: ["preparos:legumes-no-vapor"],
-                  novidade: false,
                 },
               ],
-              evitar: [],
               incertos: [],
-              citados: [],
             },
           },
         ],

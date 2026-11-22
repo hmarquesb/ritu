@@ -4,9 +4,9 @@ import type { Cenario } from "./tipos"
 
 // Primeira entrega, com a promessa que o Juiz aponta; a nova tentativa entrega o conforto.
 export const RESPOSTA_COM_PROMESSA =
-  "Um chá quente de gengibre com canela resolve a dor no estômago e aquece o corpo. Se puder, sente-se para beber, sem pressa."
+  "Um chá quente de gengibre com limão e mel resolve a dor no estômago e aquece o corpo. Se puder, sente-se para beber, sem pressa."
 export const RESPOSTA_DE_CONFORTO =
-  "Um chá quente de gengibre com canela pode aquecer o corpo neste fim de tarde. Se puder, sente-se para beber, sem pressa e sem tela."
+  "Um chá quente de gengibre com limão e mel pode aquecer o corpo neste fim de tarde. Se puder, sente-se para beber, sem pressa e sem tela."
 
 export const passoDoClima: PassoRoteirizado = {
   texto: "Vou ver o clima de agora antes de sugerir.",
@@ -21,35 +21,15 @@ export function entregaDoCha(resposta: string): PassoRoteirizado {
       {
         nome: "finalizar",
         argumentos: {
-          resposta,
-          explicacao: {
-            qualidades_do_momento: ["pesado", "frio"],
-            qualidades_buscadas: ["quente"],
-          },
+          resposta: resposta,
           sugestoes: [
             {
               tipo: "cha",
-              pratica_id: "cha-gengibre-canela",
-              itens: [
-                {
-                  alimento_id: "gengibre",
-                  contribui: ["quente"],
-                  linha_base: "alimentos:gengibre",
-                },
-                {
-                  alimento_id: "canela",
-                  contribui: ["quente"],
-                  linha_base: "alimentos:canela",
-                },
-              ],
+              id: "cha-gengibre-limao-mel",
               motivo: "Aquece o corpo no fim do dia, com o que você tem em casa.",
-              linhas_base: ["praticas:cha-gengibre-canela"],
-              novidade: false,
             },
           ],
-          evitar: ["incomodos:estomago-pesado/unica"],
           incertos: [],
-          citados: [],
         },
       },
     ],

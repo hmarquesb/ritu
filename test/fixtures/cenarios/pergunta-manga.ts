@@ -27,11 +27,8 @@ export const perguntaManga: Cenario = {
           argumentos: {
             resposta:
               "Manga costuma ser doce e refrescante, e para Pitta vale comer madura e em pouca quantidade, de preferência em horário de almoço.",
-            explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
             sugestoes: [],
-            evitar: [],
             incertos: [],
-            citados: ["alimentos:manga"],
           },
         },
       ],

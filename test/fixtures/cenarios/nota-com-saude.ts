@@ -38,11 +38,8 @@ export const notaComSaude: Cenario = {
           nome: "finalizar",
           argumentos: {
             resposta: RESPOSTA_DA_NOTA,
-            explicacao: { qualidades_do_momento: [], qualidades_buscadas: [] },
             sugestoes: [],
-            evitar: [],
             incertos: ["Não sei o que há na sua casa."],
-            citados: [],
           },
         },
       ],

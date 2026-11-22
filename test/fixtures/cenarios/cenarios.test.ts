@@ -256,7 +256,7 @@ describe("cenários de aprendizado (011)", () => {
     expect(sugeridos[0]?.ultima_sugestao_em).not.toBeNull()
   })
 
-  it("troca-por-toque: canela troca por noz-moscada na hora, sem etapa llm nova", async () => {
+  it("troca-por-toque: gengibre troca por canela na hora, sem etapa llm nova", async () => {
     const c = cenariosDeAprendizado["troca-por-toque"]
     if (!c) throw new Error("cenário ausente: troca-por-toque")
     const { contaId, deps } = await montarCenario(c)
@@ -268,15 +268,15 @@ describe("cenários de aprendizado (011)", () => {
     const resultado = await deps.touches.trocarIngrediente(contaId, {
       runId: antes.final.run_id,
       sugestao: 0,
-      alimento_id: "canela",
+      alimento_id: "gengibre",
       motivo: "trocar",
     })
     expect(resultado.resultado).toBe("trocou")
     if (resultado.resultado !== "trocou") throw new Error("troca não aconteceu")
-    const item = resultado.sugestao.itens.find((i) => i.alimento_id === "canela")
-    expect(item?.troca?.alimento_id).toBe("noz-moscada")
+    const item = resultado.sugestao.itens.find((i) => i.alimento_id === "gengibre")
+    expect(item?.troca?.alimento_id).toBe("canela")
     expect(item?.troca?.frase).toBe(
-      "Troquei canela por noz-moscada: os dois aquecem e aliviam o peso.",
+      "Troquei gengibre por canela: os dois aquecem e aliviam o peso.",
     )
     const llmDepois = (await deps.stores.runs.etapas(contaId, antes.final.run_id)).filter(
       (e) => e.tipo === "llm",
@@ -287,9 +287,9 @@ describe("cenários de aprendizado (011)", () => {
       (r) => r.id === retornoId,
     )
     expect(aguardando?.sugestao.alimentos).toEqual(
-      expect.arrayContaining(["noz-moscada", "gengibre"]),
+      expect.arrayContaining(["canela", "limao", "mel"]),
     )
-    expect(aguardando?.sugestao.alimentos).not.toContain("canela")
+    expect(aguardando?.sugestao.alimentos).not.toContain("gengibre")
   })
 
   it("troca-por-toque: o toque de rodarCenario grava a troca e o cenário termina", async () => {
@@ -297,7 +297,7 @@ describe("cenários de aprendizado (011)", () => {
     expect(rodada.toques?.[0]).toMatchObject({ tipo: "troca", resultado: { resultado: "trocou" } })
   })
 
-  it("nao-tenho-com-pergunta: gengibre acabou, pergunta pelo candidato, Não tenho nele, semSubstituto", async () => {
+  it("nao-tenho-com-pergunta: mel acabou, pergunta pelo candidato, Não tenho nele, semSubstituto", async () => {
     const { contaId, deps, rodada } = await rodarAprendizado("nao-tenho-com-pergunta")
     const [toque] = rodada.toques ?? []
     expect(toque?.tipo).toBe("troca")
@@ -310,14 +310,12 @@ describe("cenários de aprendizado (011)", () => {
     )
     expect(toque.resposta).toEqual({
       resultado: "sem_substituto",
-      texto: "Não achei uma troca para gengibre com o que você tem em casa.",
+      texto: "Não achei uma troca para mel com o que você tem em casa.",
     })
     const casa = await deps.stores.pantry.listar(contaId)
-    expect(casa.find((i) => i.alimento_id === "gengibre")?.estado).toBe("acabou")
+    expect(casa.find((i) => i.alimento_id === "mel")?.estado).toBe("acabou")
     const faltas = await deps.stores.shortages.diasComFalta(contaId, "2026-01-01")
-    expect(faltas.map((f) => f.alimento_id)).toEqual(
-      expect.arrayContaining(["gengibre", candidato]),
-    )
+    expect(faltas.map((f) => f.alimento_id)).toEqual(expect.arrayContaining(["mel", candidato]))
     const metricas = deps.telemetry.metricas
     expect(
       metricas.filter(

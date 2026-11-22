@@ -39,14 +39,8 @@ export const aprovacaoParcial: Cenario = {
           argumentos: {
             resposta:
               "Com as refeições fora essa semana, vale deixar à mão o que você trouxe da feira. Se puder, sente-se para comer, sem tela.",
-            explicacao: {
-              qualidades_do_momento: [],
-              qualidades_buscadas: [],
-            },
             sugestoes: [],
-            evitar: [],
             incertos: [],
-            citados: [],
           },
         },
       ],

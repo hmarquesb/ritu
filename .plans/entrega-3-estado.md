@@ -229,3 +229,7 @@ Plano em `.plans/026-finalizar-enxuto-e-rodada-limpa-plan.md`. Decisões 026 A1 
 | T12 · Cover the lean finalizar, the keys and the runner with deterministic evals | concluida | 2a6c1a5 |
 
 > 026 fechada em 2026-11-22: gates 1 a 6, `dup` (0 clones) e e2e (291 passam) verdes; spec `implemented` (2a6c1a5); ADR 0052. Correção de plano: T13 (cenários de `test/fixtures/`, esquecidos na quebra). Reprovações: T9 (2x: `estado` no teste do runner; e2e de troca com canela), T11 (R6 em `scripts/eval-llm.ts`), T12 (caso de evitar sempre em `citados`). Os roteiros do e2e e alguns cenários trocaram de sugestão para candidatos reais (o chá de gengibre e canela e o arroz com legume não eram candidatos do seed). Pendente: ⚠️ rodada do `c3-confiavel` com `--extra`.
+| T14 · Accept para_ter false in the model's choice (correção, fumaça) | concluida | cb97631 |
+| T15 · Keep the progress file while inconclusive cases remain (correção, rodada) | concluida | 3c77397 |
+
+> Rodada `c3-confiavel` com o `acompanhante.v8` (2026-11-22, `--extra` autorizado na spec, mais duas retomadas): 86 de 86, **rodada incompleta: 7 inconclusivos** (6 `cota`, 1 `juiz_indisponivel`). Válida na 1ª tentativa 69% (24/35; antes 15%); corrigiu após violação 73% (8/11; meta 95%); `c3-s23` e `c3-s24` certos; zero violações de montagem. Violações da 1ª entrega: `estrutura` 12, `fora_de_casa` 5, `dosagem` 1. Correções achadas na fumaça e na rodada: T14 (`para_ter: false`) e T15 (andamento mantido com inconclusivos). O andamento fica em `evals/local/` para um `--retomar` com a cota renovada.

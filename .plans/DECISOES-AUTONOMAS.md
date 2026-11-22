@@ -501,3 +501,9 @@
 - **Decidido:** o roteador devolve o id da rota (`<modelo>` com uma chave, `<modelo>@<n>` com mais); `separarRota` no core; Gemini e Mastra recebem `apiKey(chave)`. Telemetria sem o sufixo.
 - **Por quê:** a porta `FornecedorDeModelo` não muda de forma, e o ledger usa o id da rota como chave, como a spec pede.
 - **Como desfazer:** voltar `apiKey` a `() => string` e o roteador a uma chave.
+
+## 026 A3 · `para_ter: false` aceito na escolha
+- **Faltava:** o contrato da spec tem `para_ter: z.literal(true).optional()`, mas a fumaça com LLM real (`c1-01`) mostrou o modelo mandando `para_ter: false` em todas as tentativas; o loop recusa como `argumentos_invalidos` e o run sai `segura`.
+- **Decidido:** `para_ter: z.boolean().optional()`; só `true` menciona, `false` vale como omitido (T14).
+- **Por quê:** a intenção da spec (mencionar ou não é julgamento do agente) fica igual; o literal só tirava do modelo um jeito natural de dizer "não".
+- **Como desfazer:** voltar ao `z.literal(true).optional()`.

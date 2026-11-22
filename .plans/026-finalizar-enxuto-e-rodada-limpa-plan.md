@@ -285,3 +285,29 @@ Fechamento (orquestrador): gates 1 a 6 e `dup`; ADR 0052; `AI.md` (já atualizad
 - comandos: `npm run eval:det`, `npm test`, `rtk bypass npm run lint` (falhas em arquivos de T6 a T9 ainda em curso são esperadas: compare com a linha de base)
 - pronto quando: nenhum teste ou eval falha por causa de um cenário de `test/fixtures/`.
 - fora: `src/`, `evals/det/`, `e2e/`, `scripts/`.
+
+### T14 · Accept para_ter false in the model's choice (correção, fumaça)
+- nivel: nucleo
+- objetivo: a fumaça com LLM real mostrou o modelo mandando `para_ter: false`, que o schema (`z.literal(true).optional()`) recusa como `argumentos_invalidos`, sem código; o run gasta as tentativas e sai `segura`. Aceitar booleano e tratar `false` como omitido (026 A3).
+- arquivos: `src/core/agents/companion/saida.ts`, `src/core/agents/companion/saida.test.ts`, `src/core/agents/companion/completar.ts`, `src/core/agents/companion/completar.test.ts`
+- depende de: nenhuma
+- leitura: nenhuma
+- skills: nenhuma
+- contratos: `para_ter: z.boolean().optional().describe("true para mencionar o para_ter do contexto; false ou omitido para não mencionar.")`. Em `completarEntrega`, só `para_ter === true` copia `dados.para_ter` (e só `true` sem `dados.para_ter` gera a violação `para_ter` do modelo); `false` é igual a omitido. `EscolhaDoModelo` segue o schema.
+- testes primeiro: `saida.test.ts`: `para_ter: false` é aceito pelo schema; `completar.test.ts`: `para_ter: false` com e sem `dados.para_ter` não gera violação e a entrega sai sem `para_ter`.
+- comandos: `npm test`, `npm run eval:det`, `npm run typecheck`, `rtk bypass npm run lint`
+- pronto quando: gates verdes.
+- fora: prompt, loop.
+
+### T15 · Keep the progress file while inconclusive cases remain (correção, rodada)
+- nivel: mecanica
+- objetivo: a rodada do `c3-confiavel` terminou com 14 inconclusivos e o runner apagou `evals/local/andamento-c3-confiavel.json`, então `--retomar` não tem o que refazer. Com inconclusivo, o andamento fica; a retomada atualiza a mesma rodada no histórico em vez de criar outra.
+- arquivos: `scripts/lib/evals/comando.ts`, `scripts/lib/evals/eval-llm.test.ts`, `scripts/lib/evals/historico.ts`, `scripts/lib/evals/historico.test.ts` (só se o histórico precisar substituir a rodada)
+- depende de: nenhuma
+- leitura: `.docs/QA.md` "Checkpoints" (regras da rodada)
+- skills: nenhuma
+- contratos: no fim de `rodarCheckpoint`, depois de gravar relatório, `.json`, histórico e comparação: se algum resultado tem `estado === "inconclusivo"`, NÃO apaga o andamento e imprime `N inconclusivos: rode de novo com --retomar para refazê-los.`; com zero inconclusivos, apaga como hoje. Na retomada, a entrada do histórico da mesma rodada (mesmo checkpoint e mesma `iniciada_em` do andamento, ou o critério que o histórico já usa para identificar a rodada) é substituída, não duplicada; `COMPARACAO.md` sai do histórico como hoje. A recusa de "rodada do mesmo checkpoint com a data de hoje" não vale para `--retomar` (já não valia; confira).
+- testes primeiro: `eval-llm.test.ts`: rodada com um inconclusivo mantém o andamento e imprime a dica; rodada sem inconclusivo apaga; retomada que zera os inconclusivos apaga o andamento e deixa uma só entrada da rodada no histórico.
+- comandos: `npm test -- scripts/lib/evals`, `npm run typecheck`, `rtk bypass npm run lint`
+- pronto quando: gates verdes.
+- fora: métricas, relatório, runner de casos.

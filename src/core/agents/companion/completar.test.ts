@@ -269,6 +269,22 @@ describe("completarEntrega", () => {
     })
   })
 
+  it("para_ter false equivale a omitido", async () => {
+    const dados = await comRefeicao()
+    const pedido = { ...minima(refeicao()), para_ter: false }
+    const sem = completarEntrega(pedido, { dados, kb })
+    expect(sem.ok && sem.entrega.para_ter).toBeUndefined()
+    const para_ter = {
+      alimento_id: "gengibre",
+      nome: "Gengibre",
+      vezes: 3,
+      contribui: ["quente" as const],
+      linha_base: "alimentos:gengibre",
+    }
+    const com = completarEntrega(pedido, { dados: { ...dados, para_ter }, kb })
+    expect(com.ok && com.entrega.para_ter).toBeUndefined()
+  })
+
   it("citados saem da fala e o filtro de evitar sempre ainda aponta", async () => {
     const dados = await comRefeicao({
       filtro: {

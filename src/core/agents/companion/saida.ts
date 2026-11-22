@@ -94,9 +94,9 @@ export const escolhaDoModeloSchema = z.object({
   sugestoes: z.array(sugestaoEscolhidaSchema),
   incertos: z.array(z.string()),
   para_ter: z
-    .literal(true)
+    .boolean()
     .optional()
-    .describe("true para mencionar o para_ter do contexto; omita se não houver ou não couber."),
+    .describe("true para mencionar o para_ter do contexto; false ou omitido para não mencionar."),
 })
 
 export type EscolhaDoModelo = z.infer<typeof escolhaDoModeloSchema>

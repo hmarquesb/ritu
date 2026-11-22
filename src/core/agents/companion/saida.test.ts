@@ -410,7 +410,7 @@ describe("retorno_id e troca na saída", () => {
 })
 
 describe("escolhaDoModeloSchema", () => {
-  it("aceita a escolha enxuta e recusa para_ter false", () => {
+  it("aceita a escolha enxuta e aceita para_ter false", () => {
     const base = {
       resposta: "Oi",
       sugestoes: [{ tipo: "cha", id: "cha-gengibre", motivo: "Aquece." }],
@@ -418,6 +418,6 @@ describe("escolhaDoModeloSchema", () => {
     }
     expect(escolhaDoModeloSchema.safeParse(base).success).toBe(true)
     expect(escolhaDoModeloSchema.safeParse({ ...base, para_ter: true }).success).toBe(true)
-    expect(escolhaDoModeloSchema.safeParse({ ...base, para_ter: false }).success).toBe(false)
+    expect(escolhaDoModeloSchema.safeParse({ ...base, para_ter: false }).success).toBe(true)
   })
 })

@@ -110,7 +110,7 @@ function paraTerMontado(
   e: EscolhaDoModelo,
   ctx: ContextoDaMontagem,
 ): { valor?: EntregaDoModelo["para_ter"]; violacoes: Violacao[] } {
-  if (!e.para_ter) return { violacoes: [] }
+  if (e.para_ter !== true) return { violacoes: [] }
   const base = ctx.dados.para_ter
   if (!base) {
     return {

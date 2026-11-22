@@ -226,7 +226,9 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 
 Regras da rodada:
 
-- Usa a chave do projeto de **desenvolvimento** e passa pelo `ModelRouter`, que respeita as cotas por minuto e por dia. O runner espaça os casos sozinho.
+- Usa a chave do projeto de **desenvolvimento** (e, se existirem, `GEMINI_API_KEY_2` e `_3`, de outros projetos) e passa pelo `ModelRouter`, que respeita as cotas por minuto e por dia de cada chave. O runner espaça os casos sozinho.
+- Antes do 1º caso, em toda rodada e retomada, uma checagem prévia confere o Postgres e cada chave configurada; falhou, a rodada não começa.
+- Caso que a infraestrutura impediu de testar o agente fica **inconclusivo** (`banco`, `sem_etapas`, `cota`, `juiz_indisponivel`, `timeout_sem_decisao`). Inconclusivo não entra em nenhuma métrica; `--retomar` roda de novo os inconclusivos e os que faltam. O relatório só diz "rodada completa" com zero inconclusivos.
 - A rodada do `c3-confiavel` gasta cerca de 300 chamadas e leva uns 25 minutos. Não rodar duas rodadas completas do mesmo checkpoint no mesmo dia; o runner recusa a segunda sem `--extra`.
 - Um caso roda uma vez. `--caso <id>` roda um caso só e imprime as checagens, as etapas e o custo, sem gravar nada: é a fumaça do fechamento de spec. `--listar` mostra os casos por família, a contagem por tipo e a estimativa de chamadas, sem modelo e sem chave.
 - O andamento fica em `evals/local/andamento-<checkpoint>.json`, com uma assinatura dos casos, dos prompts e dos modelos. Erro 429 persistente, ou três erros inesperados seguidos: a rodada para, guarda o que fez e continua no dia seguinte (`--retomar`). Se a assinatura mudou, o runner recusa a retomada e a rodada começa de novo (`--do-zero`).

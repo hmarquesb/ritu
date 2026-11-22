@@ -70,6 +70,8 @@ export function containerDoCenario(deps: DepsDoCenario): {
     limiter: createMemoryLimiter(),
     conversation,
   })
+  // Fora de uma requisição o `after()` do Next não existe: quem descarrega a telemetria é o chamador.
+  Object.defineProperty(container, "telemetriaLigada", { value: false, configurable: true })
   return { container, devolvidos }
 }
 

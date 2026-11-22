@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   cenariosComAprovacao,
   cenariosComPausa,
@@ -9,7 +9,7 @@ import {
 } from "./index"
 import { montarCenario } from "./montar"
 import { rodarCenario } from "./rodar"
-import { RotaFalhouError, rodarCenarioPelasRotas } from "./rotas"
+import { containerDoCenario, RotaFalhouError, rodarCenarioPelasRotas } from "./rotas"
 import type { Cenario } from "./tipos"
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g
@@ -94,5 +94,21 @@ describe("rodarCenarioPelasRotas: rota que falha", () => {
     const passo = (erro as RotaFalhouError).passos.at(-1)
     expect(passo?.rota).toBe("POST /api/runs")
     expect(passo?.status).toBe(409)
+  })
+})
+
+describe("containerDoCenario: telemetria", () => {
+  it("fica desligada mesmo com o endpoint no ambiente, e a rodada termina", async () => {
+    vi.stubEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
+    try {
+      const [nome, c] = Object.entries(cenariosDeConversa)[0] as [string, Cenario]
+      expect(nome).toBeTruthy()
+      const m = await montarCenario(c)
+      expect(containerDoCenario(m.deps).container.telemetriaLigada).toBe(false)
+      const r = await montarCenario(c)
+      await expect(rodarCenarioPelasRotas(r.deps, r.contaId, c)).resolves.toBeDefined()
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })

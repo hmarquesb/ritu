@@ -21,6 +21,8 @@ type Relatorio = {
   avaliacao: { abaixo: MetricaId[]; criticas: MetricaId[] }
   metas: Record<string, Meta>
   anterior?: EntradaDoHistorico
+  /** Ausente vale `codigo`. */
+  alvo?: "codigo" | "rotas"
 }
 
 function numeroTexto(valor: number, forma: Forma): string {
@@ -90,6 +92,15 @@ export function linhaDeResumo(m: Record<MetricaId, Medida>): string {
   ].join(" · ")
 }
 
+/** Fluxo pelas rotas: dos casos com checagem `rota`, quantos têm todas as checagens `rota` verdadeiras. */
+function linhaDeFluxo(resultados: ResultadoDoCaso[]): string {
+  const comRota = resultados.filter((r) => r.checagens.some((c) => c.lista === "rota"))
+  const integros = comRota.filter((r) =>
+    r.checagens.every((c) => c.lista !== "rota" || c.ok === true),
+  )
+  return `Fluxo pelas rotas: ${integros.length} de ${comRota.length} casos íntegros`
+}
+
 const inconclusivosDe = (resultados: ResultadoDoCaso[]): ResultadoDoCaso[] =>
   resultados.filter((resultado) => resultado.estado === "inconclusivo")
 
@@ -106,6 +117,7 @@ function cabecalhoDoRelatorio(p: Relatorio): string[] {
     `- Data: ${p.data}`,
     `- Prompts: ${prompts.length === 0 ? TRACO : prompts.join(", ")}`,
     `- Modelos: ${p.modelos.length === 0 ? TRACO : p.modelos.join(", ")}`,
+    `- Alvo: ${p.alvo === "rotas" ? "rotas do site" : "código"}`,
     `- Casos rodados: ${p.resultados.length} de ${p.totalDeCasos}`,
     `- Situação: ${situacaoDaRodada(p.resultados)}`,
   ]
@@ -280,7 +292,7 @@ function secaoErros(resultados: ResultadoDoCaso[]): string[] {
 export function formatarRelatorio(p: Relatorio): string {
   const blocos: (string[] | undefined)[] = [
     cabecalhoDoRelatorio(p),
-    [linhaDeResumo(p.metricas)],
+    [linhaDeResumo(p.metricas), ...(p.alvo === "rotas" ? [linhaDeFluxo(p.resultados)] : [])],
     secaoCriticas(p),
     secaoAbaixo(p),
     secaoMetricas(p),

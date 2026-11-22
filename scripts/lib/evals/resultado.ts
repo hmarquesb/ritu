@@ -10,7 +10,7 @@ export type UsoDoPapel = { chamadas: number; tokens_entrada: number; tokens_said
 
 /** `null`: checagem não avaliada. */
 export type Checagem = {
-  lista: "deve" | "nao_pode" | "criterio"
+  lista: "deve" | "nao_pode" | "criterio" | "rota"
   descricao: string
   ok: boolean | null
 }

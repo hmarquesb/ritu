@@ -3,7 +3,7 @@ import type { EntradaDoHistorico } from "./historico"
 import type { Meta } from "./metas"
 import { calcularMetricas, type Medida, type MetricaId } from "./metricas"
 import { formatarRelatorio, linhaDeResumo } from "./relatorio"
-import type { Colhido, ResultadoDoCaso } from "./resultado"
+import { type Colhido, calcularAcertou, type ResultadoDoCaso } from "./resultado"
 
 function caso(extra: Partial<ResultadoDoCaso> = {}): ResultadoDoCaso {
   return {
@@ -339,5 +339,39 @@ describe("situação da rodada e inconclusivos", () => {
     const texto = relatorio({ resultados: [inconclusivo] })
     expect(texto).toContain("| c1-09-sem-resposta |")
     expect(texto).toMatch(/\| inconclusivo \|/)
+  })
+})
+
+describe("alvo e fluxo pelas rotas", () => {
+  const rota = (ok: boolean | null) => ({ lista: "rota" as const, descricao: "fluxo íntegro", ok })
+  const deve = { lista: "deve" as const, descricao: "fala de chá", ok: true }
+
+  it("com alvo código mostra Alvo logo depois de Modelos e não mostra o fluxo", () => {
+    const texto = relatorio({ alvo: "codigo", resultados: [caso({ checagens: [rota(true)] })] })
+    expect(texto).toContain("- Modelos: modelo-a, modelo-b\n- Alvo: código")
+    expect(texto).not.toContain("Fluxo pelas rotas")
+  })
+
+  it("sem alvo vale código", () => {
+    const texto = relatorio()
+    expect(texto).toContain("- Alvo: código")
+    expect(texto).not.toContain("Fluxo pelas rotas")
+  })
+
+  it("com alvo rotas mostra o alvo e o fluxo logo abaixo do resumo", () => {
+    const resultados = [
+      caso({ id: "r1", checagens: [rota(true), deve] }),
+      caso({ id: "r2", checagens: [rota(false)], acertou: false }),
+      caso({ id: "r3", checagens: [deve] }),
+    ]
+    const texto = relatorio({ alvo: "rotas", resultados })
+    expect(texto).toContain("- Modelos: modelo-a, modelo-b\n- Alvo: rotas do site")
+    expect(texto).toContain(
+      `${linhaDeResumo(metricasComValores({}))}\nFluxo pelas rotas: 1 de 2 casos íntegros`,
+    )
+  })
+
+  it("uma checagem rota falsa deixa o caso errado", () => {
+    expect(calcularAcertou({ checagens: [deve, rota(false)], erro: undefined })).toBe(false)
   })
 })

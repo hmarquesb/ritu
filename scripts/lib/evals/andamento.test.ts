@@ -80,6 +80,13 @@ describe("lerAndamento", () => {
     expect(lerAndamento("{ isto não é json")).toEqual({ ok: false })
   })
 
+  it("aceita uma checagem rota", () => {
+    const andamento = andamentoCom([
+      { ...resultado, checagens: [{ lista: "rota", descricao: "fluxo íntegro", ok: true }] },
+    ])
+    expect(lerAndamento(JSON.stringify(andamento))).toEqual({ ok: true, andamento })
+  })
+
   it("recusa a versão 2", () => {
     const outra = { ...andamentoCom([]), versao: 2 }
     expect(lerAndamento(JSON.stringify(outra))).toEqual({ ok: false })

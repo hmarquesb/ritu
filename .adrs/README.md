@@ -59,6 +59,7 @@
 | [0049](0049-chas-derivados-e-padrao-de-cha.md) | Chás simples derivados das ervas e padrão de chá genérico | Aceito |
 | [0050](0050-toques-da-casa-por-uma-rota-visao-devolvida-e-relogio-noturno-no-e2e.md) | Toques da casa por uma rota, visão devolvida pela rota e relógio noturno no modo E2E | Aceito |
 | [0051](0051-voce-numa-pagina-rotas-de-memoria-e-conversa-apagada-fora-da-conversa.md) | "Você" numa página, duas rotas de escrita da memória e conversa apagada fora da conversa | Aceito |
+| [0052](0052-finalizar-enxuto.md) | Finalizar enxuto, montagem por código e rodada de eval sem ruído de infraestrutura | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

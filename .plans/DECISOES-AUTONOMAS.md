@@ -489,3 +489,15 @@
 - **Decidido:** o portão 3 vai com a rodada nova do `c3-confiavel` (2026-11-22, mesmos casos, pelo `conversar`). O `c4-site` e o `c5-publico` ficam para uma tarefa ou spec própria, a decidir no portão.
 - **Por quê:** criar um checkpoint pede escolher o alvo (rotas reais × `conversar`) e as metas: decisão de produto, não de junção. E a cota do dia já foi para o `c3`.
 - **Como desfazer:** registrar o `c4-site` em `evals/llm/checkpoints.ts` e rodar `npm run eval:llm -- --checkpoint c4-site`.
+
+## 026 A1 · Fim do run por erro de montagem
+- **Faltava:** a spec manda `finalizar` fechar o run com a `segura` numa violação de montagem, mas o `ResultadoDeControle` só tinha `entregar`, `recusar` e `pausar`.
+- **Decidido:** quarta forma `{ tipo: "encerrar"; codigo; resumo? }`, que vira `FimDoTrecho` `erro` com o código `montagem`; a etapa `validacao` fica `falhou` com o resumo `erro_de_montagem`.
+- **Por quê:** é a mudança mínima no loop; o resto do loop não muda.
+- **Como desfazer:** tirar a forma nova e tratar a montagem como `recusar`.
+
+## 026 A2 · Id de rota com a chave
+- **Faltava:** como a chave chega ao adaptador quando o roteador escolhe modelo × chave.
+- **Decidido:** o roteador devolve o id da rota (`<modelo>` com uma chave, `<modelo>@<n>` com mais); `separarRota` no core; Gemini e Mastra recebem `apiKey(chave)`. Telemetria sem o sufixo.
+- **Por quê:** a porta `FornecedorDeModelo` não muda de forma, e o ledger usa o id da rota como chave, como a spec pede.
+- **Como desfazer:** voltar `apiKey` a `() => string` e o roteador a uma chave.

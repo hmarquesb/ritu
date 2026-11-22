@@ -1,6 +1,7 @@
 ---
 title: Finalizar enxuto e rodada limpa
-status: approved
+status: implemented
+implemented: 2a6c1a5
 entrega: 3
 created: 2026-11-22
 ---

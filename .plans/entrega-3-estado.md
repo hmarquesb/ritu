@@ -207,3 +207,25 @@
 > 020 fechada: gates 1 a 6 e dup verdes (com timeouts de carga repetidos: `npm test` com `--testTimeout=120000` 3249/3249; `eval:det` sozinho 1490/1490; E2E 266 + `conversa.spec.ts:327` [desktop] verde na repetição, corrida possível se a resposta termina antes do reload). ADR 0051 (era 0046 na branch; renumerada na junção). `test:db` não rodado (⚠️, fora da trilha adiantada). Spec `implemented (ced91d7)`.
 
 > 2026-11-22: `main` juntada na `entrega-3` (`28770c2`; conflitos, ADRs 0050 e 0051, migração `0006`, limite de toques em Você: DECISOES J-A1 a J-A4), J1 (`03d0431`, E2E de teclado de Você esperando a hidratação; uma reprovação por processo, a skill `web-design-guidelines` não tinha sido carregada), `entrega-3` juntada na `main` (`e1891a9`) e o teste da 0005 no `test:db` (`ca7ce1b`). Gates 1 a 6 e dup verdes na `main` (verificador): test 3596, eval:det 1579, E2E 291 + 69 pulados, 0 clones; `test:db` 152/152. Entrega fechada: relatório em `.plans/entrega-3-relatorio.md`, tag `entrega-3`.
+
+## 026 · Finalizar enxuto e rodada limpa
+
+Plano em `.plans/026-finalizar-enxuto-e-rodada-limpa-plan.md`. Decisões 026 A1 e A2 em `.plans/DECISOES-AUTONOMAS.md`.
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Build the lean finalizar input and the assembly from candidates | concluida | fa91a83 |
+| T2 · Write the acompanhante.v8 prompt | concluida | 6c4a25b |
+| T3 · Route each model through up to three Gemini keys | concluida | e5d0fc8 |
+| T4 · Classify inconclusive eval cases | concluida | 59fc3a1 |
+| T5 · Swap finalizar to the model's choice and end on assembly errors | concluida | d871937 |
+| T6 · Move the core tests to the model's choice | concluida | 6548463 |
+| T7 · Move the deterministic evals (acompanhante, aprendizado, aprovacao, guardrails) | concluida | bc635e7 |
+| T8 · Move the deterministic evals (loop, modelos, pausas) | concluida | a18fd31 |
+| T9 · Move the e2e scripts, demo scenarios and runner tests | concluida | 498a58f |
+| T13 · Move the shared scenario fixtures to the model's choice (correção do plano) | concluida | 4295b88 |
+| T10 · Leave inconclusive cases out of the metrics and rerun them on resume | concluida | d278f47 |
+| T11 · Check Postgres and each key before the first case | concluida | 5b98ebe |
+| T12 · Cover the lean finalizar, the keys and the runner with deterministic evals | concluida | 2a6c1a5 |
+
+> 026 fechada em 2026-11-22: gates 1 a 6, `dup` (0 clones) e e2e (291 passam) verdes; spec `implemented` (2a6c1a5); ADR 0052. Correção de plano: T13 (cenários de `test/fixtures/`, esquecidos na quebra). Reprovações: T9 (2x: `estado` no teste do runner; e2e de troca com canela), T11 (R6 em `scripts/eval-llm.ts`), T12 (caso de evitar sempre em `citados`). Os roteiros do e2e e alguns cenários trocaram de sugestão para candidatos reais (o chá de gengibre e canela e o arroz com legume não eram candidatos do seed). Pendente: ⚠️ rodada do `c3-confiavel` com `--extra`.

@@ -38,7 +38,7 @@ Um agente **decide o caminho**, **age**, **observa o resultado** e **corrige**. 
 
 O Intérprete usa o prompt `interprete.v2`: `estados` só com o que a pessoa disse que sente agora, sem deduzir, mas aceitando o jeito do dia a dia ("morta de cansaço", "exausta" e "sem pique" são `sem_energia`).
 
-O Acompanhante usa o prompt `acompanhante.v7`: além do contexto da v5, recebe `resumo_de_rotina` e `padroes` (os confirmados, até 10) e dá preferência ao padrão que fala do momento de agora quando o que ele aponta está entre os candidatos; quando o padrão fala de "um chá", escolhe entre os chás candidatos o que casa com o momento e com a casa. Resumo e padrões vão ao contexto neutralizados, como dados, e padrão não autoriza nada fora dos candidatos. O Memória só compacta: não escolhe o que anotar nem grava (regra 4).
+O Acompanhante usa o prompt `acompanhante.v8`: além do contexto da v5, recebe `resumo_de_rotina` e `padroes` (os confirmados, até 10) e dá preferência ao padrão que fala do momento de agora quando o que ele aponta está entre os candidatos; quando o padrão fala de "um chá", escolhe entre os chás candidatos o que casa com o momento e com a casa. Resumo e padrões vão ao contexto neutralizados, como dados, e padrão não autoriza nada fora dos candidatos. O prompt cita os campos do contexto pelo nome real (`momento.presentes`, `momento.buscadas`, `momento.conflitos`, `momento.evitar`) e não pede cópia de nada que o código monta. O Memória só compacta: não escolhe o que anotar nem grava (regra 4).
 
 O Juiz usa o prompt `juiz.v1`, sem tools, pela mesma chamada de apoio do Intérprete. **Ele só aponta; quem decide é o código**, por `config/juiz.ts`:
 

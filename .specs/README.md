@@ -9,7 +9,7 @@ Cada spec descreve **o quê e por quê** de uma parte. O **como** fica no plano 
 - Marque na spec o **nível** de cada parte: `mecanica` (Haiku), `nucleo` (Sonnet), `tela` (Sonnet) ou `conteudo` (Opus). Regras em `RULES.md` §1.
 - Liste em "Leitura para a construção" só as seções de `.docs/` que a construção precisa abrir.
 - As specs de uma entrega são todas aprovadas antes de ela começar. As das entregas seguintes podem ser escritas durante a construção, a partir do código já commitado.
-- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 a 015 implementadas (entrega 2, aprovada com correções no portão 2 em 2026-11-17, correções aplicadas na `main`); 016 a 020 implementadas na `main` (entrega 3, `entrega-3` juntada em `e1891a9`, aguardando o portão 3); 021 e 022 implementadas (produção no ar; `entrega-4` juntada na `main`); 023 e 024 aprovadas. 025 (chás híbridos) implementada na `main`. 026 (finalizar enxuto e rodada limpa) aprovada: ajuste do portão 3, antes da 023.
+- **Andamento:** 001 a 007 implementadas (entrega 1, aprovada no portão 1); 008 a 015 implementadas (entrega 2, aprovada com correções no portão 2 em 2026-11-17, correções aplicadas na `main`); 016 a 020 implementadas na `main` (entrega 3, `entrega-3` juntada em `e1891a9`, aguardando o portão 3); 021 e 022 implementadas (produção no ar; `entrega-4` juntada na `main`); 023 e 024 aprovadas. 025 (chás híbridos) implementada na `main`. 026 (finalizar enxuto e rodada limpa) implementada na `main`: ajuste do portão 3; falta a rodada do `c3-confiavel` com o `acompanhante.v8`.
 
 ## Pendências da dona
 

@@ -2,6 +2,7 @@ import { adequacao } from "./adequacao"
 import { app } from "./app"
 import { aprovacao } from "./aprovacao"
 import { base } from "./base"
+import { bastidores } from "./bastidores"
 import { casa } from "./casa"
 import { textosChas } from "./chas"
 import { clima } from "./clima"
@@ -20,6 +21,7 @@ import { ranking } from "./ranking"
 import { resposta } from "./resposta"
 import { telaConversa } from "./tela-conversa"
 import { telemetria } from "./telemetria"
+import { textosBastidores } from "./textos-bastidores"
 import { textosCasa } from "./textos-casa"
 import { textosComoFicou } from "./textos-como-ficou"
 import { textosComoPensei } from "./textos-como-pensei"
@@ -34,6 +36,7 @@ export { textosChas } from "./chas"
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
 export { telaConversa } from "./tela-conversa"
+export { textosBastidores } from "./textos-bastidores"
 export { textosCasa } from "./textos-casa"
 export { textosComoFicou } from "./textos-como-ficou"
 export { textosComoPensei } from "./textos-como-pensei"
@@ -44,6 +47,7 @@ export { textosVoce } from "./textos-voce"
 export const config = {
   app,
   base,
+  bastidores,
   momentoDoDia,
   adequacao,
   clima,
@@ -70,6 +74,7 @@ export const config = {
   textosConversa,
   textosEntrada,
   textosVoce,
+  textosBastidores,
   textosLimites,
   toques,
   ui,

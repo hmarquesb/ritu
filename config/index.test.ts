@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
+import { checkpoints } from "../evals/llm/checkpoints"
+import { FAMILIAS } from "../evals/llm/tipos"
 import { GRUPOS } from "../src/core/knowledge/vocab"
-import { config, telaConversa, textosConversa, textosLimites } from "./index"
+import { config, telaConversa, textosBastidores, textosConversa, textosLimites } from "./index"
 import { formatar } from "./textos-conversa"
 
 function textosDe(valor: unknown): string[] {
@@ -327,6 +329,87 @@ describe("config", () => {
         const chave = casamento[1] ?? ""
         expect(esperadas.has(chave), `chave {${chave}} inesperada em "${modelo}"`).toBe(true)
       }
+    }
+  })
+})
+
+describe("config do Bastidores e do MCP", () => {
+  it("expõe a configuração do Bastidores com os valores da spec 023", () => {
+    expect(config.bastidores.dias).toBe(7)
+    expect(config.bastidores.minimoDeRuns).toBe(20)
+    expect(config.bastidores.topTools).toBe(5)
+    expect(config.bastidores.cacheMs).toBe(3_600_000)
+    expect(config.bastidores.retencaoSinaisDias).toBe(30)
+    expect(config.bastidores.toolsFora).toEqual([
+      "ask_user",
+      "finalizar",
+      "memoria.propor",
+      "lista.propor",
+    ])
+    expect(config.bastidores.mcp).toEqual({ caminho: "/api/mcp", corpoMaximoBytes: 16_384 })
+  })
+
+  it("expõe os limites do MCP com os valores da spec 023", () => {
+    expect(config.limites.mcp).toEqual({ porIpPorMinuto: 30, porIpPorDia: 300, globalPorDia: 3000 })
+  })
+
+  it("tem como destaques só ids de métricas", () => {
+    const ids = new Set(textosBastidores.metricas.map((metrica) => metrica.id))
+    expect(config.bastidores.destaques.length).toBe(5)
+    for (const destaque of config.bastidores.destaques) {
+      expect(ids.has(destaque), `destaque ${destaque} fora de metricas`).toBe(true)
+    }
+  })
+
+  it("cobre toda métrica com meta de config/evals.ts, com rótulo e formato válidos", () => {
+    const ids: string[] = textosBastidores.metricas.map((metrica) => metrica.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const meta of Object.keys(config.evals.metas)) {
+      expect(ids.includes(meta), `métrica ${meta} sem texto`).toBe(true)
+    }
+    for (const metrica of textosBastidores.metricas) {
+      expect(metrica.rotulo.length).toBeGreaterThan(0)
+      expect(["pct", "num", "ms", "contagem"]).toContain(metrica.formato)
+    }
+  })
+
+  it("tem uma entrada de família para cada Familia de FAMILIAS", () => {
+    expect(Object.keys(textosBastidores.familias).sort()).toEqual([...FAMILIAS].sort())
+    for (const rotulo of Object.values(textosBastidores.familias)) {
+      expect(rotulo.length).toBeGreaterThan(0)
+    }
+  })
+
+  it("tem um texto de checkpoint para cada checkpoint de evals/llm/checkpoints.ts", () => {
+    expect(Object.keys(textosBastidores.checkpoints).sort()).toEqual(
+      Object.keys(checkpoints).sort(),
+    )
+  })
+
+  it("expõe os textos do Bastidores com as chaves da spec e os marcadores de interpolação", () => {
+    expect(textosBastidores.titulo).toBe("Bastidores")
+    expect(textosBastidores.intro).toBe(
+      "Como o Ritu está se saindo, em números. Nada aqui identifica uma pessoa.",
+    )
+    expect(textosBastidores.semana.janela).toBe("De {de} a {ate}, dias completos.")
+    expect(textosBastidores.semana.poucos.texto).toContain("{minimo}")
+    expect(textosBastidores.semana.poucos.texto).toContain("{runs}")
+    expect(textosBastidores.tile.votos.valor).toBe("{up} gostaram · {down} não gostaram")
+    expect(textosBastidores.tile.retornos.valor).toContain("{nao_fez}")
+    expect(textosBastidores.evals.meta.min).toBe("Meta: pelo menos {valor}")
+    expect(textosBastidores.evals.abaixo).toBe("abaixo da meta")
+    expect(textosBastidores.mcp.limites).toBe(
+      "Até {minuto} chamadas por minuto e {dia} por dia por conexão.",
+    )
+    expect(textosBastidores.aviso).toBe("Não é orientação médica.")
+  })
+
+  it("mantém os textos do Bastidores sem texto vazio nem marcação", () => {
+    const textos = textosDe(config.textosBastidores)
+    expect(textos.length).toBeGreaterThan(60)
+    for (const texto of textos) {
+      expect(texto.trim().length).toBeGreaterThan(0)
+      expect(texto).not.toMatch(/[<>]/)
     }
   })
 })

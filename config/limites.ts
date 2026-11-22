@@ -7,4 +7,5 @@ export const limites = {
   buscaDeAlimento: { minimoCaracteres: 2, maximoResultados: 8 },
   mensagens: { googlePorDia: 30, demoPorConta: 12, porIpPorDia: 60, avisarComRestantes: 3 },
   toques: { porContaPorMinuto: 60, porContaPorDia: 300, porIpPorDia: 1500 },
+  mcp: { porIpPorMinuto: 30, porIpPorDia: 300, globalPorDia: 3000 },
 } as const

@@ -32,7 +32,11 @@ async function montar() {
     telemetry: deps.telemetry,
     limiter: createMemoryLimiter(),
   })
-  const rotas = rotasDoVoce({ contaDaSessao: async () => contaId, container })
+  const rotas = rotasDoVoce({
+    contaDaSessao: async () => contaId,
+    container,
+    quemPede: () => ({ ipHash: "h" }),
+  })
   const dia = diaLocal(new Date(c.agora), FUSO)
   return { contaId, deps, rotas, dia }
 }

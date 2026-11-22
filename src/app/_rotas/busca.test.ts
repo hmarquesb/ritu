@@ -14,6 +14,7 @@ async function montar(comSessao = true) {
   const container = { ...base, cities }
   const rotas = rotasDeBusca({
     contaDaSessao: async () => (comSessao ? conta.id : undefined),
+    quemPede: () => ({ ipHash: "h" }),
     container,
   })
   return { rotas, cities, container }

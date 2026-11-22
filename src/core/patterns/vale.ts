@@ -16,6 +16,9 @@ export function padraoVale(
   if (p.tipo === "estados_juntos") return true
   const item = lida.item
   if (!item) return false
+  if (item.tipo === "cha") {
+    return kb.praticas.some((p) => p.tipo === "cha" && passaNoFiltro(p, filtro, kb).passa)
+  }
   const alvo = item.tipo === "pratica" ? kb.pratica(item.id) : kb.preparo(item.id)
   return !!alvo && passaNoFiltro(alvo, filtro, kb).passa
 }

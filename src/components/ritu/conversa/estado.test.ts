@@ -18,7 +18,12 @@ function visao(run_id: string, extra: Partial<VisaoDoRun> = {}): VisaoDoRun {
   } as VisaoDoRun
 }
 
-const vazia: ConversaDoDia = { falas: [], runs: {}, pendentes: 1 }
+const vazia: ConversaDoDia = {
+  falas: [],
+  runs: {},
+  pendentes: 1,
+  limites: { mensagens: { tipo: "livre" }, cota_ia: { esgotada: false } },
+}
 
 function enviado() {
   return reduzir(
@@ -67,7 +72,12 @@ describe("estado da conversa", () => {
     let e = reduzir(enviado(), { tipo: "evento", evento: { tipo: "inicio", run_id: "r1" } })
     e = reduzir(e, {
       tipo: "evento",
-      evento: { tipo: "fim", visao: visao("r1", { resposta: "Um chá." }), pendentes: 3 },
+      evento: {
+        tipo: "fim",
+        visao: visao("r1", { resposta: "Um chá." }),
+        pendentes: 3,
+        limites: { mensagens: { tipo: "livre" }, cota_ia: { esgotada: false } },
+      },
     })
     expect(e.caixa).toEqual({ texto: "", atalhos: [], respondendo: false })
     expect(e.anuncio).toBe("Um chá.")
@@ -99,7 +109,12 @@ describe("estado da conversa", () => {
   it("fim sem visão válida vira erro inesperado, sem quebrar", () => {
     const e = reduzir(enviado(), {
       tipo: "evento",
-      evento: { tipo: "fim", visao: undefined as never, pendentes: 0 },
+      evento: {
+        tipo: "fim",
+        visao: undefined as never,
+        pendentes: 0,
+        limites: { mensagens: { tipo: "livre" }, cota_ia: { esgotada: false } },
+      },
     })
     expect(e.erro?.codigo).toBe("inesperado")
   })
@@ -132,5 +147,43 @@ describe("estado da conversa", () => {
     let e = reduzir(inicial(vazia), { tipo: "digitou", texto: "x" })
     e = reduzir(e, { tipo: "marcou", atalhos: ["seca"] })
     expect(e.caixa).toEqual({ texto: "x", atalhos: ["seca"], respondendo: false })
+  })
+
+  describe("limites", () => {
+    const esgotadas = {
+      mensagens: { tipo: "esgotadas" as const, motivo: "conta" as const },
+      cota_ia: { esgotada: false as const },
+    }
+
+    it("inicial traz os limites da conversa", () => {
+      expect(inicial(vazia).limites).toEqual(vazia.limites)
+    })
+
+    it("fim troca os limites", () => {
+      const e = reduzir(enviado(), {
+        tipo: "evento",
+        evento: { tipo: "fim", visao: visao("r1"), pendentes: 1, limites: esgotadas },
+      })
+      expect(e.limites).toEqual(esgotadas)
+    })
+
+    it("fim sintético sem limites mantém os do estado", () => {
+      let e = reduzir(inicial({ ...vazia, limites: esgotadas }), {
+        tipo: "evento",
+        evento: { tipo: "inicio", run_id: "r1" },
+      })
+      e = reduzir(e, { tipo: "visao", visao: visao("r1") })
+      expect(e.limites).toEqual(esgotadas)
+    })
+
+    it("recusa 429 guarda o texto, troca os limites e desfaz a fala otimista", () => {
+      const e = reduzir(enviado(), { tipo: "barrou", limites: esgotadas })
+      expect(e.limites).toEqual(esgotadas)
+      expect(e.textoGuardado).toBe("oi")
+      expect(e.falas.some((f) => f.id === "otimista")).toBe(false)
+      expect(e.caixa.respondendo).toBe(false)
+      expect(e.aoVivo).toBeUndefined()
+      expect(e.enviado).toBeUndefined()
+    })
   })
 })

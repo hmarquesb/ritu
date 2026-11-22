@@ -64,7 +64,10 @@ export const demoSeedSchema = z.strictObject({
   rotina: z.array(z.string().max(200)).max(5),
   padrao: z.strictObject({
     estados: z.array(estadoSchema).min(1).max(2),
-    item: z.strictObject({ tipo: z.enum(["pratica", "preparo"]), id: z.string() }),
+    item: z.union([
+      z.strictObject({ tipo: z.enum(["pratica", "preparo"]), id: z.string() }),
+      z.strictObject({ tipo: z.literal("cha") }),
+    ]),
     ocorrencias: z.number().int().min(3),
   }),
   historico: z
@@ -114,7 +117,9 @@ function idsDaBase(seed: DemoSeed, kb: KnowledgeBase): string[] {
   for (const c of seed.casa) exige("alimento", c.alimento_id, "casa")
   for (const f of seed.faltas) exige("alimento", f.alimento_id, "faltas")
   for (const p of seed.preferencias) exige(p.tipo, p.id, "preferências")
-  exige(seed.padrao.item.tipo, seed.padrao.item.id, "padrão")
+  if (seed.padrao.item.tipo !== "cha") {
+    exige(seed.padrao.item.tipo, seed.padrao.item.id, "padrão")
+  }
   for (const e of seed.perfil.evitar_sempre) {
     if (e.tipo === "alimento") exige("alimento", e.valor, "evitar_sempre")
     if (e.tipo === "grupo" && !kb.gruposEvitar.some((g) => g.id === e.valor)) {
@@ -244,6 +249,7 @@ function checarFaltas(seed: DemoSeed): string[] {
 }
 
 function ehDoItemDoPadrao(sugestao: Sugestao, item: DemoSeed["padrao"]["item"]): boolean {
+  if (item.tipo === "cha") return sugestao.pratica_id?.startsWith("cha-") === true
   return item.tipo === "pratica" ? sugestao.pratica_id === item.id : sugestao.preparo_id === item.id
 }
 

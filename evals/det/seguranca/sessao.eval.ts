@@ -32,6 +32,7 @@ function montar() {
     },
     deps: (contaId?: string): DepsDaRota => ({
       contaDaSessao: async () => contaId,
+      quemPede: () => ({ ipHash: "h" }),
       container,
     }),
   }

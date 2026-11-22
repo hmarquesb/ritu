@@ -21,9 +21,11 @@
     - { ref: ayurveda-com-combinacao-alimentos, campos: [rasa, virya, vipaka] }
     - { ref: banyan-sabor-doce, campos: [rasa, gunas, marcas] }
     - { ref: banyan-dieta-vata, campos: [gunas] }
-    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [como_equilibrar] }
-  confianca: baixa
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+  confianca: media
   notas: "Vipaka azedo vem do artigo de combinações (banana com leite). Pesado vem do sabor doce; suave da página Vata."
 
 - id: maca
@@ -34,7 +36,7 @@
   funcoes: [fruta]
   rasa: [adstringente, doce]
   virya: frio
-  vipaka: picante
+  vipaka: doce
   gunas: [seco, aspero]
   efeito: { vata: 0, pitta: -1, kapha: -1 }
   como_equilibrar:
@@ -47,8 +49,11 @@
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, marcas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-maca, campos: [virya, vipaka, marcas] }
+    - { ref: banyan-vinagre-maca, campos: [vipaka] }
+    - { ref: cs-frutas, campos: [marcas] }
+  confianca: media
   notas: "Diretrizes: Vata evita crua e favorece cozida; Pitta evita a azeda e favorece a doce. Efeito Vata 0 resume as duas."
 
 - id: pera
@@ -69,9 +74,14 @@
   marcas: [fruta_doce]
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, como_equilibrar, marcas] }
-  confianca: baixa
-  notas: ""
+    - { ref: cs-frutas, campos: [rasa, virya, gunas] }
+    - { ref: ea-pera, campos: [rasa, virya, vipaka, gunas] }
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar, marcas] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar, marcas] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar, marcas] }
+  confianca: media
+  notas: "Gunas: Charaka diz pesada, Easy Ayurveda diz leve e seca; vale o Charaka no peso."
 
 - id: mamao
   nome: Mamão
@@ -80,9 +90,9 @@
   durabilidade: curta
   funcoes: [fruta]
   rasa: [doce]
-  virya: quente
+  virya: frio
   vipaka: doce
-  gunas: [pesado, suave]
+  gunas: [pesado]
   efeito: { vata: -1, pitta: 0, kapha: 1 }
   como_equilibrar:
     pitta: "Em porção moderada."
@@ -91,9 +101,9 @@
   marcas: [fruta_doce]
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, marcas] }
-  confianca: baixa
-  notas: "Diretrizes: Pitta 'em moderação' (asterisco)."
+    - { ref: ea-mamao, campos: [rasa, virya, vipaka, gunas, marcas] }
+  confianca: media
+  notas: "Diretrizes: Pitta 'em moderação' (asterisco). Virya: Banyan diz quente, Easy Ayurveda diz frio; vale a Easy Ayurveda."
 
 - id: manga
   nome: Manga
@@ -102,7 +112,7 @@
   durabilidade: curta
   funcoes: [fruta]
   rasa: [doce]
-  virya: quente
+  virya: frio
   vipaka: doce
   gunas: [pesado, oleoso]
   efeito: { vata: -1, pitta: -1, kapha: 1 }
@@ -114,9 +124,9 @@
   fontes:
     - { ref: banyan-sabor-doce, campos: [rasa, marcas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes: Kapha 'raramente' (dois asteriscos); a Banyan inclui manga entre as frutas frescas para Kapha. Divergência."
+    - { ref: ea-manga, campos: [virya, vipaka, gunas] }
+  confianca: media
+  notas: "Diretrizes: Kapha 'raramente' (dois asteriscos); a Banyan inclui manga entre as frutas frescas para Kapha. Divergência. Valores da manga madura."
 
 - id: laranja
   nome: Laranja
@@ -127,7 +137,7 @@
   rasa: [doce, azedo]
   virya: quente
   vipaka: azedo
-  gunas: [leve, oleoso]
+  gunas: [pesado]
   efeito: { vata: -1, pitta: 0, kapha: 1 }
   como_equilibrar:
     pitta: "Prefira a laranja doce, como a lima, em porção moderada."
@@ -137,9 +147,11 @@
   fontes:
     - { ref: banyan-dieta-vata, campos: [rasa, marcas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes: Pitta evita a azeda e aceita a doce com moderação."
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-laranja, campos: [virya, vipaka] }
+    - { ref: cs-frutas, campos: [gunas] }
+  confianca: media
+  notas: "Diretrizes: Pitta evita a azeda e aceita a doce com moderação. Gunas: Charaka diz pesada, Easy Ayurveda diz leve; vale o Charaka."
 
 - id: tangerina
   nome: Tangerina
@@ -148,18 +160,18 @@
   durabilidade: curta
   funcoes: [fruta]
   rasa: [doce, azedo]
-  virya: quente
-  vipaka: azedo
+  virya: frio
+  vipaka: doce
   gunas: [leve, oleoso]
   efeito: { vata: -1, pitta: 0, kapha: 1 }
-  como_equilibrar:
-    pitta: "Prefira as bem doces."
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: [fruta_azeda]
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar, marcas] }
-  confianca: baixa
+    - { ref: aa-tangerina, campos: [virya, vipaka, rasa, gunas] }
+    - { ref: ritu-regras-da-base, campos: [efeito, marcas] }
+  confianca: media
   notas: "Não aparece nas diretrizes abertas; valores espelham a laranja."
 
 - id: limao
@@ -184,8 +196,8 @@
     - { ref: banyan-dieta-pitta, campos: [virya, como_equilibrar] }
     - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
+    - { ref: ea-limao, campos: [vipaka] }
+  confianca: media
   notas: "O taiti é uma lima (lime). Diretrizes: lime Pitta e Kapha 'em moderação'; lemon Pitta evita. Usado o valor de lime."
 
 - id: abacate
@@ -194,7 +206,7 @@
   grupo: frutas
   durabilidade: curta
   funcoes: [fruta, gordura]
-  rasa: [doce, adstringente]
+  rasa: [doce]
   virya: frio
   vipaka: doce
   gunas: [pesado, oleoso, suave]
@@ -207,9 +219,11 @@
   fontes:
     - { ref: banyan-dieta-vata, campos: [gunas] }
     - { ref: banyan-dieta-pitta, campos: [virya] }
-    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, vipaka, como_equilibrar] }
-  confianca: baixa
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
+    - { ref: aa-abacate, campos: [virya, vipaka, rasa] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+  confianca: media
   notas: ""
 
 - id: abacaxi
@@ -219,8 +233,8 @@
   durabilidade: curta
   funcoes: [fruta]
   rasa: [doce, azedo]
-  virya: quente
-  vipaka: azedo
+  virya: frio
+  vipaka: doce
   gunas: [leve, oleoso, intenso]
   efeito: { vata: -1, pitta: 0, kapha: 1 }
   como_equilibrar:
@@ -232,9 +246,9 @@
     - { ref: banyan-dieta-vata, campos: [rasa, marcas] }
     - { ref: banyan-dieta-pitta, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
-  notas: "Diretrizes: Pitta evita o azedo e aceita o doce com moderação. Banyan chama de 'sharp' (intenso)."
+    - { ref: ea-abacaxi, campos: [virya, vipaka] }
+  confianca: media
+  notas: "Diretrizes: Pitta evita o azedo e aceita o doce com moderação. Banyan chama de 'sharp' (intenso). Virya: Banyan diz quente, Easy Ayurveda diz frio; vale a Easy Ayurveda."
 
 - id: melancia
   nome: Melancia
@@ -245,7 +259,7 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [frio, oleoso, pesado]
+  gunas: [frio, pesado]
   efeito: { vata: 1, pitta: -1, kapha: 1 }
   como_equilibrar:
     vata: "Coma sozinha, fora das refeições e sem gelar."
@@ -257,8 +271,9 @@
     - { ref: banyan-sabor-doce, campos: [rasa, marcas] }
     - { ref: ayurveda-com-combinacao-alimentos, campos: [observacao, como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-melancia, campos: [virya, vipaka, gunas] }
+  confianca: media
   notas: "Rasa vem de 'melons' na página do sabor doce. O artigo de combinações pede melões sozinhos."
 
 - id: melao
@@ -283,8 +298,8 @@
     - { ref: ayurveda-com-combinacao-alimentos, campos: [virya, observacao, como_equilibrar] }
     - { ref: banyan-dieta-vata, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
+    - { ref: ea-melao, campos: [vipaka] }
+  confianca: media
   notas: "Banyan Vata: melões úmidos (oleoso). Combinações: melão é refrescante."
 
 - id: uva
@@ -296,7 +311,7 @@
   rasa: [doce, azedo]
   virya: frio
   vipaka: doce
-  gunas: [oleoso, suave]
+  gunas: [oleoso, pesado]
   efeito: { vata: -1, pitta: 0, kapha: 0 }
   como_equilibrar:
     pitta: "Prefira a uva roxa; a verde é mais azeda."
@@ -308,8 +323,10 @@
     - { ref: banyan-dieta-vata, campos: [rasa] }
     - { ref: ayurveda-com-guia-dieta, campos: [rasa, marcas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: cs-frutas, campos: [virya, gunas] }
+    - { ref: ea-uva, campos: [virya, vipaka, gunas] }
+  confianca: media
   notas: "Diretrizes: Pitta evita a verde e favorece a roxa; Kapha 'em moderação'."
 
 - id: morango
@@ -318,10 +335,10 @@
   grupo: frutas
   durabilidade: curta
   funcoes: [fruta]
-  rasa: [doce, azedo]
-  virya: quente
-  vipaka: azedo
-  gunas: [leve, oleoso]
+  rasa: [doce, azedo, adstringente]
+  virya: frio
+  vipaka: doce
+  gunas: [pesado, oleoso]
   efeito: { vata: -1, pitta: 0, kapha: 0 }
   como_equilibrar:
     pitta: "Em porção moderada."
@@ -331,8 +348,10 @@
   marcas: [fruta_azeda]
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, marcas] }
-  confianca: baixa
+    - { ref: aa-morango, campos: [rasa, virya, vipaka, gunas] }
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ritu-regras-da-base, campos: [gunas, marcas] }
+  confianca: media
   notas: ""
 
 - id: goiaba
@@ -344,16 +363,20 @@
   rasa: [doce, adstringente]
   virya: frio
   vipaka: doce
-  gunas: [pesado, seco]
-  efeito: { vata: 0, pitta: -1, kapha: 0 }
+  gunas: [pesado]
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
   como_equilibrar:
     vata: "Prefira bem madura."
   restricoes: []
   grupos_evitar: []
   marcas: [fruta_doce]
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar, marcas] }
-  confianca: baixa
+    - { ref: mn-goiaba, campos: [rasa, virya, efeito] }
+    - { ref: jaims-goiaba, campos: [rasa] }
+    - { ref: aa-goiaba, campos: [virya, gunas, como_equilibrar] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ritu-regras-da-base, campos: [marcas] }
+  confianca: media
   notas: "Não aparece nas páginas abertas."
 
 - id: maracuja
@@ -366,15 +389,17 @@
   virya: frio
   vipaka: azedo
   gunas: [leve, oleoso]
-  efeito: { vata: -1, pitta: 0, kapha: 0 }
-  como_equilibrar:
-    pitta: "Prefira com um pouco de adoçante, e não muito azedo."
+  efeito: { vata: -1, pitta: 0, kapha: 1 }
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: [fruta_azeda]
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar, marcas] }
-  confianca: baixa
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: aa-maracuja, campos: [rasa] }
+    - { ref: satyori-maracuja, campos: [virya] }
+    - { ref: ritu-regras-da-base, campos: [gunas, efeito, marcas] }
+  confianca: media
   notas: "Não aparece nas páginas abertas."
 
 - id: caqui
@@ -383,21 +408,21 @@
   grupo: frutas
   durabilidade: curta
   funcoes: [fruta]
-  rasa: [doce, adstringente]
-  virya: frio
+  rasa: [doce, adstringente, azedo]
+  virya: quente
   vipaka: doce
-  gunas: [pesado, seco]
+  gunas: [leve]
   efeito: { vata: 1, pitta: 1, kapha: -1 }
-  como_equilibrar:
-    vata: "Prefira bem maduro e macio."
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
-  marcas: [fruta_doce]
+  marcas: [fruta_azeda]
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, como_equilibrar, marcas] }
-  confianca: baixa
-  notas: ""
+    - { ref: ea-caqui, campos: [rasa, virya, vipaka, gunas] }
+    - { ref: ritu-regras-da-base, campos: [marcas] }
+  confianca: media
+  notas: "Valores do caqui cru."
 
 - id: coco
   nome: Coco
@@ -420,8 +445,11 @@
     - { ref: banyan-dieta-vata, campos: [gunas] }
     - { ref: banyan-dieta-pitta, campos: [virya] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka, como_equilibrar] }
-  confianca: baixa
+    - { ref: ea-coco, campos: [vipaka] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+  confianca: media
   notas: "Não marcado em castanhas: confirmar se a base trata coco como alergênico de castanhas."
 
 - id: tamara
@@ -467,8 +495,9 @@
     - { ref: banyan-sabor-azedo, campos: [rasa] }
     - { ref: banyan-dieta-vata, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, marcas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-uva, campos: [virya, vipaka, marcas] }
+  confianca: media
   notas: "Banyan lista passas no sabor azedo; marca fruta_doce mantida pelo uso comum. Diretrizes: Vata favorece a de molho."
 
 - id: ameixa-seca
@@ -491,8 +520,9 @@
     - { ref: banyan-sabor-doce, campos: [rasa, marcas] }
     - { ref: banyan-dieta-vata, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
   notas: "Diretrizes: Vata evita a seca e favorece a de molho."
 
 # ---------- folhas ----------
@@ -516,8 +546,9 @@
     - { ref: banyan-sabor-amargo, campos: [rasa, gunas] }
     - { ref: banyan-dieta-vata, campos: [gunas, como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ritu-regras-da-base, campos: [vipaka] }
+  confianca: media
   notas: "Efeito das diretrizes é de 'kale'; a couve-manteiga é mais próxima de 'collards', que a Banyan põe junto (amargo)."
 
 - id: espinafre
@@ -527,8 +558,8 @@
   durabilidade: curta
   funcoes: [folha]
   rasa: [picante, amargo]
-  virya: quente
-  vipaka: picante
+  virya: frio
+  vipaka: doce
   gunas: [leve, seco, aspero]
   efeito: { vata: 0, pitta: 1, kapha: -1 }
   como_equilibrar:
@@ -541,9 +572,9 @@
     - { ref: banyan-sabor-amargo, campos: [rasa] }
     - { ref: banyan-dieta-vata, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
-  notas: "Banyan: espinafre cru é picante. Diretrizes: Vata 'em moderação'; Pitta evita."
+    - { ref: ea-espinafre, campos: [virya, vipaka] }
+  confianca: media
+  notas: "Banyan: espinafre cru é picante. Diretrizes: Vata 'em moderação'; Pitta evita. Virya: Banyan diz frio cru e quente cozido; a Easy Ayurveda, citando Charaka, diz frio."
 
 - id: alface
   nome: Alface
@@ -553,8 +584,8 @@
   funcoes: [folha]
   rasa: [adstringente, amargo]
   virya: frio
-  vipaka: picante
-  gunas: [frio, leve, seco]
+  vipaka: doce
+  gunas: [frio, leve]
   efeito: { vata: 0, pitta: -1, kapha: -1 }
   como_equilibrar:
     vata: "Pouca e com um molho de azeite."
@@ -565,8 +596,9 @@
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: banyan-dieta-vata, campos: [como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: aa-alface, campos: [vipaka, gunas] }
+  confianca: media
   notas: "Diretrizes: Vata 'em moderação'."
 
 - id: rucula
@@ -575,19 +607,18 @@
   grupo: folhas
   durabilidade: curta
   funcoes: [folha]
-  rasa: [picante, amargo]
+  rasa: [picante, amargo, azedo]
   virya: quente
-  vipaka: picante
-  gunas: [leve, seco, intenso]
-  efeito: { vata: 1, pitta: 1, kapha: -1 }
-  como_equilibrar:
-    vata: "Pouca, com azeite."
+  vipaka: azedo
+  gunas: [leve, intenso]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
-  confianca: baixa
+    - { ref: ea-rucula, campos: [rasa, virya, vipaka, gunas, efeito] }
+  confianca: media
   notas: "Não aparece nas páginas abertas."
 
 - id: agriao
@@ -596,10 +627,10 @@
   grupo: folhas
   durabilidade: curta
   funcoes: [folha]
-  rasa: [picante, amargo]
-  virya: quente
+  rasa: [amargo, picante]
+  virya: frio
   vipaka: picante
-  gunas: [leve, seco]
+  gunas: [leve]
   efeito: { vata: -1, pitta: 0, kapha: -1 }
   como_equilibrar:
     pitta: "Em porção moderada."
@@ -608,8 +639,9 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: aa-agriao, campos: [rasa, virya, gunas] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
   notas: "Diretrizes ('watercress'): Pitta 'em moderação'."
 
 - id: repolho
@@ -632,8 +664,9 @@
     - { ref: banyan-sabor-adstringente, campos: [rasa, gunas] }
     - { ref: banyan-dieta-vata, campos: [gunas, como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: aa-repolho, campos: [virya, vipaka] }
+  confianca: media
   notas: "Diretrizes: Vata evita cru e aceita cozido com moderação."
 
 - id: acelga
@@ -642,19 +675,19 @@
   grupo: folhas
   durabilidade: curta
   funcoes: [folha]
-  rasa: [doce, amargo]
+  rasa: [amargo, adstringente]
   virya: frio
   vipaka: picante
   gunas: [leve, seco]
   efeito: { vata: 1, pitta: -1, kapha: -1 }
-  como_equilibrar:
-    vata: "Bem refogada, com azeite."
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
-  confianca: baixa
+    - { ref: satyori-acelga, campos: [rasa, virya, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas, efeito] }
+  confianca: media
   notas: "Não aparece nas páginas abertas. No Brasil 'acelga' pode ser a acelga-chinesa (tipo repolho) ou a de talo."
 
 - id: escarola
@@ -663,19 +696,20 @@
   grupo: folhas
   durabilidade: curta
   funcoes: [folha]
-  rasa: [amargo]
+  rasa: [amargo, picante]
   virya: frio
   vipaka: picante
   gunas: [leve, seco]
-  efeito: { vata: 1, pitta: -1, kapha: -1 }
-  como_equilibrar:
-    vata: "Refogada no alho e azeite."
+  efeito: { vata: 1, pitta: 0, kapha: -1 }
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: aa-escarola, campos: [rasa] }
+    - { ref: ritu-regras-da-base, campos: [vipaka, gunas, efeito] }
+  confianca: media
   notas: "Não aparece nas páginas abertas."
 
 # ---------- legumes ----------
@@ -688,7 +722,7 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [pesado, suave]
+  gunas: [pesado, seco]
   efeito: { vata: -1, pitta: -1, kapha: 1 }
   como_equilibrar:
     kapha: "Prefira assada, com gengibre ou pimenta-do-reino."
@@ -698,9 +732,11 @@
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-dieta-pitta, campos: [rasa] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas, como_equilibrar] }
-  confianca: baixa
-  notas: "Efeito de 'pumpkin'. A tabela dá valores opostos para 'winter squash' (Vata evita, Kapha favorece); cabotiá fica entre os dois."
+    - { ref: ea-abobora, campos: [virya, vipaka, gunas, como_equilibrar] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+  confianca: media
+  notas: "Efeito de 'pumpkin'. A tabela dá valores opostos para 'winter squash' (Vata evita, Kapha favorece); cabotiá fica entre os dois. Virya: Banyan diz quente (abóbora de inverno); a Easy Ayurveda, pelo Bhavaprakasha, diz frio."
 
 - id: abobrinha
   nome: Abobrinha
@@ -722,30 +758,12 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-dieta-vata, campos: [gunas, efeito] }
     - { ref: banyan-dieta-kapha, campos: [gunas, efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, como_equilibrar] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+    - { ref: satyori-abobrinha, campos: [rasa, vipaka] }
+  confianca: media
   notas: "Banyan: úmida (oleoso), boa para Vata e a reduzir para Kapha."
-
-- id: chuchu
-  nome: Chuchu
-  sinonimos: []
-  grupo: legumes
-  durabilidade: curta
-  funcoes: [legume]
-  rasa: [doce]
-  virya: frio
-  vipaka: doce
-  gunas: [leve, oleoso]
-  efeito: { vata: 0, pitta: -1, kapha: 0 }
-  como_equilibrar:
-    vata: "Cozido, com azeite e um tempero morno."
-  restricoes: []
-  grupos_evitar: []
-  marcas: []
-  fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
-  confianca: baixa
-  notas: "Não aparece nas páginas abertas. Valores do redator, por semelhança com a abobrinha."
 
 - id: quiabo
   nome: Quiabo
@@ -756,7 +774,7 @@
   rasa: [doce, adstringente]
   virya: frio
   vipaka: doce
-  gunas: [oleoso, suave]
+  gunas: [oleoso]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -764,8 +782,10 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-quiabo, campos: [virya] }
+    - { ref: aa-quiabo, campos: [rasa, vipaka, gunas] }
+  confianca: media
   notas: "Diretrizes: favorecido para os três doshas."
 
 - id: tomate
@@ -810,8 +830,10 @@
   fontes:
     - { ref: banyan-sabor-doce, campos: [rasa, virya, gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka, como_equilibrar] }
-  confianca: baixa
+    - { ref: ea-pepino, campos: [vipaka] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+  confianca: media
   notas: "Virya e gunas são os do sabor doce (página de sabores). Banyan também o sugere como opção branda para Pitta."
 
 - id: vagem
@@ -856,8 +878,12 @@
     - { ref: banyan-sabor-amargo, campos: [rasa, vipaka, gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-dieta-vata, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, como_equilibrar] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-berinjela, campos: [virya] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+  confianca: media
   notas: "O sabor amargo é frio, mas as diretrizes pedem que Pitta evite (raramente); virya quente é dedução do redator."
 
 - id: pimentao
@@ -866,13 +892,12 @@
   grupo: legumes
   durabilidade: curta
   funcoes: [legume]
-  rasa: [doce, amargo]
-  virya: frio
+  rasa: [picante]
+  virya: quente
   vipaka: picante
-  gunas: [leve, seco]
+  gunas: [leve, seco, intenso]
   efeito: { vata: 1, pitta: -1, kapha: -1 }
-  como_equilibrar:
-    vata: "Cozido ou assado, com azeite."
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
@@ -880,8 +905,9 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-dieta-pitta, campos: [efeito] }
     - { ref: banyan-dieta-kapha, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, como_equilibrar] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-pimentao, campos: [rasa, vipaka, gunas] }
+  confianca: media
   notas: "Diretrizes: Vata evita 'peppers, sweet & hot'; Pitta favorece o doce; Kapha favorece."
 
 - id: brocolis
@@ -937,20 +963,19 @@
   durabilidade: curta
   funcoes: [legume]
   rasa: [doce, adstringente]
-  virya: quente
+  virya: frio
   vipaka: doce
   gunas: [leve, seco]
   efeito: { vata: 1, pitta: 1, kapha: -1 }
-  como_equilibrar:
-    vata: "De vez em quando, cozido e com manteiga ou ghee."
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, como_equilibrar] }
-  confianca: baixa
-  notas: "Diretrizes: 'corn (fresh)' raramente para Vata e Pitta, favorecido para Kapha."
+    - { ref: ea-milho, campos: [rasa, virya, vipaka, gunas] }
+  confianca: media
+  notas: "Diretrizes: 'corn (fresh)' raramente para Vata e Pitta, favorecido para Kapha. Virya: Banyan diz quente, Easy Ayurveda diz frio; vale a Easy Ayurveda."
 
 - id: ervilha
   nome: Ervilha
@@ -974,27 +999,6 @@
   confianca: media
   notas: "Ervilha fresca (legume). Diretrizes: Vata evita crua, favorece cozida; efeito 0. Virya e gunas são os do sabor adstringente."
 
-- id: jilo
-  nome: Jiló
-  sinonimos: []
-  grupo: legumes
-  durabilidade: curta
-  funcoes: [legume]
-  rasa: [amargo]
-  virya: frio
-  vipaka: picante
-  gunas: [leve, seco]
-  efeito: { vata: 1, pitta: -1, kapha: -1 }
-  como_equilibrar:
-    vata: "Refogado, com azeite e alho."
-  restricoes: []
-  grupos_evitar: []
-  marcas: []
-  fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
-  confianca: baixa
-  notas: "Não aparece nas páginas abertas. Valores do redator, a partir do sabor amargo."
-
 # ---------- raizes ----------
 - id: cenoura
   nome: Cenoura
@@ -1004,7 +1008,7 @@
   funcoes: [legume]
   rasa: [doce, adstringente]
   virya: quente
-  vipaka: picante
+  vipaka: doce
   gunas: [suave]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   como_equilibrar:
@@ -1017,8 +1021,9 @@
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: banyan-dieta-vata, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-cenoura, campos: [virya, vipaka] }
+  confianca: media
   notas: "Banyan: doce quando cozida, adstringente crua. Suave vem de 'raízes têm textura macia' (página Vata)."
 
 - id: beterraba
@@ -1028,7 +1033,7 @@
   durabilidade: media
   funcoes: [legume]
   rasa: [doce]
-  virya: quente
+  virya: frio
   vipaka: doce
   gunas: [pesado, suave]
   efeito: { vata: -1, pitta: 0, kapha: -1 }
@@ -1041,8 +1046,9 @@
     - { ref: banyan-sabor-doce, campos: [rasa, gunas] }
     - { ref: banyan-dieta-vata, campos: [gunas, efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
   notas: "Diretrizes: Pitta evita crua, favorece cozida; efeito 0. Virya quente é dedução do redator."
 
 - id: batata-doce
@@ -1066,8 +1072,10 @@
     - { ref: banyan-sabor-doce, campos: [rasa, virya, gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-dieta-vata, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [vipaka, como_equilibrar] }
-  confianca: baixa
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+  confianca: media
   notas: "Virya e gunas são os do sabor doce. Banyan Vata sugere 'baked and buttered'."
 
 - id: batata
@@ -1091,8 +1099,10 @@
     - { ref: banyan-dieta-vata, campos: [gunas, efeito] }
     - { ref: banyan-dieta-kapha, campos: [gunas, efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, como_equilibrar] }
-  confianca: baixa
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-quente-frio, campos: [como_equilibrar] }
+    - { ref: ea-batata, campos: [rasa] }
+  confianca: media
   notas: "Banyan: batata é adstringente e muito secante. O sabor doce é do redator."
 
 - id: mandioca
@@ -1104,16 +1114,17 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [pesado, estavel]
+  gunas: [pesado]
   efeito: { vata: -1, pitta: -1, kapha: 1 }
-  como_equilibrar:
-    kapha: "Cozida, com alho e pimenta-do-reino."
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
-  confianca: baixa
+    - { ref: aa-mandioca, campos: [virya] }
+    - { ref: satyori-tapioca, campos: [rasa, vipaka, gunas] }
+    - { ref: ritu-regras-da-base, campos: [efeito] }
+  confianca: media
   notas: "Não aparece nas páginas abertas (a tapioca está entre os grãos). Valores do redator."
 
 - id: inhame
@@ -1125,39 +1136,19 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [pesado, suave]
+  gunas: [pesado, oleoso]
   efeito: { vata: -1, pitta: -1, kapha: 1 }
-  como_equilibrar:
-    kapha: "Cozido, com gengibre ou pimenta-do-reino."
+  como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, como_equilibrar] }
-  confianca: baixa
+    - { ref: aa-inhame, campos: [rasa, virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
   notas: "Efeito de 'taro root', o que no Sudeste se chama inhame. Em outras regiões 'inhame' é o cará (yam), ausente da tabela."
-
-- id: mandioquinha
-  nome: Mandioquinha
-  sinonimos: [batata-baroa, batata-salsa]
-  grupo: raizes
-  durabilidade: media
-  funcoes: [base, legume]
-  rasa: [doce]
-  virya: frio
-  vipaka: doce
-  gunas: [pesado, suave]
-  efeito: { vata: -1, pitta: -1, kapha: 1 }
-  como_equilibrar:
-    kapha: "Cozida, com gengibre ou pimenta-do-reino."
-  restricoes: []
-  grupos_evitar: []
-  marcas: []
-  fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito, como_equilibrar] }
-  confianca: baixa
-  notas: "Não aparece nas páginas abertas. Valores do redator, por semelhança com 'parsnip' (Vata e Pitta favorecem; Kapha raramente)."
 
 - id: nabo
   nome: Nabo
@@ -1180,8 +1171,9 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-dieta-vata, campos: [efeito] }
     - { ref: banyan-dieta-kapha, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka, como_equilibrar] }
-  confianca: baixa
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+  confianca: media
   notas: "Efeito de 'turnip'. No Brasil 'nabo' costuma ser o daikon, que a tabela trata diferente (Vata com moderação, Pitta evita)."
 
 - id: rabanete
@@ -1205,8 +1197,9 @@
     - { ref: banyan-sabor-picante, campos: [rasa, virya, gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
     - { ref: banyan-dieta-kapha, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
+    - { ref: ea-rabanete, campos: [vipaka] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
   notas: "Diretrizes: Vata e Pitta evitam cru e aceitam cozido; efeito 0. Banyan pede que Vata e Pitta reduzam."
 
 # ---------- graos ----------
@@ -1253,8 +1246,8 @@
   fontes:
     - { ref: banyan-sabor-doce, campos: [rasa, vipaka, gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+  confianca: media
   notas: "Virya quente do redator: o sabor doce é frio, mas as diretrizes pedem que Pitta evite o integral (só raramente). Kapha evita o integral."
 
 - id: aveia
@@ -1266,7 +1259,7 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [pesado, suave]
+  gunas: [pesado, oleoso]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
   como_equilibrar:
     vata: "Prefira cozida, em mingau quente."
@@ -1280,8 +1273,10 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
     - { ref: banyan-dieta-vata, campos: [como_equilibrar] }
     - { ref: banyan-dieta-kapha, campos: [gunas] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
   notas: "Diretrizes: cozida favorece Vata e Pitta e agrava Kapha; seca agrava Vata e Pitta e favorece Kapha. Kapha 0 pela divergência. 'Suave' vem do cereal quente na página Kapha."
 
 - id: fuba
@@ -1291,8 +1286,8 @@
   durabilidade: longa
   funcoes: [base]
   rasa: [doce]
-  virya: quente
-  vipaka: doce
+  virya: frio
+  vipaka: picante
   gunas: [leve, seco]
   efeito: { vata: 1, pitta: 1, kapha: -1 }
   como_equilibrar: {}
@@ -1302,9 +1297,9 @@
   fontes:
     - { ref: banyan-sabor-doce, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Efeito de 'corn' e 'polenta': Vata e Pitta evitam (polenta só raramente); Kapha favorece. Virya e gunas do redator; o sabor doce seria frio."
+    - { ref: ea-milho, campos: [virya, gunas, vipaka] }
+  confianca: media
+  notas: "Efeito de 'corn' e 'polenta': Vata e Pitta evitam (polenta só raramente); Kapha favorece. Virya e gunas do redator; o sabor doce seria frio. Virya: Banyan diz quente (milho), Easy Ayurveda diz frio; vale a Easy Ayurveda."
 
 - id: cuscuz-de-milho
   nome: Cuscuz de milho
@@ -1313,8 +1308,8 @@
   durabilidade: longa
   funcoes: [base]
   rasa: [doce]
-  virya: quente
-  vipaka: doce
+  virya: frio
+  vipaka: picante
   gunas: [leve, seco]
   efeito: { vata: 1, pitta: 1, kapha: -1 }
   como_equilibrar: {}
@@ -1324,9 +1319,9 @@
   fontes:
     - { ref: banyan-sabor-doce, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "É o de flocos de milho, não o marroquino (de trigo). Efeito de 'corn' nas diretrizes. Virya e gunas do redator."
+    - { ref: ea-milho, campos: [virya, gunas, vipaka] }
+  confianca: media
+  notas: "É o de flocos de milho, não o marroquino (de trigo). Efeito de 'corn' nas diretrizes. Virya e gunas do redator. Virya: Banyan diz quente (milho), Easy Ayurveda diz frio; vale a Easy Ayurveda."
 
 - id: canjica
   nome: Canjica
@@ -1335,9 +1330,9 @@
   durabilidade: longa
   funcoes: [base]
   rasa: [doce]
-  virya: quente
-  vipaka: doce
-  gunas: [pesado, suave]
+  virya: frio
+  vipaka: picante
+  gunas: [pesado, oleoso]
   efeito: { vata: 1, pitta: 1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -1346,9 +1341,10 @@
   fontes:
     - { ref: banyan-sabor-doce, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Não aparece nas páginas; efeito copiado de 'corn'. Cozida por horas fica pesada e macia, o que conflita com o milho seco. Gunas do redator."
+    - { ref: ea-milho, campos: [virya, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
+  notas: "Não aparece nas páginas; efeito copiado de 'corn'. Cozida por horas fica pesada e macia, o que conflita com o milho seco. Gunas do redator. Virya: Banyan diz quente (milho), Easy Ayurveda diz frio; vale a Easy Ayurveda."
 
 - id: tapioca
   nome: Tapioca
@@ -1359,7 +1355,7 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [leve, seco]
+  gunas: [leve]
   efeito: { vata: 1, pitta: -1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -1367,8 +1363,11 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: satyori-tapioca, campos: [rasa] }
+    - { ref: aa-tapioca, campos: [gunas] }
+  confianca: media
   notas: "Efeito de 'tapioca' (Vata evita; Pitta e Kapha favorecem). O artigo de combinações desaconselha tapioca com frutas, feijões e uva-passa."
 
 - id: farinha-de-mandioca
@@ -1387,9 +1386,10 @@
   grupos_evitar: []
   marcas: []
   fontes:
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas, efeito] }
-  confianca: baixa
-  notas: "Não aparece nas páginas abertas. Todos os valores do redator, pela textura seca e áspera."
+    - { ref: aa-mandioca, campos: [virya, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [rasa, gunas, efeito] }
+  confianca: media
+  notas: "Não aparece nas páginas abertas. Todos os valores do redator, pela textura seca e áspera. Virya e vipaka herdados da mandioca."
 
 - id: pao
   nome: Pão
@@ -1447,7 +1447,7 @@
   durabilidade: longa
   funcoes: [base]
   rasa: [doce]
-  virya: quente
+  virya: frio
   vipaka: doce
   gunas: [leve]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
@@ -1460,8 +1460,9 @@
     - { ref: ayurveda-com-guia-dieta, campos: [rasa, gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
     - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
   notas: "Guia: grãos têm sabor doce; quinoa é 'grão leve' para Kapha. Diretrizes: Kapha com moderação."
 
 # ---------- leguminosas ----------
@@ -1588,8 +1589,8 @@
     - { ref: ayurveda-com-guia-dieta, campos: [gunas] }
     - { ref: banyan-dieta-kapha, campos: [como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
   notas: "Doce na página do sabor doce, adstringente como lentilha. Vipaka diverge (doce x picante). Vata com moderação."
 
 - id: grao-de-bico
@@ -1600,7 +1601,7 @@
   funcoes: [proteina]
   rasa: [doce, adstringente]
   virya: frio
-  vipaka: picante
+  vipaka: doce
   gunas: [seco, aspero]
   efeito: { vata: 1, pitta: -1, kapha: -1 }
   como_equilibrar:
@@ -1615,8 +1616,8 @@
     - { ref: banyan-sabor-adstringente, campos: [virya] }
     - { ref: banyan-dieta-kapha, campos: [gunas, como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
   notas: "Aparece como doce e como adstringente; vipaka diverge (doce x picante), ficou picante. Homus leva gergelim (tahine)."
 
 - id: feijao-mungo
@@ -1662,8 +1663,10 @@
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-dieta-vata, campos: [como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: aa-ervilha, campos: [rasa, gunas] }
+  confianca: media
   notas: "Efeito de 'split peas'. Rasa, virya, vipaka e gunas copiados dos feijões; as páginas não citam ervilha seca."
 
 - id: tofu
@@ -1775,7 +1778,7 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [pesado, suave]
+  gunas: [pesado]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
   como_equilibrar:
     kapha: "De vez em quando, com gengibre ou pimenta-do-reino."
@@ -1785,9 +1788,9 @@
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-laticinios, campos: [como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Efeito de 'cottage cheese'. Kapha só favorece o de leite de cabra desnatado; ricota de vaca ficou em moderação. Rasa a gunas sem página."
+    - { ref: aa-ricota, campos: [rasa, virya, vipaka, gunas] }
+  confianca: media
+  notas: "Efeito de 'cottage cheese'. Kapha só favorece o de leite de cabra desnatado; ricota de vaca ficou em moderação."
 
 - id: manteiga
   nome: Manteiga
@@ -1795,7 +1798,7 @@
   grupo: laticinios
   durabilidade: media
   funcoes: [gordura]
-  rasa: [doce, azedo]
+  rasa: [doce]
   virya: frio
   vipaka: doce
   gunas: [pesado, oleoso]
@@ -1807,9 +1810,12 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes: Pitta favorece só a sem sal; Kapha evita (sem sal, raramente). Banyan lista manteiga entre os azedos; o resto sem página."
+    - { ref: ea-liquidos, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ea-manteiga, campos: [rasa] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
+  notas: "Diretrizes: Pitta favorece só a sem sal; Kapha evita (sem sal, raramente). Banyan lista manteiga entre os azedos. Virya: Banyan diz quente; o Ashtanga Hridaya (pela Easy Ayurveda) diz que a manteiga fresca é fria; vale o clássico."
 
 - id: ovo
   nome: Ovo
@@ -1859,8 +1865,9 @@
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
-    - { ref: a_confirmar, campos: [como_equilibrar] }
-  confianca: baixa
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-quente-frio, campos: [virya] }
+  confianca: media
   notas: "Diretrizes: Vata com moderação; Banyan diz que, com moderação, toda oleaginosa acalma Vata. Pitta e Kapha evitam."
 
 - id: castanha-do-para
@@ -1869,7 +1876,7 @@
   grupo: oleaginosas
   durabilidade: longa
   funcoes: [proteina, gordura]
-  rasa: [doce]
+  rasa: [doce, adstringente]
   virya: quente
   vipaka: doce
   gunas: [pesado, oleoso]
@@ -1884,8 +1891,8 @@
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, vipaka] }
-  confianca: baixa
+    - { ref: aa-castanha-do-para, campos: [virya, vipaka, rasa, gunas] }
+  confianca: media
   notas: "Diretrizes: Vata com moderação; Banyan favorece para Vata. Pitta e Kapha evitam. Rasa e vipaka copiados do caju."
 
 - id: amendoa
@@ -1934,8 +1941,8 @@
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, vipaka] }
-  confianca: baixa
+    - { ref: ea-noz, campos: [rasa, vipaka] }
+  confianca: media
   notas: "Diretrizes: Vata com moderação; Banyan favorece para Vata. Pitta e Kapha evitam. Rasa e vipaka copiados do caju."
 
 - id: amendoim
@@ -1959,8 +1966,9 @@
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
-    - { ref: a_confirmar, campos: [rasa, vipaka] }
-  confianca: baixa
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: aa-amendoim, campos: [rasa, virya, vipaka] }
+  confianca: media
   notas: "As duas fontes o põem entre as oleaginosas: Vata com moderação (Banyan favorece), Pitta e Kapha evitam. Rasa e vipaka copiados do caju."
 
 - id: gergelim
@@ -1971,7 +1979,7 @@
   funcoes: [gordura]
   rasa: [doce, picante, adstringente, amargo]
   virya: quente
-  vipaka: doce
+  vipaka: picante
   gunas: [oleoso, quente]
   efeito: { vata: -1, pitta: 1, kapha: 1 }
   como_equilibrar: {}
@@ -1982,9 +1990,9 @@
     - { ref: banyan-oleo-de-gergelim, campos: [rasa, virya, gunas] }
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Diretrizes e Banyan concordam: Vata favorece; Pitta e Kapha evitam. Vipaka sem página."
+    - { ref: ea-gergelim, campos: [vipaka] }
+  confianca: media
+  notas: "Diretrizes e Banyan concordam: Vata favorece; Pitta e Kapha evitam. Vipaka da semente pela Easy Ayurveda (Kaiyadeva); o do óleo é doce."
 
 - id: linhaca
   nome: Linhaça
@@ -1992,10 +2000,10 @@
   grupo: oleaginosas
   durabilidade: longa
   funcoes: [gordura]
-  rasa: [doce]
+  rasa: [doce, amargo]
   virya: quente
-  vipaka: doce
-  gunas: [oleoso]
+  vipaka: picante
+  gunas: [pesado, oleoso]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
   como_equilibrar: {}
   restricoes: []
@@ -2004,9 +2012,9 @@
   fontes:
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka] }
-  confianca: baixa
-  notas: "Diretrizes: Vata e Pitta favorecem; Kapha com moderação (Banyan favorece). Rasa, virya e vipaka sem página."
+    - { ref: ea-linhaca, campos: [rasa, vipaka, gunas, virya] }
+  confianca: media
+  notas: "Diretrizes: Vata e Pitta favorecem; Kapha com moderação (Banyan favorece). A fonte também diz viscosa, qualidade que o vocabulário da base não tem."
 
 - id: chia
   nome: Chia
@@ -2014,10 +2022,10 @@
   grupo: oleaginosas
   durabilidade: longa
   funcoes: [gordura]
-  rasa: [doce]
-  virya: quente
+  rasa: [doce, adstringente]
+  virya: frio
   vipaka: doce
-  gunas: [oleoso]
+  gunas: [pesado, oleoso]
   efeito: { vata: -1, pitta: 1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -2026,9 +2034,9 @@
   fontes:
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka] }
-  confianca: baixa
-  notas: "Diretrizes e Banyan concordam: Vata e Kapha favorecem; Pitta evita. Rasa, virya e vipaka sem página."
+    - { ref: ea-chia, campos: [rasa, virya, vipaka, gunas] }
+  confianca: media
+  notas: "Diretrizes e Banyan concordam: Vata e Kapha favorecem; Pitta evita."
 
 - id: semente-de-girassol
   nome: Semente de girassol
@@ -2048,9 +2056,9 @@
   fontes:
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka] }
-  confianca: baixa
-  notas: "Diretrizes: Vata e Pitta favorecem; Kapha com moderação (Banyan favorece). Rasa, virya e vipaka sem página."
+    - { ref: aa-girassol, campos: [rasa, virya, vipaka] }
+  confianca: media
+  notas: "Diretrizes: Vata e Pitta favorecem; Kapha com moderação (Banyan favorece)."
 
 - id: semente-de-abobora
   nome: Semente de abóbora
@@ -2059,7 +2067,7 @@
   durabilidade: longa
   funcoes: [proteina, gordura]
   rasa: [doce]
-  virya: frio
+  virya: quente
   vipaka: doce
   gunas: [oleoso]
   efeito: { vata: -1, pitta: 0, kapha: 0 }
@@ -2071,9 +2079,9 @@
     - { ref: banyan-sabor-doce, campos: [rasa, vipaka] }
     - { ref: banyan-dieta-kapha, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya] }
-  confianca: baixa
-  notas: "Diretrizes: Vata favorece; Pitta e Kapha com moderação. Banyan favorece para os três. Virya sem página."
+    - { ref: aa-semente-abobora, campos: [virya] }
+  confianca: media
+  notas: "Diretrizes: Vata favorece; Pitta e Kapha com moderação. Banyan favorece para os três."
 
 - id: ghee
   nome: Ghee
@@ -2095,9 +2103,9 @@
     - { ref: banyan-substancias-veiculo, campos: [rasa, virya] }
     - { ref: banyan-laticinios, campos: [gunas, como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Banyan diz que é tridóshico e melhor para Vata e Pitta; Diretrizes dão Kapha com moderação. Vipaka sem página."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
+  notas: "Banyan diz que é tridóshico e melhor para Vata e Pitta; Diretrizes dão Kapha com moderação."
 
 - id: azeite
   nome: Azeite
@@ -2108,7 +2116,7 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [oleoso, pesado]
+  gunas: [pesado, oleoso]
   efeito: { vata: -1, pitta: -1, kapha: 1 }
   como_equilibrar: {}
   restricoes: []
@@ -2117,9 +2125,10 @@
   observacao: "Prefira o extravirgem, prensado a frio."
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes e Banyan concordam: Vata e Pitta favorecem; Kapha evita. Banyan põe o azeite entre os óleos que refrescam para Pitta; o resto sem página."
+    - { ref: aa-azeite, campos: [rasa, virya, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
+  notas: "Diretrizes e Banyan concordam: Vata e Pitta favorecem; Kapha evita. Banyan põe o azeite entre os óleos que refrescam para Pitta."
 
 - id: oleo-de-coco
   nome: Óleo de coco
@@ -2141,9 +2150,11 @@
     - { ref: banyan-alimentos-vata, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Divergência: Diretrizes dão coco só para uso externo em Vata e Pitta; Banyan favorece para os dois. Kapha evita nas duas. Rasa a gunas sem página."
+    - { ref: ea-oleos, campos: [rasa, virya, gunas] }
+    - { ref: banyan-oleo-de-coco, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
+  notas: "Divergência: Diretrizes dão coco só para uso externo em Vata e Pitta; Banyan favorece para os dois. Kapha evita nas duas."
 
 - id: oleo-de-gergelim
   nome: Óleo de gergelim
@@ -2165,9 +2176,10 @@
     - { ref: banyan-substancias-veiculo, campos: [rasa, virya] }
     - { ref: banyan-oleo-de-gergelim, campos: [gunas] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Diretrizes e Banyan: Vata favorece; Pitta evita; Kapha evita no consumo (Diretrizes aceitam uso externo). Vipaka sem página."
+    - { ref: ea-gergelim, campos: [vipaka] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
+  notas: "Diretrizes e Banyan: Vata favorece; Pitta evita; Kapha evita no consumo (Diretrizes aceitam uso externo)."
 
 - id: oleo-de-girassol
   nome: Óleo de girassol
@@ -2178,7 +2190,7 @@
   rasa: [doce]
   virya: frio
   vipaka: doce
-  gunas: [oleoso, leve]
+  gunas: [oleoso]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -2188,9 +2200,10 @@
   fontes:
     - { ref: banyan-alimentos-vata, campos: [efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes: Pitta e Kapha favorecem (Kapha com pouco óleo); Vata cai em 'most other oils'; Banyan favorece para Vata. Rasa a gunas sem página."
+    - { ref: aa-girassol, campos: [rasa, virya, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
+  notas: "Diretrizes: Pitta e Kapha favorecem (Kapha com pouco óleo); Vata cai em 'most other oils'; Banyan favorece para Vata."
 
 - id: gengibre
   nome: Gengibre
@@ -2213,9 +2226,10 @@
     - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [gunas] }
-  confianca: baixa
-  notas: "Efeito do gengibre fresco: Diretrizes e Banyan favorecem para Pitta só o fresco; o seco em pó Pitta evita. Gunas sem página."
+    - { ref: banyan-sabor-picante, campos: [gunas] }
+    - { ref: banyan-gengibre-po, campos: [rasa, virya, vipaka] }
+  confianca: media
+  notas: "Efeito do gengibre fresco: Diretrizes e Banyan favorecem para Pitta só o fresco; o seco em pó Pitta evita."
 
 - id: canela
   nome: Canela
@@ -2225,7 +2239,7 @@
   funcoes: [tempero]
   rasa: [picante, doce, amargo]
   virya: quente
-  vipaka: picante
+  vipaka: doce
   gunas: [quente, leve, seco]
   efeito: { vata: -1, pitta: 0, kapha: -1 }
   como_equilibrar:
@@ -2237,9 +2251,10 @@
     - { ref: banyan-especiarias-outono-inverno, campos: [rasa, virya] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes: favorece nos três (especiaria), mas como chá Vata só raramente; Banyan: Pitta só em pouca quantidade, daí Pitta 0. Vipaka e gunas sem página."
+    - { ref: banyan-canela-po, campos: [rasa, virya, vipaka] }
+    - { ref: banyan-sabor-picante, campos: [gunas] }
+  confianca: media
+  notas: "Diretrizes: favorece nos três (especiaria), mas como chá Vata só raramente; Banyan: Pitta só em pouca quantidade, daí Pitta 0."
 
 - id: cardamomo
   nome: Cardamomo
@@ -2249,8 +2264,8 @@
   funcoes: [tempero]
   rasa: [doce, picante]
   virya: frio
-  vipaka: doce
-  gunas: [leve, suave]
+  vipaka: picante
+  gunas: [leve, seco]
   efeito: { vata: -1, pitta: 0, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -2260,9 +2275,9 @@
     - { ref: banyan-ervas-verao, campos: [rasa, virya] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-ervas-cozinha, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka, gunas] }
-  confianca: baixa
-  notas: "Divergência: Banyan (ervas de verão) dá virya frio; a página do sabor picante lista cardamomo entre os picantes. Diretrizes: Pitta em moderação."
+    - { ref: ea-cardamomo, campos: [virya, vipaka, gunas] }
+  confianca: media
+  notas: "Divergência: Banyan (ervas de verão) dá virya frio; a página do sabor picante lista cardamomo entre os picantes. Diretrizes: Pitta em moderação. Virya: Banyan diz quente, Easy Ayurveda diz frio; vale a Easy Ayurveda."
 
 - id: cominho
   nome: Cominho
@@ -2284,9 +2299,9 @@
     - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
     - { ref: banyan-alimentos-pitta, campos: [virya] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka, gunas] }
-  confianca: baixa
-  notas: "Banyan: aquece, mas é bem-vindo para Pitta. Vipaka e gunas sem página."
+    - { ref: ea-cominho, campos: [vipaka, gunas] }
+  confianca: media
+  notas: "Banyan: aquece, mas é bem-vindo para Pitta."
 
 - id: coentro-em-grao
   nome: Coentro em grão
@@ -2306,9 +2321,9 @@
   fontes:
     - { ref: banyan-ervas-verao, campos: [rasa, virya, efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka, gunas] }
-  confianca: baixa
-  notas: "Banyan: equilibra os três, sobretudo Pitta. Vipaka e gunas sem página."
+    - { ref: ea-coentro, campos: [vipaka, gunas] }
+  confianca: media
+  notas: "Banyan: equilibra os três, sobretudo Pitta."
 
 - id: erva-doce
   nome: Erva-doce
@@ -2319,7 +2334,7 @@
   rasa: [doce, picante, amargo]
   virya: frio
   vipaka: doce
-  gunas: [leve, oleoso]
+  gunas: [leve, seco]
   efeito: { vata: -1, pitta: -1, kapha: 0 }
   como_equilibrar: {}
   restricoes: []
@@ -2329,8 +2344,9 @@
     - { ref: banyan-ervas-verao, campos: [rasa, virya] }
     - { ref: banyan-ervas-cozinha, campos: [virya, efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka, gunas] }
-  confianca: baixa
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ea-erva-doce, campos: [gunas] }
+  confianca: media
   notas: "Valores de fennel. Diretrizes: Kapha em moderação; Banyan diz que equilibra os três. No Brasil 'erva-doce' também nomeia o anis."
 
 - id: curcuma
@@ -2353,9 +2369,10 @@
     - { ref: banyan-ervas-cozinha, campos: [rasa, virya, efeito] }
     - { ref: banyan-curcuma, campos: [vipaka] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [gunas] }
-  confianca: baixa
-  notas: "Banyan: em excesso pode agravar Pitta e Vata. Gunas sem página."
+    - { ref: banyan-sabor-picante, campos: [gunas] }
+    - { ref: banyan-curcuma-po, campos: [rasa, virya, vipaka] }
+  confianca: media
+  notas: "Banyan: em excesso pode agravar Pitta e Vata."
 
 - id: pimenta-do-reino
   nome: Pimenta-do-reino
@@ -2378,9 +2395,9 @@
     - { ref: banyan-sabor-picante, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Diretrizes e Banyan: Pitta só em pouca quantidade. Vipaka sem página."
+    - { ref: ea-pimenta-do-reino, campos: [vipaka] }
+  confianca: media
+  notas: "Diretrizes e Banyan: Pitta só em pouca quantidade."
 
 - id: cravo
   nome: Cravo
@@ -2389,9 +2406,9 @@
   durabilidade: longa
   funcoes: [tempero]
   rasa: [picante, amargo]
-  virya: quente
+  virya: frio
   vipaka: picante
-  gunas: [quente, leve]
+  gunas: [leve, oleoso]
   efeito: { vata: -1, pitta: 1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -2402,9 +2419,9 @@
     - { ref: banyan-sabor-picante, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Virya, vipaka e gunas sem página."
+    - { ref: ea-cravo, campos: [virya, vipaka, gunas] }
+  confianca: media
+  notas: ""
 
 - id: noz-moscada
   nome: Noz-moscada
@@ -2425,9 +2442,9 @@
     - { ref: banyan-especiarias-outono-inverno, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "A página do sabor doce também lista noz-moscada. Virya, vipaka e gunas sem página."
+    - { ref: ea-noz-moscada, campos: [virya, vipaka, gunas] }
+  confianca: media
+  notas: "A página do sabor doce também lista noz-moscada."
 
 - id: mostarda-em-grao
   nome: Mostarda em grão
@@ -2448,9 +2465,10 @@
     - { ref: banyan-sabor-picante, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Virya, vipaka e gunas sem página."
+    - { ref: ea-mostarda, campos: [virya, vipaka, gunas] }
+    - { ref: ea-mahodadhi-leguminosas, campos: [virya, vipaka] }
+  confianca: media
+  notas: ""
 
 - id: louro
   nome: Louro
@@ -2467,14 +2485,15 @@
   restricoes: []
   grupos_evitar: []
   marcas: []
+  cha: { parte: folha }
   fontes:
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: banyan-sabor-doce, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Virya, vipaka e gunas sem página."
+    - { ref: ea-louro, campos: [virya, vipaka, gunas] }
+  confianca: media
+  notas: "A fonte trata do louro indiano e lista o Laurus nobilis junto."
 
 - id: anis-estrelado
   nome: Anis-estrelado
@@ -2484,8 +2503,8 @@
   funcoes: [tempero]
   rasa: [picante, doce]
   virya: quente
-  vipaka: doce
-  gunas: [quente, leve]
+  vipaka: picante
+  gunas: [quente, leve, seco]
   efeito: { vata: -1, pitta: 1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
@@ -2493,9 +2512,10 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Só o efeito tem página (Diretrizes: 'Star anise'). Rasa a gunas sem página."
+    - { ref: aa-anis-estrelado, campos: [rasa, virya] }
+    - { ref: ritu-regras-da-base, campos: [vipaka, gunas] }
+  confianca: media
+  notas: "Só o efeito tem página (Diretrizes: 'Star anise')."
 
 - id: pimenta-fresca
   nome: Pimenta fresca
@@ -2518,9 +2538,10 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-vata, campos: [efeito, como_equilibrar] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes: Vata em moderação (chili peppers*), mas evita 'peppers, hot'; Banyan: Vata pouca, em excesso evita. Virya a gunas sem página."
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-pimenta, campos: [virya, vipaka, gunas] }
+  confianca: media
+  notas: "Diretrizes: Vata em moderação (chili peppers*), mas evita 'peppers, hot'; Banyan: Vata pouca, em excesso evita."
 
 - id: hortela
   nome: Hortelã
@@ -2528,47 +2549,26 @@
   grupo: especiarias
   durabilidade: curta
   funcoes: [tempero]
-  rasa: [doce, picante]
+  rasa: [picante]
   virya: frio
   vipaka: picante
-  gunas: [frio, leve]
+  gunas: [frio, leve, seco]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
-    - { ref: banyan-sabor-doce, campos: [rasa] }
     - { ref: banyan-alimentos-pitta, campos: [virya, efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes favorecem mint, peppermint e spearmint nos três, como tempero e como chá. 'Picante' no rasa, vipaka e gunas sem página."
+    - { ref: ea-hortela, campos: [rasa, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
+  notas: "Diretrizes favorecem mint, peppermint e spearmint nos três, como tempero e como chá. Rasa e vipaka pela Easy Ayurveda. Gunas: a Easy Ayurveda diz quente, leve e seca, contra o virya frio da Banyan; ficam sem decisão."
 
 - id: camomila
   nome: Camomila
   sinonimos: [flor de camomila, macela]
-  grupo: especiarias
-  durabilidade: longa
-  funcoes: [tempero]
-  rasa: [amargo, doce]
-  virya: frio
-  vipaka: doce
-  gunas: [leve, suave]
-  efeito: { vata: -1, pitta: -1, kapha: -1 }
-  como_equilibrar: {}
-  restricoes: []
-  grupos_evitar: []
-  marcas: []
-  fontes:
-    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Efeito da seção de chás de ervas das Diretrizes (favorece nos três). Rasa a gunas sem página."
-
-- id: capim-limao
-  nome: Capim-limão
-  sinonimos: [capim-santo, capim-cidreira]
   grupo: especiarias
   durabilidade: longa
   funcoes: [tempero]
@@ -2583,9 +2583,32 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Efeito da seção de chás de ervas das Diretrizes ('Lemon grass', favorece nos três). Rasa a gunas sem página."
+    - { ref: aa-camomila, campos: [rasa, vipaka, gunas, virya] }
+  confianca: media
+  notas: "Efeito da seção de chás de ervas das Diretrizes (favorece nos três)."
+
+- id: capim-limao
+  nome: Capim-limão
+  sinonimos: [capim-santo, capim-cidreira]
+  grupo: especiarias
+  durabilidade: longa
+  funcoes: [tempero]
+  rasa: [picante, amargo]
+  virya: quente
+  vipaka: picante
+  gunas: [leve, seco, intenso]
+  efeito: { vata: -1, pitta: -1, kapha: -1 }
+  como_equilibrar: {}
+  restricoes: []
+  grupos_evitar: []
+  marcas: []
+  fontes:
+    - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
+    - { ref: ea-capim-limao, campos: [virya, gunas] }
+    - { ref: tae-capim-limao, campos: [rasa, gunas] }
+    - { ref: ritu-regras-da-base, campos: [vipaka] }
+  confianca: media
+  notas: "Efeito da seção de chás de ervas das Diretrizes ('Lemon grass', favorece nos três)."
 
 - id: erva-cidreira
   nome: Erva-cidreira
@@ -2593,9 +2616,9 @@
   grupo: especiarias
   durabilidade: longa
   funcoes: [tempero]
-  rasa: [amargo, picante]
+  rasa: [amargo, picante, doce]
   virya: frio
-  vipaka: picante
+  vipaka: doce
   gunas: [leve, seco]
   efeito: { vata: 1, pitta: -1, kapha: -1 }
   como_equilibrar: {}
@@ -2604,8 +2627,10 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: aa-erva-cidreira, campos: [virya] }
+    - { ref: satyori-erva-cidreira, campos: [rasa, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
   notas: "Valores de 'lemon balm' (melissa). Diretrizes: Vata só raramente (**), virou +1. No Brasil o nome também cobre a Lippia alba."
 
 - id: coentro-fresco
@@ -2616,7 +2641,7 @@
   funcoes: [tempero]
   rasa: [amargo, adstringente]
   virya: frio
-  vipaka: picante
+  vipaka: doce
   gunas: [frio, leve]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   como_equilibrar: {}
@@ -2627,9 +2652,9 @@
     - { ref: banyan-alimentos-pitta, campos: [virya, efeito] }
     - { ref: banyan-alimentos-vata, campos: [efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes: Vata favorece 'cilantro' (legumes) e põe 'coriander leaves' em moderação; Banyan favorece. Rasa, vipaka e gunas sem página."
+    - { ref: ea-coentro, campos: [rasa, vipaka, gunas] }
+  confianca: media
+  notas: "Diretrizes: Vata favorece 'cilantro' (legumes) e põe 'coriander leaves' em moderação; Banyan favorece."
 
 - id: salsinha
   nome: Salsinha
@@ -2637,8 +2662,8 @@
   grupo: especiarias
   durabilidade: curta
   funcoes: [tempero]
-  rasa: [adstringente]
-  virya: frio
+  rasa: [picante, adstringente]
+  virya: quente
   vipaka: picante
   gunas: [leve, seco]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
@@ -2651,9 +2676,10 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-vata, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes dividem: Vata favorece (especiarias) e modera (legumes); Pitta o inverso. Banyan favorece nos dois. Virya a gunas sem página."
+    - { ref: aa-salsinha, campos: [rasa, virya, vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
+  notas: "Diretrizes dividem: Vata favorece (especiarias) e modera (legumes); Pitta o inverso. Banyan favorece nos dois."
 
 - id: cebolinha
   nome: Cebolinha
@@ -2661,7 +2687,7 @@
   grupo: especiarias
   durabilidade: curta
   funcoes: [tempero]
-  rasa: [picante]
+  rasa: [picante, doce]
   virya: quente
   vipaka: picante
   gunas: [quente, leve]
@@ -2672,9 +2698,10 @@
   marcas: []
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Valores de 'scallions' (condimentos nas Diretrizes). Rasa a gunas sem página."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: satyori-cebolinha, campos: [rasa, virya, vipaka, gunas] }
+  confianca: media
+  notas: "Valores de 'scallions' (condimentos nas Diretrizes)."
 
 - id: manjericao
   nome: Manjericão
@@ -2682,24 +2709,24 @@
   grupo: especiarias
   durabilidade: curta
   funcoes: [tempero]
-  rasa: [doce, adstringente]
+  rasa: [picante]
   virya: frio
   vipaka: picante
-  gunas: [leve, suave]
+  gunas: [seco, intenso, leve]
   efeito: { vata: -1, pitta: -1, kapha: -1 }
   como_equilibrar:
     pitta: "Prefira as folhas frescas ao manjericão seco."
   restricoes: []
   grupos_evitar: []
   marcas: []
+  cha: { parte: folha }
   fontes:
-    - { ref: banyan-sabor-doce, campos: [rasa] }
-    - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
     - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Efeito do manjericão fresco; o seco Pitta evita. Virya, vipaka e gunas sem página."
+    - { ref: ea-manjericao, campos: [rasa, virya, gunas] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
+  notas: "Efeito do manjericão fresco; o seco Pitta evita. Valores da folha do manjericão (Barbari)."
 
 - id: alecrim
   nome: Alecrim
@@ -2717,14 +2744,15 @@
   restricoes: []
   grupos_evitar: []
   marcas: []
+  cha: { parte: folha }
   fontes:
     - { ref: banyan-arte-especiarias, campos: [rasa, virya, gunas, efeito, como_equilibrar] }
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Divergência: Diretrizes favorecem para Vata; Banyan pede pouco quando Vata está alto, daí Vata 0. Vipaka sem página."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
+  notas: "Divergência: Diretrizes favorecem para Vata; Banyan pede pouco quando Vata está alto, daí Vata 0."
 
 - id: oregano
   nome: Orégano
@@ -2732,7 +2760,7 @@
   grupo: especiarias
   durabilidade: longa
   funcoes: [tempero]
-  rasa: [adstringente, picante]
+  rasa: [adstringente, azedo]
   virya: quente
   vipaka: picante
   gunas: [quente, seco]
@@ -2745,9 +2773,9 @@
     - { ref: banyan-sabor-adstringente, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Só 'adstringente' tem página no rasa. Virya, vipaka e gunas sem página."
+    - { ref: aa-oregano, campos: [virya, vipaka, rasa, gunas] }
+  confianca: media
+  notas: "Só 'adstringente' tem página no rasa."
 
 - id: alho
   nome: Alho
@@ -2769,9 +2797,9 @@
     - { ref: banyan-sabor-picante, campos: [rasa] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Banyan: 'um pouco oleoso'. Vipaka sem página."
+    - { ref: ea-alho, campos: [vipaka] }
+  confianca: media
+  notas: "Banyan: 'um pouco oleoso'."
 
 - id: cebola
   nome: Cebola
@@ -2781,7 +2809,7 @@
   funcoes: [tempero, legume]
   rasa: [picante]
   virya: quente
-  vipaka: picante
+  vipaka: doce
   gunas: [quente, intenso]
   efeito: { vata: 0, pitta: 0, kapha: -1 }
   como_equilibrar:
@@ -2795,9 +2823,10 @@
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
     - { ref: banyan-alimentos-vata, campos: [efeito, como_equilibrar] }
     - { ref: banyan-alimentos-pitta, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Crua: Vata e Pitta evitam; cozida: Vata em moderação, Pitta favorece. Virou 0 nos dois. Virya a gunas sem página."
+    - { ref: banyan-quente-frio, campos: [virya] }
+    - { ref: ea-cebola, campos: [virya, vipaka, gunas] }
+  confianca: media
+  notas: "Crua: Vata e Pitta evitam; cozida: Vata em moderação, Pitta favorece. Virou 0 nos dois."
 
 - id: sal
   nome: Sal
@@ -2868,9 +2897,9 @@
     - { ref: banyan-alimentos-vata, campos: [efeito] }
     - { ref: banyan-alimentos-pitta, campos: [efeito] }
     - { ref: banyan-alimentos-kapha, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Tratado como o sucanat (açúcar de cana não refinado) da Banyan: 'frio, úmido, doce'. Equivalência é leitura da redação. Vipaka sem página."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
+  notas: "Tratado como o sucanat (açúcar de cana não refinado) da Banyan: 'frio, úmido, doce'. Equivalência é leitura da redação."
 
 - id: rapadura
   nome: Rapadura
@@ -2932,16 +2961,17 @@
   virya: frio
   vipaka: doce
   gunas: [frio]
-  efeito: { vata: 0, pitta: -1, kapha: 1 }
+  efeito: { vata: -1, pitta: -1, kapha: 1 }
   como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: []
   fontes:
     - { ref: banyan-substancias-veiculo, campos: [rasa, virya, gunas, efeito] }
-    - { ref: a_confirmar, campos: [vipaka, efeito] }
-  confianca: baixa
-  notas: "Banyan: doce, refrescante, acalma Pitta. Vata e Kapha sem página (seguem o coco)."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ea-coco, campos: [efeito] }
+  confianca: media
+  notas: "Banyan: doce, refrescante, acalma Pitta."
 
 - id: leite-de-coco
   nome: Leite de coco
@@ -2962,9 +2992,12 @@
   fontes:
     - { ref: banyan-leite, campos: [virya, gunas, efeito] }
     - { ref: banyan-substancias-veiculo, campos: [rasa, virya, efeito] }
-    - { ref: a_confirmar, campos: [vipaka, como_equilibrar] }
-  confianca: baixa
-  notas: "Banyan: frio e pesado; acalma Vata e Pitta, não é a melhor escolha para Kapha. Vipaka e o conselho para Kapha sem página."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: banyan-alimentos-vata, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-pitta, campos: [como_equilibrar] }
+    - { ref: banyan-alimentos-kapha, campos: [como_equilibrar] }
+  confianca: media
+  notas: "Banyan: frio e pesado; acalma Vata e Pitta, não é a melhor escolha para Kapha."
 
 - id: cafe
   nome: Café
@@ -2986,9 +3019,9 @@
   fontes:
     - { ref: banyan-cafe, campos: [rasa, virya, gunas, efeito, como_equilibrar] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [vipaka] }
-  confianca: baixa
-  notas: "Diretrizes: os três evitam café. Banyan: amargo e adstringente equilibram Kapha. Kapha virou 0. Vipaka sem página."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+  confianca: media
+  notas: "Diretrizes: os três evitam café. Banyan: amargo e adstringente equilibram Kapha. Kapha virou 0."
 
 - id: cha-preto
   nome: Chá preto
@@ -3006,11 +3039,14 @@
   restricoes: []
   grupos_evitar: []
   marcas: [estimulante]
+  cha: { parte: bebida }
   fontes:
     - { ref: banyan-cafe, campos: [rasa, gunas, efeito] }
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito, como_equilibrar] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas] }
-  confianca: baixa
+    - { ref: aa-cha-preto, campos: [virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas] }
+  confianca: media
   notas: "Diretrizes: Vata evita; Pitta com moderação; Kapha favorece com especiarias (mas lista cafeína como ok raramente). Só 'seco' tem página."
 
 - id: cha-mate
@@ -3028,11 +3064,13 @@
   restricoes: []
   grupos_evitar: []
   marcas: [estimulante]
+  cha: { parte: bebida }
   fontes:
     - { ref: ayurveda-com-diretrizes-alimentares, campos: [efeito] }
-    - { ref: a_confirmar, campos: [rasa, virya, vipaka, gunas] }
-  confianca: baixa
-  notas: "Diretrizes (chás de ervas): Vata evita (ok raramente), Pitta evita, Kapha favorece. Rasa, virya, vipaka e gunas sem página."
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: satyori-mate, campos: [rasa, virya, gunas] }
+  confianca: media
+  notas: "Diretrizes (chás de ervas): Vata evita (ok raramente), Pitta evita, Kapha favorece."
 
 - id: cha-verde
   nome: Chá verde
@@ -3040,17 +3078,20 @@
   grupo: bebidas
   durabilidade: longa
   funcoes: [liquido]
-  rasa: [adstringente]
-  virya: frio
+  rasa: [adstringente, amargo]
+  virya: quente
   vipaka: picante
   gunas: [seco, movel]
-  efeito: { vata: 1, pitta: 0, kapha: -1 }
+  efeito: { vata: 1, pitta: -1, kapha: -1 }
   como_equilibrar: {}
   restricoes: []
   grupos_evitar: []
   marcas: [estimulante]
+  cha: { parte: bebida }
   fontes:
     - { ref: banyan-cafe, campos: [rasa, gunas, efeito] }
-    - { ref: a_confirmar, campos: [virya, vipaka, gunas, efeito] }
-  confianca: baixa
-  notas: "Banyan: chá é adstringente e não é a melhor escolha para Vata. Pitta, Kapha, virya, vipaka e 'móvel' sem página."
+    - { ref: aa-cha-verde, campos: [rasa, virya] }
+    - { ref: ea-avastha-paka, campos: [vipaka] }
+    - { ref: ritu-regras-da-base, campos: [gunas, efeito] }
+  confianca: media
+  notas: "Banyan: chá é adstringente e não é a melhor escolha para Vata."

@@ -14,6 +14,7 @@ function montar(container?: Container) {
   const deps = (contaId?: string, c: Container = base): DepsDaRota => ({
     contaDaSessao: async () => contaId,
     container: c,
+    quemPede: () => ({ ipHash: "h" }),
   })
   return { container: base, stores: base.stores, deps }
 }

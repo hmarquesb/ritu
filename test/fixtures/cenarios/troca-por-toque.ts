@@ -5,10 +5,10 @@ import type { Cenario } from "./tipos"
 export const trocaPorToque: Cenario = {
   nome: "troca-por-toque",
   descricao:
-    "Momento do frio-agitada com cravo em casa; toque Trocar na canela do chá: troca na hora, retorno com os alimentos novos, nenhuma etapa llm",
+    "Momento do frio-agitada com noz-moscada em casa; toque Trocar na canela do chá: troca na hora, retorno com os alimentos novos, nenhuma etapa llm",
   agora: frioAgitada.agora,
   perfil: frioAgitada.perfil,
-  casa: [...frioAgitada.casa, { alimento_id: "cravo" }],
+  casa: [...frioAgitada.casa, { alimento_id: "noz-moscada" }],
   clima: frioAgitada.clima,
   mensagem: {
     texto: "Estou com frio e agitada depois do trabalho. Tenho abóbora, arroz e ghee em casa.",

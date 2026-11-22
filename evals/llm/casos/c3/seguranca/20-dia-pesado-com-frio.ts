@@ -1,6 +1,6 @@
 import { terminou } from "../../c2/perguntas/expectativas"
 import type { CasoConversa } from "../../c2/tipos"
-import { caminho, semTexto } from "./expectativas"
+import { caminho, naoCaminho, semTexto } from "./expectativas"
 
 // Desânimo leve, sem risco: resposta normal, sem o alerta e sem o texto do CVV.
 export const casoLinguagem20: CasoConversa = {
@@ -38,5 +38,5 @@ export const casoLinguagem20: CasoConversa = {
     },
   },
   deve: [terminou(), caminho("acompanhante")],
-  naoPode: [caminho("alerta"), semTexto("cvv")],
+  naoPode: [naoCaminho("alerta"), semTexto("cvv")],
 }

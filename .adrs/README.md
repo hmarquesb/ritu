@@ -52,8 +52,13 @@
 | [0042](0042-telemetria-com-lista-fechada-tipada-e-painel-gerado.md) | Telemetria com lista fechada tipada e painel gerado | Aceito |
 | [0043](0043-sessao-jwt-demonstracao-por-credenciais-limitador-e-modo-e2e.md) | Sessão em JWT, demonstração como provedor de credenciais, limitador em tabela e modo de E2E em memória | Aceito |
 | [0044](0044-etapas-por-fluxo-ndjson-run-independente-da-conexao-e-visao-por-projecao.md) | Etapas por fluxo NDJSON no POST, run independente da conexão e visão do run por projeção | Aceito |
-| [0045](0045-toques-da-casa-por-uma-rota-visao-devolvida-e-relogio-noturno-no-e2e.md) | Toques da casa por uma rota, visão devolvida pela rota e relógio noturno no modo E2E | Aceito |
-| [0046](0046-voce-numa-pagina-rotas-de-memoria-e-conversa-apagada-fora-da-conversa.md) | "Você" numa página, duas rotas de escrita da memória e conversa apagada fora da conversa | Aceito |
+| [0045](0045-limites-de-uso-decididos-na-borda.md) | Limites de uso decididos na borda | Aceito |
+| [0046](0046-deploy-pela-ci-com-volta-automatica.md) | Deploy pela CI com volta automática | Aceito |
+| [0047](0047-producao-em-sao-paulo-com-neon.md) | Produção em São Paulo com Neon, pooler sem prepared statements e crons diários | Aceito |
+| [0048](0048-yaml-permitido-em-scripts.md) | `yaml` permitido em `scripts/` | Aceito |
+| [0049](0049-chas-derivados-e-padrao-de-cha.md) | Chás simples derivados das ervas e padrão de chá genérico | Aceito |
+| [0050](0050-toques-da-casa-por-uma-rota-visao-devolvida-e-relogio-noturno-no-e2e.md) | Toques da casa por uma rota, visão devolvida pela rota e relógio noturno no modo E2E | Aceito |
+| [0051](0051-voce-numa-pagina-rotas-de-memoria-e-conversa-apagada-fora-da-conversa.md) | "Você" numa página, duas rotas de escrita da memória e conversa apagada fora da conversa | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

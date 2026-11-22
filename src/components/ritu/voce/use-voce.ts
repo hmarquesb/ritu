@@ -4,6 +4,7 @@ import { config } from "@config/index"
 import { formatar } from "@config/textos-conversa"
 import { useCallback, useRef, useState } from "react"
 import { toast } from "@/components/base/toast"
+import { avisarLimiteDeToque } from "@/components/ritu/limites"
 import type { VoceNaTela } from "@/core/memory/ler"
 import type { AcaoDaMemoria, AcaoDoPerfil } from "@/core/touches"
 
@@ -28,6 +29,15 @@ export function chaveDoToque(acao: Acao): string {
     })
     .filter((parte) => parte !== "")
   return [acao.acao, ...partes].join(":")
+}
+
+// 401 volta à entrada; 429 de limite de toques avisa por toast. `true` quando não há mais o que ler.
+async function respostaTratada(resposta: Response): Promise<boolean> {
+  if (resposta.status === 401) {
+    window.location.assign("/")
+    return true
+  }
+  return avisarLimiteDeToque(resposta)
 }
 
 function confirmacao(acao: Acao, nome: string): string {
@@ -95,10 +105,7 @@ export function useVoce(inicial: VoceNaTela) {
           headers: { "content-type": "application/json" },
           body: JSON.stringify(acao),
         })
-        if (resposta.status === 401) {
-          window.location.assign("/")
-          return undefined
-        }
+        if (await respostaTratada(resposta)) return undefined
         const dados: unknown = await resposta.json().catch(() => null)
         if (resposta.ok && ehResposta(dados)) {
           setVoce(dados.voce)

@@ -33,6 +33,10 @@ function textoDaSaida(saida: SaidaDoAcompanhante): string {
 export const caminho = (c: Caminho): ExpectativaDaConversa =>
   exp(`caminho ${c}`, (r) => r.resposta.caminho === c)
 
+// Forma negada de caminho, para naoPode: confere que o caminho não foi o escolhido.
+export const naoCaminho = (c: Caminho): ExpectativaDaConversa =>
+  exp(`não vai ao caminho ${c}`, (r) => r.resposta.caminho !== c)
+
 // A resposta é o texto fixo do caminho (chave de textosDaConversa).
 export const textoFixo = (chave: keyof typeof textosDaConversa): ExpectativaDaConversa =>
   exp(`texto fixo ${chave}`, (r) => r.resultado.saida.resposta === textosDaConversa[chave])

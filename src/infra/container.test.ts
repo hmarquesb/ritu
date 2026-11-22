@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryLedger } from "@/infra/fakes/memory-stores"
 import { createMiniKnowledge } from "@/infra/fakes/mini-knowledge"
 
 // Conta só leituras feitas pelo código do Ritu (src/ ou config/), não pelas bibliotecas.
@@ -258,6 +259,43 @@ describe("container", () => {
     }
   })
 
+  it("telemetriaLigada é false com a telemetria nula e true com o endpoint", async () => {
+    const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    try {
+      delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+      const { createContainer } = await import("./container")
+      expect(createContainer().telemetriaLigada).toBe(false)
+
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+      expect(createContainer().telemetriaLigada).toBe(true)
+    } finally {
+      if (anterior === undefined) delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+      else process.env.OTEL_EXPORTER_OTLP_ENDPOINT = anterior
+    }
+  })
+
+  it("saude sem DATABASE_URL: banco ok em memória e contagens da base carregada", async () => {
+    const anterior = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+
+      const saude = await container.saude()
+
+      expect(saude.banco).toBe("ok")
+      expect(saude.migracao).toBeNull()
+      expect(saude.base).toEqual({
+        alimentos: container.knowledge.alimentos.length,
+        preparos: container.knowledge.preparos.length,
+        praticas: container.knowledge.praticas.length,
+      })
+      expect(saude.seed).toBe("ok")
+    } finally {
+      if (anterior !== undefined) process.env.DATABASE_URL = anterior
+    }
+  })
+
   it("com o endpoint, telemetry é a do OTel; createContainer aceita override", async () => {
     const anterior = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
@@ -457,6 +495,50 @@ describe("container", () => {
       vi.doUnmock("@/infra/knowledge/yaml-seed")
       if (url !== undefined) process.env.DATABASE_URL = url
     }
+  })
+
+  describe("router e o header x-ritu-e2e-cota", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.doUnmock("next/headers")
+    })
+
+    function comHeaderDeCota() {
+      vi.doMock("next/headers", () => ({
+        headers: async () => new Headers({ "x-ritu-e2e-cota": "esgotada" }),
+      }))
+    }
+
+    it("com RITU_MODO=e2e, o header esgota a cota do dia de decisao", async () => {
+      vi.stubEnv("RITU_MODO", "e2e")
+      vi.stubEnv("VERCEL_ENV", "")
+      comHeaderDeCota()
+      const { createContainer } = await import("./container")
+      const { router } = createContainer()
+
+      expect(await router.cotaDoDiaEsgotada("decisao")).toBe(true)
+      expect(await router.temModelo("decisao")).toBe(false)
+    })
+
+    it("com RITU_MODO=e2e, fora de pedido vale o router puro", async () => {
+      vi.stubEnv("RITU_MODO", "e2e")
+      vi.stubEnv("VERCEL_ENV", "")
+      const { createContainer } = await import("./container")
+
+      expect(await createContainer().router.cotaDoDiaEsgotada("decisao")).toBe(false)
+    })
+
+    it("fora do e2e o header é ignorado: router puro", async () => {
+      vi.stubEnv("RITU_MODO", "")
+      vi.stubEnv("DATABASE_URL", "")
+      comHeaderDeCota()
+      const { createContainer } = await import("./container")
+      const container = createContainer({
+        ledger: createMemoryLedger(createFixedClock("2026-01-15T12:00:00Z")),
+      })
+
+      expect(await container.router.cotaDoDiaEsgotada("decisao")).toBe(false)
+    })
   })
 
   describe("modo e2e", () => {

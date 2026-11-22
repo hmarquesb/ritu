@@ -17,7 +17,7 @@ const CHA = {
   alimentos: [],
   titulo: "Chá",
 }
-const CHAVE_DO_CHA = "com_frio+agitada|pratica:cha-gengibre"
+const CHAVE_DO_CHA = "com_frio+agitada|cha"
 
 type Dia = {
   diasAtras: number
@@ -133,7 +133,7 @@ describe("detectarPadroesDaConta", () => {
     const s = setup()
     await s.stores.patterns.propor("c1", {
       tipo: "ajuda_em_estado",
-      chave: "com_frio|pratica:cha-gengibre",
+      chave: "com_frio|cha",
       frase: "x",
       ocorrencias: 3,
     })
@@ -192,8 +192,57 @@ describe("detectarPadroesDaConta", () => {
     expect(novos[0]).toMatchObject({ tipo: "estados_juntos", ocorrencias: 5 })
   })
 
-  it("item em evitar sempre não é proposto", async () => {
+  it("recusado do chá com o estado impede um novo padrão de chá", async () => {
     const s = setup()
+    const p = await s.stores.patterns.propor("c1", {
+      tipo: "ajuda_em_estado",
+      chave: "agitada|cha",
+      frase: "x",
+      ocorrencias: 3,
+    })
+    await s.stores.patterns.decidir("c1", p?.id ?? "", "recusado")
+    expect((await rodar(s, "c1")).propostos).toBe(0)
+  })
+
+  it("retorno de prática fora da base é ignorado e de prática não-chá segue pratica:<id>", async () => {
+    const s = setup()
+    const praticas = [
+      { ...CHA, pratica_id: "nao-existe" },
+      { ...CHA, tipo: "oleo" as const, pratica_id: "oleo-gergelim-morno" },
+    ]
+    const oleo = s.kb.praticas.find((p) => p.tipo !== "cha")
+    expect(oleo).toBeDefined()
+    for (const [i, sug] of [
+      praticas[0],
+      { ...praticas[1], pratica_id: oleo?.id ?? "" },
+    ].entries()) {
+      for (const n of [1, 2, 3]) {
+        const dia = new Date(Date.parse(AGORA) - (n + i * 10) * DIA_MS).toISOString()
+        s.clock.set(dia)
+        const run = await s.stores.runs.criar("c1", {
+          caminho: "acompanhante",
+          intencoes: [],
+          dia: dia.slice(0, 10),
+        })
+        await s.stores.runs.atualizar("c1", run.id, {
+          status: "done",
+          momento: { estados: ["seca"], momento_do_dia: "noite", gunas_buscadas: [] },
+        })
+        const [r] = await s.stores.outcomes.criar("c1", run.id, [sug as typeof CHA])
+        if (r) await s.stores.outcomes.responder("c1", r.id, "ajudou", "toque")
+      }
+    }
+    s.clock.set(AGORA)
+    const deps = { stores: s.stores, kb: s.kb, clock: s.clock, telemetry: s.telemetry }
+    await detectarPadroesDaConta(deps, "c1")
+    const chaves = (await s.stores.patterns.listar("c1")).map((p) => p.chave)
+    expect(chaves.some((c) => c.includes("nao-existe"))).toBe(false)
+    expect(chaves).toContain(`seca|pratica:${oleo?.id}`)
+  })
+
+  it("com todos os chás barrados em evitar sempre, o chá não é proposto", async () => {
+    const s = setup()
+    s.kb = { ...s.kb, praticas: s.kb.praticas.filter((p) => p.id === "cha-gengibre") }
     await s.stores.profiles.acrescentarEvitarSempre("c1", [{ tipo: "alimento", valor: "gengibre" }])
     expect((await rodar(s, "c1")).propostos).toBe(0)
   })

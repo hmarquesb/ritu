@@ -218,13 +218,15 @@ function partidaDoAndamento(o: Opcoes, texto: string | undefined, assinatura: st
   return { ok: true, anterior: lido.andamento }
 }
 
-/** Rodada nova e `--do-zero` recusam quando já houve rodada completa hoje (D18). Histórico inválido recusa sempre. */
+/** Rodada nova e `--do-zero` recusam quando já houve rodada completa do mesmo checkpoint hoje. Histórico inválido recusa sempre. */
 async function recusaDoDia(o: Opcoes, hoje: string, io: IoDoComando): Promise<string | undefined> {
   const lido = lerHistorico(await io.ler(HISTORICO))
   if (!lido.ok) return HISTORICO_INVALIDO
-  const houveHoje = lido.historico.checkpoints.some((entrada) => entrada.data === hoje)
+  const houveHoje = lido.historico.checkpoints.some(
+    (entrada) => entrada.checkpoint === o.checkpoint && entrada.data === hoje,
+  )
   if (o.extra || !houveHoje) return undefined
-  return `Já há uma rodada completa de hoje (${hoje}). Use --extra para rodar outra.`
+  return `Já há uma rodada completa de ${o.checkpoint} hoje (${hoje}). Use --extra para rodar outra.`
 }
 
 const formatarAndamento = (a: Andamento): string => `${JSON.stringify(a, null, 2)}\n`

@@ -197,4 +197,38 @@ describe("demoSeedSchema", () => {
   it("recusa chave a mais no seed", () => {
     expect(demoSeedSchema.safeParse({ ...seedValido(), extra: 1 }).success).toBe(false)
   })
+
+  it("aceita o padrão de chá sem id e recusa o id junto do tipo cha", () => {
+    const comCha = { ...seedValido(), padrao: { ...seedValido().padrao, item: { tipo: "cha" } } }
+    expect(demoSeedSchema.safeParse(comCha).success).toBe(true)
+    const comId = { ...comCha, padrao: { ...comCha.padrao, item: { tipo: "cha", id: "x" } } }
+    expect(demoSeedSchema.safeParse(comId).success).toBe(false)
+  })
+})
+
+describe("padrão de chá", () => {
+  function seedComCha(): DemoSeed {
+    const seed = seedValido()
+    seed.padrao.item = { tipo: "cha" }
+    return seed
+  }
+
+  it("aceita um padrão de chá sem conferir id na base", () => {
+    expect(errosDe(seedComCha())).toEqual([])
+  })
+
+  it("exige 3 conversas com chá ajudou também no padrão de chá", () => {
+    const seed = seedComCha()
+    conversaNo(seed, 0).resultados = ["nao_ajudou"]
+    expectErro(seed, "padrão")
+  })
+
+  it("não conta sugestão que não é chá, mesmo que tenha sido ajudou", () => {
+    const seed = seedComCha()
+    for (const i of [0, 1, 2]) {
+      const [sugestao] = conversaNo(seed, i).saida.sugestoes
+      if (sugestao) sugestao.pratica_id = "escalda-pes-morno"
+    }
+    expectErro(seed, "padrão")
+  })
 })

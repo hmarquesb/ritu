@@ -40,6 +40,7 @@ export const METRICAS = {
   ritu_llm_troca_de_modelo_total: { tipo: "contador", rotulos: ["papel", "de", "para", "motivo"] },
   ritu_llm_erros_total: { tipo: "contador", rotulos: ["modelo", "papel", "codigo"] },
   ritu_fallback_sem_llm_total: { tipo: "contador", rotulos: [] },
+  ritu_limite_total: { tipo: "contador", rotulos: ["tipo", "motivo", "resultado"] },
   ritu_tool_chamadas_total: { tipo: "contador", rotulos: ["tool", "status"] },
   ritu_tool_duracao_ms: { tipo: "histograma", rotulos: ["tool"] },
   ritu_validacao_violacoes_total: { tipo: "contador", rotulos: ["violacao"] },

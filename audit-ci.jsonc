@@ -1,0 +1,13 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  // Mesmo critério do antigo `npm audit --omit=dev --audit-level=high`.
+  "high": true,
+  "skip-dev": true,
+  "allowlist": [
+    // picomatch <=4.0.7 (ReDoS em extglobs), via @mastra/core. Sem versão corrigida
+    // publicada em 2026-11-17. Só é explorável com padrões de glob controlados por
+    // quem ataca; o Ritu não repassa input do usuário para glob. Remover assim que
+    // sair picomatch >4.0.7 (o audit-ci avisa quando a entrada ficar sobrando).
+    "GHSA-fc5q-39xc-vjpf"
+  ]
+}

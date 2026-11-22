@@ -7,7 +7,7 @@ Notas do orquestrador:
 - **Contratos por linha da spec.** A spec traz os contratos por extenso e é longa demais para copiar em cada tarefa sem estourar o plano. Cada tarefa diz, em `contratos`, o intervalo de linhas da spec que é o contrato dela: o subagente lê **só** essas linhas (`Read` com `offset`/`limit`). Decisão A6 em `DECISOES-AUTONOMAS.md`.
 - Rotas no padrão da 018/019: lógica e teste em `src/app/_rotas/<nome>.ts` com `criarRota`; cada `route.ts` só liga `depsReais()` (ver `src/app/_rotas/casa.ts` e `src/app/api/casa/route.ts`).
 - R4: `src/components/` só importa **tipos** do core (`import type`); textos vêm de `config/`. React Aria só em `src/components/`.
-- Testes que dependem do momento do dia fixam o relógio (`createContainer({ clock })`); o servidor do E2E roda às 01h de Brasília (ADR 0045).
+- Testes que dependem do momento do dia fixam o relógio (`createContainer({ clock })`); o servidor do E2E roda às 01h de Brasília (ADR 0050).
 - Frases de Como pensei (tabelas das linhas 441–488 da spec) são texto lido pela pessoa: ficam em `config/textos-como-pensei.ts` (chave `passos`), e `linhaDoTempo` só as preenche. Decisão A7.
 - A migração é a `0005`.
 

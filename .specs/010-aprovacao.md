@@ -381,6 +381,8 @@ Os textos e o prompt são copiados desta spec; não há parte `conteudo`.
 
 ## Correção do portão 2
 
+Aplicada (commits 6019a09).
+
 Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T5).
 
 ### P2-6 · "Não como" de alimento fora da base não é guardado

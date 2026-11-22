@@ -56,6 +56,65 @@ describe("sem modelo: decisão esgotada no dia", () => {
   })
 })
 
+function roteadorNovo() {
+  const relogio = createFixedClock("2026-01-15T12:00:00Z")
+  const registro = createMemoryLedger(relogio)
+  const roteador = createModelRouter({
+    ledger: registro,
+    clock: relogio,
+    telemetry: createMemoryTelemetry(),
+  })
+  return { roteador, registro, relogio }
+}
+
+async function gastarDiaDe(
+  registro: ReturnType<typeof roteadorNovo>["registro"],
+  relogio: ReturnType<typeof roteadorNovo>["relogio"],
+  modelo: string,
+) {
+  const limites = llmCotas.modelos[modelo as keyof typeof llmCotas.modelos]
+  let feitos = 0
+  while (feitos < limites.rpd) {
+    for (let i = 0; i < limites.rpm && feitos < limites.rpd; i++, feitos++) {
+      await registro.reservar(modelo, limites)
+    }
+    relogio.advance(60_000)
+  }
+}
+
+describe("sem modelo: cota do dia do papel decisão", () => {
+  it("cota do minuto cheia em todos os modelos: o dia ainda não está esgotado", async () => {
+    const { roteador, registro } = roteadorNovo()
+    for (const m of llmCotas.papeis.decisao) {
+      const limites = llmCotas.modelos[m]
+      for (let i = 0; i < limites.rpm; i++) await registro.reservar(m, limites)
+    }
+    expect(await roteador.cotaDoDiaEsgotada("decisao")).toBe(false)
+  })
+
+  it("cota do dia cheia em todos os modelos: esgotado", async () => {
+    const { roteador, registro, relogio } = roteadorNovo()
+    for (const m of llmCotas.papeis.decisao) await gastarDiaDe(registro, relogio, m)
+    expect(await roteador.cotaDoDiaEsgotada("decisao")).toBe(true)
+  })
+
+  it("um modelo do papel ainda livre: não esgotado", async () => {
+    const { roteador, registro, relogio } = roteadorNovo()
+    for (const m of llmCotas.papeis.decisao.slice(1)) await gastarDiaDe(registro, relogio, m)
+    expect(await roteador.cotaDoDiaEsgotada("decisao")).toBe(false)
+  })
+
+  it("esgotado_ate dia em todos os modelos: esgotado", async () => {
+    const { roteador, registro } = roteadorNovo()
+    for (const m of llmCotas.papeis.decisao) {
+      for (let i = 0; i < llmCotas.rateLimitsParaEsgotarODia; i++) {
+        await registro.registrarRateLimit(m)
+      }
+    }
+    expect(await roteador.cotaDoDiaEsgotada("decisao")).toBe(true)
+  })
+})
+
 describe("sem modelo: texto e práticas da base real", () => {
   it("sem estado, devolve o texto só de texto e nenhuma prática", () => {
     const r = respostaSemModelo({ estados: [], momento_do_dia: "tarde", filtro: filtroVazio }, kb)

@@ -132,6 +132,19 @@ describe("copiarSeed", () => {
     expect(visao.dias[0]?.nome).toBe("Ontem")
   })
 
+  it("com padrão de chá, grava a chave com cha e a frase genérica", async () => {
+    const { stores, conta } = await nova()
+    const comCha: DemoSeed = {
+      ...seed,
+      padrao: { estados: ["com_frio", "agitada"], item: { tipo: "cha" }, ocorrencias: 3 },
+    }
+    await copiarSeed(stores, conta.id, comCha, { clock, kb })
+
+    const [padrao] = await stores.patterns.listar(conta.id, "candidato")
+    expect(padrao?.chave).toBe("com_frio+agitada|cha")
+    expect(padrao?.frase).toBe("Quando você está com frio e agitada, um chá costuma te ajudar.")
+  })
+
   it("falha no meio propaga o erro", async () => {
     const { stores, conta } = await nova()
     stores.shortages.registrar = async () => {

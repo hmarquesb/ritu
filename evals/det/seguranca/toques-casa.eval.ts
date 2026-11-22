@@ -17,7 +17,12 @@ function montar() {
   const clock = { now: () => AGORA }
   const stores = createMemoryStores(clock)
   const container = createContainer({ clock, stores, tx: stores, limiter: createMemoryLimiter() })
-  const rotas = (contaId?: string) => rotasDaCasa({ contaDaSessao: async () => contaId, container })
+  const rotas = (contaId?: string) =>
+    rotasDaCasa({
+      contaDaSessao: async () => contaId,
+      quemPede: () => ({ ipHash: "h" }),
+      container,
+    })
   return { stores, rotas }
 }
 

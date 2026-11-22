@@ -46,7 +46,7 @@ rotina:
 
 padrao:
   estados: [com_frio, agitada]
-  item: { tipo: pratica, id: cha-gengibre-canela }
+  item: { tipo: cha }
   ocorrencias: 3
 
 historico:

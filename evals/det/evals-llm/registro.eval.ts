@@ -14,10 +14,10 @@ const MARCAS_VALIDAS: ReadonlySet<string> = new Set(MARCAS)
 const todos = casosDoCheckpoint("c3-confiavel")
 
 describe("registro dos casos com LLM", () => {
-  it("os checkpoints têm 12, 54 e 84 casos", () => {
+  it("os checkpoints têm 12, 54 e 86 casos", () => {
     expect(casosDoCheckpoint("c1-base")).toHaveLength(12)
     expect(casosDoCheckpoint("c2-conversa")).toHaveLength(54)
-    expect(todos).toHaveLength(84)
+    expect(todos).toHaveLength(86)
   })
 
   it("os ids são únicos em c3-confiavel", () => {
@@ -77,11 +77,11 @@ describe("listagem sem chave de modelo", () => {
     else process.env.GEMINI_API_KEY = chaveGuardada
   })
 
-  it("formatarListagem('c3-confiavel') roda sem GEMINI_API_KEY e conta os 84 casos", () => {
+  it("formatarListagem('c3-confiavel') roda sem GEMINI_API_KEY e conta os 86 casos", () => {
     let texto = ""
     expect(() => {
       texto = formatarListagem("c3-confiavel")
     }).not.toThrow()
-    expect(texto).toContain("Casos do c3-confiavel: 84")
+    expect(texto).toContain("Casos do c3-confiavel: 86")
   })
 })

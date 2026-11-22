@@ -35,7 +35,11 @@ function containerDoCenario(deps: DepsDoCenario) {
 }
 
 function rotasDoCenario(deps: DepsDoCenario, contaId: string) {
-  return rotasDaCasa({ contaDaSessao: async () => contaId, container: containerDoCenario(deps) })
+  return rotasDaCasa({
+    contaDaSessao: async () => contaId,
+    quemPede: () => ({ ipHash: "h" }),
+    container: containerDoCenario(deps),
+  })
 }
 
 // Monta o cenário com o perfil semeado e as rotas da casa.

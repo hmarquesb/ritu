@@ -352,6 +352,49 @@
     },
     {
       "id": 8,
+      "type": "stat",
+      "title": "Limites atingidos",
+      "description": "Quantas vezes um limite barrou a conversa, deixou só atalhos ou gerou alerta?",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${ds_metricas}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 17,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds_metricas}"
+          },
+          "expr": "sum by (resultado) (max_over_time(ritu_limite_total[$__range]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 9,
       "type": "row",
       "title": "2. Agente",
       "collapsed": false,
@@ -364,7 +407,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 10,
       "type": "barchart",
       "title": "Intenções",
       "description": "Quais intenções as mensagens tiveram no período?",
@@ -407,7 +450,7 @@
       ]
     },
     {
-      "id": 10,
+      "id": 11,
       "type": "barchart",
       "title": "Caminhos",
       "description": "Por qual caminho os runs passaram?",
@@ -450,7 +493,7 @@
       ]
     },
     {
-      "id": 11,
+      "id": 12,
       "type": "timeseries",
       "title": "Passos por run",
       "description": "Quantos passos um run leva em média, por caminho?",
@@ -493,7 +536,7 @@
       ]
     },
     {
-      "id": 12,
+      "id": 13,
       "type": "barchart",
       "title": "Tools",
       "description": "Quais tools o agente chamou, e com que resultado?",
@@ -536,7 +579,7 @@
       ]
     },
     {
-      "id": 13,
+      "id": 14,
       "type": "barchart",
       "title": "Violações do validador",
       "description": "Que regras o validador da resposta mais barrou?",
@@ -579,7 +622,7 @@
       ]
     },
     {
-      "id": 14,
+      "id": 15,
       "type": "barchart",
       "title": "Juiz",
       "description": "Como o Juiz julgou as respostas, e por quais motivos reprovou ou avisou?",
@@ -642,7 +685,7 @@
       ]
     },
     {
-      "id": 15,
+      "id": 16,
       "type": "barchart",
       "title": "Guardrail",
       "description": "Quantas mensagens o guardrail deixou passar ou tratou, e por qual origem?",
@@ -685,7 +728,7 @@
       ]
     },
     {
-      "id": 16,
+      "id": 17,
       "type": "barchart",
       "title": "Pausas",
       "description": "Quantas vezes o run pausou para pedir algo à pessoa, e de que tipo?",
@@ -728,7 +771,7 @@
       ]
     },
     {
-      "id": 17,
+      "id": 18,
       "type": "barchart",
       "title": "Memória",
       "description": "Quantos resumos de rotina e padrões foram gerados, e de onde vieram?",
@@ -781,7 +824,7 @@
       ]
     },
     {
-      "id": 18,
+      "id": 19,
       "type": "barchart",
       "title": "Edições da memória pela pessoa",
       "description": "Em qual nível da memória a pessoa mexeu, e como?",
@@ -824,7 +867,7 @@
       ]
     },
     {
-      "id": 19,
+      "id": 20,
       "type": "barchart",
       "title": "Contas apagadas",
       "description": "Quantas contas foram apagadas, por tipo?",
@@ -867,7 +910,7 @@
       ]
     },
     {
-      "id": 20,
+      "id": 21,
       "type": "row",
       "title": "3. Modelos e cota",
       "collapsed": false,
@@ -880,7 +923,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 22,
       "type": "timeseries",
       "title": "Chamadas por modelo e papel",
       "description": "Quantas chamadas cada modelo recebeu em cada papel na última hora?",
@@ -923,7 +966,7 @@
       ]
     },
     {
-      "id": 22,
+      "id": 23,
       "type": "barchart",
       "title": "Tokens",
       "description": "Quantos tokens de entrada e de saída cada modelo consumiu?",
@@ -966,7 +1009,7 @@
       ]
     },
     {
-      "id": 23,
+      "id": 24,
       "type": "bargauge",
       "title": "Cota do dia",
       "description": "Quanto da cota diária de cada modelo já foi usado?",
@@ -1018,7 +1061,7 @@
       ]
     },
     {
-      "id": 24,
+      "id": 25,
       "type": "timeseries",
       "title": "Cota do minuto",
       "description": "Como está a cota do minuto de cada modelo?",
@@ -1062,7 +1105,7 @@
       ]
     },
     {
-      "id": 25,
+      "id": 26,
       "type": "table",
       "title": "Trocas de modelo",
       "description": "Quando e por que o roteador trocou de modelo?",
@@ -1105,7 +1148,7 @@
       ]
     },
     {
-      "id": 26,
+      "id": 27,
       "type": "stat",
       "title": "Respostas sem modelo",
       "description": "Quantas respostas foram montadas sem modelo?",
@@ -1156,7 +1199,7 @@
       ]
     },
     {
-      "id": 27,
+      "id": 28,
       "type": "barchart",
       "title": "Erros do modelo",
       "description": "Quais erros os modelos devolveram, por modelo e código?",
@@ -1199,7 +1242,7 @@
       ]
     },
     {
-      "id": 28,
+      "id": 29,
       "type": "row",
       "title": "4. Qualidade",
       "collapsed": false,
@@ -1212,7 +1255,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 30,
       "type": "barchart",
       "title": "👍/👎",
       "description": "Como a pessoa avaliou as respostas?",
@@ -1255,7 +1298,7 @@
       ]
     },
     {
-      "id": 30,
+      "id": 31,
       "type": "barchart",
       "title": "Retornos",
       "description": "Como foram os retornos da pessoa sobre o que foi sugerido, e de onde vieram?",
@@ -1298,7 +1341,7 @@
       ]
     },
     {
-      "id": 31,
+      "id": 32,
       "type": "barchart",
       "title": "Trocas de ingrediente",
       "description": "As trocas de ingrediente deram certo?",
@@ -1341,7 +1384,7 @@
       ]
     },
     {
-      "id": 32,
+      "id": 33,
       "type": "barchart",
       "title": "Gostos",
       "description": "Quais gostos a pessoa registrou?",
@@ -1384,7 +1427,7 @@
       ]
     },
     {
-      "id": 33,
+      "id": 34,
       "type": "barchart",
       "title": "Faltas",
       "description": "Que itens faltaram em casa, e de qual origem veio o aviso?",
@@ -1427,7 +1470,7 @@
       ]
     },
     {
-      "id": 34,
+      "id": 35,
       "type": "barchart",
       "title": "Propostas",
       "description": "Quais propostas o agente fez, e o que a pessoa decidiu?",
@@ -1470,7 +1513,7 @@
       ]
     },
     {
-      "id": 35,
+      "id": 36,
       "type": "barchart",
       "title": "Vale ter em casa",
       "description": "Em que etapa está a indicação de vale ter em casa?",
@@ -1513,7 +1556,7 @@
       ]
     },
     {
-      "id": 36,
+      "id": 37,
       "type": "barchart",
       "title": "Entradas",
       "description": "Quantas entradas houve, por tipo de conta, e quantas o limite recusou?",
@@ -1556,7 +1599,7 @@
       ]
     },
     {
-      "id": 37,
+      "id": 38,
       "type": "row",
       "title": "5. Rastro",
       "collapsed": false,
@@ -1569,7 +1612,7 @@
       }
     },
     {
-      "id": 38,
+      "id": 39,
       "type": "table",
       "title": "Runs recentes",
       "description": "Quais foram os runs recentes, com caminho, status, passos e duração?",
@@ -1628,7 +1671,7 @@
       ]
     },
     {
-      "id": 39,
+      "id": 40,
       "type": "logs",
       "title": "Avisos e erros",
       "description": "Quais avisos e erros aconteceram recentemente?",

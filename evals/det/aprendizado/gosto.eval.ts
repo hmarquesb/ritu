@@ -74,16 +74,16 @@ describe("gosto dito pela pessoa (toque) vale no preparo seguinte", () => {
   it("gosta sobe o alimento na ordem das opções da sua vaga", async () => {
     const { contaId, deps } = await montarCenario(frioAgitada())
     const antes = await preparoSeguinte(deps, contaId)
-    const ordem = opcoesDaVaga(antes, "pure-de-raiz", "tempero")
+    const ordem = opcoesDaVaga(antes, "arroz-com-legume", "tempero")
     const escolhido = ordem.at(-1)
     expect(escolhido).toBeDefined()
 
     await deps.touches.tocarGosto(contaId, { tipo: "alimento", id: escolhido ?? "" }, "gosta")
     const depois = await preparoSeguinte(deps, contaId)
 
-    expect(opcoesDaVaga(depois, "pure-de-raiz", "tempero").indexOf(escolhido ?? "")).toBeLessThan(
-      ordem.indexOf(escolhido ?? ""),
-    )
+    expect(
+      opcoesDaVaga(depois, "arroz-com-legume", "tempero").indexOf(escolhido ?? ""),
+    ).toBeLessThan(ordem.indexOf(escolhido ?? ""))
     expect(depois.sinais.registros_de_gosto).toBe(1)
   })
 
@@ -117,14 +117,14 @@ describe("gosto escrito na mensagem: vale no run, grava só com aprovação", ()
   it("o gosto da mensagem muda a ordem das opções no preparo do próprio run", async () => {
     const { contaId, deps } = await montarCenario(frioAgitada())
     const sem = await preparoSeguinte(deps, contaId)
-    const ordem = opcoesDaVaga(sem, "pure-de-raiz", "tempero")
+    const ordem = opcoesDaVaga(sem, "arroz-com-legume", "tempero")
     const citado = ordem.at(-1) ?? ""
 
     const com = await preparoSeguinte(deps, contaId, { gosta_da_mensagem: [citado] })
     const nomeCitado = kb.alimento(citado)?.nome
 
     expect(com.gosta_da_mensagem).toEqual([nomeCitado])
-    expect(opcoesDaVaga(com, "pure-de-raiz", "tempero").indexOf(citado)).toBeLessThan(
+    expect(opcoesDaVaga(com, "arroz-com-legume", "tempero").indexOf(citado)).toBeLessThan(
       ordem.indexOf(citado),
     )
   })

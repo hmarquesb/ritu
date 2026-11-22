@@ -3,6 +3,7 @@ import { app } from "./app"
 import { aprovacao } from "./aprovacao"
 import { base } from "./base"
 import { casa } from "./casa"
+import { textosChas } from "./chas"
 import { clima } from "./clima"
 import { conversa } from "./conversa"
 import { evals } from "./evals"
@@ -24,10 +25,12 @@ import { textosComoFicou } from "./textos-como-ficou"
 import { textosComoPensei } from "./textos-como-pensei"
 import { textosConversa } from "./textos-conversa"
 import { textosEntrada } from "./textos-entrada"
+import { textosLimites } from "./textos-limites"
 import { textosVoce } from "./textos-voce"
 import { toques } from "./toques"
 import { ui } from "./ui"
 
+export { textosChas } from "./chas"
 export type { Papel } from "./llm-cotas"
 export { llmCotas } from "./llm-cotas"
 export { telaConversa } from "./tela-conversa"
@@ -35,6 +38,7 @@ export { textosCasa } from "./textos-casa"
 export { textosComoFicou } from "./textos-como-ficou"
 export { textosComoPensei } from "./textos-como-pensei"
 export { textosConversa } from "./textos-conversa"
+export { textosLimites } from "./textos-limites"
 export { textosVoce } from "./textos-voce"
 
 export const config = {
@@ -59,12 +63,14 @@ export const config = {
   resposta,
   telaConversa,
   telemetria,
+  textosChas,
   textosCasa,
   textosComoFicou,
   textosComoPensei,
   textosConversa,
   textosEntrada,
   textosVoce,
+  textosLimites,
   toques,
   ui,
 } as const

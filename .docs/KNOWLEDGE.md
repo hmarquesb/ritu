@@ -86,7 +86,7 @@ Vocabulário **fechado**: o agente só sugere alimentos de `alimentos.yaml`, pre
 
 ### 5.1 `data/alimentos.yaml`
 
-**130 alimentos** comuns numa cozinha brasileira, cobrindo todos os grupos: frutas, verduras e folhas, legumes, raízes e tubérculos, grãos e féculas, leguminosas, laticínios, ovos, oleaginosas e sementes, óleos e gorduras, especiarias e ervas, adoçantes, bebidas. A base não tem carnes, peixes nem frutos do mar. Todo óleo vegetal leva a observação de preferir o prensado a frio. A base cresce pelos alimentos que as pessoas registram em casa e ela ainda não conhece.
+**127 alimentos** comuns numa cozinha brasileira, cobrindo todos os grupos: frutas, verduras e folhas, legumes, raízes e tubérculos, grãos e féculas, leguminosas, laticínios, ovos, oleaginosas e sementes, óleos e gorduras, especiarias e ervas, adoçantes, bebidas. A base não tem carnes, peixes nem frutos do mar. Todo óleo vegetal leva a observação de preferir o prensado a frio. A base cresce pelos alimentos que as pessoas registram em casa e ela ainda não conhece.
 
 ```yaml
 - id: abobora
@@ -106,11 +106,14 @@ Vocabulário **fechado**: o agente só sugere alimentos de `alimentos.yaml`, pre
   marcas: []                    # fruta_azeda | fruta_doce | fermentado | estimulante (usadas em combinações e no "evitar" do momento)
   observacao: ""                # opcional, lida pela pessoa (ex.: "Prefira o prensado a frio.")
   grupos_evitar: []             # grupos de data/grupos_evitar.yaml a que pertence: amendoim | castanhas | leite | ovo | soja | trigo | gergelim | peixe | frutos_do_mar
+  # cha: { parte: folha }       # opcional, só em especiarias e bebidas: a erva vira um chá simples (R9)
   fontes:
     - { ref: lad-food-guidelines, campos: [efeito] }
   confianca: media              # alta | media | baixa
   notas: ""
 ```
+
+O campo `cha` marca a erva ou especiaria que vira um chá de uma erva só (§8.1, R9). Ele existe só nos grupos `especiarias` e `bebidas`. `parte` diz o que vai na água e decide o modo de preparo: `folha`, `flor`, `semente`, `casca`, `raiz` ou `bebida` (a erva que já é vendida como chá). `aviso` é opcional, tem até 200 caracteres, é lido pela pessoa e só existe com um cuidado que uma fonte registrada afirma; a fonte da erva cita então o campo `cha`. Têm `cha` o louro, o alecrim e o manjericão (`folha`) e o chá-preto, o chá-mate e o chá verde (`bebida`).
 
 ### 5.2 `data/preparos.yaml`
 
@@ -138,7 +141,7 @@ As qualidades de uma refeição são as dos alimentos somadas às do preparo. Co
 
 ### 5.3 `data/praticas.yaml`
 
-Chás, óleos e práticas. São 44: 20 chás, 7 de óleo e 17 práticas leves.
+Chás, óleos e práticas. `praticas.yaml` tem 44: 19 chás, 7 de óleo e 18 práticas leves. A base monta mais um chá simples por erva com o campo `cha` (6, pela R9 de §8.1), e são 50 no total. O chá fixo de `praticas.yaml` vence o derivado, e um id fixo igual ao de um derivado é erro de validação. Toda prática do `tipo: cha` tem id começado por `cha-`, e só ela. O preparo do chá simples sai da `parte` da erva, com os textos de `config/chas.ts`.
 
 ```yaml
 - id: cha-gengibre-canela
@@ -252,16 +255,95 @@ Quando a pessoa registra em casa um alimento que não está em `alimentos.yaml`,
 | `lad-cooking` | Usha e Vasant Lad, *Ayurvedic Cooking for Self-Healing* | Propriedades, preparo, combinações |
 | `banyan-listas` | Listas de alimentos por dosha da Banyan Botanicals | Conferência cruzada |
 
-Na construção da base, as fontes são consultadas pela internet uma única vez, só nas páginas do Ayurvedic Institute e da Banyan Botanicals. Cada página aberta entra em `data/fontes.yaml` com a URL e a data de acesso. Livro sem página aberta fica como `a_confirmar`.
+As fontes têm pesos diferentes:
+
+| Peso | Fontes |
+|---|---|
+| Alto | Textos clássicos e suas traduções (Charaka Samhita, Ashtanga Hridaya, Madanapala Nighantu) e artigos revisados (JAIMS, WJPR) |
+| Médio-alto | Easy Ayurveda (Dr. J. V. Hebbar), que cita os clássicos; The Ayurvedic Institute |
+| Médio | Banyan Botanicals; Ask Ayurveda (só os artigos "X in Ayurveda"); AyurTimes; outras organizações que estudam Ayurveda (Maharishi Ayurveda, Kripalu, AyurVAID, The Ayurveda Experience, LifeSpa) |
+| Só apoio | Satyori e portais de saúde (1mg, PharmEasy, Apollo); nunca sustentam um campo sozinhos |
+
+Cada página aberta entra em `data/fontes.yaml` com a URL e a data de acesso. Livro sem página aberta fica como `a_confirmar`.
+
+Duas refs de `fontes.yaml` não são páginas: `ritu-regras-da-base` marca o campo derivado por uma regra de §8.1, e `ritu-textos-revisados` marca o texto que a pessoa lê (preparo, passos, aviso) lido e aprovado pela dona.
 
 ## 8. Curadoria
 
 - **Toda linha tem fonte.** Sem fonte, não entra.
-- **Divergência entre fontes** → `confianca: media` ou `baixa` e uma nota.
+- **Uma fonte que confirma** o valor da base basta: o campo fica com o valor e a fonte registrada, e a linha com `confianca: media`.
+- **Uma fonte que contradiz** a base corrige o campo para o valor da fonte.
+- **Fontes que divergem entre si:** vence a de mais peso (§7). Clássico e Easy Ayurveda vencem Ask Ayurveda e Banyan. A divergência fica na `nota` da linha.
+- **Parte de um campo sem fonte** (ex.: uma das gunas) sai do campo; fica só o que a fonte confirma.
+- **`confianca`:** `media` quando todo campo tem fonte ou regra; `baixa` enquanto algum campo seguir `a_confirmar`; `alta` só com duas fontes independentes em todos os campos.
 - **Validação automática:** schema zod, ids únicos, referências existentes (fontes, alimentos citados em práticas e combinações), toda vaga de preparo com pelo menos 3 alimentos possíveis (as exceções ficam listadas em `config/base.ts`, como a vaga de leite do `leite-morno-com-especiaria`, que aceita só o leite, e a base dos preparos em que pão, tapioca, cuscuz, macarrão ou fubá são a base de fato), cobertura mínima por grupo, por tipo de prática e por estado do momento.
 - **Crescimento guiado por dados:** os alimentos "ainda não conheço", os itens "incertos" e os 👎 indicam onde a base precisa crescer.
 - **Mudança na base = commit próprio.**
 - **Agentes de código não inventam fonte.** Se o agente não tem a fonte confirmada de uma linha, ela entra com `confianca: baixa` e `fontes: [{ ref: a_confirmar }]`, e a dona revisa no portão 1. Nenhum título, página ou URL é escrito de memória. Linha com `a_confirmar` vale em desenvolvimento e nos evals; `npm run base:check -- --producao` falha enquanto houver alguma, e é rodado antes de publicar.
+
+### 8.1 Regras de derivação
+
+Alguns campos não são fatos que uma fonte afirma item por item. Eles saem de uma regra, e a linha cita `ritu-regras-da-base` (ou a página da regra) nesses campos.
+
+**Vipaka pelo sabor.** Quando nenhuma fonte dá o vipaka de um alimento, ele sai da regra clássica do sabor ([Easy Ayurveda, Avastha paka](https://www.easyayurveda.com/avastha-paka/), ref `ea-avastha-paka`):
+
+| Rasa | Vipaka |
+|---|---|
+| doce, salgado | doce |
+| azedo | azedo |
+| picante, amargo, adstringente | picante |
+
+Com mais de um sabor, vale o sabor principal, o primeiro do `rasa`. Uma fonte que dê o vipaka vence a regra. O campo fica com `confianca: media` quando o rasa tem fonte; se o rasa ainda é `a_confirmar`, a linha segue `baixa`.
+
+**R1. Chás pelas ervas.** As gunas, os estados que um chá favorece e o efeito por dosha são a soma das ervas e especiarias dele, lidas em `alimentos.yaml`.
+
+**R2. Chás pelo virya.** Chá de virya quente não vai para quem está `com_calor`; chá de virya frio não vai para quem está `com_frio`. Chá com a marca `estimulante` só de manhã e à tarde.
+
+**R3. Preparos pelo modo de cozinhar.** O `gunas_do_preparo` sai do modo de preparo:
+
+| Modo | Acrescenta |
+|---|---|
+| Assar | quente, seco |
+| Refogar ou cozinhar com gordura | oleoso |
+| Vapor ou cozido em água | suave |
+| Com leite ou creme | pesado |
+
+**R4. Preparos pelo peso.** O momento de um preparo segue a leveza: preparo leve vai para a manhã e o jantar; preparo pesado, para o almoço, quando a digestão está mais forte.
+
+**R5. Pelo sabor.** Quando nenhuma fonte dá as gunas ou o efeito de um alimento, eles saem do sabor principal, o primeiro do `rasa` ([JAIMS, Shad Rasa](https://jaims.in/jaims/article/download/1575/1555), ref `jaims-shad-rasa`; [Charak Samhita Online, Rasa](https://www.carakasamhitaonline.com/index.php/Rasa), ref `caraka-rasa`). Uma fonte do próprio alimento vence a regra, e o campo pode ficar só com a parte que a regra confirma.
+
+| Rasa | Gunas | Vata | Pitta | Kapha |
+|---|---|---|---|---|
+| doce | pesado, oleoso, frio | acalma | acalma | agrava |
+| azedo | leve, oleoso, quente | acalma | agrava | agrava |
+| salgado | oleoso, quente | acalma | agrava | agrava |
+| picante | leve, seco, quente | agrava | agrava | acalma |
+| amargo | leve, seco, frio | agrava | acalma | acalma |
+| adstringente | seco, frio | agrava | acalma | acalma |
+
+A temperatura das gunas segue o `virya` da linha. O efeito por dosha soma os sabores do `rasa` (agrava +1, acalma −1) e fica em −1, 0 ou +1 pelo sinal da soma.
+
+**R6. Marcas das frutas.** Fruta com azedo no `rasa` leva a marca `fruta_azeda`; fruta com doce e sem azedo leva `fruta_doce`.
+
+**R7. Hábitos pelo calor e pela hora.** Prática com a qualidade `quente` não vai para quem está `com_calor`, como o chá de virya quente (R2). Os estados que ela favorece são os que pedem as qualidades dela (tabela de §3). Sem fonte de horário: hábito ligado à refeição vale nos momentos de refeição; hábito "ao longo do dia" vale de manhã, no almoço e à tarde; calor no corpo sem hora própria vale de manhã, à tarde e à noite.
+
+**R8. Farinha de mandioca.** A farinha herda o sabor da mandioca. Torrada, é seca e áspera, e por isso agrava vata (o semelhante aumenta).
+
+**R9. Chás simples pelas ervas.** Erva ou especiaria com o campo `cha` vira um chá de uma erva só, montado por código: gunas e efeito da erva (R1), contraindicação e momento pelo virya e pela marca `estimulante` (R2), e estados favorecidos pela tabela de §3, como nos hábitos (R7). O chá fixo de `praticas.yaml` vence o derivado.
+
+**Fontes mais fracas, aceitas pela dona.** Para itens sem página nas fontes de §7, valem Satyori e textos do Ask Ayurveda fora do formato "X in Ayurveda" (artigo ou resposta de médico na página): maracujá, acelga, mandioca, tapioca, abobrinha, cebolinha, erva-cidreira e chá-mate. Chuchu, jiló e mandioquinha não têm fonte nenhuma e ficam fora da base.
+
+**Hábitos pelos doshas.** Um hábito (prática do tipo `pratica`) se lê pelo que ele faz com cada dosha. O `efeito` vem da fonte que trata do dosha. As `gunas` são as qualidades por trás desse efeito (o que sobe e o que desce), e os `favorece_estados` são os estados que pedem essas qualidades.
+
+- Água morna (ao acordar e ao longo do dia) acalma vata e kapha; água gelada agrava os dois.
+- Banho morno acalma vata e kapha, de manhã e à noite; a água na cabeça é morna ou fresca, nunca quente. Água fresca no rosto acalma pitta e não vai para quem está `com_frio`.
+- Exercício traz leveza, tira o peso e acalma kapha, mas em excesso agrava vata e pitta. Por isso a caminhada da manhã não acalma vata (vata 0), não vai para quem está `agitada` e leva óleo de gergelim no corpo antes e banho morno depois, na ordem clássica da manhã: óleo, exercício, banho. A manhã, hora de kapha, é a melhor hora para se mexer.
+- Caminhar devagar depois de comer não é exercício: ajuda a digestão (kapha −1) sem mexer em vata. Exercício logo depois de comer fica fora da base.
+- Dormir cedo acalma vata (ficar acordada à noite resseca e agrava vata) e pitta (das 22h às 2h é a hora de pitta).
+- Respiração lenta, pausa em silêncio e alongamento leve acalmam vata. Telas desligadas antes de dormir acalmam vata e pitta.
+- Almoço como refeição principal e jantar leve e cedo seguem o ritmo do dia: a refeição maior na hora de pitta.
+- Pés aquecidos, escalda-pés morno e bolsa morna acalmam vata pelo calor (vata é frio). O escalda-pés vai para a noite, antes de dormir (AyurVAID); os horários dos outros dois e os estados e cuidados dos três saem de R7.
+- Comer sentada, com calma e sem tela, ajuda a digestão (The Ayurveda Experience) e acalma vata, que é móvel, pela estabilidade.
 
 ## 9. Cuidados
 

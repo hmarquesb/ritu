@@ -65,6 +65,17 @@ describe("runner da conversa com LLM falso", () => {
     expect(resultado.marcas).toEqual([])
   })
 
+  it("o uso sai por papel: Intérprete e Juiz em apoio, o agente em decisao", async () => {
+    const { resultado } = await rodarConversa(casoConversa, {
+      runtime: createScriptedRuntime(soAtalhos.roteiro),
+      llm: createFakeLlm([{ apontamentos: [] }]),
+    })
+
+    expect(resultado.uso.apoio?.chamadas).toBeGreaterThanOrEqual(1)
+    expect(resultado.uso.decisao).toBeDefined()
+    expect(resultado.uso).not.toHaveProperty("reforco")
+  })
+
   it("com telemetria, o span run da conversa chega a ela além da memória do caso", async () => {
     const telemetria = createMemoryTelemetry()
 
@@ -482,7 +493,7 @@ describe("runner do acompanhante com pausa", () => {
 
   it.each([
     ["c1-08-casa-so-incertos", { tipo: "casa", alimentos: ["abobora", "arroz-branco"] }],
-    ["c1-11-sem-cidade", { tipo: "casa", alimentos: ["camomila"] }],
+    ["c1-11-sem-cidade", { tipo: "casa", alimentos: ["anis-estrelado"] }],
   ])("%s: pausa, a pessoa pula a pergunta e o run entrega a saída", async (id, pedido) => {
     const caso = casosC1.find((c) => c.id === id)
     if (!caso) throw new Error(`caso ${id} ausente`)
@@ -517,7 +528,7 @@ describe("runner do acompanhante com pausa", () => {
       chamadas: [{ nome: "ask_user", argumentos: { tipo: "casa", alimentos: [alimento] } }],
     })
     // Quatro itens diferentes: uma pausa a mais que as retomadas do teto.
-    const roteiro = ["gengibre", "limao", "camomila", "cebola"].map(pergunta)
+    const roteiro = ["gengibre", "limao", "anis-estrelado", "cebola"].map(pergunta)
     expect(roteiro).toHaveLength(MAXIMO_DE_RETOMADAS + 1)
 
     await expect(

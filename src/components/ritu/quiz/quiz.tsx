@@ -6,6 +6,7 @@ import { Button } from "@/components/base/button"
 import { Surface } from "@/components/base/surface"
 import { DoshaBlot } from "@/components/brand/dosha-blot"
 import { cx } from "@/components/cx"
+import { avisarLimiteDeToque } from "@/components/ritu/limites"
 
 type Dosha = "vata" | "pitta" | "kapha"
 type Pergunta = { id: string; texto: string; opcoes: { dosha: Dosha; texto: string }[] }
@@ -70,6 +71,10 @@ export function Quiz({
       })
       if (resposta.status === 401) {
         window.location.href = "/"
+        return
+      }
+      if (await avisarLimiteDeToque(resposta)) {
+        setEnviando(false)
         return
       }
       if (!resposta.ok) throw new Error("falhou")

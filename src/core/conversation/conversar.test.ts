@@ -4,11 +4,12 @@ import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { Judge, Veredito } from "@/core/agents/judge/julgar"
 import { createMemoryAgent } from "@/core/agents/memory/memoria"
-import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
+import { acompanhanteV7 } from "@/core/agents/prompts/acompanhante.v7"
 import { executarLimpeza } from "@/core/cleanup"
 import { RituError } from "@/core/errors"
 import { resolverEvitar } from "@/core/knowledge/identificar"
 import { createModelRouter } from "@/core/llm/router"
+import { TEXTO_LIMITE_COM_ATALHOS } from "@/core/llm/textos"
 import { RunAbertoError } from "@/core/runs/errors"
 import { createRunService } from "@/core/runs/run-service"
 import { diaLocal } from "@/core/time/dia-local"
@@ -220,7 +221,7 @@ it("conversa com o Acompanhante: o span run leva prompt.versao, também ao pausa
   await m.conversation.conversar(m.conta.id, { atalhos: ["com_frio"] })
   const span = m.telemetry.spans.find((s) => s.nome === "run")
   expect(span?.atributos["run.caminho"]).toBe("acompanhante")
-  expect(span?.atributos["prompt.versao"]).toBe(acompanhanteV6.versao)
+  expect(span?.atributos["prompt.versao"]).toBe(acompanhanteV7.versao)
 })
 
 describe("conversar: atalhos e acompanhante", () => {
@@ -282,6 +283,56 @@ describe("conversar: atalhos e acompanhante", () => {
     expect(await m.stores.profiles.evitarTemporario(m.conta.id, dia)).toEqual([
       resolverEvitar("leite", kb),
     ])
+  })
+})
+
+describe("conversar: aviso de incômodo pela fala de saúde", () => {
+  const avisosDeIncomodo = (avisos: { tipo: string }[] | undefined) =>
+    (avisos ?? []).filter((a) => a.tipo === "incomodo")
+
+  it("sem incômodo na interpretação, a fala de saúde leva o aviso e marca a mensagem", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "esse chá cura gastrite?")
+    expect(avisosDeIncomodo(r.saida?.avisos)).toHaveLength(1)
+    const gravada = (await runDe(m, r.run_id)).saida as { avisos: { tipo: string }[] }
+    expect(avisosDeIncomodo(gravada.avisos)).toHaveLength(1)
+  })
+
+  it("fala de saúde com pausa do agente deixa o run com incômodo", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio", "agitada"] })],
+      roteiro: [
+        { chamadas: [{ nome: "casa.ler", argumentos: {} }] },
+        {
+          chamadas: [
+            { nome: "ask_user", argumentos: { tipo: "casa", alimentos: ["abobora", "cenoura"] } },
+          ],
+        },
+      ],
+    })
+    m.clock.set("2026-09-16T22:00:00.000Z")
+    await m.stores.pantry.registrar(
+      m.conta.id,
+      [{ alimento_id: "abobora" }, { alimento_id: "cenoura" }],
+      "tela",
+    )
+    m.clock.set("2026-11-15T22:00:00.000Z")
+    await m.stores.pantry.registrar(m.conta.id, [{ alimento_id: "arroz-branco" }], "tela")
+    const r = await dizer(m, "esse chá cura gastrite? o que como?")
+    expect(r.status).toBe("waiting_for_input")
+    expect((await runDe(m, r.run_id)).com_incomodo).toBe(true)
+  })
+
+  it("com o aviso já na saída, ele não se repete", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], incomodo: { id: "estomago-pesado" } })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "tenho refluxo, o que tomo?")
+    expect(avisosDeIncomodo(r.saida?.avisos)).toHaveLength(1)
   })
 })
 
@@ -1168,5 +1219,75 @@ describe("conversar: o Juiz antes de entregar", () => {
     const r = await dizer(m, "acordo cedo, comprei abóbora, o que faço?")
     const linhas = await m.stores.proposals.doRun(m.conta.id, r.run_id)
     expect(linhas.map((l) => l.tool)).toEqual(["casa.propor"])
+  })
+})
+
+describe("conversar: semModelo limite", () => {
+  it("só atalhos: done, sem_modelo, sem chamar modelo, abertura do limite, sem fallback", async () => {
+    const m = await montar({ llm: [], roteiro: [] })
+    const r = await m.conversation.conversar(
+      m.conta.id,
+      { atalhos: ["com_frio"] },
+      { semModelo: "limite" },
+    )
+    expect(r).toMatchObject({ status: "done", caminho: "sem_modelo" })
+    expect(m.llm.pedidos).toHaveLength(0)
+    expect(m.runtime.pedidos).toHaveLength(0)
+    expect(r.saida?.resposta).toBe(TEXTO_LIMITE_COM_ATALHOS.replace("{estados}", "com frio"))
+    expect(r.saida?.sugestoes.length).toBeLessThanOrEqual(3)
+    const etapas = await etapasDe(m, r.run_id)
+    expect(etapas.some((e) => e.tipo === "interprete" || e.tipo === "guardrail")).toBe(false)
+    const soma = m.telemetry.metricas.filter((x) => x.nome === "ritu_fallback_sem_llm_total")
+    expect(soma).toHaveLength(0)
+  })
+
+  it("com texto: mensagem_invalida", async () => {
+    const m = await montar({ llm: [], roteiro: [] })
+    await expect(
+      m.conversation.conversar(
+        m.conta.id,
+        { texto: "oi", atalhos: ["com_frio"] },
+        { semModelo: "limite" },
+      ),
+    ).rejects.toMatchObject({ code: "mensagem_invalida" })
+  })
+})
+
+describe("conversar: não como livre", () => {
+  const frasePitaya =
+    "Ainda não conheço pitaya, então não consigo guardar isso. Se eu sugerir algo com pitaya, é só me dizer que eu troco."
+
+  it("não como pitaya (sem id) no caminho evitar: sem anotação, sem item no dia, com a frase", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["evitar"], nao_come: ["pitaya"] })] })
+    const r = await dizer(m, "não como pitaya")
+    expect(r.saida?.anotacoes).toEqual([])
+    expect(r.saida?.resposta).toContain(frasePitaya)
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([])
+  })
+
+  it("não como banana (com id) segue como antes: anotação e item do dia", async () => {
+    const m = await montar({ llm: [saida({ intencoes: ["evitar"], nao_come: ["banana"] })] })
+    const r = await dizer(m, "não como banana")
+    expect(r.saida?.anotacoes).toEqual([
+      { tipo: "nao_come", itens: [{ alimento_id: "banana", nome: "Banana" }] },
+    ])
+    expect(r.saida?.resposta).not.toContain("Ainda não conheço")
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([
+      { tipo: "nao_come", valor: "banana" },
+    ])
+  })
+
+  it("momento + não como pitaya pelo agente: a resposta termina com a frase, sem linha nao_come", async () => {
+    const m = await montar({
+      llm: [saida({ intencoes: ["momento"], estados: ["com_frio"], nao_come: ["pitaya"] })],
+      roteiro: [finalizar(entregaDoMomento)],
+    })
+    const r = await dizer(m, "estou com frio e não como pitaya")
+    expect(r.saida?.resposta.endsWith(` ${frasePitaya}`)).toBe(true)
+    expect(r.saida?.anotacoes.some((a) => a.tipo === "nao_come")).toBe(false)
+    const run = await runDe(m, r.run_id)
+    expect(await m.stores.profiles.evitarTemporario(m.conta.id, run.dia)).toEqual([])
   })
 })

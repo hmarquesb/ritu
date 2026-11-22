@@ -149,6 +149,12 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - Rotas de toque respeitam o limite próprio; a 31ª demonstração do dia é recusada.
 - Você: rota sem sessão → `401`; nota, padrão e conversa de outra conta → recusa e nada gravado; `apagarConta` não deixa nada da conta (`evals/det/seguranca/voce.eval.ts`).
 
+- **Limites de mensagem e de toque** (`evals/det/seguranca/limites.eval.ts`): a 31ª mensagem de uma conta Google é recusada com `limite_mensagens`, a 13ª da demonstração com `limite_demo` (também depois da meia-noite) e, com 60 do mesmo IP somando contas, a seguinte com `limite_ip`, sempre antes de abrir o fluxo, sem run nem mensagem gravados; o que o IP barra não soma na conta, e o inverso; `409 run_aberto`, cota de IA do dia esgotada e tester não gastam o limite.
+- **Depois do limite:** só atalhos seguem com `semModelo: "limite"` (práticas por código, sem chamar o `LlmClient`, sem contar, sem somar `ritu_fallback_sem_llm_total`); alerta físico e emocional recebem o texto de alerta sem contar e sem modelo, e "quero um chá" é recusada.
+- **Toques:** o 61º no minuto e o 301º no dia recebem `429 limite_toques` com `Retry-After` até o próximo minuto e até a meia-noite local, sem gravar; o limite por IP vale com teto reduzido; todo `POST` com conta, menos `POST /api/runs`, conta um toque, e nenhum `GET` conta.
+- **Cota e hora:** `cotaDoDiaEsgotada` só é verdadeiro com a cota do dia cheia ou `esgotado_ate: "dia"` em todo modelo do papel; `viradaDaCota` e `horaLocal` dão "5h" e "4h" em São Paulo nos dois horários do Pacífico.
+- **Privacidade dos limites:** `ritu_limite_total` só tem `tipo`, `motivo` e `resultado`; chave, IP, hash e conta não vão para span, métrica nem log, e a tabela `limites` não guarda IP.
+
 **Telemetria**
 - Todo span, métrica e log da lista fechada é emitido por algum cenário, com os atributos e rótulos declarados.
 - O painel cobre todas as métricas.
@@ -175,6 +181,8 @@ Os cenários da Conversa estão em `e2e/conversa.spec.ts`; os de Minha casa, em 
 - Resposta do agente com `<script>` aparece como texto.
 - **Acessibilidade:** `@axe-core/playwright` sem violação `serious` ou `critical` em todas as telas, nos dois temas, em celular e desktop; o caminho da demonstração e o envio de uma mensagem funcionam só com teclado; a resposta final é anunciada numa região `aria-live`.
 - `/marca` passa no axe com a página parada e com cada sobreposição aberta (menu, diálogo, folha, lista da busca, dica, aviso breve), nos dois temas, em celular e desktop; e confere fontes só locais, tema automático e manual, teclado, alvos de 44 px, reflow em 320 px e movimento reduzido.
+- **Limites** (`e2e/limites.spec.ts`): com a cota do dia esgotada, a Conversa abre com a faixa e a hora local de volta, e a caixa continua aceitando texto; com as mensagens esgotadas, a caixa de texto sai, o bloco de cota aparece (na demonstração, com "Entrar com Google" só quando o Google está configurado), os atalhos seguem e "Ver práticas" responde; o aviso de restantes aparece com 3 ou menos, no plural e no singular; um `429` no meio do envio troca a tela para o estado esgotado sem recarregar e deixa o texto escrito visível, só leitura; um toque além do teto mostra o aviso breve do limite na Conversa (voto) e em Minha casa, com teto reduzido, e a tela não muda (Como ficou? e o onboarding usam o mesmo aviso); faixa e bloco passam no axe nos dois temas, em celular e desktop.
+- **Modo e2e dos limites:** os headers `x-ritu-e2e-teto` (inteiro de 1 a 100, substitui os tetos do pedido) e `x-ritu-e2e-cota: esgotada` (tira a cota do dia de `decisao`) só valem com `RITU_MODO=e2e`. O relógio do modo e2e (`src/infra/e2e/relogio.ts`) anda com o real, mas deslocado em horas inteiras para a hora local cair à noite, porque a pergunta de casa do roteiro só tem candidatos noturnos. Tester não tem E2E: é coberto pelo eval.
 - Toda spec de tela usa `usarTema` e `TEMAS` (`e2e/apoio/tema.ts`) e `expectSemViolacoes` (`e2e/apoio/a11y.ts`) em cada tela.
 
 ## Evals com LLM (⚠️ só nos checkpoints)
@@ -219,10 +227,10 @@ Os evals com LLM **não rodam a cada mudança**. Rodam em cinco momentos fixos, 
 Regras da rodada:
 
 - Usa a chave do projeto de **desenvolvimento** e passa pelo `ModelRouter`, que respeita as cotas por minuto e por dia. O runner espaça os casos sozinho.
-- A rodada do `c3-confiavel` gasta cerca de 300 chamadas e leva uns 25 minutos. Não rodar duas rodadas completas no mesmo dia; o runner recusa a segunda sem `--extra`.
+- A rodada do `c3-confiavel` gasta cerca de 300 chamadas e leva uns 25 minutos. Não rodar duas rodadas completas do mesmo checkpoint no mesmo dia; o runner recusa a segunda sem `--extra`.
 - Um caso roda uma vez. `--caso <id>` roda um caso só e imprime as checagens, as etapas e o custo, sem gravar nada: é a fumaça do fechamento de spec. `--listar` mostra os casos por família, a contagem por tipo e a estimativa de chamadas, sem modelo e sem chave.
 - O andamento fica em `evals/local/andamento-<checkpoint>.json`, com uma assinatura dos casos, dos prompts e dos modelos. Erro 429 persistente, ou três erros inesperados seguidos: a rodada para, guarda o que fez e continua no dia seguinte (`--retomar`). Se a assinatura mudou, o runner recusa a retomada e a rodada começa de novo (`--do-zero`).
-- Uma rodada nova é recusada se já há andamento do checkpoint ou se o histórico já tem rodada com a data de hoje; `--extra` libera a segunda rodada do dia, só a pedido da dona.
+- Uma rodada nova é recusada se já há andamento do checkpoint ou se o histórico já tem rodada do mesmo checkpoint com a data de hoje; `--extra` libera a segunda rodada do dia, só a pedido da dona.
 - Mudança de prompt ou de base entre dois checkpoints é conferida pelos evals determinísticos. O efeito no LLM aparece no checkpoint seguinte.
 - A dona pode pedir uma rodada extra; o orquestrador não decide isso sozinho.
 

@@ -35,7 +35,6 @@ const ALIMENTOS = [
   "escarola",
   "abobora",
   "abobrinha",
-  "chuchu",
   "quiabo",
   "tomate",
   "pepino",
@@ -46,14 +45,12 @@ const ALIMENTOS = [
   "couve-flor",
   "milho-verde",
   "ervilha",
-  "jilo",
   "cenoura",
   "beterraba",
   "batata-doce",
   "batata",
   "mandioca",
   "inhame",
-  "mandioquinha",
   "nabo",
   "rabanete",
   "arroz-branco",
@@ -189,7 +186,6 @@ const CHAS = [
   "cha-erva-cidreira",
   "cha-curcuma-gengibre",
   "cha-anis-estrelado",
-  "agua-morna-com-limao",
 ]
 
 const OLEOS = [
@@ -203,6 +199,7 @@ const OLEOS = [
 ]
 
 const PRATICAS = [
+  "agua-morna-com-limao",
   "agua-morna-ao-acordar",
   "agua-morna-ao-longo-do-dia",
   "caminhada-leve-apos-refeicao",
@@ -235,7 +232,8 @@ describe("base real: validação", () => {
     const { knowledge } = getContainer()
     expect(knowledge.alimentos.length).toBe(dados.alimentos.length)
     expect(knowledge.preparos.length).toBe(dados.preparos.length)
-    expect(knowledge.praticas.length).toBe(dados.praticas.length)
+    const chasDerivados = dados.alimentos.filter((a) => a.cha !== undefined).length
+    expect(knowledge.praticas.length).toBe(dados.praticas.length + chasDerivados)
   })
 })
 

@@ -1,14 +1,27 @@
 import type { z } from "zod"
 import type { Conta } from "@/core/accounts/types"
 import { MARCA_RITU, RituError } from "@/core/errors"
+import { consumirToque } from "@/core/limits/toques"
 import type { Container } from "@/infra/container"
+import { descarregarDepois } from "../_apoio/descarregar"
 
 export type DepsDaRota = {
   contaDaSessao(): Promise<string | undefined>
   container: Container
+  quemPede(request: Request): { ipHash: string; escopo?: string; teto?: number }
 }
 
-export type Contexto<B> = { conta: Conta; corpo: B; request: Request; container: Container }
+export type OpcoesDeRota<B> = { corpo?: z.ZodType<B>; limite?: "toque" | "nenhum" }
+
+export type Contexto<B> = {
+  conta: Conta
+  corpo: B
+  request: Request
+  container: Container
+  ipHash: string
+  escopo?: string
+  teto?: number
+}
 
 export function resposta(status: number, corpo: unknown): Response {
   return Response.json(corpo, { status })
@@ -44,6 +57,19 @@ async function lerValidado<B>(
   return { ok: true, valor: validado.data }
 }
 
+const CODIGOS_DE_LIMITE = new Set(["limite_mensagens", "limite_demo", "limite_ip", "limite_toques"])
+
+// O Next carrega cópias dos módulos: o `retryAfterS` é lido do objeto, sem `instanceof`.
+export function respostaDeLimite(code: string, erro?: unknown): Response {
+  const lido = (erro as { retryAfterS?: unknown } | undefined)?.retryAfterS
+  const retryAfterS =
+    typeof lido === "number" && Number.isFinite(lido) ? Math.max(1, Math.ceil(lido)) : 1
+  return Response.json(
+    { erro: code },
+    { status: 429, headers: { "Retry-After": String(retryAfterS) } },
+  )
+}
+
 const STATUS_409 = new Set([
   "run_aberto",
   "run_nao_continuavel",
@@ -64,6 +90,7 @@ export function ehRituError(e: unknown): e is RituError {
 
 export function statusDoErro(code: string): number {
   if (code === "run_nao_encontrado") return 404
+  if (CODIGOS_DE_LIMITE.has(code)) return 429
   if (STATUS_409.has(code)) return 409
   return 400
 }
@@ -73,7 +100,7 @@ type Preparado<B> = { ok: true; ctx: Contexto<B> } | { ok: false; resposta: Resp
 // Checagens comuns às rotas JSON e às de fluxo: sessão, conta, tamanho e corpo.
 export async function prepararContexto<B>(
   deps: DepsDaRota,
-  opts: { corpo?: z.ZodType<B> },
+  opts: OpcoesDeRota<B>,
   request: Request,
 ): Promise<Preparado<B>> {
   const { container } = deps
@@ -86,12 +113,30 @@ export async function prepararContexto<B>(
     if (!lido.ok) return lido
     corpo = lido.valor
   }
-  return { ok: true, ctx: { conta, corpo, request, container } }
+  const quem = deps.quemPede(request)
+  const limite = opts.limite ?? (request.method === "POST" ? "toque" : "nenhum")
+  if (limite === "toque") {
+    const { limiter, router, clock, telemetry, config } = container
+    const consumo = await consumirToque(
+      { limiter, router, clock, telemetry },
+      {
+        conta,
+        ipHash: quem.ipHash,
+        fuso: config.clima.fusoPadrao,
+        escopo: quem.escopo,
+        teto: quem.teto,
+      },
+    )
+    if (!consumo.ok) {
+      return { ok: false, resposta: respostaDeLimite(consumo.erro.code, consumo.erro) }
+    }
+  }
+  return { ok: true, ctx: { conta, corpo, request, container, ...quem } }
 }
 
 export function criarRota<B, R>(
   deps: DepsDaRota,
-  opts: { corpo?: z.ZodType<B> },
+  opts: OpcoesDeRota<B>,
   fn: (ctx: Contexto<B>) => Promise<R>,
 ): (request: Request) => Promise<Response> {
   const { container } = deps
@@ -99,9 +144,15 @@ export function criarRota<B, R>(
     try {
       const preparado = await prepararContexto(deps, opts, request)
       if (!preparado.ok) return preparado.resposta
-      return resposta(200, await fn(preparado.ctx))
+      const r = resposta(200, await fn(preparado.ctx))
+      descarregarDepois(container)
+      return r
     } catch (erro) {
-      if (ehRituError(erro)) return resposta(statusDoErro(erro.code), { erro: erro.code })
+      descarregarDepois(container)
+      if (ehRituError(erro)) {
+        if (statusDoErro(erro.code) === 429) return respostaDeLimite(erro.code, erro)
+        return resposta(statusDoErro(erro.code), { erro: erro.code })
+      }
       container.telemetry.log("erro_inesperado")
       return resposta(500, { erro: "erro_inesperado" })
     }

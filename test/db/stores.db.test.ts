@@ -1,4 +1,4 @@
-import { mkdir, readdir, rm, writeFile } from "node:fs/promises"
+import { copyFile, mkdir, readdir, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createDbClient, type DbClient } from "@/infra/db/client"
@@ -186,6 +186,128 @@ describe("migrate", () => {
     } finally {
       await cliMig.close()
       await rm(fixtures, { recursive: true, force: true })
+    }
+  })
+})
+
+describe("migração 0005 (padrões de chá)", () => {
+  it("converte as chaves de chá, junta duplicadas e reescreve a frase, sem mexer no resto", async () => {
+    const schemaMig = "ritu_test_mig5"
+    const antes = join(process.cwd(), "test", "db", "fixtures-0005")
+    const clock = createFixedClock(INICIO)
+    await cliente.sql.unsafe(
+      `DROP SCHEMA IF EXISTS ${schemaMig} CASCADE; CREATE SCHEMA ${schemaMig}`,
+    )
+    await rm(antes, { recursive: true, force: true })
+    await mkdir(antes, { recursive: true })
+    const cli = createDbClient({ url: URL_DO_BANCO, schema: schemaMig })
+    try {
+      const todas = (await readdir(join(process.cwd(), "db", "migrations")))
+        .filter((nome) => nome.endsWith(".sql"))
+        .sort()
+      for (const nome of todas.filter((n) => n < "0005")) {
+        await copyFile(join(process.cwd(), "db", "migrations", nome), join(antes, nome))
+      }
+      await migrate(cli.sql, clock, antes)
+
+      const [ra] = await cli.sql<
+        { id: string }[]
+      >`insert into contas (tipo, email, tester, criado_em) values ('google', 'a@teste.dev', false, now()) returning id`
+      const a = { id: ra?.id ?? "" }
+      const [rb] = await cli.sql<
+        { id: string }[]
+      >`insert into contas (tipo, email, tester, criado_em) values ('google', 'b@teste.dev', false, now()) returning id`
+      const b = { id: rb?.id ?? "" }
+      const linhas: [string, string, string, number, string, string, string | null][] = [
+        [
+          a.id,
+          "ajuda_em_estado",
+          "com_frio+agitada|pratica:cha-gengibre-canela",
+          3,
+          "confirmado",
+          "2026-01-05T10:00:00Z",
+          "2026-01-10T10:00:00Z",
+        ],
+        [
+          a.id,
+          "ajuda_em_estado",
+          "com_frio+agitada|pratica:cha-louro",
+          2,
+          "candidato",
+          "2026-01-03T10:00:00Z",
+          null,
+        ],
+        [
+          a.id,
+          "ajuda_em_estado",
+          "seca|preparo:sopa",
+          4,
+          "candidato",
+          "2026-01-04T10:00:00Z",
+          null,
+        ],
+        [a.id, "estados_juntos", "com_frio+agitada", 5, "candidato", "2026-01-04T10:00:00Z", null],
+        [
+          b.id,
+          "ajuda_em_estado",
+          "pesada+seca+irritada|pratica:cha-hortela",
+          1,
+          "recusado",
+          "2026-01-06T10:00:00Z",
+          "2026-01-07T10:00:00Z",
+        ],
+        [
+          b.id,
+          "ajuda_em_estado",
+          "pesada+seca+irritada|pratica:cha-erva-doce",
+          2,
+          "candidato",
+          "2026-01-02T10:00:00Z",
+          null,
+        ],
+      ]
+      for (const [conta, tipo, chave, oc, status, criado, decidido] of linhas) {
+        await cli.sql`insert into padroes (conta_id, tipo, chave, frase, ocorrencias, status, criado_em, decidido_em)
+          values (${conta}, ${tipo}, ${chave}, 'antiga', ${oc}, ${status}, ${criado}, ${decidido})`
+      }
+
+      expect(await migrate(cli.sql, clock)).toEqual([todas.find((n) => n.startsWith("0005")) ?? ""])
+
+      const lidas =
+        await cli.sql`select conta_id, tipo, chave, frase, ocorrencias, status, criado_em, decidido_em
+        from padroes order by conta_id, tipo, chave`
+      const daConta = (id: string) => lidas.filter((l) => l.conta_id === id)
+      const cha = daConta(a.id).filter((l) => l.chave.endsWith("|cha"))
+      expect(cha).toHaveLength(1)
+      expect(cha[0]).toMatchObject({
+        chave: "com_frio+agitada|cha",
+        frase: "Quando você está com frio e agitada, um chá costuma te ajudar.",
+        ocorrencias: 5,
+        status: "confirmado",
+      })
+      expect(new Date(cha[0]?.criado_em).toISOString()).toBe("2026-01-03T10:00:00.000Z")
+      expect(new Date(cha[0]?.decidido_em).toISOString()).toBe("2026-01-10T10:00:00.000Z")
+      expect(
+        daConta(a.id)
+          .map((l) => l.chave)
+          .sort(),
+      ).toEqual(["com_frio+agitada", "com_frio+agitada|cha", "seca|preparo:sopa"])
+      expect(daConta(a.id).find((l) => l.chave === "seca|preparo:sopa")).toMatchObject({
+        frase: "antiga",
+        ocorrencias: 4,
+      })
+      const outra = daConta(b.id)
+      expect(outra).toHaveLength(1)
+      expect(outra[0]).toMatchObject({
+        chave: "pesada+seca+irritada|cha",
+        frase: "Quando você está pesada, seca e irritada, um chá costuma te ajudar.",
+        ocorrencias: 3,
+        status: "recusado",
+      })
+      expect(new Date(outra[0]?.criado_em).toISOString()).toBe("2026-01-02T10:00:00.000Z")
+    } finally {
+      await cli.close()
+      await rm(antes, { recursive: true, force: true })
     }
   })
 })

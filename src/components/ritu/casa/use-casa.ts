@@ -4,6 +4,7 @@ import { config } from "@config/index"
 import { formatar } from "@config/textos-conversa"
 import { useCallback, useRef, useState } from "react"
 import { toast } from "@/components/base/toast"
+import { avisarLimiteDeToque } from "@/components/ritu/limites"
 import type { CasaNaTela } from "@/core/pantry/visao"
 import type { AcaoDaCasa } from "@/core/touches"
 
@@ -88,6 +89,7 @@ export function useCasa(inicial: CasaNaTela) {
           window.location.assign("/")
           return undefined
         }
+        if (await avisarLimiteDeToque(resposta)) return undefined
         const dados: unknown = await resposta.json().catch(() => null)
         if (resposta.ok && ehResposta(dados)) {
           setCasa(dados.casa)

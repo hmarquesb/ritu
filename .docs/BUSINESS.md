@@ -209,7 +209,7 @@ O agente responde com o momento e o clima, e avisa: *"Resposta geral. Descubra s
 |---|---|---|
 | **Confirmado** | A pessoa disse que tem, dentro da validade do grupo | Usa sem perguntar |
 | **Incerto** | Passou a validade do grupo desde a última confirmação | Pergunta antes de usar, ou sugere já com uma troca pronta |
-| **Acabou** | A pessoa disse que não tem | Não usa; pode propor pôr na lista "Para ter em casa" |
+| **Acabou** | A pessoa disse que não tem (em Minha casa, na mensagem ou com "Não tenho" numa pergunta) | Não usa: chá, óleo ou prática com um ingrediente que acabou não é sugerido. A falta conta para o "vale ter em casa" |
 | **Sempre tenho** | A pessoa marcou o item como básico da casa | Usa sem perguntar; nunca fica incerto |
 
 Validade por grupo, contada da última confirmação:
@@ -325,7 +325,7 @@ Regras da memória:
 - **Toques diretos** (Não gosto, Não tenho, Ajudou) são gravados na hora: o toque é o consentimento.
 - **Faltas** são anotadas por código, sem pergunta: guardam só o alimento e o dia. Pôr o alimento na lista "Para ter em casa" pede aprovação.
 - **Incômodos de saúde nunca entram na memória.** O agente usa na resposta daquela mensagem e não anota. A mensagem em que o incômodo aparece e a resposta do agente ficam na conversa do dia e são apagadas no dia seguinte.
-- **Restrição e "não como" ditos na conversa valem no dia**, na resposta daquela mensagem e nas seguintes, mesmo sem aprovação. Para ficar guardados, entram no bloco "Posso anotar isto?". Com "Agora não" ou sem resposta, deixam de valer no dia seguinte. O mesmo vale para o "Não como" respondido a uma pergunta do agente. Um nome que o Ritu não conhece é guardado como texto: aparece em "O que sei sobre você", mas não filtra sugestões.
+- **Restrição e "não como" ditos na conversa valem no dia**, na resposta daquela mensagem e nas seguintes, mesmo sem aprovação. Para ficar guardados, entram no bloco "Posso anotar isto?". Com "Agora não" ou sem resposta, deixam de valer no dia seguinte. O mesmo vale para o "Não como" respondido a uma pergunta do agente. Um "não como" de algo que o Ritu não conhece não é guardado nem proposto: a resposta diz, com texto fixo, que ele ainda não conhece o alimento e que, se sugerir algo com ele, é só pedir a troca.
 - Quando dois registros se contradizem, vale o mais recente. **Exceção: "evitar sempre"** (abaixo).
 
 ### Evitar sempre
@@ -376,9 +376,14 @@ O texto vem de `data/doshas.yaml`, com fonte, em linguagem leve.
 
 ## 14. Regras de negócio
 
-- **Limites por conta:** 30 mensagens por dia para conta Google; 12 mensagens por conta de demonstração; no máximo 5 contas de demonstração por IP por dia e, somando todos, **30 por dia** (atingido o teto, a Entrada mostra só o Google, com uma frase explicando). Toques (retorno, troca, gosto, casa) não contam nas mensagens, mas têm limite próprio: 60 por minuto e 300 por dia por conta. Mensagem com até 1000 caracteres. Os números ficam em configuração.
-- **Testers** (lista em variável de ambiente): sem limites.
-- **Quando a cota de IA acaba:** a tela avisa e continua funcionando no que não depende do modelo: Minha casa, Como ficou?, trocas, painel do dosha e práticas gerais para os atalhos de check-in, montadas por código.
+- **Limites por conta:** 30 mensagens por dia para conta Google; 12 mensagens por conta de demonstração (no total, não por dia: a conta vive 24 h e o total não se renova); no máximo 5 contas de demonstração por IP por dia e, somando todos, **30 por dia** (atingido o teto, a Entrada mostra só o Google, com uma frase explicando). Toques (retorno, troca, gosto, casa, resposta a uma pergunta do agente, decisão do bloco de aprovação) não contam nas mensagens, mas têm limite próprio: 60 por minuto e 300 por dia por conta. Toda ação `POST` com conta, menos o envio de mensagem, é um toque; a leitura de uma tela nunca é. Mensagem com até 1000 caracteres. Os números ficam em configuração.
+- **Limites por IP:** além do limite da conta, cada IP tem 60 mensagens e 1500 toques por dia, somando todas as contas que passam por ele. O IP só existe como hash e não é guardado com a pessoa.
+- **Mensagem que não conta:** a que não chega a rodar (já há uma resposta em andamento, corpo inválido), a que cai na cota de IA esgotada e a de tester não gastam o limite da pessoa.
+- **Depois do limite de mensagens:** o campo de texto some, os atalhos de check-in continuam e o botão vira "Ver práticas": a resposta sai com práticas da base montadas por código, sem modelo e sem contar. Mensagem com sinal de alerta reconhecido por código ainda recebe o texto de alerta, antes de qualquer recusa. Com 3 mensagens restantes ou menos, um aviso abaixo do campo diz quantas restam. O texto que a pessoa escreveu e não foi enviado fica visível, só para leitura, abaixo do aviso.
+- **Fim da demonstração:** o aviso de mensagens esgotadas tem o botão "Entrar com Google" (quando o Google está configurado), o momento natural de levar a visita para uma conta própria.
+- **Testers** (e-mails do Google em variável de ambiente, sem diferença de maiúsculas nem espaços): sem limite de mensagem, de toque nem de IP. A conta é marcada como tester ao entrar com Google; tirar o e-mail da lista vale na próxima entrada.
+- **Faixa da cota de IA:** quando a cota **do dia** do modelo acaba, a Conversa abre com uma faixa que diz a hora em que volta (a virada é a meia-noite do Pacífico, mostrada no fuso da cidade da pessoa ou no padrão, por exemplo "5h"). Enviar continua possível e cai na resposta por código. A cota do minuto volta sozinha em segundos e não gera faixa.
+- **Quando a cota de IA acaba:** a tela avisa com a faixa e continua funcionando no que não depende do modelo: Minha casa, Como ficou?, trocas, painel do dosha e práticas gerais para os atalhos de check-in, montadas por código.
 - **Clima:** da cidade escolhida pela pessoa, consultado na hora, com cache curto. O produto nunca usa GPS nem localização do aparelho.
 - **Privacidade (LGPD):** guarda o id da conta, o perfil, a cidade escolhida, a casa, os gostos, as faltas dos últimos 30 dias, os retornos, a rotina, os padrões confirmados, as mensagens dos últimos 7 dias e os runs. O e-mail do Google serve **só para entrar**. Nada de telefone. A página "Você" mostra tudo; "Apagar meus dados" apaga tudo. A telemetria nunca leva texto da pessoa.
 - **Aviso sobre o provedor de IA:** no plano gratuito, o provedor pode usar as mensagens para melhorar os produtos dele. O Aviso inicial e a tela Sobre dizem isso com clareza.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { GRUPOS } from "../src/core/knowledge/vocab"
-import { config, telaConversa, textosConversa } from "./index"
+import { config, telaConversa, textosConversa, textosLimites } from "./index"
 import { formatar } from "./textos-conversa"
 
 function textosDe(valor: unknown): string[] {
@@ -39,6 +39,49 @@ describe("config", () => {
     }
   })
 
+  it("expõe os limites de mensagem e de toque com os valores da spec 021", () => {
+    expect(config.limites.mensagens).toEqual({
+      googlePorDia: 30,
+      demoPorConta: 12,
+      porIpPorDia: 60,
+      avisarComRestantes: 3,
+    })
+    expect(config.limites.toques).toEqual({
+      porContaPorMinuto: 60,
+      porContaPorDia: 300,
+      porIpPorDia: 1500,
+    })
+  })
+
+  it("expõe os textos de limite com as chaves e os textos da spec 021", () => {
+    expect(textosLimites.cota.faixa).toContain("{hora}")
+    expect(textosLimites.cota.rotulo).toBe("Aviso")
+    expect(textosLimites.restam.varias).toBe("Restam {n} mensagens hoje.")
+    expect(textosLimites.restam.uma).toBe("Resta 1 mensagem hoje.")
+    expect(textosLimites.restam.variasDemo).toBe("Restam {n} mensagens na demonstração.")
+    expect(textosLimites.restam.umaDemo).toBe("Resta 1 mensagem na demonstração.")
+    expect(textosLimites.esgotadas.conta.titulo).toBe("Suas mensagens de hoje acabaram")
+    expect(textosLimites.esgotadas.demo.google).toBe("Entrar com Google")
+    expect(textosLimites.esgotadas.textoGuardado).toBe("O que você escreveu:")
+    expect(textosLimites.atalhos.enviar).toBe("Ver práticas")
+    expect(textosLimites.toques.minuto).toBe(
+      "Muitos toques seguidos. Espere um minuto e tente de novo.",
+    )
+    expect(textosLimites.toques.dia).toBe(
+      "Você chegou ao limite de toques de hoje. Amanhã tem mais.",
+    )
+  })
+
+  it("mantém os textos de limite com placeholders e sem texto vazio", () => {
+    expect(textosLimites.restam.varias).toContain("{n}")
+    expect(textosLimites.restam.variasDemo).toContain("{n}")
+    const textos = textosDe(config.textosLimites)
+    expect(textos.length).toBeGreaterThan(15)
+    for (const texto of textos) {
+      expect(texto.trim().length).toBeGreaterThan(0)
+    }
+  })
+
   it("expõe a configuração de telemetria com o painel ritu", () => {
     expect(config.telemetria.grafana.uidDoPainel).toBe("ritu")
   })
@@ -49,7 +92,7 @@ describe("config", () => {
   })
 
   it("expõe os limites da base e a adequação com os valores da spec", () => {
-    expect(config.base.minAlimentos).toBe(130)
+    expect(config.base.minAlimentos).toBe(127)
     expect(config.adequacao.porQualidadeOposta).toBe(-2)
   })
 

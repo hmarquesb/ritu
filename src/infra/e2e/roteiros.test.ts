@@ -1,14 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { copiarSeed } from "@/core/accounts/copiar-seed"
 import { createContainer } from "@/infra/container"
+import { createFixedClock } from "@/infra/fakes/fixed-clock"
 
-// Relógio fixo: o roteiro `pergunta-casa` só tem couve e leite entre os candidatos de noite,
-// e o momento do dia sai da hora do relógio. 01h de Brasília é noite em qualquer data.
-const relogioDeNoite = { now: () => new Date("2026-11-17T04:00:00Z") }
+// O momento do dia muda os candidatos do agente (de manhã e ao almoço a couve não entra). O roteiro da pergunta de
+// casa conta com a couve, então o relógio fica fixo à noite (21h em São Paulo), salvo pedido.
+const NOITE_SP = "2026-11-18T00:00:00Z"
 
-async function novoContainer() {
+async function novoContainer(agora = NOITE_SP) {
   vi.stubEnv("RITU_MODO", "e2e")
-  const container = createContainer({ clock: relogioDeNoite })
+  const container = createContainer({ clock: createFixedClock(agora) })
   const conta = await container.stores.accounts.criar({ tipo: "demo" })
   await copiarSeed(container.stores, conta.id, container.demoSeed, {
     clock: container.clock,
@@ -41,8 +42,13 @@ describe("modo e2e: roteiros", () => {
     ])
   })
 
-  it("pergunta-casa: pergunta de couve e leite e, com a resposta, entrega", async () => {
-    const { container, contaId } = await novoContainer()
+  it.each([
+    "2026-11-17T06:00:00Z",
+    "2026-11-18T01:00:00Z",
+    "2026-11-18T00:00:00Z",
+    "2026-11-18T02:30:00Z",
+  ])("pergunta-casa: pergunta de couve e leite e, com a resposta, entrega (%s)", async (agora) => {
+    const { container, contaId } = await novoContainer(agora)
 
     const r = await container.conversation.conversar(contaId, {
       texto: "fui à feira ontem, o que faço pro jantar?",

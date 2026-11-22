@@ -1,6 +1,6 @@
 ---
 title: Produção
-status: approved
+status: implemented
 entrega: 4
 created: 2026-11-15
 ---
@@ -11,7 +11,7 @@ created: 2026-11-15
 
 ## Pré-condição (pendência da dona)
 
-**A construção desta spec só começa depois da revisão da base.** `data/` tem 156 linhas com `ref: a_confirmar` (106 em `alimentos.yaml`, 37 em `praticas.yaml`, 10 em `preparos.yaml`, 3 em `incomodos.yaml`). Pela regra de `KNOWLEDGE.md` §8 elas não vão para produção, e o job `deploy` desta spec roda `npm run base:check -- --producao`, que falha enquanto houver alguma. A dona decidiu, em 2026-11-15, fazer essa revisão em conversa com o Claude antes de a 022 ir para código. A pendência fica marcada em `.specs/README.md` ("Pendências da dona").
+**Revisão da base concluída (2026-11-17):** nenhuma linha `ref: a_confirmar` em `data/`, e `npm run base:check -- --producao` passa sem bloqueios. A construção desta spec pode começar.
 
 ## Contexto
 

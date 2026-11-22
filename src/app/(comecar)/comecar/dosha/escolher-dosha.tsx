@@ -87,7 +87,9 @@ export function EscolherDosha({ opcoes, doshas, cidade }: Props) {
         : null,
     }
     try {
-      router.push(await enviarPasso("/api/onboarding/perfil", corpo))
+      const proximo = await enviarPasso("/api/onboarding/perfil", corpo)
+      if (proximo) router.push(proximo)
+      else setEnviando(false)
     } catch {
       setErro(true)
       setEnviando(false)

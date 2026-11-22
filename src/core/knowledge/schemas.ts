@@ -53,6 +53,14 @@ const gunasSchema = z
   .refine(gunasSemRepeticao, "gunas não podem se repetir")
   .refine(gunasSemPar, "gunas não podem ter os dois lados de um mesmo par (ex.: quente e frio)")
 
+export const PARTES_DE_CHA = ["folha", "flor", "semente", "casca", "raiz", "bebida"] as const
+
+export const chaDaErvaSchema = z.strictObject({
+  parte: z.enum(PARTES_DE_CHA),
+  aviso: z.string().max(200).optional(),
+})
+export type ChaDaErva = z.infer<typeof chaDaErvaSchema>
+
 export const alimentoSchema = z.strictObject({
   id: idSchema,
   nome: z.string().min(1),
@@ -69,6 +77,7 @@ export const alimentoSchema = z.strictObject({
   restricoes: z.array(restricaoSchema),
   grupos_evitar: z.array(grupoEvitarSchema),
   marcas: z.array(marcaSchema),
+  cha: chaDaErvaSchema.optional(),
   observacao: z.string().max(120).optional(),
   fontes: fontesSchema,
   confianca: confiancaSchema,

@@ -12,7 +12,10 @@ export function EscolherEvitar(props: Props) {
     <Escolha
       {...props}
       gravar={async (corpo) => {
-        router.push(await enviarPasso("/api/onboarding/evitar", corpo))
+        const proximo = await enviarPasso("/api/onboarding/evitar", corpo)
+        if (!proximo) return false
+        router.push(proximo)
+        return true
       }}
     />
   )

@@ -1,8 +1,16 @@
-import type { z } from "zod"
-import type { Conta } from "@/core/accounts/types"
 import { codificarEvento, type EventoDaTela } from "@/core/conversation/eventos"
 import type { Container } from "@/infra/container"
-import { type DepsDaRota, ehRituError, prepararContexto, resposta, statusDoErro } from "./rota"
+import { descarregarDepois } from "../_apoio/descarregar"
+import {
+  type Contexto,
+  type DepsDaRota,
+  ehRituError,
+  type OpcoesDeRota,
+  prepararContexto,
+  resposta,
+  respostaDeLimite,
+  statusDoErro,
+} from "./rota"
 
 // Rota de fluxo NDJSON. Os `route.ts` que a usam exportam
 // `export const maxDuration = 60` (valor de `telaConversa.rotaMaxDurationS`): o Next
@@ -10,7 +18,7 @@ import { type DepsDaRota, ehRituError, prepararContexto, resposta, statusDoErro 
 
 export type Emitir = (e: EventoDaTela) => void
 
-type ContextoDeFluxo<B> = { conta: Conta; corpo: B; request: Request; container: Container }
+type ContextoDeFluxo<B> = Contexto<B>
 
 const CABECALHOS = {
   "Content-Type": "application/x-ndjson; charset=utf-8",
@@ -26,7 +34,7 @@ function descreverErro(erro: unknown, container: Container) {
 
 export function criarRotaDeFluxo<B>(
   deps: DepsDaRota,
-  opts: { corpo?: z.ZodType<B> },
+  opts: OpcoesDeRota<B>,
   fn: (ctx: ContextoDeFluxo<B>, emitir: Emitir) => Promise<void>,
 ): (request: Request) => Promise<Response> {
   const { container } = deps
@@ -85,7 +93,7 @@ export function criarRotaDeFluxo<B>(
         const { code, status } = descreverErro(erro, container)
         if (aberto) return emitir({ tipo: "erro", erro: code })
         aberto = true
-        resolver(resposta(status, { erro: code }))
+        resolver(status === 429 ? respostaDeLimite(code, erro) : resposta(status, { erro: code }))
       }
 
       fn(ctx, emitir)
@@ -93,6 +101,7 @@ export function criarRotaDeFluxo<B>(
         .finally(() => {
           abrir()
           fechar()
+          descarregarDepois(container)
         })
     })
   }

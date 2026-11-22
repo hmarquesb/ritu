@@ -283,3 +283,174 @@
 - **A9 · T7, módulo de Como pensei, gunas e "quando".** Faltava: (1) `src/core/runs/linha-do-tempo.ts` precisa de `textoDaProposta` (`proposals`), e `proposals/montar.ts` já importa tipo de `runs`: ciclo R9. (2) Os nomes das gunas do detalhe do clima. (3) O texto `quando` ("Mensagem de {dia}, {hora}") com `dia.data` = "em {data}" dá "Mensagem de em 12 nov.". Decidi: (1) `linhaDoTempo` e `lerComoPensei` ficam num módulo novo, `src/core/como-pensei/` (`linha-do-tempo.ts`, `ler.ts`), que importa `runs` e `proposals` sem ciclo; contratos iguais. (2) Os nomes de `vocabulario.yaml` pela `kb`, como `painelDoDosha`. (3) `dia.data` = "{data}" ("Mensagem de 12 nov., 21h"). Por quê: não muda contrato nem a regra R9; o texto da spec tinha um "em" sobrando. Desfazer: voltar os arquivos para `src/core/runs/` quebrando o ciclo por outro lado (tipo `MensagemDoLoop` fora de `runs`).
 - **A10 · T20, o `Quiz` extraído com a rota de Você.** Faltava: o `Quiz` da T16 posta `{respostas}` e lê o JSON inteiro como resultado, com o botão "Continuar"; `POST /api/perfil` espera `{acao: "quiz", respostas}` e devolve `{voce, nome, resultado}`, e a spec pede "Voltar para Você"; a página do servidor não passa função. Decidi: o `Quiz` ganha props opcionais (`acao`, mesclada ao corpo; leitura de `json.resultado ?? json`; `rotuloContinuar`), sem mudar o onboarding; `/voce/quiz` ganha um wrapper client (`src/app/(app)/voce/quiz/quiz.tsx`), como o do onboarding. Por quê: reaproveita o componente sem uma segunda cópia do quiz. Desfazer: um quiz próprio de Você.
 - **A11 · T23, o que o E2E de Como pensei não cobre.** Faltava: (1) a spec (~linha 99) mostra "Consultei a base ayurvédica…" e "Propus anotar…" na linha do tempo, mas o roteiro E2E `e2e/roteiros/demo.ts` não chama tool de base e a proposta não vira etapa; (2) a spec (~linha 561) pede o E2E do run semeado sem rastro, mas nenhuma rota expõe o `run_id` dos runs semeados (de dias anteriores). Decidi: o E2E confere a ordem das etapas que a demo produz (Entendi, clima, casa, conferi, revisei, aprovou, entreguei) e o run sem rastro fica coberto pelos testes unitários de `src/core/como-pensei/`. O 404 sai com status 200 (a casca do `loading.tsx` já foi enviada): o teste confere o texto. Por quê: mudar o roteiro da demo ou abrir rota para runs antigos foge da tarefa. Desfazer: incluir no roteiro uma tool de base e uma etapa de proposta; expor o `run_id` dos runs semeados.
+
+## 021 · A1 · 019 e 020 ausentes na branch
+- **Faltava:** a spec põe o `toast` de toque em `useCasa`, no hook de Como ficou? e em `useVoce`, e o E2E de toques em Minha casa; a 019 e a 020 não estão na `entrega-4` (que saiu da `entrega-3` só com 016 a 018).
+- **Decidido:** o limite de toque fica em `criarRota`/`criarRotaDeFluxo` pelo método, então as rotas da 019 e da 020 o herdam ao chegar. O `toast` vai para a Conversa e o onboarding; o E2E de toques usa o voto da Conversa.
+- **Por quê:** a dona mandou construir só a 021 nesta branch; a regra pelo método não depende de lista de rotas.
+- **Como desfazer:** na junção com a 019/020, uma tarefa de correção põe `textoDoLimite` + `toast` nos hooks delas e o caso de Minha casa no `e2e/limites.spec.ts`.
+
+## 021 · A2 · IP, escopo e teto nas rotas
+- **Faltava:** como `criarRota` obtém `ipHash`, `escopo` e `teto` sem importar adaptador em `src/app/`.
+- **Decidido:** `DepsDaRota.quemPede(request)`, implementado em `depsReais()` com `ipDoPedido`, `hashDoIp` e `RITU_MODO`; os testes passam um fake.
+- **Por quê:** mantém as rotas testáveis com stores em memória, como o resto de `DepsDaRota`.
+- **Como desfazer:** calcular no `criarRota` direto e ajustar os testes.
+
+## 021 · A3 · Fuso dos limites
+- **Faltava:** `QuemPede.fuso` pede o fuso da cidade do perfil, mas `criarRota` não lê o perfil.
+- **Decidido:** toques e `retryAfterS` usam `config.clima.fusoPadrao` (como a spec manda para as chaves); só `estadoDosLimites` (hora da virada) usa `perfil.cidade_fuso ?? fusoPadrao`.
+- **Por quê:** evita uma leitura de perfil em todo `POST`; a spec só usa o fuso da pessoa para a hora da virada.
+- **Como desfazer:** ler o perfil em `prepararContexto`.
+
+## 021 · A4 · `test:db` fora da trilha adiantada
+- **Faltava:** a spec pede `test:db` verde com o contrato estendido; `test:db` é ⚠️.
+- **Decidido:** o contrato roda contra o fake no `npm test`; o Postgres fica para a junção, como na 017 e na 018.
+- **Por quê:** a trilha adiantada não roda nada com ⚠️ (skill §7.6).
+- **Como desfazer:** rodar `npm run test:db` na junção.
+
+## 021 · A5 · Cota esgotada por pedido no modo e2e
+- **Faltava:** onde ligar `x-ritu-e2e-cota`.
+- **Decidido:** `createRouterE2e` em `src/infra/e2e/cota.ts`, embrulhando o router no container só com `RITU_MODO=e2e`, como o ledger por escopo.
+- **Por quê:** o modo e2e já lê headers do pedido por esse módulo.
+- **Como desfazer:** apagar o embrulho e a ligação no container.
+
+## 021 · A6 · Métrica nova sem emissão até a T6
+- **Faltava:** `evals/det/telemetria/cobertura.eval.ts` exige que toda métrica de `METRICAS` seja emitida; `ritu_limite_total` (T4) só é emitida por `consumirToque` (T6).
+- **Decidido:** a T4 é verificada na onda 1 mas commitada só junto da onda 2, logo antes da T6, que acrescenta ao `cobertura.eval.ts` um cenário de toque barrado.
+- **Por quê:** nenhum commit com gate vermelho, sem exceção artificial no eval.
+- **Como desfazer:** nada a desfazer depois do commit da T6.
+
+## 021 · A7 · T2 · Consumo atômico em transação, não em um comando
+- **Faltava:** a T2 pedia "SQL com `inicio` por linha num único comando atômico"; com `inicio` diferente por chave, o comando único ficou difícil de ler e de travar em ordem.
+- **Decidido:** `src/infra/db/limits.ts` faz, numa transação, `insert ... on conflict do nothing` e `select ... for update` por par (chave, início), em ordem fixa; confere os tetos sob trava e só então soma. Algum par no teto: retorna sem somar.
+- **Por quê:** mantém o tudo ou nada e a ordem de trava evita deadlock; o verificador conferiu por leitura (o `test:db` fica para a junção, 021 A4).
+- **Como desfazer:** reescrever `consumir` do adaptador Postgres num único `with ... update` e rodar `npm run test:db`.
+- **Nota da onda 1:** o orquestrador incluiu `evals/det/telemetria/cobertura.eval.ts` na T5 (passar `testers: []` a `entrarComGoogle`), autorizado pelo orquestrador.
+
+## 021 · A8 · T6 · Conta estrutural em `limits`, sem importar `accounts`
+- **Faltava:** os contratos punham `Conta` (de `accounts`) em `QuemPede` e nas chaves, mas `accounts/entrar.ts` já importa `UsageLimiter` de `limits`: ciclo proibido pela R9.
+- **Decidido:** `src/core/limits/estado.ts` declara `ContaDoLimite`, só com os campos de `Conta` que os limites leem; `Conta` continua atribuível a ele.
+- **Por quê:** quebra o ciclo sem mexer em `accounts` nem mover tipo usado em muitos arquivos.
+- **Como desfazer:** mover `Conta` para um módulo comum de `src/core/` e voltar a importá-la em `limits`.
+
+## 021 · A9 · T9 · `quemPede` real em `src/infra/auth/next.ts`
+- **Faltava:** a T9 punha o `quemPede` real em `src/app/_lib/deps.ts`, importando `@/infra/auth/ip` e `@/infra/env`; a R3 só deixa `src/app` importar `@/infra/container` e `@/infra/auth/next`.
+- **Decidido:** a função mora em `src/infra/auth/next.ts` (que já usa `hashDoIp`); `deps.ts` só a liga em `depsReais()`.
+- **Por quê:** não abre exceção na R3.
+- **Como desfazer:** liberar os dois módulos na R3 e devolver a função a `deps.ts`.
+
+## 021 · A10 · T19 e T20 · Relógio fixo nos testes da pergunta de casa
+- **Faltava:** a T19 pedia que os testes de `pergunta-casa` passassem a qualquer hora; o roteiro pergunta por couve, que só é candidata à noite (21h a 04h59 em São Paulo), então isso exigiria mudar o roteiro ou os candidatos.
+- **Decidido:** os testes unitários fixam o relógio em horas noturnas (T19). Os E2E ganham o header `x-ritu-e2e-agora`, só no modo e2e, e mandam 21h em São Paulo (T20).
+- **Por quê:** a dependência da hora é comportamento do produto, não defeito; fixar o relógio é a mudança mais conservadora e segue o padrão do `x-ritu-e2e-cota`.
+- **Como desfazer:** trocar o roteiro por itens candidatos em qualquer momento e tirar o header e o relógio fixo.
+
+## Portão 2 · P2-T4 · "Não tenho" do run
+
+- **Faltava:** o contrato manda unir `entrada.nao_tem_do_run` ao `acabou` em `lerContexto`, mas a entrada do acompanhante não tem esse campo: `nao_tem_do_run` é dado do preparo, preenchido por `aplicarResposta` depois do `preparar`.
+- **Decidido:** `lerContexto` une só Minha casa e `casa_da_mensagem.acabou`. O "Não tenho" já entra em `acabou` em `aplicarCasa` (`pergunta-do-run.ts`), que chama `entregaveis` de novo; a regra nova de `entregaveis` vale ali sem mudança. O teste do "Não tenho" fica em `pergunta-do-run.test.ts`.
+- **Por quê:** é o único ponto em que a resposta existe; mudar o schema da entrada levaria o dado para antes de ele existir.
+- **Como desfazer:** acrescentar `nao_tem_do_run` a `entradaDoAcompanhanteSchema`, repassar em `responder.ts` e unir em `lerContexto`.
+
+## Portão 2 · P2-T9 · Relógio do modo e2e
+
+- **Faltava:** o roteiro `pergunta-casa` dependia da hora real (o corte das refeições muda com o momento do dia), e o teste dele já falhava no commit que o criou.
+- **Decidido:** no modo e2e (`RITU_MODO=e2e`), o container usa um relógio que anda como o real a partir de 20h30 UTC do dia em que o processo sobe (`src/infra/e2e/relogio.ts`); o produto real segue com `systemClock`. O roteiro pergunta a banana (incerta na semente) e entrega `pausa-em-silencio`, com ou sem a resposta.
+- **Por quê:** teste determinístico sem mudar regra de produto; o modo e2e já fixa o clima pelo mesmo motivo.
+- **Como desfazer:** tirar `relogio.ts` do container e2e e escolher um cenário de pergunta de casa que não dependa da hora.
+
+## Portão 2 · P2-T6 · Aviso de saúde na retomada
+
+- **Faltava:** a tarefa cobria só `conversar.ts`; um run com fala de saúde que pausa (pergunta de casa) fecha em `continuar.ts`, sem o aviso.
+- **Decidido:** na pausa, o run com fala de saúde grava `com_incomodo: true` (como já faz o alerta e a variante); na retomada, `continuar.ts` põe o aviso `incomodo` na saída final quando `com_incomodo`, sem repetir. `continuar.ts` e o teste dele entram na tarefa.
+- **Por quê:** o objetivo da tarefa é "a saída final sempre leva o aviso"; o `com_incomodo` do run é o dado que a retomada já lê.
+- **Como desfazer:** tirar o aviso de `continuar.ts` e a gravação de `com_incomodo` na pausa.
+
+## Portão 2 · P2-T5 · "Não como" livre
+
+- **Faltava (1):** o preparo do acompanhante gravava o item livre no dia (`nao_come_texto`), o que contraria "não grava".
+- **Decidido (1):** `conversar.ts` passa ao acompanhante só os itens de `nao_come` com `alimento_id`. O caminho de item livre em `preparo.ts` continua (testado por `preparo.test.ts` e `evals/det/aprovacao/restricao-no-run.eval.ts`), mas a conversa não o alimenta mais.
+- **Por quê (1):** candidato só sai da base, então evitar um nome que a base não conhece não mudava nenhuma sugestão; e a frase aprovada já diz "se eu sugerir algo com X, é só me dizer que eu troco".
+- **Como desfazer (1):** voltar a passar os itens livres em `nao_come_da_mensagem`. Limpeza possível: tirar o caminho livre de `preparo.ts` (fica para a revisão da 010, a pedido da dona).
+- **Faltava (2):** quando o run pausa, a frase `naoComeDesconhecido` não chega à resposta final da retomada: a pausa não guarda a interpretação.
+- **Decidido (2):** não mudar schema nem checkpoint; a frase sai nos runs sem pausa e no caminho `evitar`.
+- **Por quê (2):** a opção mais conservadora; mudar o checkpoint mexe em núcleo fora da tarefa.
+- **Como desfazer (2):** guardar os itens livres no checkpoint da pausa e acrescentar a frase em `continuar.ts`.
+
+## Revisão da base · R1 nos chás de ervas alteradas (d0b187f)
+
+- **Faltava:** a R1 (`KNOWLEDGE.md` §8.1) diz "soma das ervas" sem dizer como somar, e cardamomo, cravo, camomila e capim-limão mudaram na revisão.
+- **Decidido:** qualidades de cada erva = virya + `gunas` de `alimentos.yaml`; gunas do chá = soma por erva, com pares opostos se cancelando, e ficam as de saldo positivo. `favorece_estados` = estados cujas `presentes` têm o oposto de alguma guna do chá e cujas `presentes` e `evitar_gunas` não têm nenhuma. Campo com fonte real fica (a fonte vence a regra), exceto em `cha-cravo-canela` e `cha-canela-cardamomo`: as páginas da Banyan liam cravo e cardamomo como quentes, e a revisão ficou com a Easy Ayurveda (mais peso, §7), que diz que os dois são frios. A R2 foi refeita só onde o campo já citava a regra; com saldo térmico zero, o chá fica sem contraindicação térmica. O efeito não muda: nenhuma erva mudou de efeito. Chás alterados: `cha-canela-cardamomo`, `cha-cardamomo`, `cha-cravo-canela`, `cha-camomila`, `cha-camomila-erva-doce`, `cha-capim-limao`, `cha-capim-limao-hortela`.
+- **Por quê:** é a conta mais direta do vocabulário de pares (§1) e reproduz os chás de uma erva que a revisão já tinha refeito (`cha-hortela`, `cha-capim-limao`).
+- **Consequências para a dona ver na segunda rodada:** (1) o chá de camomila fica `frio` e deixa de ser candidato para quem está `agitada` (que evita frio), embora a fonte dele cite `agitada`; os testes do runner da pausa passaram a perguntar anis-estrelado. (2) `cha-camomila-erva-doce` passa a favorecer `[com_calor, pesada]` em vez de `[agitada, seca, irritada]`; a citação `banyan-erva-doce`, que trata da erva-doce sozinha, saiu. (3) `cha-camomila-erva-doce` tem saldo frio e `contraindicacoes: []`, campo sem citação da regra; pela R2 seria `[com_frio]`, e ficou como estava. (4) `cha-capim-limao-hortela` fica `intenso` com `favorece_estados` de fonte que inclui `irritada`. (5) `cha-canela-cardamomo` perde `com_calor`, porque o saldo térmico fica zero.
+- **Como desfazer:** reverter d0b187f.
+
+## Junção da entrega-4 · relógio e2e
+
+- **Faltava:** o pedido da dona era manter "o relógio por requisição da `entrega-4` (T20)", mas a T20 foi revertida na própria `entrega-4` (438479b), porque a `entrega-3` trouxe o relógio deslocado para a noite (019 C3).
+- **Decidido:** manter o relógio que a `entrega-4` tem hoje (o noturno, `createRelogioE2e`) e adaptar a ele os roteiros e testes da P2-T9 da `main`.
+- **Por quê:** segue a intenção do pedido (vence o lado da `entrega-4`) sem ressuscitar um código que a trilha já tinha tirado.
+- **Como desfazer:** reaplicar a T20 (a91d363) e trocar o relógio do container.
+
+## 022 · A1 · 401 da limpeza
+
+- **Faltava:** a spec manda a limpeza usar `autorizarCron` (que responde `401 nao_autorizado`) e, ao mesmo tempo, não mudar o 401 dela, que hoje responde `{ erro: "sem_autorizacao" }`.
+- **Decidido:** a limpeza decide por `autorizarCron`. Com o segredo ausente, responde `503 cron_desligado`, como a rota de padrões. Com o cabeçalho errado, mantém `401 { erro: "sem_autorizacao" }`. As rotas novas (padrões e saúde) respondem `nao_autorizado`.
+- **Por quê:** cumpre as duas frases da spec sem quebrar quem já lê o 401 da limpeza.
+- **Como desfazer:** responder com o `erro` de `autorizarCron` também na limpeza e ajustar os testes dela.
+
+## 022 · A2 · `c5-publico` adiado
+
+- **Faltava:** a spec manda registrar o `c5-publico` com os mesmos casos e o mesmo alvo do `c4-site`, mas o `c4-site` ainda não existe em `evals/llm/checkpoints.ts`: ele nasce no fechamento da entrega 3.
+- **Decidido:** o registro do `c5-publico` fica para a junção com o `c4-site`; o resto da 022 segue.
+- **Por quê:** copiar um checkpoint que não existe obrigaria a inventar o alvo.
+- **Como desfazer:** registrar o `c5-publico` com as pastas do `c3-confiavel`.
+
+## 022 · A3 · `vercel` CLI 65.17.0 e `rollback --non-interactive`
+
+- **Faltava:** a versão do CLI e as flags exatas.
+- **Decidido:** `vercel@65.17.0` (a estável publicada em 2026-11-17). Deploy com `deploy --prod --yes --token "$VERCEL_TOKEN" --env RITU_VERSAO=<sha>`, já que a documentação atual diz que `--env` define variável de runtime. Volta com `rollback --token "$VERCEL_TOKEN" --non-interactive`: sem argumento, o `rollback` volta ao deploy de produção anterior (no Hobby, só a ele), e a documentação não lista `--yes` para ele.
+- **Por quê:** é o que a documentação atual da Vercel descreve; não foi possível rodar o CLI nesta sessão para conferir o `--help`.
+- **Como desfazer:** trocar a versão e as flags nos dois passos do job `deploy`.
+
+## 022 · A4 · `x-forwarded-for` na Vercel
+
+- **Faltava:** a spec pede conferir se a Vercel reescreve o `x-forwarded-for` na borda.
+- **Decidido:** nada muda. A documentação de request headers diz que a Vercel sobrescreve o `X-Forwarded-For` e não repassa IP externo, para impedir spoofing (exceção: Trusted Proxy, só no plano Enterprise).
+- **Por quê:** a confiança da 017 no primeiro endereço vale em produção.
+- **Como desfazer:** —
+
+## 022 · A5 · `yaml` em `scripts/`
+
+- **Faltava:** a spec manda o teste do workflow ler o YAML com `yaml`, e o `painel:publicar` lê as regras de `observability/grafana/alerting/ritu.yaml`. A regra R5 do teste de arquitetura só deixa importar `yaml` em `src/infra/knowledge/`.
+- **Decidido:** `scripts/` passa a ser casa permitida do `yaml` (T7, em `src/architecture.test.ts`). O produto (`src/`) continua só com `src/infra/knowledge/`. A ADR sai no fechamento da 022.
+- **Por quê:** `scripts/` é ferramenta de quem desenvolve e opera; passar o YAML pelo container só para ler um arquivo de CI seria indireção sem ganho.
+- **Como desfazer:** tirar `scripts/` da lista e ler os arquivos por uma função exportada de `src/infra/knowledge/`.
+
+## 022 · A6 · `google` da saúde sem importar `auth/next`
+
+- **Faltava:** a saúde usa `googleDisponivel()` (`src/infra/auth/next.ts`), mas importar esse módulo no container cria ciclo, e o import dinâmico quebra no Vitest.
+- **Decidido:** o container repete a regra (`AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET` presentes) com `optionalEnv` (T8).
+- **Por quê:** evita o ciclo sem mexer na autenticação.
+- **Como desfazer:** mover a regra para um módulo sem dependência de `next-auth` e usá-lo nos dois lugares.
+
+## 025 · A1 · `agua-morna-com-limao` vira `pratica`
+
+- **Faltava:** a spec exige que toda prática `tipo: cha` tenha id `cha-…`, mas `agua-morna-com-limao` era `tipo: cha`.
+- **Decidido (pela dona, antes da construção):** a linha passa a `tipo: pratica`, com o mesmo id; `minPraticas` vira `{ cha: 19, oleo: 7, pratica: 18 }`. Ela não entra no padrão genérico de "um chá".
+- **Por quê:** água morna com limão é hábito da manhã, não chá de erva; trocar o tipo não muda id nem dado gravado.
+- **Como desfazer:** voltar o tipo e abrir exceção nomeada na regra 17.
+
+## 025 · A2 · Seed da demonstração com o padrão genérico
+
+- **Faltava:** a spec não cita o seed, e `seed/demo.yaml` grava justamente `com_frio+agitada|pratica:cha-gengibre-canela`, o padrão que a regra da base barra com `agitada`.
+- **Decidido:** o item do padrão do seed aceita `{ tipo: cha }`, e o seed passa a gravar `com_frio+agitada|cha` com a frase de "um chá" (T6).
+- **Por quê:** sem isso, a conta de demonstração nasceria com o padrão que a spec aposenta, e ele nunca valeria com `agitada`.
+- **Como desfazer:** voltar `seed/demo.yaml` ao item `pratica` e tirar a união do schema do seed.
+
+## 025 · A3 · Prakriti no eval de frio com agitada
+
+- **Faltava:** a spec pede `cha-louro` candidato com `com_frio + agitada` à tarde, sem dizer o perfil. Sem prakriti, a adequação do louro é 0 (+2 por `quente`, −2 porque `leve` é o oposto de `pesado`, que `agitada` busca) e ele não entra.
+- **Decidido:** o eval `cha-derivado-frio-agitada` usa prakriti com vata dominante (0,6/0,2/0,2); o louro entra pelo efeito (vata −1). O caso `c3-s23` já usa vata 0,45/pitta 0,45/kapha 0,1 e o louro entra com adequação 0,1, entre os 4 chás do contexto. Ranking e dados não mudaram.
+- **Por quê:** é o cenário real de quem fica agitada (vata); mudar a pontuação mexeria em todos os candidatos.
+- **Como desfazer:** se a dona quiser o louro candidato com qualquer perfil, uma spec de ranking (ex.: chás julgados por `favorece_estados`). A margem do `c3-s23` é fina: mudar `porPontoDeEfeito` ou o efeito do louro tira o louro do contexto.

@@ -18,7 +18,10 @@ export interface AccountRepository {
   marcar(
     contaId: string,
     campos: Partial<
-      Pick<Conta, "aviso_aceito_em" | "evitar_passo" | "evitar_lembrete_em" | "dosha_adiado_em">
+      Pick<
+        Conta,
+        "aviso_aceito_em" | "evitar_passo" | "evitar_lembrete_em" | "dosha_adiado_em" | "tester"
+      >
     >,
   ): Promise<void>
   /** Cascata nas tabelas da conta e anonimiza os runs. */

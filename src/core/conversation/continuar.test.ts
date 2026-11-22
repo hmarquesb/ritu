@@ -238,6 +238,21 @@ describe("continuar: pausa do agente", () => {
   })
 })
 
+describe("continuar: aviso de incômodo", () => {
+  it("run retomado com incômodo sai com um aviso incomodo só", async () => {
+    const m = await montar({ roteiro: [askCasa, fim()] })
+    await prepararCasa(m)
+    const p = await m.conversation.conversar(m.conta.id, {
+      texto: "esse chá cura gastrite?",
+      atalhos: [],
+    })
+    expect(p.status).toBe("waiting_for_input")
+    expect((await estado(m, p.run_id)).com_incomodo).toBe(true)
+    const r = await continuar(m, p.run_id, tenhoNaoTenho)
+    expect(r.saida?.avisos.filter((a) => a.tipo === "incomodo")).toHaveLength(1)
+  })
+})
+
 describe("continuar: totais do run", () => {
   it("com modelo: loop + Intérprete, uma vez", async () => {
     const m = await montar({ roteiro: [askCasa, fim()] })

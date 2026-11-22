@@ -129,6 +129,22 @@ describe("validarBase · schemas", () => {
   })
 })
 
+function estado(id: string, favorecer: string[]) {
+  return {
+    id,
+    rotulo: id,
+    emoji: "",
+    eixo: "temperatura",
+    presentes: [],
+    favorecer,
+    evitar_gunas: [],
+    evitar_marcas: [],
+    evitar_texto: "",
+    fontes: refs,
+    confianca: "media",
+  }
+}
+
 function gengibreComPar() {
   return alimento({ id: "gengibre", gunas: ["quente", "frio"] })
 }
@@ -365,7 +381,7 @@ describe("regra 12 · fonte com url sem data de acesso", () => {
 describe("regra 13 · cobertura", () => {
   it("gera erros cobertura: quando a base está abaixo do mínimo", () => {
     const resultado = validarBase(dados())
-    expect(resultado.erros).toContain("cobertura: alimentos tem 2, mínimo 130")
+    expect(resultado.erros).toContain("cobertura: alimentos tem 2, mínimo 127")
     expect(resultado.erros.every((e) => e.startsWith("cobertura:"))).toBe(true)
   })
 
@@ -489,5 +505,89 @@ describe("vaga com lista explícita de alimentos", () => {
       semCobertura,
     )
     expect(resultado.erros.some((e) => e.includes("poucos alimentos possíveis"))).toBe(false)
+  })
+})
+
+describe("regra 14 · cha só em especiaria ou bebida", () => {
+  it("aponta cha em alimento de outro grupo", () => {
+    const resultado = validarBase(
+      dados({ alimentos: [alimento({ cha: { parte: "folha" } }), gengibre] }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain("alimentos:abobora:cha só em especiarias ou bebidas")
+  })
+
+  it("aceita cha em especiaria e em bebida", () => {
+    const comCha = [
+      alimento({ id: "louro", nome: "Louro", grupo: "especiarias", cha: { parte: "folha" } }),
+      alimento({ id: "cha-verde", nome: "Chá verde", grupo: "bebidas", cha: { parte: "bebida" } }),
+    ]
+    const resultado = validarBase(dados({ alimentos: comCha }), semCobertura)
+    expect(resultado.erros.some((e) => e.includes("cha só em"))).toBe(false)
+  })
+})
+
+describe("regra 15 · id do chá derivado sem colisão", () => {
+  it("aponta colisão com prática fixa de mesmo id", () => {
+    const resultado = validarBase(
+      dados({
+        alimentos: [alimento(), { ...gengibre, cha: { parte: "folha" } }],
+        praticas: [pratica({ id: "cha-gengibre" })],
+        estados: [estado("com_frio", ["quente"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain(
+      'alimentos:gengibre:cha id "cha-gengibre" já existe em praticas.yaml',
+    )
+  })
+
+  it("não aponta quando não há colisão", () => {
+    const resultado = validarBase(
+      dados({
+        alimentos: [alimento(), { ...gengibre, cha: { parte: "folha" } }],
+        praticas: [pratica({ id: "cha-outro" })],
+        estados: [estado("com_frio", ["quente"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros.some((e) => e.includes("já existe em praticas.yaml"))).toBe(false)
+  })
+})
+
+describe("regra 16 · chá derivado com favorece_estados vazio", () => {
+  it("aponta chá derivado que não favorece nenhum estado", () => {
+    const resultado = validarBase(
+      dados({
+        alimentos: [alimento(), { ...gengibre, cha: { parte: "folha" } }],
+        estados: [estado("com_frio", ["seco"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain("alimentos:gengibre:cha favorece_estados vazio")
+  })
+})
+
+describe("regra 17 · prefixo cha- só em prática do tipo cha", () => {
+  it("aponta prática do tipo cha sem o prefixo cha-", () => {
+    const resultado = validarBase(
+      dados({
+        praticas: [pratica({ id: "sopa-x", tipo: "cha" })],
+        estados: [estado("com_frio", ["quente"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain('praticas:sopa-x:id tipo cha sem prefixo "cha-"')
+  })
+
+  it("aponta prática de outro tipo com o prefixo cha-", () => {
+    const resultado = validarBase(
+      dados({
+        praticas: [pratica({ id: "cha-x", tipo: "pratica" })],
+        estados: [estado("com_frio", ["quente"])],
+      }),
+      semCobertura,
+    )
+    expect(resultado.erros).toContain('praticas:cha-x:id prefixo "cha-" fora do tipo cha')
   })
 })

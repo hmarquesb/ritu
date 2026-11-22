@@ -248,7 +248,7 @@ describe("cenários de aprendizado (011)", () => {
     ])
     // O cardamomo já tinha três faltas (nao_tenho) e não entra de novo nas faltas de hoje: o que a entrega grava é o que faltou no preparo.
     const faltas = await deps.stores.shortages.diasComFalta(contaId, "2026-06-15")
-    expect(faltas.map((f) => f.alimento_id).sort()).toEqual(["mandioca", "tofu"])
+    expect(faltas.map((f) => f.alimento_id).sort()).toEqual(["batata-doce", "tofu"])
     expect(faltas.every((f) => f.ultimo_dia === "2026-06-15")).toBe(true)
     const sugeridos = await deps.stores.preferences.ler(contaId, [
       { tipo: "pratica", id: "cha-gengibre-canela" },
@@ -256,7 +256,7 @@ describe("cenários de aprendizado (011)", () => {
     expect(sugeridos[0]?.ultima_sugestao_em).not.toBeNull()
   })
 
-  it("troca-por-toque: canela troca por cravo na hora, sem etapa llm nova", async () => {
+  it("troca-por-toque: canela troca por noz-moscada na hora, sem etapa llm nova", async () => {
     const c = cenariosDeAprendizado["troca-por-toque"]
     if (!c) throw new Error("cenário ausente: troca-por-toque")
     const { contaId, deps } = await montarCenario(c)
@@ -274,8 +274,10 @@ describe("cenários de aprendizado (011)", () => {
     expect(resultado.resultado).toBe("trocou")
     if (resultado.resultado !== "trocou") throw new Error("troca não aconteceu")
     const item = resultado.sugestao.itens.find((i) => i.alimento_id === "canela")
-    expect(item?.troca?.alimento_id).toBe("cravo")
-    expect(item?.troca?.frase).toBe("Troquei canela por cravo: os dois aquecem e aliviam o peso.")
+    expect(item?.troca?.alimento_id).toBe("noz-moscada")
+    expect(item?.troca?.frase).toBe(
+      "Troquei canela por noz-moscada: os dois aquecem e aliviam o peso.",
+    )
     const llmDepois = (await deps.stores.runs.etapas(contaId, antes.final.run_id)).filter(
       (e) => e.tipo === "llm",
     )
@@ -284,7 +286,9 @@ describe("cenários de aprendizado (011)", () => {
     const aguardando = (await deps.stores.outcomes.pendentes(contaId)).find(
       (r) => r.id === retornoId,
     )
-    expect(aguardando?.sugestao.alimentos).toEqual(expect.arrayContaining(["cravo", "gengibre"]))
+    expect(aguardando?.sugestao.alimentos).toEqual(
+      expect.arrayContaining(["noz-moscada", "gengibre"]),
+    )
     expect(aguardando?.sugestao.alimentos).not.toContain("canela")
   })
 
@@ -350,11 +354,19 @@ describe("cenários de aprendizado (011)", () => {
       contaId,
       { intencoes: ["momento"], estados: ["com_frio"], evitar_da_mensagem: [] },
     )
-    // A ordem completa (candidatos_completos) põe o chá com dois "não ajudou" seguidos no fim dos chás; o corte por tipo o tira do contexto.
+    // A ordem completa (candidatos_completos) e o contexto põem o chá com dois "não ajudou" seguidos no fim dos chás.
+    // Sem a ordem fixa da base: o chá com os "não ajudou" não vem antes de nenhum outro chá.
+    // Se ele entra no contexto (corte por tipo), também fica por último entre os chás de lá.
     const chasNaOrdem = dados.candidatos_completos.filter((id) => id.startsWith("cha-"))
     expect(chasNaOrdem.length).toBeGreaterThanOrEqual(2)
     expect(chasNaOrdem[chasNaOrdem.length - 1]).toBe("cha-gengibre")
-    expect(dados.candidatos.some((c) => c.id === "cha-gengibre")).toBe(false)
+    const chasNoContexto = dados.candidatos.map((c) => c.id).filter((id) => id.startsWith("cha-"))
+    expect(chasNoContexto.length).toBeGreaterThan(0)
+    const depoisDoGengibre = chasNoContexto.slice(chasNoContexto.indexOf("cha-gengibre") + 1)
+    expect(chasNoContexto.includes("cha-gengibre") ? depoisDoGengibre : []).toEqual([])
+    if (chasNoContexto.includes("cha-gengibre")) {
+      expect(chasNoContexto[chasNoContexto.length - 1]).toBe("cha-gengibre")
+    }
   })
 
   it("retorno-pelo-agente: o ajudou da mensagem fecha o pendente 1 com origem conversa", async () => {
@@ -385,8 +397,7 @@ describe("cenários de aprendizado (011)", () => {
 })
 
 // Os seis da 012 (rotina e padrões): cada um confere o que a coluna "Mostra" pede, nos stores, nas etapas, no bloco e no contexto.
-const FRASE_DO_CHA =
-  "Quando você está com frio e agitada, chá de gengibre com canela costuma te ajudar."
+const FRASE_DO_CHA = "Quando você está com frio e agitada, um chá costuma te ajudar."
 
 async function rodarDeMemoria(nome: string) {
   const c = cenariosDeMemoria[nome]
@@ -449,7 +460,7 @@ describe("cenários de rotina e padrões (012)", () => {
     expect(rodada.bloco?.resultado.gravadas.map((p) => p.tool)).toEqual(["padrao.confirmar"])
     const padroes = await deps.stores.patterns.listar(contaId)
     expect(padroes.map((p) => [p.chave, p.status])).toEqual([
-      ["com_frio+agitada|pratica:cha-gengibre-canela", "confirmado"],
+      ["com_frio+agitada|cha", "confirmado"],
     ])
     expect(rodada.depois?.final.status).toBe("done")
     const dados = await preparoDaSegunda(deps, contaId)

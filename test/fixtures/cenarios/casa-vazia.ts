@@ -72,7 +72,7 @@ export const casaVazia: Cenario = {
                   {
                     alimento_id: "mandioca",
                     funcao: "base",
-                    contribui: ["pesado", "estavel"],
+                    contribui: ["pesado"],
                     linha_base: "alimentos:mandioca",
                   },
                 ],

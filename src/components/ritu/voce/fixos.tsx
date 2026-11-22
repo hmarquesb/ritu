@@ -91,10 +91,14 @@ function FolhaDeEvitar({ em, grupos, fechar }: FolhaEvitarProps) {
       maxTexto={LIMITES.evitar.textoLivreCaracteres}
       minBusca={LIMITES.buscaDeAlimento.minimoCaracteres}
       gravar={async (corpo) => {
-        if (corpo.passo !== "pronto") return fechar()
+        if (corpo.passo !== "pronto") {
+          fechar()
+          return true
+        }
         const nova = await em.perfil({ acao: "evitar_acrescentar", itens: corpo.itens })
         if (!nova) throw new Error("nao_gravou")
         fechar()
+        return true
       }}
     />
   )

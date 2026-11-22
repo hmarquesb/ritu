@@ -580,6 +580,8 @@ Os prompts e os textos são copiados desta spec; não há parte `conteudo`.
 
 ## Correção do portão 2
 
+Aplicada (commits 4c3f511).
+
 Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T7).
 
 ### P2-7 · Estados ditos do jeito do dia a dia

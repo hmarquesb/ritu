@@ -32,7 +32,8 @@ async function montar() {
     limiter: createMemoryLimiter(),
   })
   const dia = diaLocal(new Date(c.agora), FUSO)
-  const rotas = (sessao?: string) => rotasDoVoce({ contaDaSessao: async () => sessao, container })
+  const rotas = (sessao?: string) =>
+    rotasDoVoce({ contaDaSessao: async () => sessao, container, quemPede: () => ({ ipHash: "h" }) })
   return { c, contaId, deps, container, dia, rotas, sessao: contaId }
 }
 

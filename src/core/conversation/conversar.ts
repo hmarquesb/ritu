@@ -9,10 +9,11 @@ import {
 } from "@/core/agents/interpreter/interpretacao"
 import type { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import type { MemoryAgent } from "@/core/agents/memory/memoria"
-import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
+import { acompanhanteV7 } from "@/core/agents/prompts/acompanhante.v7"
 import type { Clock } from "@/core/clock"
 import { RituError } from "@/core/errors"
 import { conferirEntrada } from "@/core/guardrails/entrada"
+import { falaDeSaude } from "@/core/guardrails/saude"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import { ESTADOS } from "@/core/knowledge/vocab"
 import { lerConversaDoDia } from "@/core/messages/para-o-prompt"
@@ -25,6 +26,7 @@ import type { createRunService } from "@/core/runs/run-service"
 import type { Stores, Transactor } from "@/core/stores"
 import type { Telemetry } from "@/core/telemetry/ports"
 import { criarAprovar } from "./aprovar"
+import { comAvisoDeIncomodo } from "./aviso-de-incomodo"
 import {
   anotacoesDaMensagem,
   type CaminhoDeCodigo,
@@ -37,6 +39,7 @@ import {
 import { criarContinuar } from "./continuar"
 import { fecharOuFalhar, filtroDoRun } from "./fim-com-propostas"
 import { anotarPendencia, ETAPA_DA_VARIANTE, perguntaDaVariantePendente } from "./pausa-de-codigo"
+import { comNaoComeDesconhecido } from "./textos"
 
 export { type MensagemRecebida, mensagemRecebidaSchema } from "@/core/messages/texto"
 
@@ -71,6 +74,7 @@ type Execucao = {
   perfil: Perfil
   m: MensagemRecebida
   aoVivo?: AoVivo
+  semModelo?: "limite"
 }
 
 function mensagemInvalida(): RituError {
@@ -113,6 +117,7 @@ function entradaDoAcompanhante(
   intencoes: string[],
 ): EntradaDoAcompanhante {
   const casa = casaDaMensagem(i)
+  const naoComeDaBase = i.nao_come.filter((c) => c.alimento_id)
   const { retorno } = i
   return {
     intencoes: intencoesDoAcompanhante(intencoes, i),
@@ -120,7 +125,8 @@ function entradaDoAcompanhante(
     evitar_da_mensagem: i.evitar.filter((item) => item.tipo === "texto").map((item) => item.valor),
     ...(texto ? { texto } : {}),
     ...(i.incomodo ? { incomodo: i.incomodo } : {}),
-    ...(i.nao_come.length > 0 ? { nao_come_da_mensagem: i.nao_come } : {}),
+    // Só o "não como" com alimento da base: o livre não vai ao Acompanhante nem ao dia (preparo grava o que chega aqui).
+    ...(naoComeDaBase.length > 0 ? { nao_come_da_mensagem: naoComeDaBase } : {}),
     ...(i.restricoes.length > 0 ? { restricoes_da_mensagem: i.restricoes } : {}),
     ...(casa ? { casa_da_mensagem: casa } : {}),
     ...(i.gosta.length > 0 ? { gosta_da_mensagem: i.gosta.map((g) => g.alimento_id) } : {}),
@@ -227,6 +233,7 @@ export function createConversation(deps: Deps) {
     const r = await companion.responder(x.contaId, entrada, {
       run: x.run,
       semModelo: true,
+      ...(x.semModelo ? { motivo: x.semModelo } : {}),
       manterAberto: true,
       aoVivo: x.aoVivo,
     })
@@ -295,7 +302,7 @@ export function createConversation(deps: Deps) {
     await registrarRetornoDaConversa(ctx)
     await gravarItensDoDia(ctx)
     const entrada = entradaDoAcompanhante(x.m.texto, ctx.interpretacao, intencoes)
-    const incomodo = Boolean(ctx.interpretacao.incomodo)
+    const incomodo = Boolean(ctx.interpretacao.incomodo) || falaDeSaude(x.m.texto ?? "")
     const variante = perguntaDaVariantePendente(entrada, kb)
     if (variante) return pausarNaVariante(x, ctx, entrada, variante, apoio)
     const r = await companion.responder(x.contaId, entrada, {
@@ -306,11 +313,18 @@ export function createConversation(deps: Deps) {
     const anotacoes = await anotacoesDaMensagem(ctx)
     if (r.pergunta) {
       await anotarPendencia(stores, x.contaId, x.run.id, anotacoes)
-      await stores.runs.atualizar(x.contaId, x.run.id, await somarApoio(x, apoio))
+      await stores.runs.atualizar(x.contaId, x.run.id, {
+        ...(incomodo ? { com_incomodo: true } : {}),
+        ...(await somarApoio(x, apoio)),
+      })
       return { pergunta: r.pergunta, incomodo }
     }
     if (!r.saida) throw new RituError("run_pausado", "O run pausou sem saída")
-    const saida = { ...r.saida, anotacoes }
+    const saida = {
+      ...comAvisoDeIncomodo(r.saida, incomodo),
+      resposta: comNaoComeDesconhecido(r.saida.resposta, ctx.interpretacao),
+      anotacoes,
+    }
     await stores.runs.atualizar(x.contaId, x.run.id, { saida, ...(await somarApoio(x, apoio)) })
     return { saida, incomodo }
   }
@@ -326,7 +340,7 @@ export function createConversation(deps: Deps) {
     telemetry.atribuirAoSpanAtual({
       "run.caminho": caminho,
       "run.intencoes": intencoes.join(","),
-      ...(caminho === "acompanhante" ? { "prompt.versao": acompanhanteV6.versao } : {}),
+      ...(caminho === "acompanhante" ? { "prompt.versao": acompanhanteV7.versao } : {}),
     })
     await stores.runs.atualizar(contaId, run.id, { caminho, intencoes })
     for (const intencao of intencoes) telemetry.contador("ritu_run_intencao_total", { intencao })
@@ -365,7 +379,9 @@ export function createConversation(deps: Deps) {
   }
 
   async function responderMensagem(x: Execucao, estado: { gravada: boolean }) {
-    const { interpretacao, apoio, guardrail } = await interpretar(x)
+    const { interpretacao, apoio, guardrail } = x.semModelo
+      ? ({} as Interpretado)
+      : await interpretar(x)
     const r = interpretacao
       ? await seguirCaminho(x, interpretacao, apoio, guardrail)
       : await semModelo(x)
@@ -450,9 +466,10 @@ export function createConversation(deps: Deps) {
     async conversar(
       contaId: string,
       mensagem: MensagemRecebida,
-      opts?: { aoVivo?: AoVivo; aoCriar?: (runId: string) => void },
+      opts?: { aoVivo?: AoVivo; aoCriar?: (runId: string) => void; semModelo?: "limite" },
     ): Promise<RespostaDaConversa> {
       const m = validar(mensagem)
+      if (opts?.semModelo && m.texto) throw mensagemInvalida()
       const perfil = await stores.profiles.ler(contaId)
       const run = await runs.iniciarRun(contaId, {
         caminho: "acompanhante",
@@ -464,7 +481,14 @@ export function createConversation(deps: Deps) {
       } catch {
         // quem chamou falhou ao ser avisado; o run segue
       }
-      const x: Execucao = { contaId, run, perfil, m, aoVivo: opts?.aoVivo }
+      const x: Execucao = {
+        contaId,
+        run,
+        perfil,
+        m,
+        aoVivo: opts?.aoVivo,
+        ...(opts?.semModelo ? { semModelo: opts.semModelo } : {}),
+      }
       return runs.comSpanDoRun(contaId, run.id, () => rodar(x))
     },
   }

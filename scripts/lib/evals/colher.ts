@@ -168,15 +168,27 @@ export function parteDoRun(p: {
   }
 }
 
-/** O uso do run no papel `decisao`, como o runner antigo mede. */
-export function usoDoRun(run: Run, r: ResultadoDoRun): Partial<Record<Papel, UsoDoPapel>> {
-  return {
-    decisao: {
-      chamadas: r.chamadasDeModelo,
-      tokens_entrada: run.tokens_entrada,
-      tokens_saida: run.tokens_saida,
-    },
+/** Ponto de métrica da telemetria do caso (`deps.telemetry.metricas`): nome, valor e rótulos. */
+export type PontoDeMetrica = { nome: string; valor: number; rotulos: Record<string, unknown> }
+
+/**
+ * O uso do caso por papel, somado dos pontos de `ritu_llm_chamadas_total` e de `ritu_tokens_total`.
+ * Papel sem chamada não entra no objeto. A telemetria é por caso (`montarCenario` cria uma nova).
+ */
+export function usoDoRun(metricas: PontoDeMetrica[]): Partial<Record<Papel, UsoDoPapel>> {
+  const somas = new Map<Papel, UsoDoPapel>()
+  for (const m of metricas) {
+    if (m.nome !== "ritu_llm_chamadas_total" && m.nome !== "ritu_tokens_total") continue
+    const papel = String(m.rotulos.papel) as Papel
+    const soma = somas.get(papel) ?? { chamadas: 0, tokens_entrada: 0, tokens_saida: 0 }
+    if (m.nome === "ritu_llm_chamadas_total") soma.chamadas += m.valor
+    else if (m.rotulos.direcao === "entrada") soma.tokens_entrada += m.valor
+    else if (m.rotulos.direcao === "saida") soma.tokens_saida += m.valor
+    somas.set(papel, soma)
   }
+  const uso: Partial<Record<Papel, UsoDoPapel>> = {}
+  for (const [papel, soma] of somas) if (soma.chamadas > 0) uso[papel] = soma
+  return uso
 }
 
 /** O que o runner colhe de um caso para avaliar e para o arquivo de falhas local. */

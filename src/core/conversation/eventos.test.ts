@@ -19,7 +19,12 @@ const etapa: EventoDaTela = {
   tipo: "etapa",
   frase: { chave: "clima", texto: "Olhando o clima de hoje" },
 }
-const fim: EventoDaTela = { tipo: "fim", visao, pendentes: 2 }
+const fim: EventoDaTela = {
+  tipo: "fim",
+  visao,
+  pendentes: 2,
+  limites: { mensagens: { tipo: "livre" }, cota_ia: { esgotada: false } },
+}
 const erro: EventoDaTela = { tipo: "erro", erro: "run_nao_encontrado" }
 
 const EVENTOS: EventoDaTela[] = [inicio, etapa, fim, erro]

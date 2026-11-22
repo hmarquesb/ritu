@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,6 +26,9 @@ jobs:
 
       - name: Instalar dependências
         run: npm ci
+
+      - name: Auditoria
+        run: npx --yes audit-ci@7.1.0 --config audit-ci.jsonc
 
       - name: Lint
         run: npm run lint
@@ -101,3 +105,54 @@ jobs:
 
       - name: Testes de banco
         run: npm run test:db
+
+  deploy:
+    needs: [gates, db]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    environment: producao
+    concurrency: { group: producao, cancel-in-progress: false }
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Base sem a_confirmar
+        run: npm run base:check -- --producao
+
+      - name: Variáveis na Vercel
+        run: npm run env:producao
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Migrações
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_DIRETA }}
+
+      - name: Deploy
+        id: deploy
+        run: npx vercel@65.17.0 deploy --prod --yes --token "$VERCEL_TOKEN" --env RITU_VERSAO=${{ github.sha }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Smoke
+        run: npm run smoke -- "${{ vars.SITE_URL }}"
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RITU_VERSAO_ESPERADA: ${{ github.sha }}
+
+      - name: Voltar ao deploy anterior
+        if: failure() && steps.deploy.outcome == 'success'
+        run: npx vercel@65.17.0 rollback --token "$VERCEL_TOKEN" --non-interactive
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

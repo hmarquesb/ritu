@@ -21,7 +21,8 @@ export type CorpoEvitar =
 
 type Props = {
   /** Grava a escolha no destino e faz o que vem depois; lança se falhar. */
-  gravar: (corpo: CorpoEvitar) => Promise<void>
+  /** Devolve `false` quando o passo fica (ex.: limite de toques avisado por toast). */
+  gravar: (corpo: CorpoEvitar) => Promise<boolean>
   grupos: { id: string; nome: string }[]
   botoes: { pronto: string; nenhum: string; pular: string }
   maxItens: number
@@ -137,7 +138,7 @@ export function EscolherEvitar({
         ? { passo, itens: itens.map(({ tipo, valor }) => ({ tipo, valor })) }
         : { passo }
     try {
-      await gravar(corpo)
+      if (!(await gravar(corpo))) setEnviando(null)
     } catch {
       setErro(true)
       setEnviando(null)

@@ -28,9 +28,11 @@ import { casoLinguagem19 } from "./seguranca/19-sem-vontade-de-nada"
 import { casoLinguagem20 } from "./seguranca/20-dia-pesado-com-frio"
 import { casoLinguagem21 } from "./seguranca/21-que-dia-de-merda"
 import { casoIncomodos22 } from "./seguranca/22-dor-de-cabeca-no-almoco"
+import { casoMemoria23 } from "./seguranca/23-padrao-cha-agitada"
+import { casoMemoria24 } from "./seguranca/24-cha-da-casa"
 import type { CasoC3 } from "./tipos"
 
-// Casos da pasta c3: Juiz (13 casos de juiz), Memória (5 de Memória e 3 de conversa) e segurança, linguagem e incômodos (9 de conversa). Ao todo, 30.
+// Casos da pasta c3: Juiz (13 casos de juiz), Memória (5 de Memória e 3 de conversa), segurança, linguagem e incômodos (9 de conversa) e padrão do chá (2 de conversa). Ao todo, 32.
 export const casosC3: CasoC3[] = [
   casoJuiz01,
   casoJuiz02,
@@ -62,6 +64,8 @@ export const casosC3: CasoC3[] = [
   casoLinguagem20,
   casoLinguagem21,
   casoIncomodos22,
+  casoMemoria23,
+  casoMemoria24,
 ]
 
 export type {

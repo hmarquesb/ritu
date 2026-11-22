@@ -54,8 +54,8 @@ describe("nomes da telemetria", () => {
     }
   })
 
-  it("tem 30 métricas, todas com tipo e rótulos", () => {
-    expect(Object.keys(METRICAS)).toHaveLength(30)
+  it("tem 31 métricas, todas com tipo e rótulos", () => {
+    expect(Object.keys(METRICAS)).toHaveLength(31)
     for (const definicao of Object.values(METRICAS)) {
       expect(["contador", "histograma", "medidor"]).toContain(definicao.tipo)
       expect(Array.isArray(definicao.rotulos)).toBe(true)
@@ -80,6 +80,10 @@ describe("nomes da telemetria", () => {
     expect(METRICAS.ritu_juiz_total).toEqual({ tipo: "contador", rotulos: ["resultado"] })
     expect(METRICAS.ritu_llm_cota_usada).toEqual({ tipo: "medidor", rotulos: ["modelo", "janela"] })
     expect(METRICAS.ritu_fallback_sem_llm_total).toEqual({ tipo: "contador", rotulos: [] })
+    expect(METRICAS.ritu_limite_total).toEqual({
+      tipo: "contador",
+      rotulos: ["tipo", "motivo", "resultado"],
+    })
   })
 
   it("separa os nomes de métrica por tipo", () => {

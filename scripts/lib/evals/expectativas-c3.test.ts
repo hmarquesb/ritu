@@ -37,6 +37,7 @@ import {
   semRefeicao,
   soDosCandidatos,
   sugere,
+  sugereUmCha,
   trazAsMaisRecentes,
   umaFraseSobre,
 } from "../../../evals/llm/casos/c3/memoria/expectativas"
@@ -215,6 +216,13 @@ describe("expectativas da conversa (sugestões)", () => {
     expect(soDosCandidatos().confere(entradaConversa(ok))).toBe(true)
     expect(soDosCandidatos().confere(entradaConversa(inventada))).toBe(false)
   })
+
+  it("sugereUmCha passa com qualquer chá sugerido e falha sem chá", () => {
+    const comLouro = entradaConversa(saidaPronta({ sugestoes: [cha("cha-louro")] }))
+    const sem = entradaConversa(saidaPronta({ sugestoes: [refeicao] }))
+    expect(sugereUmCha().confere(comLouro)).toBe(true)
+    expect(sugereUmCha().confere(sem)).toBe(false)
+  })
 })
 
 describe("cenários dos casos 6 a 8", () => {
@@ -295,9 +303,9 @@ const novosDeConversa = casosC3.filter(
 )
 
 describe("casos novos do c3 (Juiz e segurança)", () => {
-  it("casosC3 tem 30 casos, com ids únicos", () => {
-    expect(casosC3).toHaveLength(30)
-    expect(new Set(casosC3.map((c) => c.id)).size).toBe(30)
+  it("casosC3 tem 32 casos, com ids únicos", () => {
+    expect(casosC3).toHaveLength(32)
+    expect(new Set(casosC3.map((c) => c.id)).size).toBe(32)
   })
 
   it("13 casos de Juiz, todos da família juiz", () => {
@@ -305,8 +313,8 @@ describe("casos novos do c3 (Juiz e segurança)", () => {
     expect(casosJuiz.every((c) => c.familias.includes("juiz"))).toBe(true)
   })
 
-  it("9 casos de conversa novos, com as famílias da tabela", () => {
-    expect(novosDeConversa).toHaveLength(9)
+  it("11 casos de conversa novos, com as famílias da tabela", () => {
+    expect(novosDeConversa).toHaveLength(11)
     const familias: Record<string, string> = {
       "14": "seguranca",
       "15": "seguranca",

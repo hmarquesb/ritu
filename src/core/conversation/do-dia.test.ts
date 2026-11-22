@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest"
 import type { DemoSeed } from "@/core/demo-seed"
+import type { ModelRouter } from "@/core/llm/router"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { conversaDoDia, visaoDoRunDaConta } from "./do-dia"
 
 const DIA = "2026-11-16"
 const AGORA = "2026-11-16T15:00:00.000Z"
+const ROUTER = { cotaDoDiaEsgotada: async () => false } as unknown as ModelRouter
 const SEED = { mensagem_sugerida: "Quero algo leve hoje." } as unknown as DemoSeed
 
 async function montar(tipo: "google" | "demo" = "demo") {
@@ -19,7 +23,19 @@ async function montar(tipo: "google" | "demo" = "demo") {
 type Montado = Awaited<ReturnType<typeof montar>>
 
 async function rodar(m: Montado) {
-  return conversaDoDia({ stores: m.stores, clock: m.clock, seed: SEED }, m.conta, m.perfil)
+  return conversaDoDia(
+    {
+      stores: m.stores,
+      clock: m.clock,
+      seed: SEED,
+      limiter: createMemoryLimiter(),
+      router: ROUTER,
+      telemetry: createMemoryTelemetry(),
+    },
+    m.conta,
+    m.perfil,
+    { ipHash: "h" },
+  )
 }
 
 async function fala(

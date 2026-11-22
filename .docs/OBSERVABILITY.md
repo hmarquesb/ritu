@@ -76,7 +76,8 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_llm_cota_usada` | medidor | `modelo`, `janela` (minuto, dia); fração de 0 a 1 |
 | `ritu_llm_troca_de_modelo_total` | contador | `papel`, `de`, `para`, `motivo` (cota, 429) |
 | `ritu_llm_erros_total` | contador | `modelo`, `papel`, `codigo` (rate_limit, timeout…) |
-| `ritu_fallback_sem_llm_total` | contador | — |
+| `ritu_fallback_sem_llm_total` | contador | — (só a falta de modelo; o modo `limite` não soma) |
+| `ritu_limite_total` | contador | `tipo` (mensagem, toque), `motivo` (conta, demo, ip, minuto, dia), `resultado` (barrado, so_atalhos, alerta): uma por decisão de limite que barra ou desvia a mensagem, ou por toque barrado; nunca chave, IP, hash ou conta |
 | `ritu_tool_chamadas_total` | contador | `tool`, `status` |
 | `ritu_tool_duracao_ms` | histograma | `tool` |
 | `ritu_validacao_violacoes_total` | contador | `violacao` |
@@ -115,7 +116,7 @@ Os dois saem de uma definição em TypeScript (`scripts/lib/painel.ts`) por `npm
 
 Linhas do painel:
 
-1. **Saúde:** runs por hora, espera por resposta (p50 e p95), runs que falharam, 429 do modelo, latência do modelo e das tools.
+1. **Saúde:** runs por hora, espera por resposta (p50 e p95), runs que falharam, 429 do modelo, limites atingidos (`ritu_limite_total` por `resultado`), latência do modelo e das tools.
 2. **Agente:** intenções, caminhos, passos por run, tools, violações do validador, juiz, guardrail, pausas, memória (propostas, padrões, edições da pessoa e contas apagadas).
 3. **Modelos e cota:** chamadas e tokens por modelo e por papel; cota do dia e do minuto por modelo; trocas de modelo; respostas sem modelo; erros do modelo.
 4. **Qualidade:** 👍/👎, retornos, trocas de ingrediente, gostos, faltas, propostas, indicações de "vale ter em casa", entradas por tipo de conta e resultado.
@@ -143,7 +144,8 @@ Um print desse painel vai para o README.
 
 - `npm run demo` e `npm run eval:llm` exportam quando há endpoint: os cenários espelham a telemetria em memória no adaptador OTel.
 - Envio só pelas variáveis padrão do OTel: `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_SERVICE_NAME`.
-- **Serverless:** a função termina logo após a resposta. Usar `@vercel/otel` em `instrumentation.ts` e garantir o envio antes do fim (validar na spec 005).
+- **Serverless:** a instância pode congelar logo após a resposta. Com telemetria ligada, `criarRota`, `criarRotaDeFluxo` (quando o fluxo fecha), os crons e a saúde agendam `telemetry.encerrar()` em `after()` (`descarregarDepois`), que descarrega traces, métricas e logs. As saídas antes de a rota trabalhar (401, 400, 413, 429) não descarregam.
+- **Grafana Cloud:** ⚠️ `npm run painel:publicar` publica pela API o mesmo painel e as mesmas regras de `painel:gerar`, com o uid do Prometheus da stack no lugar de `prometheus`, na pasta `Ritu`, com `X-Disable-Provenance` (a dona pode editar na tela). As cinco regras avisam por e-mail pelo ponto de contato `ritu-email`, ligado à política raiz; o endereço fica só no Grafana Cloud e no `.env.local`. Rodar duas vezes não muda nada.
 - A telemetria do core passa pela porta `Telemetry` (spans, contadores, histogramas). O adaptador OTel fica em `src/infra/`; o fake grava em memória e é o que os testes conferem.
 
 ### Privacidade
@@ -173,4 +175,4 @@ Sem nenhum dado de pessoa.
 - **Entrega 1:** um run no terminal aparece como trace no Grafana local, com a árvore de §3 e o modelo de cada chamada.
 - **Entrega 2:** o painel e os alertas carregam sozinhos, com dados da rodada do `c3-confiavel` (feita com o OTLP ligado; nos cenários o relógio é fixo, então as latências saem 0); `npm run painel:check` sai com 0; a linha de modelos e cota mostra as trocas; o teste de privacidade passa.
 - **Entrega 3:** Como pensei mostra a mesma história do trace.
-- **Entrega 4:** traces de produção chegam ao Grafana Cloud; Bastidores no ar, com a evolução dos checkpoints.
+- **Entrega 4:** traces de produção chegam ao Grafana Cloud em até 5 min e `ritu_runs_total` em até 15 min; o "Test" do ponto de contato `ritu-email` chega por e-mail; Bastidores no ar, com a evolução dos checkpoints.

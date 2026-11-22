@@ -43,6 +43,7 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: [
       "evals/det/acompanhante/preparo.eval.ts",
       "evals/det/base/candidatos.eval.ts",
+      "evals/det/base/chas-derivados.eval.ts",
       "evals/det/base/estados.eval.ts",
       "evals/det/pausas/variante.eval.ts",
     ],
@@ -530,6 +531,12 @@ export const mapa: LinhaDoMapa[] = [
   },
   {
     grupo: "Guardrails e Juiz",
+    linha: "`aviso-de-saude`: falar de saúde leva o aviso de incômodo",
+    arquivos: ["evals/det/guardrails/aviso-de-saude.eval.ts"],
+    desde: 2,
+  },
+  {
+    grupo: "Guardrails e Juiz",
     linha: "`nota-com-saude`: a linha de rotina com assunto de saúde sai",
     arquivos: ["evals/det/guardrails/nota-com-saude.eval.ts"],
     desde: 2,
@@ -618,6 +625,7 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: [
       "evals/det/rotina-e-padroes/job.eval.ts",
       "evals/det/rotina-e-padroes/ajuda-em-estado.eval.ts",
+      "evals/det/rotina-e-padroes/padrao-cha-generico.eval.ts",
     ],
     desde: 2,
   },
@@ -714,7 +722,19 @@ export const mapa: LinhaDoMapa[] = [
   {
     grupo: "Segurança e privacidade",
     linha: "Rotas de toque respeitam o limite próprio; a 31ª demonstraçã",
-    arquivos: [],
+    arquivos: ["evals/det/seguranca/limites.eval.ts"],
+    desde: 4,
+  },
+  {
+    grupo: "Segurança e privacidade",
+    linha: "Cron sem segredo: /api/cron/* responde 401 sem o bearer e 503 sem CRON_SECRET",
+    arquivos: ["evals/det/seguranca/cron-e-saude.eval.ts"],
+    desde: 4,
+  },
+  {
+    grupo: "Segurança e privacidade",
+    linha: "Saúde sem segredo: /api/saude pede o bearer e não devolve valor de variável",
+    arquivos: ["evals/det/seguranca/cron-e-saude.eval.ts"],
     desde: 4,
   },
   {

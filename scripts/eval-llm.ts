@@ -12,8 +12,8 @@
 // Este arquivo só lê os argumentos, monta o container (quando precisa) e grava os arquivos. A regra fica em scripts/lib/evals/comando.ts.
 import { appendFile, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { dirname } from "node:path"
-import { acompanhanteV6 } from "@/core/agents/prompts/acompanhante.v6"
-import { interpreteV1 } from "@/core/agents/prompts/interprete.v1"
+import { acompanhanteV7 } from "@/core/agents/prompts/acompanhante.v7"
+import { interpreteV2 } from "@/core/agents/prompts/interprete.v2"
 import { juizV1 } from "@/core/agents/prompts/juiz.v1"
 import { memoriaV1 } from "@/core/agents/prompts/memoria.v1"
 import type { Clock } from "@/core/clock"
@@ -99,8 +99,8 @@ const io: IoDoComando = {
   },
   esperar: (ms) => new Promise((resolver) => setTimeout(resolver, ms)),
   prompts: {
-    acompanhante: acompanhanteV6.versao,
-    interprete: interpreteV1.versao,
+    acompanhante: acompanhanteV7.versao,
+    interprete: interpreteV2.versao,
     memoria: memoriaV1.versao,
     juiz: juizV1.versao,
     avaliador: avaliadorV1.versao,

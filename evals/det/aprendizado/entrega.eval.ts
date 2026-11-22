@@ -13,7 +13,7 @@ import {
 } from "../../../test/fixtures/cenarios"
 
 // Entrega do momento frio-agitada (sem conversa, pelo Acompanhante): o que a entrega grava e o que não grava.
-// Faltas do dia do frio-agitada: mandioca e tofu (teria_entrado). Retornos e "já sugerido" saem da saída entregue.
+// Faltas do dia do frio-agitada: batata-doce e tofu (teria_entrado). Retornos e "já sugerido" saem da saída entregue.
 
 const DIA = "2026-06-15"
 
@@ -129,7 +129,7 @@ describe("entrega grava as faltas do run como teria_entrado", () => {
     const { contaId, deps } = await entregar(frioAgitada())
     const hoje = await faltasDeHoje(deps, contaId)
 
-    expect(hoje.map((f) => f.alimento_id).sort()).toEqual(["mandioca", "tofu"])
+    expect(hoje.map((f) => f.alimento_id).sort()).toEqual(["batata-doce", "tofu"])
     expect(hoje.every((f) => f.dias === 1)).toBe(true)
   })
 
@@ -150,7 +150,7 @@ describe("entrega grava as faltas do run como teria_entrado", () => {
     await deps.companion.responder(contaId, dobrado.entrada)
     const hoje = await faltasDeHoje(deps, contaId)
 
-    expect(hoje.map((f) => f.alimento_id).sort()).toEqual(["mandioca", "tofu"])
+    expect(hoje.map((f) => f.alimento_id).sort()).toEqual(["batata-doce", "tofu"])
     expect(hoje.every((f) => f.dias === 1)).toBe(true)
   })
 })
@@ -211,16 +211,16 @@ describe("entrega não grava nada quando a saída não é a do agente", () => {
 describe("'Tenho' durante o run tira a falta de hoje", () => {
   it("a resposta 'tenho' a uma pergunta de casa do mesmo run tira o alimento das faltas", async () => {
     const { contaId, deps, r } = await entregar(frioAgitada())
-    expect((await faltasDeHoje(deps, contaId)).map((f) => f.alimento_id)).toContain("mandioca")
+    expect((await faltasDeHoje(deps, contaId)).map((f) => f.alimento_id)).toContain("batata-doce")
 
     const pergunta: Pergunta = {
       tipo: "casa",
-      texto: "Você tem mandioca em casa?",
-      itens: [{ alimento_id: "mandioca", nome: "mandioca" }],
+      texto: "Você tem batata-doce em casa?",
+      itens: [{ alimento_id: "batata-doce", nome: "batata-doce" }],
     }
     const resposta: RespostaDaPessoa = {
       tipo: "casa",
-      itens: [{ alimento_id: "mandioca", resposta: "tenho" }],
+      itens: [{ alimento_id: "batata-doce", resposta: "tenho" }],
     }
     // O mesmo caminho da resposta de casa do run: a transação é a das stores em memória.
     const tx: Transactor = { emTransacao: (fn) => fn(deps.stores) }

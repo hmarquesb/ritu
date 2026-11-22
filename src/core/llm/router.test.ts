@@ -203,3 +203,56 @@ describe("createModelRouter", () => {
     expect(telemetry.metricas.filter((x) => x.nome === "ritu_llm_erros_total")).toHaveLength(1)
   })
 })
+
+async function gastarDia(
+  ledger: ReturnType<typeof setup>["ledger"],
+  clock: ReturnType<typeof setup>["clock"],
+  modelo: keyof typeof llmCotas.modelos,
+) {
+  const limites = llmCotas.modelos[modelo]
+  let feitos = 0
+  while (feitos < limites.rpd) {
+    for (let i = 0; i < limites.rpm && feitos < limites.rpd; i++, feitos++) {
+      await ledger.reservar(modelo, limites)
+    }
+    clock.advance(60_000)
+  }
+}
+
+describe("cotaDoDiaEsgotada", () => {
+  it("falso com a cota do minuto cheia em todos os modelos", async () => {
+    const { router, ledger } = setup()
+    for (const m of llmCotas.papeis.decisao) await encher(ledger, m, llmCotas.modelos[m].rpm)
+    expect(await router.cotaDoDiaEsgotada("decisao")).toBe(false)
+  })
+
+  it("verdadeiro com a cota do dia cheia em todos os modelos", async () => {
+    const { router, ledger, clock } = setup()
+    for (const m of llmCotas.papeis.decisao) await gastarDia(ledger, clock, m)
+    expect(await router.cotaDoDiaEsgotada("decisao")).toBe(true)
+  })
+
+  it("falso com um modelo do papel ainda livre", async () => {
+    const { router, ledger, clock } = setup()
+    const [livre, ...cheios] = llmCotas.papeis.decisao
+    for (const m of cheios) await gastarDia(ledger, clock, m)
+    expect(livre).toBeDefined()
+    expect(await router.cotaDoDiaEsgotada("decisao")).toBe(false)
+  })
+
+  it("verdadeiro com esgotado_ate dia em todos os modelos", async () => {
+    const { router, ledger } = setup()
+    for (const m of llmCotas.papeis.decisao) {
+      for (let i = 0; i < llmCotas.rateLimitsParaEsgotarODia; i++) {
+        await ledger.registrarRateLimit(m)
+      }
+    }
+    expect(await router.cotaDoDiaEsgotada("decisao")).toBe(true)
+  })
+
+  it("um 429 do minuto não conta como cota do dia", async () => {
+    const { router, ledger } = setup()
+    for (const m of llmCotas.papeis.decisao) await ledger.registrarRateLimit(m)
+    expect(await router.cotaDoDiaEsgotada("decisao")).toBe(false)
+  })
+})

@@ -10,8 +10,9 @@ const UUID_DE_FORA = "7f0c9a4e-1b2d-4c3e-8f5a-6b7c8d9e0f1a"
 function montar(container?: Container) {
   vi.stubEnv("RITU_MODO", "e2e")
   const base = container ?? createContainer({ clock: { now: () => new Date(AGORA) } })
-  const deps = (contaId?: string, c: Container = base): DepsDaRota => ({
+  const deps = (contaId?: string, c: Container = base, teto?: number): DepsDaRota => ({
     contaDaSessao: async () => contaId,
+    quemPede: () => ({ ipHash: "h", ...(teto === undefined ? {} : { teto }) }),
     container: c,
   })
   return { container: base, stores: base.stores, deps }
@@ -215,6 +216,26 @@ describe("rotasDaCasa", () => {
       expect(r.status).toBe(200)
       const corpo = await r.json()
       expect(corpo.retorno.resultado).toBe("ajudou")
+    })
+  })
+
+  describe("limite de toques", () => {
+    it("teto 0 responde 429 limite_toques nas quatro rotas POST", async () => {
+      const m = montar()
+      const conta = await m.stores.accounts.criar({ tipo: "google", google_sub: "s1" })
+      const rotas = rotasDaCasa(m.deps(conta.id, m.container, 0))
+      const id = comId(UUID_DE_FORA)
+      const respostas = [
+        await rotas.tocarCasa(pedido({ acao: "adicionar", alimento_id: "gengibre" })),
+        await rotas.lista(pedido({ acao: "por", alimento_id: "gengibre" })),
+        await rotas.preferencias(pedido({ alimento_id: "gengibre", gosto: "gosta" })),
+        await rotas.responderRetorno(pedido({ resultado: "ajudou" }), id),
+      ]
+      for (const r of respostas) {
+        expect(r.status).toBe(429)
+        expect(await r.json()).toEqual({ erro: "limite_toques" })
+        expect(Number(r.headers.get("Retry-After"))).toBeGreaterThanOrEqual(1)
+      }
     })
   })
 })

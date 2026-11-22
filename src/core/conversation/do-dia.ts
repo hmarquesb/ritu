@@ -1,9 +1,14 @@
+import { config } from "@config/index"
 import type { Conta, Perfil } from "@/core/accounts/types"
 import type { Clock } from "@/core/clock"
 import type { DemoSeed } from "@/core/demo-seed"
+import { type EstadoDosLimites, estadoDosLimites } from "@/core/limits/estado"
+import type { UsageLimiter } from "@/core/limits/ports"
+import type { ModelRouter } from "@/core/llm/router"
 import type { Mensagem } from "@/core/messages/ports"
 import type { Run } from "@/core/runs/ports"
 import type { Stores } from "@/core/stores"
+import type { Telemetry } from "@/core/telemetry/ports"
 import { diaLocal } from "@/core/time/dia-local"
 import { type VisaoDoRun, visaoDoRun } from "./visao"
 
@@ -17,24 +22,39 @@ export type ConversaDoDia = {
   aberto?: { run_id: string; status: Run["status"] }
   pendentes: number
   mensagem_sugerida?: string
+  limites: EstadoDosLimites
 }
 
-type Deps = { stores: Stores; clock: Clock; seed: DemoSeed }
+type Deps = {
+  stores: Stores
+  clock: Clock
+  seed: DemoSeed
+  limiter: UsageLimiter
+  router: ModelRouter
+  telemetry: Telemetry
+}
+
+type Quem = { ipHash: string; escopo?: string; teto?: number }
 
 // O que a tela recebe ao abrir: falas do dia, visão de cada run citado, o run aberto e os retornos pendentes.
 export async function conversaDoDia(
   deps: Deps,
   conta: Conta,
   perfil: Perfil,
+  quem: Quem,
 ): Promise<ConversaDoDia> {
   const { stores, clock, seed } = deps
   const agora = clock.now()
   const dia = diaLocal(agora, perfil.cidade_fuso ?? undefined)
-  const [mensagens, doDia, aberto, pendentes] = await Promise.all([
+  const [mensagens, doDia, aberto, pendentes, limites] = await Promise.all([
     stores.messages.doDia(conta.id, dia),
     stores.runs.doDia(conta.id, dia),
     stores.runs.aberto(conta.id),
     stores.outcomes.pendentes(conta.id),
+    estadoDosLimites(
+      { limiter: deps.limiter, router: deps.router, clock, telemetry: deps.telemetry },
+      { conta, fuso: perfil.cidade_fuso ?? config.clima.fusoPadrao, ...quem },
+    ),
   ])
 
   const conhecidos = new Map<string, Run>(doDia.map((r) => [r.id, r]))
@@ -51,6 +71,7 @@ export async function conversaDoDia(
     falas,
     runs: Object.fromEntries(visoes),
     pendentes: pendentes.length,
+    limites,
     ...(aberto ? { aberto: { run_id: aberto.id, status: aberto.status } } : {}),
     ...(sugerida !== undefined ? { mensagem_sugerida: sugerida } : {}),
   }

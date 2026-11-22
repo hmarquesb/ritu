@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** entrega 1 construída e aprovada no portão 1. Entrega 2 construída (008 a 015), com a tag `entrega-2`, e aprovada com correções no portão 2 (2026-11-17); as correções seguem na `main` (`.plans/portao-2-correcoes-plan.md`). Entrega 3 (016 a 020) aprovada; 016 a 018 implementadas e juntadas na `main`; 019 implementada e 020 em construção na trilha adiantada (`entrega-3`).
+> **Status:** entregas 1 e 2 aprovadas (portão 2 com correções, já aplicadas na `main`). Entrega 3: 016 a 019 na `main`; 020 implementada na `entrega-3`, ainda não juntada. Entrega 4: 021 e 022 implementadas e produção no ar; 023 e 024 aprovadas. Spec 025 (chás híbridos) implementada na `main`.
 
 ## O que é o projeto
 
@@ -37,6 +37,8 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 `.local/REFERENCIAS.md` é um arquivo **local, fora do git**, com padrões de referência para a fundação. Se existir, leia antes de escrever qualquer fundação; se não existir, siga só a spec. Nada do repositório cita o conteúdo dele (`RULES.md` §5).
 
 `PREPARO.md` (raiz) é a lista da dona antes de a construção começar. Agentes só o leem para conferir pré-condições.
+
+`DEPLOY.md` (raiz) é o roteiro da dona para ligar as contas de produção (Gemini, Neon, Vercel, Google, Grafana Cloud, GitHub). Agentes não o seguem: tudo nele depende de conta da dona.
 
 ## Onde fica cada coisa
 
@@ -73,16 +75,20 @@ Os documentos ficam em `.docs/`. **Nenhum é leitura obrigatória inteira.** Est
 | `npm run demo` | Sem argumento, lista os cenários. `-- --cenario <nome>` roda o acompanhante num cenário com o runtime roteirizado, sem rede, e imprime etapas (com o pensamento), resposta, sugestões, avisos e o resumo do run. Cenários com mensagem passam por `conversar`, com o Intérprete roteirizado, e o relatório mostra "Entendi". Cenários com pausa imprimem a pergunta com as opções numeradas e a resposta usada; os com aprovação imprimem o bloco com as linhas numeradas, a decisão e o que foi gravado. `-- --interativo` lê a resposta do terminal: na pergunta de casa, `t`, `n`, `g` ou Enter por item; nas outras, o número da opção ou Enter; no bloco, Enter anota tudo, números separados por vírgula desligam linhas e `n` é "Agora não". `-- --esgotar decisao` esgota o modelo principal do papel antes, para mostrar a troca. Os cenários de aprendizado também imprimem "Como ficou?", "Gravado" e "Toques" (retorno, gosto, troca e "Não tenho" tocados depois da entrega). Os cenários de memória imprimem "Rotina" (o resumo de rotina usado) e "Padrões" (os padrões da conta, com o status). Os sete cenários de guardrail e Juiz (`alerta-por-codigo`, `sumir-por-codigo`, `injection-por-codigo`, `juiz-corrige`, `juiz-barra`, `juiz-fora-do-ar`, `nota-com-saude`) mostram a etapa `guardrail` com o resumo `codigo`, ou, no Resumo, a linha "juiz" (tentativas, `aprovado`, `reprovado` ou `indisponivel`, e os motivos) e, quando houve nova tentativa, a linha "reforço" (os modelos do papel `reforco`). Com `OTEL_EXPORTER_OTLP_ENDPOINT`, exporta spans, métricas e logs do run para o LGTM |
 | ⚠️ `npm run demo -- --cenario <nome> --llm` | O mesmo cenário com o runtime da Mastra e LLM real; o Intérprete também chama o modelo real; combina com `--interativo`; registro de uso em memória |
 | `npm run eval:llm -- --checkpoint <nome> --listar` | Lista os casos do checkpoint por família, a contagem por tipo e a estimativa de chamadas, sem modelo, sem rede e sem chave |
-| ⚠️ `npm run eval:llm -- --checkpoint <nome>` | Rodada nova do checkpoint (`evals/llm/checkpoints.ts`: `c1-base`, `c2-conversa`, `c3-confiavel`), um caso por vez, com LLM real e o avaliador `avaliador.v1` nas perguntas fechadas. Grava `evals/resultados/<nome>.md` e `.json`, `historico.json` e `evals/COMPARACAO.md` (gerado), com as metas de `config/evals.ts`; o detalhe das falhas vai para `evals/local/` (fora do git). Recusa se há andamento do checkpoint ou rodada com a data de hoje. Interrompida (cota ou erros seguidos), sai com 2 e diz como retomar. Só nos checkpoints. Com `OTEL_EXPORTER_OTLP_ENDPOINT`, exporta a telemetria dos casos para o LGTM |
+| ⚠️ `npm run eval:llm -- --checkpoint <nome>` | Rodada nova do checkpoint (`evals/llm/checkpoints.ts`: `c1-base`, `c2-conversa`, `c3-confiavel`), um caso por vez, com LLM real e o avaliador `avaliador.v1` nas perguntas fechadas. Grava `evals/resultados/<nome>.md` e `.json`, `historico.json` e `evals/COMPARACAO.md` (gerado), com as metas de `config/evals.ts`; o detalhe das falhas vai para `evals/local/` (fora do git). Recusa se há andamento do checkpoint ou rodada do mesmo checkpoint com a data de hoje. Interrompida (cota ou erros seguidos), sai com 2 e diz como retomar. Só nos checkpoints. Com `OTEL_EXPORTER_OTLP_ENDPOINT`, exporta a telemetria dos casos para o LGTM |
 | ⚠️ `npm run eval:llm -- --checkpoint <nome> --retomar` | Continua a rodada do andamento em `evals/local/`; recusa se os casos, os prompts ou os modelos mudaram |
 | ⚠️ `npm run eval:llm -- --checkpoint <nome> --do-zero` | Apaga o andamento e começa a rodada de novo |
-| ⚠️ `npm run eval:llm -- --checkpoint <nome> --extra` | Permite uma segunda rodada completa no mesmo dia. Só a pedido da dona |
+| ⚠️ `npm run eval:llm -- --checkpoint <nome> --extra` | Permite uma segunda rodada completa do mesmo checkpoint no mesmo dia. Só a pedido da dona |
 | ⚠️ `npm run eval:llm -- --checkpoint <nome> --caso <id>` | Roda um caso e imprime checagens, etapas e custo, sem gravar nada. É a fumaça do fechamento de spec |
 | ⚠️ `npm run modelos:check` | Uma chamada mínima por modelo de `config/llm-cotas.ts`, passando pelo registro de uso; diz `ok` ou o código do erro. Só à mão |
 | ⚠️ `npm run runtime:real -- <modelo>` | Uma chamada real pelo adaptador Mastra, com uma tool de exemplo; imprime a chamada pedida e os tokens |
 | `npm run env:check` | Presente ou ausente de cada variável, sem valor. `-- --entrega N` falha se faltar obrigatória até a entrega N |
 | `npm run painel:gerar` | Gera `observability/dashboards/ritu.json` e `observability/grafana/alerting/ritu.yaml` a partir de `scripts/lib/painel.ts`. Os gerados não se editam à mão; um teste trava o gerado |
 | ⚠️ `npm run painel:check` | Confere um Grafana no ar (o local, por padrão): painel e regras presentes e, painel por painel, se há dados. Sai com 1 se falta painel ou regra e com 2 se o Grafana não responde |
+| ⚠️ `npm run env:producao` | Lê na API da Vercel só os nomes das variáveis de produção e imprime `presente`, `ausente`, `proibida` ou `—` por variável do catálogo. Sai com 1 se falta obrigatória ou há proibida, e com 2 se a API não responde. Nunca imprime valor. Precisa de `VERCEL_TOKEN`, `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID` |
+| ⚠️ `npm run smoke -- <url>` | Smoke de produção sem LLM: espera a versão `RITU_VERSAO_ESPERADA` (até 120 s), confere saúde, página com o aviso, headers e proteções (`401` do cron, `403` sem `Origin`). Sai com 1 no primeiro grupo que falha. Precisa de `CRON_SECRET`; a URL vem do argumento ou de `SITE_URL`. Roda no job `deploy` da CI |
+| ⚠️ `npm run smoke:completo` | Playwright contra `SITE_URL` (`playwright.producao.config.ts`, projeto `celular`): demonstração, Aviso, mensagem sugerida e resposta com "Não é orientação médica", com LLM de produção. Só à mão |
+| ⚠️ `npm run painel:publicar` | Publica no Grafana Cloud a pasta `Ritu`, o painel, as cinco regras, o ponto de contato `ritu-email` e a política. Imprime `criado`, `atualizado` ou `sem mudança` por item; nunca o e-mail nem o token. Precisa de `GRAFANA_URL`, `GRAFANA_TOKEN` e `GRAFANA_ALERTA_EMAIL` |
 | `docker compose up -d` | Postgres (`5432`) e Grafana LGTM (`3001`, OTLP `4317`/`4318`), numa tag fixa, com o painel e as regras de alerta provisionados |
 
 ## Skills

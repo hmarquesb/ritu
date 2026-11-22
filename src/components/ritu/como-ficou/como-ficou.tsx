@@ -5,6 +5,7 @@ import { useCallback, useState } from "react"
 import { StateBlock } from "@/components/base/state-block"
 import { TextLink } from "@/components/base/text-link"
 import { toast } from "@/components/base/toast"
+import { avisarLimiteDeToque } from "@/components/ritu/limites"
 import type { ComoFicouNaTela, RetornoNaTela } from "@/core/outcomes/visao"
 import { ItemDeRetorno } from "./item"
 
@@ -26,6 +27,7 @@ async function enviar(id: string, resultado: Resultado) {
     window.location.assign("/")
     return { tipo: "sessao" as const }
   }
+  if (await avisarLimiteDeToque(resposta)) return { tipo: "limite" as const }
   if (resposta.ok) {
     const corpo: unknown = await resposta.json()
     const retorno =

@@ -443,6 +443,8 @@ Tudo mecânica. A fumaça ⚠️ é do orquestrador.
 
 ## Correção do portão 2
 
+Aplicada (commits f0c567f, 55dc606, efeedfb, 2dc6b6d).
+
 Aprovada pela dona no portão 2 (2026-11-17). Plano: `.plans/portao-2-correcoes-plan.md` (P2-T1 a P2-T3 e P2-T8). Depois delas, ⚠️ rodada nova do `c3-confiavel` em outro dia, com o modelo estável.
 
 ### P2-8 · A recusa por dia olha só o checkpoint pedido

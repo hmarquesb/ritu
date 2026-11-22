@@ -4,14 +4,13 @@
 
 ## 0. Estado atual (atualizar a cada sessão)
 
-Entrega 1 (specs 001 a 007) construída, com a tag `entrega-1`, e aprovada pela dona no portão 1 em 2026-11-15. O relatório está em `.plans/entrega-1-relatorio.md`; o checkpoint `c1-base` está em `evals/resultados/c1-base.md`. Entrega 2 (specs 008 a 015, com a correção C13 da 002) construída, com a tag `entrega-2`, e aprovada com correções pela dona no portão 2 em 2026-11-17. O relatório está em `.plans/entrega-2-relatorio.md`; o checkpoint `c3-confiavel` está em `evals/resultados/c3-confiavel.md`. As correções do portão 2 (seções "Correção do portão 2" das specs 008, 010, 012, 013 e 014) estão em `.plans/portao-2-correcoes-plan.md`, com o estado em `.plans/portao-2-estado.md`. Entrega 3: 016 a 020 aprovadas; 016, 017 e 018 implementadas e juntadas na `main`; 019 implementada e 020 em construção na trilha adiantada (`entrega-3`). 021 a 024 aprovadas (entrega 4 toda especificada).
+Entrega 1 (001 a 007) aprovada no portão 1, com a tag `entrega-1`. Entrega 2 (008 a 015) aprovada com correções no portão 2 (2026-11-17), com a tag `entrega-2`; as correções estão na `main` (`.plans/portao-2-correcoes-plan.md`). Segunda rodada da base concluída e commitada (127 alimentos, nenhuma linha `a_confirmar`). Entrega 3: 016 a 019 implementadas na `main`; 020 implementada na `entrega-3` (`50f0ec4`, ADR 0046), ainda não juntada. Entrega 4: 021 e 022 implementadas, `entrega-4` juntada na `main` e produção no ar; 023 e 024 aprovadas. Spec 025 (chás híbridos) implementada na `main` (ADR 0049); a migração `0005` vai à produção pelo job `deploy` da CI no push.
 
 **Próximos passos, na ordem:**
-1. Na `main`: as correções do portão 2 (`.plans/portao-2-correcoes-plan.md`).
-2. Em paralelo, no worktree: `/construir-entrega 3 adiantada`, seguindo pela 020.
-3. Depois das correções: ⚠️ rodada nova do `c3-confiavel`, em outro dia, com o modelo estável.
-4. A dona revisa a base (as linhas `a_confirmar`) e escreve, com o Claude, a spec nova dos chás híbridos. Ela é construída antes da 022.
-5. `/construir-entrega 3`, que junta o que houver de novo na branch `entrega-3` (skill §0.6) e fecha a entrega.
+1. Push da `main` com a 025 (o job `deploy` aplica a `0005` em produção) e conferir o smoke.
+2. ⚠️ Rodada nova do `c3-confiavel`, com o modelo estável (já inclui os casos `c3-s23` e `c3-s24` da 025).
+3. `/construir-entrega 3`: juntar a `entrega-3` (020) na `main` → portão 3.
+4. Construir a 023 e a 024 → portão 4.
 
 ## 1. Entregas
 

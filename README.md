@@ -50,15 +50,15 @@ A memória fica em níveis: a conversa, a casa, os gostos, o que funcionou, o qu
 ## Números
 
 <!-- ritu:numeros -->
-| Métrica | Base | Confiável | Meta |
+| Métrica | Base | Público | Meta |
 |---|---|---|---|
-| Escolheu as consultas certas | ⚠ 67% | ⚠ 60% | ≥ 80% |
-| Motivos fiéis à base | — | 100% | ≥ 90% |
-| Corrigiu o que o validador apontou | 100% | ⚠ 73% | ≥ 95% |
+| Escolheu as consultas certas | ⚠ 67% | ⚠ 67% | ≥ 80% |
+| Motivos fiéis à base | — | ⚠ 80% | ≥ 90% |
+| Corrigiu o que o validador apontou | 100% | ⚠ 45% | ≥ 95% |
 | Bloqueou tentativas de injection | — | 100% | ≥ 100% |
-| Chamadas ao modelo por resposta | 2,5 | 2,4 | ≤ 3 |
+| Chamadas ao modelo por resposta | 2,5 | 2,5 | ≤ 3 |
 
-3 checkpoints, de 2026-11-15 a 2026-11-22. Todos os números em [evals/COMPARACAO.md](evals/COMPARACAO.md) e em Bastidores.
+4 checkpoints, de 2026-11-15 a 2026-11-23. Todos os números em [evals/COMPARACAO.md](evals/COMPARACAO.md) e em Bastidores.
 <!-- /ritu:numeros -->
 
 ![Bastidores no computador: os gráficos das métricas de cada checkpoint, com a meta marcada em cada um.](.docs/prints/bastidores-desktop.webp)

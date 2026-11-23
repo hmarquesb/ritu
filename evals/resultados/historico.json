@@ -576,6 +576,235 @@
         "custo.latencia_p95_ms"
       ],
       "criticas": []
+    },
+    {
+      "checkpoint": "c5-publico",
+      "data": "2026-11-23",
+      "prompts": {
+        "acompanhante": "acompanhante.v8",
+        "interprete": "interprete.v2",
+        "memoria": "memoria.v1",
+        "juiz": "juiz.v1",
+        "avaliador": "avaliador.v1"
+      },
+      "modelos": [
+        "gemini-3.1-flash-lite",
+        "gemini-3.1-flash-lite@1",
+        "gemini-3.5-flash-lite"
+      ],
+      "casos": 86,
+      "casos_com_erro": 0,
+      "metricas": {
+        "intencao.acerto": {
+          "valor": 0.9,
+          "parte": 18,
+          "total": 20
+        },
+        "casa.acerto": {
+          "valor": 1,
+          "parte": 5,
+          "total": 5
+        },
+        "propostas.corretas": {
+          "valor": 0.6666666666666666,
+          "parte": 4,
+          "total": 6
+        },
+        "para_ter.acerto": {
+          "valor": 0.6666666666666666,
+          "parte": 2,
+          "total": 3
+        },
+        "aprendizado.acerto": {
+          "valor": 0.8,
+          "parte": 4,
+          "total": 5
+        },
+        "memoria.acerto": {
+          "valor": 0.9,
+          "parte": 9,
+          "total": 10
+        },
+        "conversa.acerto": {
+          "valor": 0.6666666666666666,
+          "parte": 2,
+          "total": 3
+        },
+        "seguranca.bloqueio": {
+          "valor": 1,
+          "parte": 6,
+          "total": 6
+        },
+        "linguagem.acerto": {
+          "valor": 0.875,
+          "parte": 7,
+          "total": 8
+        },
+        "incomodos.acerto": {
+          "valor": 0.5,
+          "parte": 2,
+          "total": 4
+        },
+        "conteudo.deve": {
+          "valor": 0.75,
+          "parte": 9,
+          "total": 12
+        },
+        "conteudo.nao_pode": {
+          "valor": 1,
+          "parte": 9,
+          "total": 9
+        },
+        "fidelidade.motivos_fieis": {
+          "valor": 0.8,
+          "parte": 12,
+          "total": 15
+        },
+        "fidelidade.texto_bate": {
+          "valor": 0.8181818181818182,
+          "parte": 9,
+          "total": 11
+        },
+        "explicacao.completa": {
+          "valor": 0.5454545454545454,
+          "parte": 6,
+          "total": 11
+        },
+        "trajetoria.correta": {
+          "valor": 0.6666666666666666,
+          "parte": 4,
+          "total": 6
+        },
+        "trajetoria.desnecessarias_por_run": {
+          "valor": 0.041666666666666664,
+          "parte": 2,
+          "total": 48
+        },
+        "autocorrecao.valida_na_1a": {
+          "valor": 0.7209302325581395,
+          "parte": 31,
+          "total": 43
+        },
+        "autocorrecao.corrigiu": {
+          "valor": 0.45454545454545453,
+          "parte": 5,
+          "total": 11
+        },
+        "perguntas.necessarias": {
+          "valor": 1,
+          "parte": 2,
+          "total": 2
+        },
+        "perguntas.desnecessarias_evitadas": {
+          "valor": 1,
+          "parte": 3,
+          "total": 3
+        },
+        "perguntas.recusadas_por_run": {
+          "valor": 0,
+          "parte": 0,
+          "total": 8
+        },
+        "propostas.recusadas_por_run": {
+          "valor": 0.3333333333333333,
+          "parte": 2,
+          "total": 6
+        },
+        "conversa.passos_pergunta_simples": {
+          "valor": 2
+        },
+        "seguranca.injection_bloqueada": {
+          "valor": 1,
+          "parte": 4,
+          "total": 4
+        },
+        "linguagem.alertas_perdidos": {
+          "valor": 1,
+          "parte": 1,
+          "total": 3
+        },
+        "linguagem.falsos_alertas": {
+          "valor": 0,
+          "parte": 0,
+          "total": 3
+        },
+        "incomodos.promessas_bloqueadas": {
+          "valor": 1,
+          "parte": 3,
+          "total": 3
+        },
+        "juiz.acerto": {
+          "valor": 0.7692307692307693,
+          "parte": 10,
+          "total": 13
+        },
+        "juiz.falsas_reprovacoes": {
+          "valor": 1,
+          "parte": 1,
+          "total": 4
+        },
+        "custo.chamadas_decisao_por_run": {
+          "valor": 2.4583333333333335,
+          "parte": 118,
+          "total": 48
+        },
+        "custo.chamadas_apoio_por_run": {
+          "valor": 1.7708333333333333,
+          "parte": 85,
+          "total": 48
+        },
+        "custo.chamadas_reforco_por_run": {
+          "valor": 0.1875,
+          "parte": 9,
+          "total": 48
+        },
+        "custo.tokens_entrada_por_run": {
+          "valor": 20023.520833333332,
+          "parte": 961129,
+          "total": 48
+        },
+        "custo.tokens_saida_por_run": {
+          "valor": 524.7916666666666,
+          "parte": 25190,
+          "total": 48
+        },
+        "custo.trocas": {
+          "valor": 0,
+          "parte": 0,
+          "total": 86
+        },
+        "custo.latencia_p50_ms": {
+          "valor": 6229
+        },
+        "custo.latencia_p95_ms": {
+          "valor": 36079
+        }
+      },
+      "violacoes_da_1a": {
+        "estrutura": 17,
+        "fora_dos_candidatos": 1,
+        "texto_sem_estrutura": 1
+      },
+      "abaixo_da_meta": [
+        "conteudo.deve",
+        "fidelidade.motivos_fieis",
+        "fidelidade.texto_bate",
+        "explicacao.completa",
+        "trajetoria.correta",
+        "autocorrecao.corrigiu",
+        "propostas.corretas",
+        "propostas.recusadas_por_run",
+        "para_ter.acerto",
+        "aprendizado.acerto",
+        "conversa.acerto",
+        "linguagem.alertas_perdidos",
+        "incomodos.acerto",
+        "juiz.acerto",
+        "custo.latencia_p95_ms"
+      ],
+      "criticas": [
+        "linguagem.alertas_perdidos"
+      ]
     }
   ]
 }

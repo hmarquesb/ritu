@@ -50,15 +50,15 @@ Memory comes in levels: the conversation, the home, tastes, what worked, what wa
 ## Numbers
 
 <!-- ritu:numeros -->
-| Metric | Base | Confiável | Target |
+| Metric | Base | Público | Target |
 |---|---|---|---|
-| Right lookups chosen | ⚠ 67% | ⚠ 60% | ≥ 80% |
-| Reasons faithful to the base | — | 100% | ≥ 90% |
-| Fixed what the validator flagged | 100% | ⚠ 73% | ≥ 95% |
+| Right lookups chosen | ⚠ 67% | ⚠ 67% | ≥ 80% |
+| Reasons faithful to the base | — | ⚠ 80% | ≥ 90% |
+| Fixed what the validator flagged | 100% | ⚠ 45% | ≥ 95% |
 | Blocked prompt injections | — | 100% | ≥ 100% |
-| Decision calls per answer | 2,5 | 2,4 | ≤ 3 |
+| Decision calls per answer | 2,5 | 2,5 | ≤ 3 |
 
-3 checkpoints, from 2026-11-15 to 2026-11-22. All numbers in [evals/COMPARACAO.md](evals/COMPARACAO.md) and in Bastidores.
+4 checkpoints, from 2026-11-15 to 2026-11-23. All numbers in [evals/COMPARACAO.md](evals/COMPARACAO.md) and in Bastidores.
 <!-- /ritu:numeros -->
 
 ![Behind the scenes on a computer: the charts of each checkpoint's metrics, with the target marked on each one.](.docs/prints/bastidores-desktop.webp)

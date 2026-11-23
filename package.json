@@ -37,7 +37,10 @@
     "env:producao": "node --env-file-if-exists=.env.local --import tsx scripts/env-producao.ts",
     "smoke": "node --env-file-if-exists=.env.local --import tsx scripts/smoke.ts",
     "smoke:completo": "playwright test -c playwright.producao.config.ts",
-    "painel:publicar": "node --env-file-if-exists=.env.local --import tsx scripts/painel-publicar.ts"
+    "painel:publicar": "node --env-file-if-exists=.env.local --import tsx scripts/painel-publicar.ts",
+    "readme": "tsx scripts/readme.ts",
+    "prints": "tsx scripts/prints.ts",
+    "marca:og": "tsx scripts/marca-og.ts"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

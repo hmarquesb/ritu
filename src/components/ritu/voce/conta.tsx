@@ -6,6 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/base/button"
 import { Dialog } from "@/components/base/dialog"
 import { Surface } from "@/components/base/surface"
+import { TextLink } from "@/components/base/text-link"
 import type { ThemeChoice } from "@/components/theme/theme"
 import { ThemeSwitcher } from "@/components/theme/theme-switcher"
 import type { VoceNaTela } from "@/core/memory/ler"
@@ -59,6 +60,9 @@ export function Conta({ conta, tema, googleDisponivel, criarPerfil, sair, apagar
           <ThemeSwitcher initial={tema} />
         </div>
       </div>
+      <p className="text-body">
+        <TextLink href="/sobre">{T.sobre}</TextLink>
+      </p>
       <div className="flex flex-wrap gap-2">
         <Button
           variant="secondary"

@@ -2,6 +2,7 @@ import { config } from "@config/index"
 import { sair } from "@/app/_acoes/sessao"
 import { exigirPasso } from "@/app/_lib/conta"
 import { Button } from "@/components/base/button"
+import { TextLink } from "@/components/base/text-link"
 import { AceitarAviso } from "./aceitar"
 
 export const dynamic = "force-dynamic"
@@ -21,6 +22,9 @@ export default async function AvisoPage() {
           </p>
         ))}
         {conta.tipo === "demo" ? <p className="text-ink-muted">{avisoInicial.demo}</p> : null}
+        <p>
+          <TextLink href="/sobre#privacidade">{avisoInicial.politica}</TextLink>
+        </p>
       </div>
       <AceitarAviso rotulo={avisoInicial.botao} />
       <form action={sair}>

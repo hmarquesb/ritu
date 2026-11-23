@@ -919,4 +919,11 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/publico/politica.eval.ts"],
     desde: 4,
   },
+  {
+    grupo: "Páginas públicas",
+    linha:
+      "O README em dia nos dois idiomas: o gerador refeito bate com o arquivo, cada marcador aparece uma vez, e nenhum README cita e-mail, URL de banco, `.local` nem referência local",
+    arquivos: ["evals/det/publico/readme.eval.ts"],
+    desde: 4,
+  },
 ]

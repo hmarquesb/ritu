@@ -531,3 +531,17 @@
 - **Faltava:** com segunda mensagem há dois runs; a checagem de `run_id` e de texto recebe um só.
 - **Decidido:** valem para a primeira parte da rodada (da mensagem até antes da segunda mensagem), que é o run que o caso avalia.
 - **Desfazer:** passar os dois runs a `checagensDeRota`.
+
+## 023 A1 · Contratos citados pela subseção da spec
+
+- **Faltava:** a spec 023 traz cerca de 400 linhas de contratos; copiá-los em cada tarefa duplicaria o texto no plano.
+- **Decidido:** cada tarefa do plano cita a subseção exata de "Contratos" e os critérios de aceite que cobre; o subagente lê só essas partes da spec.
+- **Por quê:** mantém uma fonte só e o prompt curto; a regra de não abrir a spec existe para economizar contexto, e a leitura dirigida economiza mais que a cópia.
+- **Desfazer:** copiar as subseções nos blocos do plano.
+
+## 023 A2 · `caminho` opcional em `origemValida`
+
+- **Faltava:** a spec declara `caminho` obrigatório, mas o eval `evals/det/seguranca/origem-e-headers.eval.ts` (017) chama `origemValida` sem ele.
+- **Decidido:** `caminho?: string`; sem caminho, a regra é a da 017. O `proxy.ts` sempre passa o caminho.
+- **Por quê:** não muda o comportamento em produção e não reescreve um eval de outra spec.
+- **Desfazer:** tornar obrigatório e passar o caminho no eval da 017.

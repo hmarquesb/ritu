@@ -109,3 +109,29 @@ Plano em `.plans/027-checkpoints-pelas-rotas-plan.md`. Na `main` (entrega 4, dep
 | T6 · Keep the route flush off in the scenario container | concluida | 293e8f8 |
 
 > Fumaça ⚠️ do fechamento da 027 (2026-11-22): `--checkpoint c5-publico --caso c2-p01-frio-so-incertos` acertou, com pausa pela rota de resposta e as 5 checagens `rota` ok. A 1ª tentativa achou o `after()` do Next fora de requisição (telemetria ligada pelo ambiente): corrigido na T6.
+
+## 023 · Bastidores e MCP
+
+Plano em `.plans/023-bastidores-e-mcp-plan.md`. Na `main`.
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Install the MCP packages and fence them in the architecture test | concluida | fbf797f |
+| C1 · Stop the intermittent target-size violation in the question (correção da CI) | concluida | 05df77c |
+| T2 · Add the sinais_dia table and the BastidoresStore port with its adapters | concluida | ffebb92 |
+| T3 · Add the Bastidores config, texts and MCP limits | concluida | aba3439 |
+| T4 · Move the history schema to core and read it at runtime | concluida | b016eca |
+| T8 · Write the six public MCP tools over the internal ones | concluida (escalada a nucleo) | c6a2c34 |
+| T5 · Compute the week numbers with window, floor and cache | concluida | c32358e |
+| T6 · Build the evals evolution from the history | concluida | cfefc3b |
+| T9 · Add the MCP limit, the MCP metric and span, and the panel stat | concluida | 85e9530 |
+| T10 · Let /api/mcp pass without an Origin header | concluida | b5f4b6c |
+| T11 · Wire the Bastidores store, the week numbers and the history into the container | concluida | 6a6029d |
+| T7 · Record the daily signals in the cleanup before deleting accounts | pendente | |
+| T12 · Serve the MCP tools at /api/mcp with limits and telemetry | pendente | |
+| T13 · Build the Bastidores page | pendente | |
+| T14 · Cover the week numbers with the privacy eval | pendente | |
+| T15 · Check Bastidores and the MCP tools in the production smoke | pendente | |
+> eval:det intermitente visto na 023 T1: `evals/det/aprendizado/privacidade.eval.ts` (dois-nao-ajudou) falhou uma vez sob carga e passou isolado e na 2ª rodada.
+
+> Parada para passagem em 2026-11-22 (pedido da dona). 023: T1–T6 e T8–T11 com commit; faltam T7 (onda 6), T12 e T13 (onda 7), T14 e T15 (onda 8) e o fechamento. CI verde em `05df77c` (C1 resolveu o axe intermitente).

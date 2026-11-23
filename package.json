@@ -43,8 +43,8 @@
     "marca:og": "tsx scripts/marca-og.ts"
   },
   "dependencies": {
-    "@google/genai": "^3.3.0",
-    "@mastra/core": "^1.83.0",
+    "@google/genai": "^3.6.1",
+    "@mastra/core": "^1.85.0",
     "@modelcontextprotocol/server": "^2.4.0",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.223.2",

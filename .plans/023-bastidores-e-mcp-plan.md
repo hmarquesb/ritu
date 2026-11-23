@@ -152,7 +152,7 @@ Regras comuns: zod em toda borda; `src/core/` só importa `src/core/`, `config/`
 ### T12 · Serve the MCP tools at /api/mcp with limits and telemetry
 - nivel: nucleo
 - objetivo: servidor MCP sem estado com as seis tools, rota `/api/mcp` com corpo máximo, limites e `descarregarDepois`, e o eval de segurança da rota.
-- arquivos: `src/infra/mcp/servidor.ts`, `src/infra/mcp/servidor.test.ts`, `src/app/api/mcp/route.ts`, `evals/det/seguranca/mcp-rota.eval.ts`, `evals/det/privacidade/<novo arquivo>.eval.ts` (canários do MCP), `evals/det/mapa.ts` (só as entradas novas, `desde: 4`)
+- arquivos: `src/infra/mcp/servidor.ts`, `src/infra/mcp/servidor.test.ts`, `src/app/api/mcp/route.ts`, `evals/det/seguranca/mcp-rota.eval.ts`, `evals/det/privacidade/<novo arquivo>.eval.ts` (canários do MCP), `evals/det/mapa.ts` (só as entradas novas, `desde: 4`), `src/app/_lib/rota.ts` (só `limite_mcp` em `CODIGOS_DE_LIMITE`)
 - depende de: T1, T8, T9, T10, T11
 - leitura: spec 023 `Contratos › **Servidor (src/infra/mcp/servidor.ts)**` e `**Rota (src/app/api/mcp/route.ts)**`; critérios "Lista", "Entrada inválida", "Limites", "Origem", "Corpo", "Telemetria" e, em "Geral", o de canários; em `Evals`, os itens `mcp-rota.eval.ts` e `privacidade/`; `OBSERVABILITY.md` §3 "Privacidade"; a documentação da versão instalada de `mcp-handler` e `@modelcontextprotocol/server` em `node_modules` (README e tipos)
 - skills: nenhuma
@@ -161,6 +161,7 @@ Regras comuns: zod em toda borda; `src/core/` só importa `src/core/`, `config/`
 - comandos: `rtk bypass npm run lint`, `npm run typecheck`, `npm test`, `npm run eval:det`, `npm run build`
 - pronto quando: testes, evals e build verdes.
 - fora: página, smoke.
+- notas (da sessão anterior): `src/app/_lib/rota.ts` (`CODIGOS_DE_LIMITE`) não tem `limite_mcp`: acrescente (o arquivo entra na lista desta tarefa). Use `medirChamadaMcp` de `src/core/mcp/telemetria.ts` (o classificador não pode lançar, senão perde o erro original). `CityLookupUnavailableError` é checado por `instanceof` em `src/core/mcp/tools.ts`: se a rota carregar cópias separadas, troque pela marca/código (`cidades_indisponivel`). `createPgBastidores(sql)` recebe só o `sql`. `origemValida` usa `startsWith("/api/mcp")` (conforme a spec; não mexer).
 
 ### T13 · Build the Bastidores page
 - nivel: tela

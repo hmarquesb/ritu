@@ -1,6 +1,7 @@
 ---
 title: Bastidores e MCP
-status: approved
+status: implemented
+implemented: e770b3d
 entrega: 4
 created: 2026-11-15
 ---

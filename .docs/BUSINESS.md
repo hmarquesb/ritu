@@ -64,6 +64,8 @@ O Ritu é um **site** (responsivo, pensado primeiro para o celular).
 | **Falta** | O registro de que um alimento teria entrado numa resposta e não estava em casa (§9) |
 | **Vale ter em casa** | Indicação, dentro de uma resposta, de um alimento que fez falta várias vezes. Vai para a lista "Para ter em casa" se a pessoa aprovar |
 | **Run** | Uma execução do agente para uma mensagem, com rastro das etapas |
+| **Bastidores** | Página pública com os números agregados do agente e a evolução dos evals |
+| **MCP** | Protocolo pelo qual outro agente chama as tools. O Ritu expõe as de leitura da base e do clima em `/api/mcp` |
 
 ## 6. Entrada no site
 
@@ -103,7 +105,7 @@ Meta: **primeira resposta em menos de 1 minuto, sem preencher nenhum campo.**
 | **Como pensei** | Linha do tempo do rastro: o que o agente entendeu, consultou, corrigiu, perguntou e propôs, e o que o juiz disse. Os detalhes técnicos (modelo, tokens, tempo) ficam recolhidos, por passo e no total |
 | **O que sei sobre você** (em Você) | Tudo o que o Ritu guarda, por nível (§11), editável e apagável item por item. Os fixos (dosha, cidade, **evitar sempre**, restrições, "não como") mudam aqui mesmo |
 | **Conta** (em Você) | Como a pessoa entrou (Google ou demonstração, com "Criar meu perfil"), tema, **Sair** e **Apagar meus dados** |
-| **Bastidores** (pública) | Números agregados do agente e a evolução dos evals (`OBSERVABILITY.md` §4) |
+| **Bastidores** (pública, sem login) | Últimos 7 dias completos, só a partir de 20 conversas: conversas, tempo típico, passos, respostas refeitas pelo juiz, trocas de modelo, 👍/👎 e retornos, intenções e tools mais usadas, sem nenhum dado de pessoa. Evolução dos evals em cinco gráficos, com a tabela completa recolhida. "Use a base no seu agente": o endereço do MCP, as seis tools e um exemplo de configuração (`OBSERVABILITY.md` §4) |
 | **Sobre** | O projeto, privacidade, link do repositório |
 
 Quem entrou navega por quatro destinos: **Conversa**, **Minha casa**, **Como ficou?** e **Você**. A barra fica embaixo no celular e na lateral no desktop. **Você** junta a carta do dosha, o que o Ritu sabe sobre a pessoa e a Conta.
@@ -388,6 +390,8 @@ O texto vem de `data/doshas.yaml`, com fonte, em linguagem leve.
 - **Privacidade (LGPD):** guarda o id da conta, o perfil, a cidade escolhida, a casa, os gostos, as faltas dos últimos 30 dias, os retornos, a rotina, os padrões confirmados, as mensagens dos últimos 7 dias e os runs. O e-mail do Google serve **só para entrar**. Nada de telefone. A página "Você" mostra tudo; "Apagar meus dados" apaga tudo. A telemetria nunca leva texto da pessoa.
 - **Aviso sobre o provedor de IA:** no plano gratuito, o provedor pode usar as mensagens para melhorar os produtos dele. O Aviso inicial e a tela Sobre dizem isso com clareza.
 - **Demonstração:** as contas expiram em 24 h e são apagadas.
+- **Bastidores:** abaixo de 20 conversas nos 7 dias, a página mostra só quantas houve; nunca mostra id, texto nem cidade. Todos os runs contam (Google, demonstração, testers e contas já apagadas).
+- **MCP público:** seis tools de leitura da base ayurvédica e do clima, sem conta, com o aviso "Não é orientação médica." em toda saída. Não lê nem escreve nada de pessoa. Limite por IP (30 por minuto, 300 por dia) e global (3000 por dia); passando disso, `429`.
 
 ## 15. O que o produto não faz
 

@@ -158,6 +158,12 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - **Cota e hora:** `cotaDoDiaEsgotada` só é verdadeiro com a cota do dia cheia ou `esgotado_ate: "dia"` em todo modelo do papel; `viradaDaCota` e `horaLocal` dão "5h" e "4h" em São Paulo nos dois horários do Pacífico.
 - **Privacidade dos limites:** `ritu_limite_total` só tem `tipo`, `motivo` e `resultado`; chave, IP, hash e conta não vão para span, métrica nem log, e a tabela `limites` não guarda IP.
 
+- **MCP** (`evals/det/mcp/tools.eval.ts`): `tools/list` traz exatamente as seis tools, com `inputSchema` e `outputSchema`; cada tool devolve o mesmo que a interna com contexto neutro, mais o aviso; `dosha` muda a ordem dos candidatos; cidade não encontrada e clima fora do ar viram status, não erro; os stores proibidos lançam `mcp_sem_conta`; entrada inválida vira erro de tool sem stack.
+- **Rota do MCP** (`evals/det/seguranca/mcp-rota.eval.ts`): sem `Origin` passa e com `Origin` de outro site dá `403`; a 31ª chamada do IP no minuto, a 301ª no dia e a 3001ª no total dão `429` com `Retry-After`; corpo acima de 16 KB dá `413` sem consumir limite.
+- **Privacidade do MCP e de Bastidores** (`evals/det/privacidade/mcp-canarios.eval.ts`): nenhuma saída do MCP nem da página traz `conta_id`, e-mail, texto de mensagem ou cidade de perfil; cidade pedida, alimento e argumentos não vão para span, métrica nem log.
+- **Números de Bastidores** (`evals/det/bastidores/numeros.eval.ts`): janela até ontem, piso de 20 conversas, quem conta, indicadores, intenções e tools, sinais gravados antes de apagar a conta e idempotência do registro, cache e erro do banco.
+- **Evolução dos evals** (`evals/det/bastidores/evolucao.eval.ts`): com o `historico.json` real, as métricas, os checkpoints e cada valor da página batem com `evals/COMPARACAO.md`.
+
 **Telemetria**
 - Todo span, métrica e log da lista fechada é emitido por algum cenário, com os atributos e rótulos declarados.
 - O painel cobre todas as métricas.
@@ -169,6 +175,9 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - O registro dos casos com LLM tem ids únicos, famílias e marcas.
 - A checagem antes do 1º caso para sem Postgres e não lista modelos.
 - Um caso por motivo de inconclusivo; inconclusivo nunca vira acertou, e as métricas saem iguais às de sem ele (`evals/det/evals-llm/inconclusivos.eval.ts`).
+
+**Smoke de produção** (⚠️ `npm run smoke`, no job `deploy` da CI)
+- Grupos, em ordem: `versao`, `saude`, `pagina`, `headers`, `protecao` e `publico`. O `publico` confere `GET /bastidores` com `200` e o `tools/list` do MCP em `/api/mcp` com as seis tools.
 
 **Telas (E2E)**
 

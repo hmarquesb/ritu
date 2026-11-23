@@ -79,6 +79,7 @@ Spans, métricas, atributos e códigos de log são uma lista fechada em `src/cor
 | `ritu_fallback_sem_llm_total` | contador | — (só a falta de modelo; o modo `limite` não soma) |
 | `ritu_limite_total` | contador | `tipo` (mensagem, toque), `motivo` (conta, demo, ip, minuto, dia), `resultado` (barrado, so_atalhos, alerta): uma por decisão de limite que barra ou desvia a mensagem, ou por toque barrado; nunca chave, IP, hash ou conta |
 | `ritu_tool_chamadas_total` | contador | `tool`, `status` |
+| `ritu_mcp_chamadas_total` | contador | `tool` (as seis tools públicas), `resultado` (`ok`, `invalido`, `erro`): uma por chamada de tool do MCP público; o painel mostra o total no stat "Chamadas MCP", por resultado |
 | `ritu_tool_duracao_ms` | histograma | `tool` |
 | `ritu_validacao_violacoes_total` | contador | `violacao` |
 | `ritu_guardrail_total` | contador | `resultado` (`alerta_fisico`, `alerta_emocional`, `injection`, `suspeito`), `origem` (`codigo`, `interprete`): uma vez por mensagem barrada antes do Acompanhante |
@@ -108,7 +109,7 @@ JSON estruturado. Cada código tem um nível fixo; dentro de um run, todo log le
 |---|---|
 | `info` | `run_inicio`, `run_retomado`, `run_fim` |
 | `warn` | `clima_indisponivel`, `troca_de_modelo`, `sem_modelo`, `llm_erro`, `resposta_segura`, `atributo_proibido` |
-| `error` | `run_falhou`, `padroes_conta_falhou`, `erro_inesperado` |
+| `error` | `run_falhou`, `padroes_conta_falhou`, `sinais_dia_falhou`, `erro_inesperado` |
 
 ### Painel e alertas como código
 
@@ -169,6 +170,11 @@ Spans, métricas e logs levam **ids, tipos, durações, contagens, tokens e nome
 - a **evolução dos evals**: um gráfico por métrica, com um ponto por checkpoint, lido de `historico.json`.
 
 Sem nenhum dado de pessoa.
+
+- **Piso:** com menos de 20 conversas (runs `done`) nos 7 dias completos até ontem, os números da semana não aparecem; os evals e o MCP aparecem sempre.
+- **Votos e retornos** vêm da tabela `sinais_dia`, gravada pela limpeza diária antes de apagar as contas vencidas (`ARCHITECTURE.md` §6); o resto vem de `runs` e `run_etapas`. O resultado fica em cache em memória por 1 h.
+- **Evolução:** cinco gráficos em SVG no servidor (um por métrica de destaque, com a meta tracejada) e a tabela de todas as métricas, recolhida; os valores são os de `evals/COMPARACAO.md`.
+- **MCP:** a página explica como ligar o servidor `/api/mcp`. Cada chamada soma `ritu_mcp_chamadas_total` e abre o span `mcp.tool` (`tool.nome`, `tool.status`), raiz e sem run; nome de cidade, alimento e argumentos nunca saem da chamada.
 
 ## 5. O que cada portão confere
 

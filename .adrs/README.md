@@ -61,6 +61,8 @@
 | [0051](0051-voce-numa-pagina-rotas-de-memoria-e-conversa-apagada-fora-da-conversa.md) | "Você" numa página, duas rotas de escrita da memória e conversa apagada fora da conversa | Aceito |
 | [0052](0052-finalizar-enxuto.md) | Finalizar enxuto, montagem por código e rodada de eval sem ruído de infraestrutura | Aceito |
 | [0053](0053-checkpoints-pelas-rotas.md) | Checkpoints do eval com LLM pelos handlers das rotas do site | Aceito |
+| [0054](0054-mcp-publico-so-de-leitura.md) | MCP público só de leitura, sem estado, com limites próprios | Aceito |
+| [0055](0055-bastidores-com-piso-e-sinais-por-dia.md) | Bastidores com piso de conversas e sinais agregados por dia | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 
@@ -88,4 +90,4 @@
 | 0020 | Só planos gratuitos, sem cartão | `ARCHITECTURE.md` §8 |
 | 0021 | Construção por orquestrador e subagentes, commit direto na `main`, quatro portões humanos | `RULES.md` |
 
-Devem surgir nas specs: formato do checkpoint (005 e 009), streaming das etapas (018), banco de produção (022), transporte do MCP (023).
+Devem surgir nas specs: formato do checkpoint (005 e 009), streaming das etapas (018), banco de produção (022).

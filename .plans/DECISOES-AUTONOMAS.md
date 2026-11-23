@@ -545,3 +545,27 @@
 - **Decidido:** `caminho?: string`; sem caminho, a regra é a da 017. O `proxy.ts` sempre passa o caminho.
 - **Por quê:** não muda o comportamento em produção e não reescreve um eval de outra spec.
 - **Desfazer:** tornar obrigatório e passar o caminho no eval da 017.
+
+## 023 · T12 · rota e evals do MCP importam o servidor de `src/infra/mcp/`
+- **Faltava:** o R3 (a tela não importa adaptador) e o R6 (eval não importa adaptador) barram `src/app/api/mcp/route.ts` e os evals do MCP, que precisam do servidor em `src/infra/mcp/servidor.ts`. A spec deixa os pacotes do MCP em `src/app/api/mcp/**`, mas não diz nada do R3.
+- **Decidido:** exceção estreita no `src/architecture.test.ts`. No R3, só `route.ts` pode importar `@/infra/mcp/servidor`. No R6, só os dois evals novos. `limites.eval.ts` tira `/api/mcp` da varredura de rotas de toque: a rota tem limite próprio, coberto por `mcp-rota.eval.ts`.
+- **Por quê:** o servidor é o adaptador do protocolo. Passar por `container.ts` exigiria expor o `mcp-handler` no composition root, sem ganho.
+- **Desfazer:** expor `criarPostMcp` pelo container e tirar as exceções.
+
+## 023 · T12 · diferenças da API instalada (`mcp-handler` e `@modelcontextprotocol/server` 2.4.0)
+- **Faltava:** a spec cita `basePath` e um modo sem estado configurável.
+- **Decidido:** não existe `basePath`: quem fixa `/api/mcp` é a rota do Next. O handler já não guarda estado e responde `405` ao `GET`. O `inputSchema` anunciado deixa o valor passar, e a validação real (`safeParse`) fica na tool, para contar `invalido` e responder "Entrada inválida. Campos: …" sem stack. `outputSchema` e `structuredContent` seguem a spec. A rota não lê env: `criarPostMcp` em `src/infra/mcp/servidor.ts` lê `IP_HMAC_SECRET` e `RITU_MODO`.
+- **Por quê:** é a API instalada que vale (a tarefa manda segui-la).
+- **Desfazer:** se uma versão nova trouxer `basePath`, usá-lo.
+
+## 023 · T13 · semear os números da semana no modo e2e pelo container
+- **Faltava:** a página não pode importar `src/infra/e2e/` (R3/R12), e a tarefa não listava `container.ts`.
+- **Decidido:** o getter `numerosDaSemana` do `src/infra/container.ts`, no modo e2e, passa por `numerosDoE2e()` (`src/infra/e2e/bastidores.ts`, header `x-ritu-e2e-bastidores`: `poucos` ou `ok`). Sem o header, usa os números reais.
+- **Por quê:** é o mesmo caminho dos outros cenários do modo e2e.
+- **Desfazer:** tirar o gancho do getter e semear pelo store em memória.
+
+## 023 · T13 · dois componentes de cliente em Bastidores
+- **Faltava:** a spec diz que só `use-o-mcp.tsx` é cliente, mas o `Disclosure` do React Aria (tabela "Todas as métricas") exige cliente, e não há base `Disclosure` no design system.
+- **Decidido:** `tabela-metricas.tsx` também é `"use client"` e recebe o texto já formatado. `UseOMcp` recebe as descrições das tools por prop, para o `core/mcp` não ir para o bundle.
+- **Por quê:** é o que cumpre o critério de abrir e fechar pelo teclado sem escrever um disclosure do zero.
+- **Desfazer:** criar um `Disclosure` base em `src/components/` e mover a tabela para servidor com uma ilha só no botão.

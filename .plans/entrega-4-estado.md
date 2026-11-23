@@ -127,11 +127,15 @@ Plano em `.plans/023-bastidores-e-mcp-plan.md`. Na `main`.
 | T9 · Add the MCP limit, the MCP metric and span, and the panel stat | concluida | 85e9530 |
 | T10 · Let /api/mcp pass without an Origin header | concluida | b5f4b6c |
 | T11 · Wire the Bastidores store, the week numbers and the history into the container | concluida | 6a6029d |
-| T7 · Record the daily signals in the cleanup before deleting accounts | pendente | |
-| T12 · Serve the MCP tools at /api/mcp with limits and telemetry | pendente | |
-| T13 · Build the Bastidores page | pendente | |
-| T14 · Cover the week numbers with the privacy eval | pendente | |
-| T15 · Check Bastidores and the MCP tools in the production smoke | pendente | |
+| T7 · Record the daily signals in the cleanup before deleting accounts | concluida | cef1eed |
+| T12 · Serve the MCP tools at /api/mcp with limits and telemetry | concluida | 44e9cdd |
+| T13 · Build the Bastidores page | concluida | ac1226b |
+| T14 · Cover the week numbers with the privacy eval | concluida (2ª verificação) | e770b3d |
+| T15 · Check Bastidores and the MCP tools in the production smoke | concluida | 17e6d80 |
 > eval:det intermitente visto na 023 T1: `evals/det/aprendizado/privacidade.eval.ts` (dois-nao-ajudou) falhou uma vez sob carga e passou isolado e na 2ª rodada.
 
 > Parada para passagem em 2026-11-22 (pedido da dona). 023: T1–T6 e T8–T11 com commit; faltam T7 (onda 6), T12 e T13 (onda 7), T14 e T15 (onda 8) e o fechamento. CI verde em `05df77c` (C1 resolveu o axe intermitente).
+
+> Retomada em 2026-11-22 (21:30 -03). Pendências da passagem levadas para a T12 do plano da 023. Pedido da dona nesta sessão: parar ao chegar a 90% da janela de 5 horas (esperando a onda em curso voltar), fazer a passagem e retomar sozinho às 02h30.
+
+> 023 fechada em 2026-11-22 na `main`: gates 1 a 6, `dup` (0 clones), `base:check` e `test:db` (165) verdes; 3864 testes, 1631 casos det, 313 e2e. ADRs 0054 e 0055. Decisões 023 (T12, T13). Segue a 024.

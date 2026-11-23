@@ -13,7 +13,9 @@ ROTAS DO SERVIDOR (Next.js na Vercel)
    ├── POST /api/runs/:id/continue    resposta a uma pergunta do agente
    ├── POST /api/runs/:id/approve     aprovação das propostas → executor em código
    ├── toques (sem LLM): retorno, trocar ingrediente, gosto, casa, 👍/👎
-   └── Você (perfil, memória), cidade, quiz, bastidores (sem LLM)
+   ├── Você (perfil, memória), cidade, quiz (sem LLM)
+   ├── GET /bastidores               página pública: números da semana, evolução dos evals, como usar o MCP
+   └── POST /api/mcp                 servidor MCP público (sem conta): seis tools de leitura
           │
           ▼
    INTÉRPRETE (intenções) → o código escolhe o caminho
@@ -33,7 +35,7 @@ ROTAS DO SERVIDOR (Next.js na Vercel)
 
 Todas as chamadas de modelo passam pelo ModelRouter (papéis, registro de cota, troca de modelo).
 
-Vercel Cron, 3h em São Paulo → limpeza (demos vencidas, runs e propostas expirados, mensagens com mais de 7 dias, mensagens de run com incômodo do dia anterior, retornos sem resposta há mais de 7 dias, faltas com mais de 30 dias)
+Vercel Cron, 3h em São Paulo → limpeza (sinais de ontem em `sinais_dia`, demos vencidas, runs e propostas expirados, mensagens com mais de 7 dias, mensagens de run com incômodo do dia anterior, retornos sem resposta há mais de 7 dias, faltas com mais de 30 dias)
 Vercel Cron, 5h em São Paulo → detecção de padrões
 ```
 
@@ -159,7 +161,8 @@ Rotina e padrões têm funções do core que `tocarMemoria` chama, em `src/core/
 - **Entrada das rotas:** corpo validado em zod, com tamanho máximo. Erro para fora nunca mostra stack nem detalhe interno.
 - **Limites:** mensagens, toques e demonstrações têm limites próprios (`BUSINESS.md` §14), contados por conta e por IP em HMAC, na tabela `limites`. Cada pedido de consumo leva o próprio início de janela, e o adaptador do banco confere todos os tetos sob trava, numa transação, e só então soma: se um barra, nenhum sobe. A limpeza diária apaga as janelas de dia anteriores a ontem e as de minuto anteriores a hoje. No modo e2e (`RITU_MODO=e2e`), o header `x-ritu-e2e-teto` (1 a 100) substitui os tetos daquele pedido e o `x-ritu-e2e-cota: esgotada` tira a cota do dia do modelo `decisao`; fora do modo e2e os dois são ignorados.
 - **Cron e saúde:** `/api/cron/limpeza`, `/api/cron/padroes` e `/api/saude` só com `Authorization: Bearer <CRON_SECRET>`, conferido por `autorizarCron` em tempo constante; sem `CRON_SECRET`, `503 cron_desligado`. A Vercel manda o bearer sozinha nos crons. A saúde (banco, última migração, contagens da base, seed, telemetria, Google, versão) nunca devolve valor de variável, URL nem mensagem de erro.
-- **Servidor MCP:** público e sem login, com limite por IP. Só expõe as tools de leitura da base e do clima; nunca dado de conta.
+- **Servidor MCP:** `POST /api/mcp`, público, sem login e sem estado (`mcp-handler`). Expõe seis tools de leitura da base e do clima, sobre as tools internas e com contexto neutro; os stores do contexto público lançam `mcp_sem_conta` em qualquer acesso, então nunca há dado de conta. Limites por IP (30 por minuto, 300 por dia) e global (3000 por dia), na tabela `limites`; corpo até 16 KB (`413`). O `proxy.ts` aceita `Origin` ausente só nesta rota; `Origin` de outro site segue `403`. O porquê está na ADR 0054.
+- **Bastidores:** `/bastidores` abre sem sessão e sem redirecionar. Nenhum id, texto ou número abaixo de 20 conversas (ADR 0055).
 - **Dependências:** Dependabot semanal, com os pacotes `@opentelemetry/*` e o `@vercel/otel` num grupo só (eles só instalam juntos). Na CI, o `audit-ci` barra advisory alto ou crítico em dependência de produção; as exceções ficam em `audit-ci.jsonc`, cada uma com o id e o porquê.
 
 ## 5. Portas e adaptadores
@@ -176,6 +179,7 @@ A lógica fica em `src/core/`, sem Next, Auth.js, driver de banco, Mastra ou SDK
 | `KnowledgeBase` | YAML em `data/` | Os mesmos arquivos ou mini-tabela |
 | `RunRepository`, `MessageRepository`, `AccountRepository`, `PantryStore`, `ShortageStore`, `PreferenceStore`, `OutcomeStore`, `RoutineStore`, `PatternStore`, `ProposalStore` | Postgres | Em memória |
 | `UsageLimiter` (`src/core/limits/`; consome várias chaves de uma vez, todas ou nenhuma) | Postgres | Em memória |
+| `BastidoresStore` (agregados dos runs da semana, sinais por dia, registro e retenção dos sinais) | Postgres | Em memória, lendo os stores em memória |
 | `Telemetry` | OpenTelemetry | Em memória (os testes conferem spans e métricas) |
 | `Clock` | Relógio do sistema | Data fixa |
 
@@ -205,7 +209,8 @@ A montagem acontece num único composition root (`src/infra/container.ts`). O te
 | `feedback` | `run_id`, `conta_id`, `voto` (up, down), `criado_em`. Um voto por run |
 | `alimentos_desconhecidos` | `nome`, `vezes` (sem `conta_id`; candidatos a entrar na base) |
 | `llm_uso` | `modelo`, `janela` (minuto ou dia), `inicio`, `pedidos`, `tokens` |
-| `limites` | `chave` (opaca: HMAC do IP ou identificador, nunca texto da pessoa), `janela` (minuto, dia), `inicio`, `total`. Uma linha por chave, janela e início; as de dia são apagadas pela limpeza diária |
+| `limites` | `chave` (opaca: HMAC do IP ou identificador, nunca texto da pessoa; `mcp:ip:<hmac>` e `mcp:global` no MCP), `janela` (minuto, dia), `inicio`, `total`. Uma linha por chave, janela e início; as de dia são apagadas pela limpeza diária |
+| `sinais_dia` | `dia`, `sinal` (feedback_up, feedback_down, retorno_ajudou, retorno_nao_ajudou, retorno_nao_fez), `total`. Sem `conta_id`; escrita só pela limpeza diária; apagada depois de 30 dias |
 
 O estado "incerto" de um item da casa não é gravado: é calculado de `confirmado_em`, da durabilidade do grupo e de `sempre_tenho` (`BUSINESS.md` §9).
 
@@ -217,7 +222,7 @@ A recusa de uma indicação de "vale ter em casa" não tem tabela própria: é a
 
 **Portas.** O core grava e lê por onze portas (`AccountRepository`, `ProfileStore`, `PantryStore`, `PreferenceStore`, `OutcomeStore`, `ShortageStore`, `RoutineStore`, `PatternStore`, `MessageRepository`, `RunRepository`, `ProposalStore`) e por um `Transactor`, que entrega as mesmas portas ligadas a uma transação. Todo método recebe `contaId` primeiro, e ele vai no `WHERE` de toda consulta; as exceções são os métodos de limpeza, `alimentos_desconhecidos` e a busca de conta pelo `google_sub`. Cada porta tem um adaptador Postgres (`src/infra/db/`) e um fake em memória (`src/infra/fakes/memory-stores.ts`). Uma suíte de contrato única (`test/contracts/`) roda contra os dois: o fake no `npm test` e o Postgres no ⚠️ `test:db` e no job `db` da CI.
 
-**Limpeza diária.** `executarLimpeza` apaga as mensagens com mais de 7 dias, as mensagens com incômodo de dias anteriores, os retornos sem resposta com mais de 7 dias, as faltas com mais de 30 dias e o "evitar" temporário de dias anteriores. Ela também expira os runs em espera há mais de 30 minutos e as propostas pendentes deles, e apaga as contas de demonstração vencidas. Os prazos ficam em `config/memoria.ts`, e os cortes por dia usam o fuso padrão.
+**Limpeza diária.** `executarLimpeza` apaga as mensagens com mais de 7 dias, as mensagens com incômodo de dias anteriores, os retornos sem resposta com mais de 7 dias, as faltas com mais de 30 dias e o "evitar" temporário de dias anteriores. Ela também expira os runs em espera há mais de 30 minutos e as propostas pendentes deles, e apaga as contas de demonstração vencidas. Antes de tudo, grava em `sinais_dia` os cinco sinais de ontem (votos e retornos, que cairiam em cascata com a conta) e apaga os sinais com mais de 30 dias; se o registro falha, loga `sinais_dia_falhou` e a limpeza segue. A porta `BastidoresStore` fica fora do `Transactor`. Os prazos ficam em `config/memoria.ts`, e os cortes por dia usam o fuso padrão.
 
 ## 7. Estrutura de pastas
 
@@ -237,10 +242,14 @@ src/
       chamada-de-apoio.ts    # a chamada do papel apoio, dividida por Intérprete e Juiz
       tools/                 # catálogo fechado: leitura, controle, escrita
       prompts/               # prompts versionados
+    mcp/                     # tools públicas (sobre as internas), contexto neutro com stores proibidos, telemetria do MCP
+    bastidores/              # porta BastidoresStore, janela e números da semana, montagem da evolução dos evals
+    evals/                   # historico.ts: schema do historico.json, lido pelos scripts e por Bastidores
     como-pensei/             # linha-do-tempo.ts (frases por código a partir das etapas) e ler.ts (a leitura do run para a tela)
     runs/                    # estados, checkpoint, etapas, loop, caminhos por intenção, aprovação
     telemetry/               # porta Telemetry e nomes de spans e métricas
   infra/                     # adaptadores: mastra, gemini, open-meteo, db, auth (Auth.js, token, IP em HMAC), otel
+    mcp/                     # servidor.ts: o handler do MCP (mcp-handler), limites, corpo máximo e telemetria
     container.ts             # composition root; saude() e telemetriaLigada
     saude.ts                 # leitura da saúde (banco, migração, base, seed), sem valor de variável
     e2e/                     # modo e2e: roteiros, clima e relógio fixos e cota por x-ritu-e2e; só o container importa
@@ -249,6 +258,8 @@ src/
     _rotas/                  # corpo das rotas: conversa, fluxo-de-run (mensagem e resposta do run), cron (limpeza e padrões), saude, onboarding, busca
     _apoio/                  # descarregar.ts: telemetry.encerrar() em after() com telemetria ligada
     api/cron/_autorizar.ts   # autorizarCron, comum aos crons e à saúde
+    api/mcp/route.ts         # POST do MCP; só chama o servidor de infra/mcp
+    bastidores/              # página pública (render dinâmico, sem ISR)
     fonts/                   # Cormorant Garamond e Figtree (woff2 variável, OFL)
   proxy.ts                   # headers de segurança (CSP com nonce) e checagem de Origin
   components/                # UI: só aqui se importa react-aria-components (R5)
@@ -256,8 +267,8 @@ src/
     theme/                   # cookie ritu_theme e seletor de tema
     base/                    # componentes base sobre React Aria
     brand/                   # Logo e DoshaBlot
-    ritu/                    # telas do Ritu: abas.tsx (barra de navegação), conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts), casa/ (Minha casa, use-casa.ts), como-ficou/, voce/ (carta do dosha, fixos, memória, conta) e como-pensei/ (a linha do tempo)
-config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas)
+    ritu/                    # telas do Ritu: abas.tsx (barra de navegação), conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts), casa/ (Minha casa, use-casa.ts), como-ficou/, voce/ (carta do dosha, fixos, memória, conta), como-pensei/ (a linha do tempo) e bastidores/ (números, barras, gráfico de evolução em SVG, tabela de métricas e a seção do MCP)
+config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas), bastidores.ts e textos-bastidores.ts
 public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
 scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts, env-producao.ts, painel-publicar.ts; ci-workflow.test.ts trava o workflow
   lib/evals/                 # runner do eval com LLM: casos, rodadores, avaliador, rodada, métricas, metas, relatório, histórico e comparação
@@ -273,7 +284,6 @@ observability/
   dashboards/ritu.json       # painel, gerado por npm run painel:gerar
   grafana/alerting/ritu.yaml # regras de alerta, geradas por npm run painel:gerar
   grafana/dashboards.yaml    # provedor do painel no LGTM, escrito à mão
-mcp/                         # servidor MCP
 test/fixtures/
 e2e/                         # Playwright; apoio/ com usarTema e expectSemViolacoes (axe); roteiros/ são os roteiros do modo e2e
 e2e-producao/                # smoke:completo contra a produção (playwright.producao.config.ts), só à mão

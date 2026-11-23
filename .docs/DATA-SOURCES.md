@@ -10,6 +10,7 @@
 - Um pedido só traz o clima de agora e as próximas horas. Resposta validada com zod. Timeout de 4 s, sem nova tentativa.
 - Cache de 1 hora por cidade (chave: coordenadas com duas casas), em memória, por processo. Falha não entra no cache.
 - A busca de cidade aceita qualquer país, com nomes em português, a partir de 2 caracteres e até 5 resultados. A cidade traz o fuso, que define a hora local; sem cidade, vale `America/Sao_Paulo`.
+- O MCP público (`/api/mcp`) expõe o clima da Open-Meteo e a base ayurvédica a quem não tem conta. `clima_agora` e `clima_proximas_horas` recebem a cidade pelo nome, usam o primeiro resultado do `CityLookup` e devolvem `regiao`, `pais` e `fonte: "Open-Meteo (CC BY 4.0)"`, a atribuição que a licença pede; cidade sem resultado vira `cidade_nao_encontrada`. Os limites do MCP protegem também a cota da Open-Meteo.
 - Sem cidade: a tool devolve `sem_cidade`, o agente responde sem clima e diz isso.
 - Falhou (timeout, erro ou resposta fora do schema): a tool devolve `indisponivel`, o agente segue sem clima e diz isso. A falha vira etapa do rastro e conta na métrica de tools.
 

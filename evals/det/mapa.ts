@@ -877,4 +877,11 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/evals-llm/inconclusivos.eval.ts"],
     desde: 2,
   },
+  {
+    grupo: "MCP",
+    linha:
+      "As seis tools públicas são as seis e só elas; o resultado é o da interna com contexto neutro; clima trata cidade achada, não achada e fora do ar; toda saída traz aviso",
+    arquivos: ["evals/det/mcp/tools.eval.ts"],
+    desde: 4,
+  },
 ]

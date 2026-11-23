@@ -727,14 +727,18 @@ function arquivosQueExportam(metodo: "GET" | "POST"): string[] {
   const nomes = readdirSync(raiz, { recursive: true }) as string[]
   const direta = new RegExp(`export\\s+(async\\s+function|function|const)\\s+${metodo}\\b`)
   const desestruturada = new RegExp(`export\\s+const\\s*\\{[^}]*\\b${metodo}\\b[^}]*\\}`)
-  return nomes
-    .filter((n) => n.endsWith("route.ts"))
-    .filter((n) => {
-      const texto = readFileSync(`${raiz}/${n}`, "utf8")
-      return direta.test(texto) || desestruturada.test(texto)
-    })
-    .map((n) => `src/app/api/${n.split("\\").join("/")}`)
-    .sort()
+  return (
+    nomes
+      .filter((n) => n.endsWith("route.ts"))
+      // A rota do MCP tem limite próprio, coberto por mcp-rota.eval.ts.
+      .filter((n) => n !== "mcp/route.ts")
+      .filter((n) => {
+        const texto = readFileSync(`${raiz}/${n}`, "utf8")
+        return direta.test(texto) || desestruturada.test(texto)
+      })
+      .map((n) => `src/app/api/${n.split("\\").join("/")}`)
+      .sort()
+  )
 }
 
 const semNaLista = (lista: string[], tabelaArquivos: string[]) =>

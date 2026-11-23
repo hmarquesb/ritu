@@ -891,4 +891,18 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/bastidores/evolucao.eval.ts"],
     desde: 4,
   },
+  {
+    grupo: "MCP",
+    linha:
+      "A rota do MCP respeita os limites por minuto, por dia e global com `Retry-After`; `Origin` de outro site `403`; corpo grande `413` sem consumir; erro de tool sem stack; `GET` não consome",
+    arquivos: ["evals/det/seguranca/mcp-rota.eval.ts"],
+    desde: 4,
+  },
+  {
+    grupo: "MCP",
+    linha:
+      "As seis tools do MCP com canário na cidade e nos nomes de alimento não deixam rastro em span, métrica, log nem console",
+    arquivos: ["evals/det/privacidade/mcp-canarios.eval.ts"],
+    desde: 4,
+  },
 ]

@@ -57,7 +57,13 @@ async function lerValidado<B>(
   return { ok: true, valor: validado.data }
 }
 
-const CODIGOS_DE_LIMITE = new Set(["limite_mensagens", "limite_demo", "limite_ip", "limite_toques"])
+const CODIGOS_DE_LIMITE = new Set([
+  "limite_mensagens",
+  "limite_demo",
+  "limite_ip",
+  "limite_toques",
+  "limite_mcp",
+])
 
 // O Next carrega cópias dos módulos: o `retryAfterS` é lido do objeto, sem `instanceof`.
 export function respostaDeLimite(code: string, erro?: unknown): Response {

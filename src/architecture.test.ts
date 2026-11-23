@@ -194,6 +194,10 @@ const RULE_R2: Rule = {
       : [],
 }
 
+// O servidor MCP é o adaptador do protocolo; a spec 023 deixa o pacote em `src/app/api/mcp/**`.
+const ROTA_DO_MCP = "src/app/api/mcp/route.ts"
+const SERVIDOR_MCP = "@/infra/mcp/servidor"
+
 const RULE_R3: Rule = {
   id: "R3",
   check: (file) =>
@@ -203,7 +207,8 @@ const RULE_R3: Rule = {
           (ctx) =>
             isUnder(ctx.spec, "@/infra") &&
             ctx.spec !== "@/infra/container" &&
-            !isUnder(ctx.spec, "@/infra/auth/next"),
+            !isUnder(ctx.spec, "@/infra/auth/next") &&
+            !(file.path === ROTA_DO_MCP && ctx.spec === SERVIDOR_MCP),
         )
       : [],
 }
@@ -247,6 +252,12 @@ const RULE_R5: Rule = {
     }),
 }
 
+// Os dois evals do MCP rodam o handler real (spec 023: o servidor MCP é o adaptador do protocolo).
+const EVALS_DO_MCP = [
+  "evals/det/seguranca/mcp-rota.eval.ts",
+  "evals/det/privacidade/mcp-canarios.eval.ts",
+]
+
 const RULE_R6: Rule = {
   id: "R6",
   check: (file) =>
@@ -256,7 +267,8 @@ const RULE_R6: Rule = {
           (ctx) =>
             isUnder(ctx.spec, "@/infra") &&
             !SCRIPT_ALLOWED_INFRA.includes(ctx.spec) &&
-            !isUnder(ctx.spec, "@/infra/fakes"),
+            !isUnder(ctx.spec, "@/infra/fakes") &&
+            !(EVALS_DO_MCP.includes(file.path) && ctx.spec === SERVIDOR_MCP),
         )
       : [],
 }
@@ -516,6 +528,33 @@ describe("R3 · app só importa infra pelo container", () => {
 
   it("@/infra/container em src/app é válido", () => {
     expectClean("src/app/page.tsx", `${IMPORT} { getContainer } from "@/infra/container"`)
+  })
+})
+
+describe("R3 · servidor MCP liberado só na rota do MCP", () => {
+  it("a rota do MCP pode importar o servidor", () => {
+    expectClean(ROTA_DO_MCP, `${IMPORT} { criarHandlerMcp } from "${SERVIDOR_MCP}"`)
+  })
+
+  it("outra rota de app importando o servidor é violação", () => {
+    expectOnly(
+      "src/app/api/x/route.ts",
+      `${IMPORT} { criarHandlerMcp } from "${SERVIDOR_MCP}"`,
+      "R3",
+    )
+  })
+})
+
+describe("R6 · servidor MCP liberado só nos evals do MCP", () => {
+  it("o eval da rota pode importar o servidor", () => {
+    expectClean(
+      "evals/det/seguranca/mcp-rota.eval.ts",
+      `${IMPORT} { criarHandlerMcp } from "${SERVIDOR_MCP}"`,
+    )
+  })
+
+  it("outro eval importando o servidor é violação", () => {
+    expectOnly("evals/det/x.eval.ts", `${IMPORT} { criarHandlerMcp } from "${SERVIDOR_MCP}"`, "R6")
   })
 })
 

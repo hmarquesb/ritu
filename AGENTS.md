@@ -2,7 +2,7 @@
 
 Instruções para qualquer agente de código que trabalhe neste repositório.
 
-> **Status:** entregas 1 e 2 aprovadas (portão 2 com correções, já aplicadas na `main`). Entrega 3 (016 a 020) na `main`, parada no portão 3 (relatório em `.plans/entrega-3-relatorio.md`). Entrega 4: 021 e 022 implementadas e produção no ar; Spec 025 (chás híbridos) implementada na `main`. Spec 026 implementada; portão 3 aprovado com correções. Spec 027 (checkpoints pelas rotas) implementada na `main`. Specs 023 e 024 implementadas na `main`; segue o fechamento da entrega 4 (c5-publico, prints e relatório do portão 4).
+> **Status:** entregas 1 e 2 aprovadas (portão 2 com correções, já aplicadas na `main`). Entrega 3 (016 a 020) na `main`, parada no portão 3 (relatório em `.plans/entrega-3-relatorio.md`). Entrega 4: 021 e 022 implementadas e produção no ar; Spec 025 (chás híbridos) implementada na `main`. Spec 026 implementada; portão 3 aprovado com correções. Spec 027 (checkpoints pelas rotas) implementada na `main`. Specs 023 e 024 implementadas na `main`. Entrega 4 fechada com a tag `entrega-4`, parada no portão 4 (relatório em `.plans/entrega-4-relatorio.md`).
 
 ## O que é o projeto
 

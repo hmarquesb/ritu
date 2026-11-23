@@ -159,7 +159,7 @@ Plano em `.plans/024-landing-e-readme-plan.md`. Na `main`.
 | T12 · Build the Sobre page with the privacy policy | concluida | f834aa6 |
 | T6 · Write the prints script and generate the prints | concluida | f85c542 (2ª verificação) |
 | T14 · Cover the public pages end to end | concluida | c79c1be |
-| T15 · Cover the policy and the example with a deterministic eval | pendente | |
+| T15 · Cover the policy and the example with a deterministic eval | concluida | 752dd10 |
 | T16 · Write README.md and README.en.md | concluida | a2e0ab1 |
 | T7 · Add the readme, prints and marca:og scripts to package.json | concluida | fd73ff0 |
 | T17 · Fail eval:det when the README is out of date | concluida | bfb6d16 |

@@ -117,6 +117,18 @@ function climaFixoE2e(): WeatherSource {
   }
 }
 
+// O header `x-ritu-e2e-bastidores` (poucos | ok) troca os números da semana por um cenário fixo. Só no modo e2e.
+function numerosDoModo(
+  real: () => Promise<NumerosDaSemana>,
+  e2e: boolean,
+): () => Promise<NumerosDaSemana> {
+  if (!e2e) return real
+  return async () => {
+    const { numerosDoE2e } = await import("@/infra/e2e/bastidores")
+    return (await numerosDoE2e()) ?? real()
+  }
+}
+
 // Um ledger por `x-ritu-e2e`, como os dados de cada teste.
 function ledgerE2e(clock: Clock): UsageLedger {
   const porEscopo = new Map<string, UsageLedger>()
@@ -451,7 +463,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
     },
     // Uma instância por container: o cache dos números da semana fica nela.
     get numerosDaSemana() {
-      numerosDaSemana ??= criarNumerosDaSemana({ store: container.bastidores, clock })
+      const reais = criarNumerosDaSemana({ store: container.bastidores, clock })
+      numerosDaSemana ??= numerosDoModo(reais, e2e)
       return numerosDaSemana
     },
     // Lido do arquivo a cada chamada; ausente ou inválido vira undefined (a página mostra o estado de erro).

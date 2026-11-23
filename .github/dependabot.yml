@@ -9,8 +9,21 @@ updates:
       opentelemetry:
         patterns: ["@opentelemetry/*", "@vercel/otel"]
         update-types: [major, minor, patch]
-      producao: { dependency-type: production, update-types: [minor, patch] }
-      desenvolvimento: { dependency-type: development, update-types: [minor, patch] }
+      producao:
+        dependency-type: production
+        update-types: [minor, patch]
+        exclude-patterns: ["@opentelemetry/*", "@vercel/otel"]
+      desenvolvimento:
+        dependency-type: development
+        update-types: [minor, patch]
+        exclude-patterns: ["@opentelemetry/*", "@vercel/otel"]
+    # A @vercel/otel 2.x só aceita a linha 2.x do OpenTelemetry (api < 1.10, pacotes 0.2xx).
+    # Tirar estas regras quando a @vercel/otel aceitar a linha 3.x.
+    ignore:
+      - dependency-name: "@opentelemetry/api"
+        versions: [">=1.10.0"]
+      - dependency-name: "@opentelemetry/*"
+        versions: [">=0.300.0 <1.0.0", ">=3.0.0"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly, day: monday, time: "09:00", timezone: America/Sao_Paulo }

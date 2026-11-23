@@ -905,4 +905,11 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/privacidade/mcp-canarios.eval.ts"],
     desde: 4,
   },
+  {
+    grupo: "Evals",
+    linha:
+      "Os números da semana na página Bastidores: piso de 20 runs, o dia de hoje fora da janela, o voto de demonstração contado depois da limpeza e nenhum conta_id, e-mail nem canário no JSON nem no HTML",
+    arquivos: ["evals/det/bastidores/numeros.eval.ts"],
+    desde: 4,
+  },
 ]

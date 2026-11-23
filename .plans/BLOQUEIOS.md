@@ -15,3 +15,11 @@
 | 022 · `painel:publicar` | `GRAFANA_URL`, `GRAFANA_TOKEN`, `GRAFANA_ALERTA_EMAIL` no `.env.local` | Painel, regras e alertas por e-mail no Grafana Cloud; conferir na primeira rodada o formato do intervalo do grupo de regras e se o painel aparece como "sem mudança" na segunda | `DEPLOY.md` §6 |
 | 022 · `smoke:completo` | `SITE_URL` e a produção no ar | A prova do caminho real com o Gemini de produção | `DEPLOY.md` §8 |
 | 022 · `vercel` CLI | Não foi possível rodar o CLI nesta sessão | Flags do deploy e da volta (decisão 022 A3) conferidas só pela documentação | Ver o primeiro job `deploy`; se uma flag falhar, ajustar os dois passos do `ci.yml` |
+
+## 024 · fechamento da entrega 4 (2026-11-23)
+
+| Spec · Tarefa | O que bloqueia | O que depende | O que a dona precisa fazer |
+|---|---|---|---|
+| 024 · `CONTATO_PRIVACIDADE` | A variável não existe na produção da Vercel; o job `deploy` da CI (run 45100387128, `88d931d`) para no `env:producao` | Deploy da 023 e da 024; e-mail de contato na política | Cadastrar `CONTATO_PRIVACIDADE` na Vercel (`DEPLOY.md`, passo 6) e rodar de novo o job |
+| 024 · `publico.siteUrl` | URL final de produção ainda `null` em `config/publico.ts` | Links do README, `metadataBase`, `sitemap`, endereço do MCP nos prints | Preencher a URL (`DEPLOY.md`, passo 11), rodar `npm run readme` e `npm run prints` |
+| CI · Dependabot | O PR `dependabot/npm_and_yarn/producao-*` falha no `npm ci` (ERESOLVE: `@opentelemetry/api` 1.10 contra o peer `<1.10.0` de `@opentelemetry/context-async-hooks`) | Nada na `main` | Fechar ou ajustar o PR do Dependabot |

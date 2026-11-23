@@ -167,3 +167,9 @@ Plano em `.plans/024-landing-e-readme-plan.md`. Na `main`.
 
 > 024, onda 4: o e2e de `marca.spec.ts` ("fontes locais") falhou só porque os gates rodaram na porta 3100 (a 3000 tinha um `next-server` antigo desta pasta que o orquestrador não pôde encerrar); o teste fixa `localhost:3000`. Conferir no fechamento com a porta livre.
 > 024 fechada em 2026-11-22 na `main`: gates 1 a 6, `dup` (0 clones) e `base:check` verdes (3945 testes, 1649 casos det, 341 e2e; as 2 falhas de `marca.spec.ts` "fontes locais" vêm só da porta 3100). ADR 0056. Decisões 024 (T1, T2, T11, T12). Segue o fechamento da entrega 4.
+
+## Fechamento da entrega 4
+
+> Retomada em 2026-11-23 (02h32 -03). Pendências da passagem: bloqueios de `CONTATO_PRIVACIDADE` (deploy) e `siteUrl` em `.plans/BLOQUEIOS.md`; porta 3000 ocupada por um `next-server` antigo desta pasta (e2e na 3100); notas do relatório na passagem levadas para o relatório.
+> `.docs/prints/painel.webp` gerado do Grafana local (cenários `demo` sem LLM com OTLP; `painel:check` 0; 9 de ~38 painéis sem dados: limites, MCP, memória, edições, contas apagadas, sem modelo, 👍/👎, trocas de ingrediente, entradas).
+> ⚠️ `c5-publico` (2026-11-23, 02h33): interrompida por cota do Gemini (429 no provedor) depois de 32 de 86 casos; retomar com `--retomar` depois das 05h00 -03 (virada do dia em Los Angeles).

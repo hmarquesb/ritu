@@ -14,6 +14,8 @@ ROTAS DO SERVIDOR (Next.js na Vercel)
    ├── POST /api/runs/:id/approve     aprovação das propostas → executor em código
    ├── toques (sem LLM): retorno, trocar ingrediente, gosto, casa, 👍/👎
    ├── Você (perfil, memória), cidade, quiz (sem LLM)
+   ├── GET /sobre                    página pública: o projeto, as fontes e a política de privacidade (#privacidade)
+   ├── GET /robots.txt · /sitemap.xml  indexação só de /, /sobre e /bastidores
    ├── GET /bastidores               página pública: números da semana, evolução dos evals, como usar o MCP
    └── POST /api/mcp                 servidor MCP público (sem conta): seis tools de leitura
           │
@@ -243,6 +245,7 @@ src/
       tools/                 # catálogo fechado: leitura, controle, escrita
       prompts/               # prompts versionados
     mcp/                     # tools públicas (sobre as internas), contexto neutro com stores proibidos, telemetria do MCP
+    publico/                 # contato.ts (contatoDePrivacidade) e prazos.ts (prazos e preencher da política)
     bastidores/              # porta BastidoresStore, janela e números da semana, montagem da evolução dos evals
     evals/                   # historico.ts: schema do historico.json, lido pelos scripts e por Bastidores
     como-pensei/             # linha-do-tempo.ts (frases por código a partir das etapas) e ler.ts (a leitura do run para a tela)
@@ -260,6 +263,8 @@ src/
     api/cron/_autorizar.ts   # autorizarCron, comum aos crons e à saúde
     api/mcp/route.ts         # POST do MCP; só chama o servidor de infra/mcp
     bastidores/              # página pública (render dinâmico, sem ISR)
+    sobre/                   # página pública com a política de privacidade (render dinâmico)
+    robots.ts  sitemap.ts    # indexação das três páginas públicas
     fonts/                   # Cormorant Garamond e Figtree (woff2 variável, OFL)
   proxy.ts                   # headers de segurança (CSP com nonce) e checagem de Origin
   components/                # UI: só aqui se importa react-aria-components (R5)
@@ -267,10 +272,11 @@ src/
     theme/                   # cookie ritu_theme e seletor de tema
     base/                    # componentes base sobre React Aria
     brand/                   # Logo e DoshaBlot
-    ritu/                    # telas do Ritu: abas.tsx (barra de navegação), conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts), casa/ (Minha casa, use-casa.ts), como-ficou/, voce/ (carta do dosha, fixos, memória, conta), como-pensei/ (a linha do tempo) e bastidores/ (números, barras, gráfico de evolução em SVG, tabela de métricas e a seção do MCP)
+    ritu/                    # telas do Ritu: abas.tsx (barra de navegação), conversa/ (componentes, estado.ts, use-conversa.ts, ler-eventos.ts), casa/ (Minha casa, use-casa.ts), como-ficou/, voce/ (carta do dosha, fixos, memória, conta), como-pensei/ (a linha do tempo) bastidores/ (números, barras, gráfico de evolução em SVG, tabela de métricas e a seção do MCP), landing/ (as seções da Entrada abaixo do cartão), publico/ (cabeçalho e rodapé públicos) e sobre/ (índice, seções e política)
 config/                      # llm-cotas.ts, clima.ts, ranking.ts, limites.ts, padroes.ts, ui.ts, evals.ts (pausas, estimativas e metas), bastidores.ts e textos-bastidores.ts
 public/marca/                # símbolo do logo, manchas dos doshas, textura de papel
-scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts, env-producao.ts, painel-publicar.ts; ci-workflow.test.ts trava o workflow
+scripts/                     # demo.ts (terminal), eval-llm.ts, cleanup.ts, padroes.ts, smoke.ts, env-producao.ts, painel-publicar.ts, readme.ts, prints.ts, marca-og.ts; ci-workflow.test.ts trava o workflow
+  lib/readme/                # gerador dos blocos do README (site, numeros, adrs), lido de historico.json, .adrs/ e config/publico.ts
   lib/evals/                 # runner do eval com LLM: casos, rodadores, avaliador, rodada, métricas, metas, relatório, histórico e comparação
 data/                        # base ayurvédica em YAML
 seed/                        # perfil de demonstração (demo.yaml)

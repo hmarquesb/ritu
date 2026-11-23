@@ -94,7 +94,7 @@ Meta: **primeira resposta em menos de 1 minuto, sem preencher nenhum campo.**
 
 | Tela | Conteúdo |
 |---|---|
-| **Entrada** | O que é, aviso de que não é orientação médica, demonstração em destaque e Google |
+| **Entrada** | Primeira dobra: o que é, aviso de que não é orientação médica e para maiores de 18 anos, demonstração em destaque e Google. Abaixo do cartão, rolando: Como funciona (três passos), uma conversa de exemplo com o aviso, O que faz e não faz, Por dentro (Bastidores, MCP e código) e uma chamada final com o mesmo botão da demonstração. Fecha com o rodapé público (Sobre e privacidade, Bastidores, GitHub) |
 | **Aviso inicial** | O aviso de §12 e, para conta nova, a pergunta do dosha e da cidade. Uma vez só |
 | **Conversa** (tela inicial depois de entrar) | Mensagens do dia; caixa de texto; atalhos de check-in; etapas do agente ao vivo; pergunta do agente; resposta em texto com sugestões de apoio; indicação de "vale ter em casa"; o que o agente propõe anotar; indicador discreto de "Como ficou?" |
 | **Minha casa** (aba) | Uma página: seção **"Ainda tem?"** no topo, com o que ficou incerto; o que a pessoa tem em **prateleiras** por grupo, com os itens como rótulos ("sempre tenho" e gosto marcados no rótulo; um toque abre as opções); prateleira **"Acabou"**; lista **"Para ter em casa"**, com o motivo de cada item |
@@ -106,7 +106,7 @@ Meta: **primeira resposta em menos de 1 minuto, sem preencher nenhum campo.**
 | **O que sei sobre você** (em Você) | Tudo o que o Ritu guarda, por nível (§11), editável e apagável item por item. Os fixos (dosha, cidade, **evitar sempre**, restrições, "não como") mudam aqui mesmo |
 | **Conta** (em Você) | Como a pessoa entrou (Google ou demonstração, com "Criar meu perfil"), tema, **Sair** e **Apagar meus dados** |
 | **Bastidores** (pública, sem login) | Últimos 7 dias completos, só a partir de 20 conversas: conversas, tempo típico, passos, respostas refeitas pelo juiz, trocas de modelo, 👍/👎 e retornos, intenções e tools mais usadas, sem nenhum dado de pessoa. Evolução dos evals em cinco gráficos, com a tabela completa recolhida. "Use a base no seu agente": o endereço do MCP, as seis tools e um exemplo de configuração (`OBSERVABILITY.md` §4) |
-| **Sobre** | O projeto, privacidade, link do repositório |
+| **Sobre** (`/sobre`, pública) | O projeto, quem fez, como foi feito (com a licença), fontes e créditos, cuidados (com os textos fixos de alerta e de sofrimento emocional) e a política de privacidade em `#privacidade`: o que é guardado e o que não, por quanto tempo, com quem passa, cookies, direitos, idade e contato. Os prazos da política vêm da configuração |
 
 Quem entrou navega por quatro destinos: **Conversa**, **Minha casa**, **Como ficou?** e **Você**. A barra fica embaixo no celular e na lateral no desktop. **Você** junta a carta do dosha, o que o Ritu sabe sobre a pessoa e a Conta.
 
@@ -389,6 +389,7 @@ O texto vem de `data/doshas.yaml`, com fonte, em linguagem leve.
 - **Clima:** da cidade escolhida pela pessoa, consultado na hora, com cache curto. O produto nunca usa GPS nem localização do aparelho.
 - **Privacidade (LGPD):** guarda o id da conta, o perfil, a cidade escolhida, a casa, os gostos, as faltas dos últimos 30 dias, os retornos, a rotina, os padrões confirmados, as mensagens dos últimos 7 dias e os runs. O e-mail do Google serve **só para entrar**. Nada de telefone. A página "Você" mostra tudo; "Apagar meus dados" apaga tudo. A telemetria nunca leva texto da pessoa.
 - **Aviso sobre o provedor de IA:** no plano gratuito, o provedor pode usar as mensagens para melhorar os produtos dele. O Aviso inicial e a tela Sobre dizem isso com clareza.
+- **Idade mínima e contato:** o Ritu é para maiores de 18 anos (exigência do provedor de IA), dito no aviso da Entrada e na política. O contato para pedidos sobre dados é o e-mail da variável `CONTATO_PRIVACIDADE`, mostrado só na política; sem ela, a política manda usar a aba Você.
 - **Demonstração:** as contas expiram em 24 h e são apagadas.
 - **Bastidores:** abaixo de 20 conversas nos 7 dias, a página mostra só quantas houve; nunca mostra id, texto nem cidade. Todos os runs contam (Google, demonstração, testers e contas já apagadas).
 - **MCP público:** seis tools de leitura da base ayurvédica e do clima, sem conta, com o aviso "Não é orientação médica." em toda saída. Não lê nem escreve nada de pessoa. Limite por IP (30 por minuto, 300 por dia) e global (3000 por dia); passando disso, `429`.

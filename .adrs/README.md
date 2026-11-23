@@ -63,6 +63,7 @@
 | [0053](0053-checkpoints-pelas-rotas.md) | Checkpoints do eval com LLM pelos handlers das rotas do site | Aceito |
 | [0054](0054-mcp-publico-so-de-leitura.md) | MCP público só de leitura, sem estado, com limites próprios | Aceito |
 | [0055](0055-bastidores-com-piso-e-sinais-por-dia.md) | Bastidores com piso de conversas e sinais agregados por dia | Aceito |
+| [0056](0056-paginas-publicas-e-readme-das-fontes-de-verdade.md) | Páginas públicas e README a partir das fontes de verdade | Aceito |
 
 ## Fundadoras (a spec 001 escreve, com o racional dos docs)
 

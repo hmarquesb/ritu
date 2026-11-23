@@ -139,3 +139,31 @@ Plano em `.plans/023-bastidores-e-mcp-plan.md`. Na `main`.
 > Retomada em 2026-11-22 (21:30 -03). Pendências da passagem levadas para a T12 do plano da 023. Pedido da dona nesta sessão: parar ao chegar a 90% da janela de 5 horas (esperando a onda em curso voltar), fazer a passagem e retomar sozinho às 02h30.
 
 > 023 fechada em 2026-11-22 na `main`: gates 1 a 6, `dup` (0 clones), `base:check` e `test:db` (165) verdes; 3864 testes, 1631 casos det, 313 e2e. ADRs 0054 e 0055. Decisões 023 (T12, T13). Segue a 024.
+
+## 024 · Landing, Sobre e README
+
+Plano em `.plans/024-landing-e-readme-plan.md`. Na `main`.
+
+| Tarefa | Status | Commit |
+|---|---|---|
+| T1 · Add the public config and the landing, Sobre and README texts | concluida | ef04312 |
+| T2 · Add CONTATO_PRIVACIDADE and contatoDePrivacidade | concluida | 108df62 |
+| T5 · Generate the share image and the site icons | concluida | b064df0 |
+| T9 · Check /sobre in the production smoke | concluida | 813aad0 |
+| T3 · Add prazosDaPolitica and preencher | concluida | 36d0913 |
+| T4 · Write the README block generator | concluida | 70ff1bd |
+| T8 · Add the metadata, robots and sitemap | concluida | c5f70a2 |
+| T10 · Build the public header and footer and use them in Bastidores | concluida | 596f4e0 |
+| T13 · Link the privacy policy from the Aviso and from Você › Conta | concluida | 2d3d585 |
+| T11 · Build the landing sections below the Entrada card | concluida | ecf3f4c (2ª verificação) |
+| T12 · Build the Sobre page with the privacy policy | concluida | f834aa6 |
+| T6 · Write the prints script and generate the prints | concluida | f85c542 (2ª verificação) |
+| T14 · Cover the public pages end to end | concluida | c79c1be |
+| T15 · Cover the policy and the example with a deterministic eval | pendente | |
+| T16 · Write README.md and README.en.md | concluida | a2e0ab1 |
+| T7 · Add the readme, prints and marca:og scripts to package.json | concluida | fd73ff0 |
+| T17 · Fail eval:det when the README is out of date | concluida | bfb6d16 |
+
+
+> 024, onda 4: o e2e de `marca.spec.ts` ("fontes locais") falhou só porque os gates rodaram na porta 3100 (a 3000 tinha um `next-server` antigo desta pasta que o orquestrador não pôde encerrar); o teste fixa `localhost:3000`. Conferir no fechamento com a porta livre.
+> 024 fechada em 2026-11-22 na `main`: gates 1 a 6, `dup` (0 clones) e `base:check` verdes (3945 testes, 1649 casos det, 341 e2e; as 2 falhas de `marca.spec.ts` "fontes locais" vêm só da porta 3100). ADR 0056. Decisões 024 (T1, T2, T11, T12). Segue o fechamento da entrega 4.

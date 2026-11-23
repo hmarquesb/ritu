@@ -2,7 +2,7 @@
 
 ## 1. Open-Meteo: clima e cidades
 
-- API gratuita, sem chave, uso não comercial.
+- API gratuita, sem chave, uso não comercial. Licença CC BY 4.0: a tela Sobre (Fontes e créditos) traz a atribuição, com link para a Open-Meteo.
 - **Geocodificação:** a pessoa busca a cidade pelo nome (no Aviso inicial ou no Perfil). O produto guarda o nome escolhido e as coordenadas com duas casas decimais. Nunca usa GPS nem localização do aparelho. Atrás da porta `CityLookup`.
 - **Previsão:** acessada só pelas tools `clima.agora` e `clima.proximas_horas` (`AI.md` §4), atrás da porta `WeatherSource`.
 - `clima.agora`: temperatura aparente e umidade relativa atuais, convertidas em qualidades pelas faixas de `KNOWLEDGE.md` §4.

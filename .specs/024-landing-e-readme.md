@@ -1,6 +1,7 @@
 ---
 title: Landing, Sobre e README
-status: approved
+status: implemented
+implemented: bfb6d16
 entrega: 4
 created: 2026-11-15
 ---

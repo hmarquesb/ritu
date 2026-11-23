@@ -147,6 +147,7 @@ ADRs are written in Portuguese.
 - [0053](.adrs/0053-checkpoints-pelas-rotas.md) Checkpoints do eval com LLM pelos handlers das rotas do site
 - [0054](.adrs/0054-mcp-publico-so-de-leitura.md) MCP público só de leitura, sem estado, com limites próprios
 - [0055](.adrs/0055-bastidores-com-piso-e-sinais-por-dia.md) Bastidores com piso de conversas e sinais agregados por dia
+- [0056](.adrs/0056-paginas-publicas-e-readme-das-fontes-de-verdade.md) Páginas públicas e README a partir das fontes de verdade
 <!-- /ritu:adrs -->
 
 ## How to run

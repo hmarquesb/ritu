@@ -37,11 +37,12 @@ Onde guardar cada valor:
 3. Ajuste o Node para a versão 24.
 4. Ligue o Fluid compute.
 5. Confira a região `gru1`. Ela vem do `vercel.json`, não precisa escolher.
-6. Crie as variáveis de produção, no ambiente Production: `DATABASE_URL`, `GEMINI_API_KEY`, `AUTH_SECRET`, `IP_HMAC_SECRET`, `CRON_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`. As opcionais são `TESTER_IDS` e `OTEL_SERVICE_NAME`. Nunca crie `RITU_MODO`.
+6. Crie as variáveis de produção, no ambiente Production: `DATABASE_URL`, `GEMINI_API_KEY`, `AUTH_SECRET`, `IP_HMAC_SECRET`, `CRON_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `CONTATO_PRIVACIDADE` (o e-mail para pedidos sobre dados, mostrado na política de privacidade), `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`. As opcionais são `TESTER_IDS` e `OTEL_SERVICE_NAME`. Nunca crie `RITU_MODO`.
 7. Gere `AUTH_SECRET`, `IP_HMAC_SECRET` e `CRON_SECRET` novos, um para cada, com `openssl rand -base64 32`. Eles devem ser diferentes dos de desenvolvimento.
 8. Crie um token de conta na Vercel. No GitHub, crie o segredo `VERCEL_TOKEN` com ele.
 9. Pegue o `orgId` e o `projectId` com `vercel link` ou nas configurações do projeto. No GitHub, crie os segredos `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID`.
 10. Copie a URL de produção que a Vercel mostra no projeto. No GitHub, crie a variável `SITE_URL` com ela. No `.env.local`, crie `SITE_URL` com a mesma URL.
+11. Depois do primeiro deploy, preencha `publico.siteUrl` em `config/publico.ts` com essa URL (`https://`, sem barra final). Ela vira o `metadataBase`, o `sitemap.xml` e o link "Experimente" do README. Em seguida, rode `npm run readme` e faça o commit dos dois READMEs.
 
 ## 5. Google
 

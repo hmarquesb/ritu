@@ -163,6 +163,7 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - **Privacidade do MCP e de Bastidores** (`evals/det/privacidade/mcp-canarios.eval.ts`): nenhuma saída do MCP nem da página traz `conta_id`, e-mail, texto de mensagem ou cidade de perfil; cidade pedida, alimento e argumentos não vão para span, métrica nem log.
 - **Números de Bastidores** (`evals/det/bastidores/numeros.eval.ts`): janela até ontem, piso de 20 conversas, quem conta, indicadores, intenções e tools, sinais gravados antes de apagar a conta e idempotência do registro, cache e erro do banco.
 - **Evolução dos evals** (`evals/det/bastidores/evolucao.eval.ts`): com o `historico.json` real, as métricas, os checkpoints e cada valor da página batem com `evals/COMPARACAO.md`.
+- **Páginas públicas** (`evals/det/publico/politica.eval.ts` e `readme.eval.ts`): todo marcador dos textos do Sobre tem valor; os prazos da política batem com a configuração; os textos de alerta e de sofrimento emocional são os do agente; a página sem `CONTATO_PRIVACIDADE` não tem `mailto:`; a conversa de exemplo cita os nomes da base. Os dois READMEs estão em dia com `npm run readme` (falha com "README desatualizado: rode npm run readme"), com cada marcador uma vez e sem e-mail, URL de banco, token nem referência local.
 
 **Telemetria**
 - Todo span, métrica e log da lista fechada é emitido por algum cenário, com os atributos e rótulos declarados.
@@ -177,11 +178,11 @@ Usam o `AgentRuntime` roteirizado e os fakes das portas. Cada linha desta seçã
 - Um caso por motivo de inconclusivo; inconclusivo nunca vira acertou, e as métricas saem iguais às de sem ele (`evals/det/evals-llm/inconclusivos.eval.ts`).
 
 **Smoke de produção** (⚠️ `npm run smoke`, no job `deploy` da CI)
-- Grupos, em ordem: `versao`, `saude`, `pagina`, `headers`, `protecao` e `publico`. O `publico` confere `GET /bastidores` com `200` e o `tools/list` do MCP em `/api/mcp` com as seis tools.
+- Grupos, em ordem: `versao`, `saude`, `pagina`, `headers`, `protecao` e `publico`. O `publico` confere `GET /bastidores` com `200`, `GET /sobre` (checagem `sobre`) com `200` e as frases "Privacidade" e "Não é orientação médica", e o `tools/list` do MCP em `/api/mcp` com as seis tools.
 
 **Telas (E2E)**
 
-Os cenários da Conversa estão em `e2e/conversa.spec.ts`; os de Minha casa, em `e2e/casa.spec.ts`; os de Como ficou?, em `e2e/como-ficou.spec.ts`; os de Você, em `e2e/voce.spec.ts`; os de Como pensei, em `e2e/como-pensei.spec.ts`. O servidor do E2E roda com o relógio às 01h do fuso padrão, e os testes de unidade que dependem do momento do dia fixam o relógio.
+Os cenários da Conversa estão em `e2e/conversa.spec.ts`; os de Minha casa, em `e2e/casa.spec.ts`; os de Como ficou?, em `e2e/como-ficou.spec.ts`; os de Você, em `e2e/voce.spec.ts`; os de Como pensei, em `e2e/como-pensei.spec.ts`; os das páginas públicas (Entrada rolada, Sobre e a política, links do Aviso e de Você, `robots.txt`, `sitemap.xml`, axe nos dois temas, zoom de 200%, teclado), em `e2e/publico.spec.ts`. O servidor do E2E roda com o relógio às 01h do fuso padrão, e os testes de unidade que dependem do momento do dia fixam o relógio.
 
 - Caminho da demonstração: da Entrada à primeira resposta só com cliques.
 - Mensagem livre → pergunta do agente → resposta em texto com sugestões.

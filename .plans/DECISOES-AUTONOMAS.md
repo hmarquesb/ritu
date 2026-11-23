@@ -569,3 +569,21 @@
 - **Decidido:** `tabela-metricas.tsx` também é `"use client"` e recebe o texto já formatado. `UseOMcp` recebe as descrições das tools por prop, para o `core/mcp` não ir para o bundle.
 - **Por quê:** é o que cumpre o critério de abrir e fechar pelo teclado sem escrever um disclosure do zero.
 - **Desfazer:** criar um `Disclosure` base em `src/components/` e mover a tabela para servidor com uma ilha só no botão.
+
+## 024 · T1 e T2 · ids do exemplo, alertas em `config/` e contato sem minúsculas
+- **Faltava:** o id `arroz` não existe na base; `config/` não pode importar os textos fixos de alerta, que ficavam em `src/core/`; a spec diz que o contato é "aparado", sem dizer nada sobre maiúsculas.
+- **Decidido:** `arroz-branco` em `exemploDaLanding`. Os textos fixos de alerta físico e emocional passaram para `config/textos-alertas.ts`, e `src/core/conversation/textos.ts` os lê de lá, com a mesma string. `contatoDePrivacidade` apara só os espaços e mantém a caixa. O leitor `contatoPrivacidade()` de `src/infra/env.ts` devolve o valor cru e não importa o validador, para o teste "não lê process.env ao ser importado" continuar valendo.
+- **Por quê:** são as opções que não mudam o que o agente diz nem o que a dona configurou.
+- **Desfazer:** trocar o id; voltar os textos para `src/core/`; passar o contato por `toLowerCase()`.
+
+## 024 · T12 · o Sobre lê `CONTATO_PRIVACIDADE` por um apoio em `src/app/_lib/`
+- **Faltava:** a spec manda ler a variável "pelo `env` da 001, nunca `process.env` direto fora de `src/infra/env`", mas o R3 proíbe `src/app/` de importar `@/infra/env`, e o container não expõe o contato.
+- **Decidido:** `src/app/_lib/contato.ts` lê `process.env.CONTATO_PRIVACIDADE` e passa por `contatoDePrivacidade`, como as rotas de cron fazem com `CRON_SECRET`.
+- **Por quê:** segue o padrão que já existe em `src/app/` sem abrir exceção no teste de arquitetura.
+- **Desfazer:** expor o contato pelo container (campo lido de `contatoPrivacidade()` em `src/infra/env.ts`) e trocar o apoio.
+
+## 024 · T11 · manchas da chamada final acima do título e botão de envio próprio na landing
+- **Faltava:** com as manchas "pequenas no canto" (spec, "Desenho"), no celular elas cobriam o título da chamada final. E `BotaoDeEnvio` mora em `src/app/`, que componente não importa.
+- **Decidido:** as três manchas ficam num `div` no fluxo, acima do `h2`, sobrepostas só entre elas. `src/components/ritu/landing/envio.tsx` tem um botão de envio próprio, sem `fullWidth`. Os e2e da 017 usam `.first()` no botão da demonstração, que agora aparece duas vezes.
+- **Por quê:** ornamento não cobre texto (`DESIGN.md`); camadas.
+- **Desfazer:** voltar as manchas para o canto com espaço reservado ao título; mover o botão de envio para `src/components/` e usá-lo nos dois lugares.

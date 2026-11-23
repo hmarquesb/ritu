@@ -884,4 +884,11 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/mcp/tools.eval.ts"],
     desde: 4,
   },
+  {
+    grupo: "Evals",
+    linha:
+      "A evolução dos evals na página Bastidores bate com `evals/COMPARACAO.md` do mesmo `historico.json`: os cinco gráficos e a tabela têm os mesmos valores, colunas e marcas de abaixo da meta",
+    arquivos: ["evals/det/bastidores/evolucao.eval.ts"],
+    desde: 4,
+  },
 ]

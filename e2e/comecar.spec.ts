@@ -21,7 +21,7 @@ async function entrarNoAviso(page: Page): Promise<void> {
     .context()
     .setExtraHTTPHeaders({ "x-ritu-e2e": randomUUID(), "x-ritu-e2e-conta": "nova" })
   await page.goto("/")
-  await page.getByRole("button", { name: BOTAO_DEMO }).click()
+  await page.getByRole("button", { name: BOTAO_DEMO }).first().click()
   await page.waitForURL("**/comecar/aviso")
   await aguardarAssentar(page)
 }

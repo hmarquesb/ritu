@@ -24,16 +24,25 @@ const ICONES: Record<SugestaoNaTela["tipo"], Icon> = {
 export type BlocoDeSugestaoProps = {
   sugestao: SugestaoNaTela
   resultadoDaTroca?: { alimento_id: string; resultado: ResultadoDaTroca }
-  aoTrocar: (alimentoId: string, motivo: MotivoDaTroca) => void
-  aoResponderTroca: (alimentoId: string, candidato: string, resposta: "tenho" | "nao_tenho") => void
+  aoTrocar?: (alimentoId: string, motivo: MotivoDaTroca) => void
+  aoResponderTroca?: (
+    alimentoId: string,
+    candidato: string,
+    resposta: "tenho" | "nao_tenho",
+  ) => void
+  // Conversa de exemplo da landing: só leitura, sem menu, verbos, "Por quê?" nem avaliação.
+  exemplo?: boolean
   className?: string
 }
+
+const SEM_TROCA = () => undefined
 
 export function BlocoDeSugestao({
   sugestao,
   resultadoDaTroca,
-  aoTrocar,
-  aoResponderTroca,
+  aoTrocar = SEM_TROCA,
+  aoResponderTroca = SEM_TROCA,
+  exemplo = false,
   className,
 }: BlocoDeSugestaoProps) {
   const [aberto, setAberto] = useState(false)
@@ -57,7 +66,19 @@ export function BlocoDeSugestao({
         </div>
       </header>
       <p className="text-body text-ink">{sugestao.como_fazer}</p>
-      {sugestao.itens.length > 0 ? (
+      {exemplo && sugestao.itens.length > 0 ? (
+        <ul className="flex flex-wrap gap-2">
+          {sugestao.itens.map((item) => (
+            <li
+              key={item.alimento_id}
+              className="inline-flex min-h-8 items-center rounded-pill border border-line bg-surface px-3 py-1 font-body text-sm font-medium text-ink"
+            >
+              {item.nome}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {!exemplo && sugestao.itens.length > 0 ? (
         <ul className="flex flex-wrap gap-x-3 gap-y-2">
           {sugestao.itens.map((item) => (
             <Ingrediente
@@ -75,7 +96,7 @@ export function BlocoDeSugestao({
           ))}
         </ul>
       ) : null}
-      {sugestao.verbos.length > 0 ? (
+      {!exemplo && sugestao.verbos.length > 0 ? (
         <p className="text-caption text-ink-muted">{sugestao.verbos.join(" · ")}</p>
       ) : null}
       {sugestao.aviso ? (
@@ -84,14 +105,16 @@ export function BlocoDeSugestao({
           <span>{sugestao.aviso}</span>
         </p>
       ) : null}
-      <div>
-        <Button variant="quiet" size="sm" onPress={() => setAberto(true)}>
-          {T.porque}
-        </Button>
-        <Sheet title={sugestao.titulo} isOpen={aberto} onOpenChange={setAberto}>
-          <p className="font-body text-body text-ink">{sugestao.motivo}</p>
-        </Sheet>
-      </div>
+      {exemplo ? null : (
+        <div>
+          <Button variant="quiet" size="sm" onPress={() => setAberto(true)}>
+            {T.porque}
+          </Button>
+          <Sheet title={sugestao.titulo} isOpen={aberto} onOpenChange={setAberto}>
+            <p className="font-body text-body text-ink">{sugestao.motivo}</p>
+          </Sheet>
+        </div>
+      )}
     </Surface>
   )
 }

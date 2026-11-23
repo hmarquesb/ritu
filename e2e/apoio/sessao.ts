@@ -15,7 +15,7 @@ export const test = base.extend({
 
 async function clicarNaDemo(page: Page): Promise<void> {
   await page.goto("/")
-  await page.getByRole("button", { name: "Testar com perfil de demonstração" }).click()
+  await page.getByRole("button", { name: "Testar com perfil de demonstração" }).first().click()
   await page.getByRole("button", { name: "Entendi, quero começar" }).click()
 }
 

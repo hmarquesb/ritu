@@ -93,7 +93,7 @@ async function demoAteAResposta(page: Page): Promise<void> {
 test.describe("demonstração até a resposta", () => {
   test("em três toques, só com cliques", async ({ page }) => {
     await page.goto("/")
-    await page.getByRole("button", { name: "Testar com perfil de demonstração" }).click()
+    await page.getByRole("button", { name: "Testar com perfil de demonstração" }).first().click()
     await page.getByRole("button", { name: "Entendi, quero começar" }).click()
     await page.waitForURL("**/conversa")
     // A caixa já vem com a mensagem sugerida pelo perfil.
@@ -120,7 +120,7 @@ test.describe("demonstração até a resposta", () => {
 
   test("só com teclado", async ({ page }) => {
     await page.goto("/")
-    const demo = page.getByRole("button", { name: "Testar com perfil de demonstração" })
+    const demo = page.getByRole("button", { name: "Testar com perfil de demonstração" }).first()
     await demo.focus()
     await page.keyboard.press("Enter")
     const entendi = page.getByRole("button", { name: "Entendi, quero começar" })

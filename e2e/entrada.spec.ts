@@ -42,7 +42,7 @@ function vigiarConsole(page: Page): string[] {
 test.describe("demonstração", () => {
   test("em dois toques, só com cliques", async ({ page }) => {
     await page.goto("/")
-    await page.getByRole("button", { name: BOTAO_DEMO }).click()
+    await page.getByRole("button", { name: BOTAO_DEMO }).first().click()
     await page.getByRole("button", { name: BOTAO_ENTENDI }).click()
     await page.waitForURL("**/conversa")
     await expect(page.getByRole("complementary", { name: "Demonstração" })).toBeVisible()
@@ -50,7 +50,7 @@ test.describe("demonstração", () => {
 
   test("em dois toques, só com o teclado", async ({ page }) => {
     await page.goto("/")
-    const demo = page.getByRole("button", { name: BOTAO_DEMO })
+    const demo = page.getByRole("button", { name: BOTAO_DEMO }).first()
     for (let i = 0; i < 20; i++) {
       await page.keyboard.press("Tab")
       if (await demo.evaluate((el) => el === document.activeElement)) break
@@ -75,7 +75,7 @@ test.describe("demonstração", () => {
       await page.context().clearCookies()
     }
     await page.goto("/")
-    await page.getByRole("button", { name: BOTAO_DEMO }).click()
+    await page.getByRole("button", { name: BOTAO_DEMO }).first().click()
     await page.waitForURL("**/?aviso=demo_limite_ip")
     await expect(page.getByRole("status")).toContainText("5 demonstrações")
   })
@@ -87,7 +87,7 @@ test.describe("demonstração", () => {
 
   test("sem Google, o botão não aparece", async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByRole("button", { name: BOTAO_DEMO })).toBeVisible()
+    await expect(page.getByRole("button", { name: BOTAO_DEMO }).first()).toBeVisible()
     await expect(page.getByRole("button", { name: /Entrar com Google/ })).toHaveCount(0)
   })
 
@@ -96,7 +96,7 @@ test.describe("demonstração", () => {
     await page.getByRole("button", { name: "Menu da conta" }).click()
     await page.getByRole("menuitem", { name: "Sair" }).click()
     await page.waitForURL((url) => url.pathname === "/")
-    await expect(page.getByRole("button", { name: BOTAO_DEMO })).toBeVisible()
+    await expect(page.getByRole("button", { name: BOTAO_DEMO }).first()).toBeVisible()
   })
 })
 
@@ -179,7 +179,7 @@ test.describe("screenshots da Entrada", () => {
     test(`entrada ${tema}`, async ({ context, page }, info) => {
       await usarTema(context, tema)
       await page.goto("/")
-      await expect(page.getByRole("button", { name: BOTAO_DEMO })).toBeVisible()
+      await expect(page.getByRole("button", { name: BOTAO_DEMO }).first()).toBeVisible()
       await page.evaluate(() => document.fonts.ready)
       await page.screenshot({ path: `.plans/017-entrada-${tema}-${info.project.name}.png` })
     })

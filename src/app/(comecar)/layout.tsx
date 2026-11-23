@@ -1,5 +1,8 @@
+import type { Metadata } from "next"
 import type { ReactNode } from "react"
 import { Logo } from "@/components/brand/logo"
+
+export const metadata: Metadata = { robots: { index: false } }
 
 export default function ComecarLayout({ children }: { children: ReactNode }) {
   return (

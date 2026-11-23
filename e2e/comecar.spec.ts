@@ -10,7 +10,7 @@ const BOTAO_DEMO = "Testar com perfil de demonstração"
 // Espera a navegação assentar: título no ar e o anúncio do botão pendente já removido.
 async function aguardarAssentar(page: Page): Promise<void> {
   await page.waitForLoadState("networkidle")
-  await expect(page).toHaveTitle("Ritu")
+  await expect(page).toHaveTitle("Ritu · agente ayurvédico para o seu momento")
   await expect(page.locator('[role="log"] [role="img"]')).toHaveCount(0)
 }
 

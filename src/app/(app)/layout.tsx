@@ -1,4 +1,5 @@
 import { config } from "@config/index"
+import type { Metadata } from "next"
 import type { ReactNode } from "react"
 import { Logo } from "@/components/brand/logo"
 import { AbasPrincipais } from "@/components/ritu/abas"
@@ -8,6 +9,8 @@ import { getContainer } from "@/infra/container"
 import { entrarComGoogleAcao, sair } from "../_acoes/sessao"
 import { exigirPasso } from "../_lib/conta"
 import { MenuDaConta } from "./menu-da-conta"
+
+export const metadata: Metadata = { robots: { index: false } }
 
 export default async function MolduraDeQuemEntrou({ children }: { children: ReactNode }) {
   const { conta } = await exigirPasso("pronto")

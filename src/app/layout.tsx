@@ -1,4 +1,5 @@
 import { config } from "@config/index"
+import { publico } from "@config/publico"
 import type { Metadata, Viewport } from "next"
 import { cookies, headers } from "next/headers"
 import type { ReactNode } from "react"
@@ -8,8 +9,30 @@ import { parseTheme, THEME_COOKIE } from "@/components/theme/theme"
 import { bodyFont, titleFont } from "./fonts"
 import "./globals.css"
 
+const tituloPadrao = "Ritu · agente ayurvédico para o seu momento"
+const imagemDeCompartilhamento = {
+  url: "/marca/og.jpg",
+  width: 1200,
+  height: 630,
+  alt: "Ritu, agente ayurvédico para o seu momento",
+}
+
 export const metadata: Metadata = {
-  title: "Ritu",
+  title: { default: tituloPadrao, template: "%s · Ritu" },
+  description: config.textosEntrada.entrada.oQueE,
+  metadataBase: publico.siteUrl ? new URL(publico.siteUrl) : undefined,
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Ritu",
+    title: tituloPadrao,
+    description: config.textosEntrada.entrada.oQueE,
+    images: [imagemDeCompartilhamento],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [imagemDeCompartilhamento],
+  },
 }
 
 export const viewport: Viewport = {

@@ -60,6 +60,12 @@ export function chavesDeToque(
   }
 }
 
+// Início do minuto seguinte ao instante.
+export function proximoMinuto(agora: Date): Date {
+  const MINUTO_EM_MS = 60_000
+  return new Date(Math.floor(agora.getTime() / MINUTO_EM_MS) * MINUTO_EM_MS + MINUTO_EM_MS)
+}
+
 // Segundos até o alvo, para o cabeçalho de nova tentativa: arredonda para cima e nunca dá zero.
 export function segundosAte(agora: Date, alvo: Date): number {
   return Math.max(1, Math.ceil((alvo.getTime() - agora.getTime()) / 1000))

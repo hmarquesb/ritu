@@ -4,6 +4,7 @@ import { criarDemonstracao, entrarComGoogle } from "@/core/accounts/entrar"
 import type { Conta } from "@/core/accounts/types"
 import { consumirToque } from "@/core/limits/toques"
 import type { ModelRouter } from "@/core/llm/router"
+import { medirChamadaMcp } from "@/core/mcp/telemetria"
 import {
   type AtributoPermitido,
   type CodigoDeLog,
@@ -199,6 +200,19 @@ async function barrarToque(coleta: Coleta): Promise<void> {
   coleta.metricas.push(...telemetry.metricas)
 }
 
+// Chamada de tool pública (MCP): o span `mcp.tool` e `ritu_mcp_chamadas_total`.
+async function chamarToolPublica(coleta: Coleta): Promise<void> {
+  const telemetry = createMemoryTelemetry()
+  await medirChamadaMcp(
+    telemetry,
+    "ayurveda.buscar",
+    async () => ({ ok: true }),
+    () => "ok",
+  )
+  coleta.spans.push(...telemetry.spans)
+  coleta.metricas.push(...telemetry.metricas)
+}
+
 // Atributos que só são obrigatórios em certos casos (OBSERVABILITY.md §3 e nomes.ts).
 type Condicional = {
   aplica: (s: SpanRegistrado) => boolean
@@ -248,6 +262,7 @@ describe("cobertura da telemetria pelos cenários", () => {
     await tocarMemoriaEApagar(coleta)
     await entrar(coleta)
     await barrarToque(coleta)
+    await chamarToolPublica(coleta)
   }, 180_000)
 
   afterAll(() => {

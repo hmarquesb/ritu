@@ -22,6 +22,7 @@ export const SPANS = {
   toque: ["tipo"],
   "memoria.resumo": ["resumo.origem"],
   "padroes.deteccao": ["padroes.contas", "padroes.propostos"],
+  "mcp.tool": ["tool.nome", "tool.status"],
 } as const satisfies Record<string, readonly AtributoPermitido[]>
 // Valores: atributos obrigatórios num span que termina sem falha.
 // Condicionais: `prompt.versao` em `run` com agente; `cache.hit` em `tool.chamada` de `clima.*`;
@@ -61,6 +62,7 @@ export const METRICAS = {
   ritu_entrada_total: { tipo: "contador", rotulos: ["conta.tipo", "entrada.resultado"] },
   ritu_memoria_edicoes_total: { tipo: "contador", rotulos: ["nivel", "acao"] },
   ritu_conta_apagada_total: { tipo: "contador", rotulos: ["tipo"] },
+  ritu_mcp_chamadas_total: { tipo: "contador", rotulos: ["tool", "resultado"] },
 } as const satisfies Record<
   string,
   { tipo: "contador" | "histograma" | "medidor"; rotulos: readonly AtributoPermitido[] }

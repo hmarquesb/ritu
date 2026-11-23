@@ -38,7 +38,15 @@ describe("nomes da telemetria", () => {
     expect(Object.keys(SPANS)).toContain("agente.passo")
     expect(Object.keys(SPANS)).toContain("aprovacao.execucao")
     expect(Object.keys(SPANS)).toContain("toque")
-    expect(Object.keys(SPANS)).toHaveLength(13)
+    expect(Object.keys(SPANS)).toHaveLength(14)
+  })
+
+  it("SPANS e METRICAS contêm o MCP público", () => {
+    expect(SPANS["mcp.tool"]).toEqual(["tool.nome", "tool.status"])
+    expect(METRICAS.ritu_mcp_chamadas_total).toEqual({
+      tipo: "contador",
+      rotulos: ["tool", "resultado"],
+    })
   })
 
   it("SPANS contém a memória e a detecção de padrões", () => {
@@ -54,8 +62,8 @@ describe("nomes da telemetria", () => {
     }
   })
 
-  it("tem 31 métricas, todas com tipo e rótulos", () => {
-    expect(Object.keys(METRICAS)).toHaveLength(31)
+  it("tem 32 métricas, todas com tipo e rótulos", () => {
+    expect(Object.keys(METRICAS)).toHaveLength(32)
     for (const definicao of Object.values(METRICAS)) {
       expect(["contador", "histograma", "medidor"]).toContain(definicao.tipo)
       expect(Array.isArray(definicao.rotulos)).toBe(true)

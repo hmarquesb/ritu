@@ -1,12 +1,18 @@
 import { RituError } from "@/core/errors"
 
-export type CodigoDeLimite = "limite_mensagens" | "limite_demo" | "limite_ip" | "limite_toques"
+export type CodigoDeLimite =
+  | "limite_mensagens"
+  | "limite_demo"
+  | "limite_ip"
+  | "limite_toques"
+  | "limite_mcp"
 
 const MENSAGENS: Record<CodigoDeLimite, string> = {
   limite_mensagens: "Você chegou ao limite de mensagens de hoje",
   limite_demo: "As mensagens da demonstração acabaram",
   limite_ip: "As mensagens desta conexão acabaram hoje",
   limite_toques: "Muitos toques seguidos ou limite de toques de hoje",
+  limite_mcp: "Limite de uso atingido. Tente de novo mais tarde.",
 }
 
 export class LimiteError extends RituError {

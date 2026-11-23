@@ -114,6 +114,13 @@ export const PAINEL: { uid: string; titulo: "Ritu"; linhas: Linha[] } = {
           fonte: "metricas",
           consultas: [{ expr: TOTAL("ritu_limite_total", "resultado") }],
         },
+        {
+          titulo: "Chamadas MCP",
+          descricao: "Quantas chamadas ao MCP público chegaram, e com qual resultado?",
+          tipo: "stat",
+          fonte: "metricas",
+          consultas: [{ expr: TOTAL("ritu_mcp_chamadas_total", "resultado") }],
+        },
       ],
     },
     {

@@ -1,7 +1,7 @@
 import { config } from "@config/index"
 import { janelaDoMinuto } from "@/core/llm/janelas"
 import { diaLocal } from "@/core/time/dia-local"
-import { chavesDeToque, segundosAte } from "./chaves"
+import { chavesDeToque, proximoMinuto, segundosAte } from "./chaves"
 import { LimiteError } from "./erros"
 import type { DepsDosLimites, QuemPede } from "./estado"
 
@@ -38,11 +38,6 @@ function barrado(deps: DepsDosLimites, motivo: MotivoDeToque, retryAfterS: numbe
     resultado: "barrado",
   })
   return { ok: false, erro: new LimiteError("limite_toques", retryAfterS) }
-}
-
-function proximoMinuto(agora: Date): Date {
-  const MINUTO_EM_MS = 60_000
-  return new Date(Math.floor(agora.getTime() / MINUTO_EM_MS) * MINUTO_EM_MS + MINUTO_EM_MS)
 }
 
 // Próxima meia-noite do fuso: a partir da hora local do instante, sem depender do deslocamento.

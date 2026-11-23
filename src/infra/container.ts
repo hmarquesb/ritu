@@ -6,12 +6,15 @@ import { createCompanion } from "@/core/agents/companion/responder"
 import { createInterpreter } from "@/core/agents/interpreter/interpretar"
 import { createJudge, type Judge } from "@/core/agents/judge/julgar"
 import { createMemoryAgent, type MemoryAgent } from "@/core/agents/memory/memoria"
+import { criarNumerosDaSemana, type NumerosDaSemana } from "@/core/bastidores/numeros"
+import type { BastidoresStore } from "@/core/bastidores/ports"
 import type { Clock } from "@/core/clock"
 import { lerComoPensei as lerComoPenseiDoCore } from "@/core/como-pensei/ler"
 import type { LinhaDoTempo } from "@/core/como-pensei/linha-do-tempo"
 import { createConversation } from "@/core/conversation/conversar"
 import type { DemoSeed } from "@/core/demo-seed"
 import { RituError } from "@/core/errors"
+import type { Historico } from "@/core/evals/historico"
 import type { KnowledgeBase } from "@/core/knowledge/knowledge-base"
 import type { DadosDaBase } from "@/core/knowledge/schemas"
 import type { UsageLimiter } from "@/core/limits/ports"
@@ -31,6 +34,7 @@ import type { Telemetry } from "@/core/telemetry/ports"
 import { createTouches } from "@/core/touches"
 import { createCachedWeatherSource } from "@/core/weather/cache"
 import type { CityLookup, WeatherSource } from "@/core/weather/ports"
+import { createPgBastidores } from "@/infra/db/bastidores"
 import { createDbClient, type DbClient } from "@/infra/db/client"
 import { createPgLimiter } from "@/infra/db/limits"
 import { migrate } from "@/infra/db/migrate"
@@ -39,7 +43,9 @@ import { createPgTransactor } from "@/infra/db/transactor"
 import { createPgUsageLedger } from "@/infra/db/usage-ledger"
 import { createRelogioE2e } from "@/infra/e2e/relogio"
 import { optionalEnv, requireEnv } from "@/infra/env"
+import { lerHistorico } from "@/infra/evals/historico"
 import { createFakeCities } from "@/infra/fakes/fake-cities"
+import { createMemoryBastidores } from "@/infra/fakes/memory-bastidores"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createGeminiClient } from "@/infra/gemini/client"
@@ -78,6 +84,9 @@ export type Container = {
   touches: ReturnType<typeof createTouches>
   routine: ReturnType<typeof createRoutine>
   patterns: ReturnType<typeof createPatterns>
+  bastidores: BastidoresStore
+  numerosDaSemana: () => Promise<NumerosDaSemana>
+  historico: () => Historico | undefined
   lerCasa(contaId: string): Promise<CasaNaTela>
   lerComoFicou(contaId: string): Promise<ComoFicouNaTela>
   lerVoce(conta: Conta): Promise<VoceNaTela>
@@ -244,6 +253,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
   let touches: ReturnType<typeof createTouches> | undefined
   let routine: ReturnType<typeof createRoutine> | undefined
   let patterns: ReturnType<typeof createPatterns> | undefined
+  let bastidores: BastidoresStore | undefined
+  let numerosDaSemana: (() => Promise<NumerosDaSemana>) | undefined
   let sdk: { encerrar(): Promise<void> } | undefined
   let telemetriaIniciada = false
   const container: Container = {
@@ -431,6 +442,20 @@ export function createContainer(overrides?: Partial<Container>): Container {
       })
       return patterns
     },
+    // Bastidores: o adaptador Postgres no modo normal (preguiçoso); no e2e, o fake sobre os stores em memória.
+    get bastidores() {
+      bastidores ??= memoria
+        ? createMemoryBastidores(memoria)
+        : createPgBastidores(bancoPreguicoso().sql)
+      return bastidores
+    },
+    // Uma instância por container: o cache dos números da semana fica nela.
+    get numerosDaSemana() {
+      numerosDaSemana ??= criarNumerosDaSemana({ store: container.bastidores, clock })
+      return numerosDaSemana
+    },
+    // Lido do arquivo a cada chamada; ausente ou inválido vira undefined (a página mostra o estado de erro).
+    historico: () => lerHistorico(),
     // Telas de Minha casa e Como ficou: o fuso vem do perfil, com o padrão quando a pessoa não escolheu cidade.
     async lerCasa(contaId) {
       return lerCasaDoCore(

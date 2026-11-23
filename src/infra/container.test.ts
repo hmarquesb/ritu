@@ -541,6 +541,39 @@ describe("container", () => {
     })
   })
 
+  it("bastidores, numerosDaSemana e historico existem sem abrir o banco", async () => {
+    const url = process.env.DATABASE_URL
+    delete process.env.DATABASE_URL
+    try {
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+
+      expect(() => container.bastidores).not.toThrow()
+      expect(container.numerosDaSemana).toBe(container.numerosDaSemana)
+      expect(() => container.historico()).not.toThrow()
+    } finally {
+      if (url !== undefined) process.env.DATABASE_URL = url
+    }
+  })
+
+  it("historico() devolve o histórico real de evals/resultados", async () => {
+    const { createContainer } = await import("./container")
+    const { lerHistorico } = await import("@/infra/evals/historico")
+
+    expect(createContainer().historico()).toEqual(lerHistorico())
+  })
+
+  it("aceita bastidores de teste", async () => {
+    const { createContainer } = await import("./container")
+    const { createMemoryBastidores } = await import("@/infra/fakes/memory-bastidores")
+    const { createMemoryStores } = await import("@/infra/fakes/memory-stores")
+    const fake = createMemoryBastidores(
+      createMemoryStores(createFixedClock("2026-01-15T12:00:00Z")),
+    )
+
+    expect(createContainer({ bastidores: fake }).bastidores).toBe(fake)
+  })
+
   describe("modo e2e", () => {
     afterEach(() => {
       vi.unstubAllEnvs()
@@ -562,6 +595,22 @@ describe("container", () => {
       expect(getContainer()).toBe(
         (globalThis as { __rituContainerE2e?: unknown }).__rituContainerE2e,
       )
+    })
+
+    it("bastidores é o fake em memória: sinais zerados e números da semana como poucos", async () => {
+      vi.stubEnv("RITU_MODO", "e2e")
+      vi.stubEnv("VERCEL_ENV", "")
+      const { createContainer } = await import("./container")
+      const container = createContainer()
+
+      await expect(container.bastidores.sinais("2026-01-01", "2026-01-07")).resolves.toEqual({
+        feedback: { up: 0, down: 0 },
+        retornos: { ajudou: 0, nao_ajudou: 0, nao_fez: 0 },
+      })
+      await expect(container.numerosDaSemana()).resolves.toMatchObject({
+        tipo: "poucos",
+        runs: 0,
+      })
     })
 
     it("recusa em produção", async () => {

@@ -1,16 +1,18 @@
-// ⚠️ Confere a produção no ar: versão, saúde, página, cabeçalhos e proteções. Opt-in, fora dos gates.
+// ⚠️ Confere a produção no ar: versão, saúde, página, cabeçalhos, proteções e as portas públicas (Bastidores e MCP). Opt-in, fora dos gates.
 // Não chama modelo nem cria conta. Precisa de CRON_SECRET no .env.local.
 //   npm run smoke -- <url>        (ou SITE_URL)
 // Com RITU_VERSAO_ESPERADA, espera até 120 s a versão chegar. Sai com 1 no primeiro grupo que falha.
 import { readdirSync } from "node:fs"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { z } from "zod"
 import { optionalEnv } from "@/infra/env"
 import {
   type Checagem,
   checarHeaders,
   checarPagina,
   checarProtecao,
+  checarPublico,
   checarSaude,
   ultimaMigracao,
   versaoChegou,
@@ -72,6 +74,77 @@ async function checagensDeProtecao(base: string): Promise<Checagem[]> {
   return checarProtecao({ cronSemBearer, postSemOrigin })
 }
 
+const PROTOCOLO_MCP = "2025-11-25"
+const RESPOSTA_TOOLS = z.object({
+  result: z.object({ tools: z.array(z.object({ name: z.string() })) }).optional(),
+})
+
+async function pedirAoMcp(
+  base: string,
+  corpo: object,
+  sessao?: string,
+): Promise<Response | undefined> {
+  try {
+    return await fetch(`${base}/api/mcp`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        "mcp-protocol-version": PROTOCOLO_MCP,
+        ...(sessao === undefined ? {} : { "mcp-session-id": sessao }),
+      },
+      body: JSON.stringify(corpo),
+    })
+  } catch {
+    return undefined
+  }
+}
+
+function nomesDasTools(texto: string, contentType: string | null): string[] {
+  const textos = contentType?.includes("text/event-stream")
+    ? texto
+        .split("\n")
+        .filter((linha) => linha.startsWith("data:"))
+        .map((linha) => linha.slice("data:".length).trim())
+    : [texto]
+  for (const bruto of textos) {
+    const lida = RESPOSTA_TOOLS.safeParse(parseJson(bruto))
+    if (lida.success && lida.data.result) return lida.data.result.tools.map((t) => t.name)
+  }
+  return []
+}
+
+function parseJson(texto: string): unknown {
+  try {
+    return JSON.parse(texto)
+  } catch {
+    return undefined
+  }
+}
+
+async function lerToolsDoMcp(base: string): Promise<string[]> {
+  const init = await pedirAoMcp(base, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: PROTOCOLO_MCP,
+      capabilities: {},
+      clientInfo: { name: "ritu-smoke", version: "1.0.0" },
+    },
+  })
+  if (init?.ok !== true) return []
+  const sessao = init.headers.get("mcp-session-id") ?? undefined
+  const lista = await pedirAoMcp(base, { jsonrpc: "2.0", id: 2, method: "tools/list" }, sessao)
+  if (lista?.ok !== true) return []
+  return nomesDasTools(await lista.text(), lista.headers.get("content-type"))
+}
+
+async function checagensPublicas(base: string): Promise<Checagem[]> {
+  const bastidores = await statusDe(`${base}/bastidores`)
+  return checarPublico({ bastidores, toolsDoMcp: await lerToolsDoMcp(base) })
+}
+
 function linhaDe(checagem: Checagem): string {
   const marca = checagem.ok ? "ok     " : "FALHOU "
   return `${marca}${checagem.grupo} · ${checagem.nome} · ${checagem.detalhe}`
@@ -113,6 +186,7 @@ async function main(): Promise<number> {
     () => checarPagina(pagina.status, pagina.html),
     () => checarHeaders(pagina.headers),
     () => checagensDeProtecao(base),
+    () => checagensPublicas(base),
   ]
   for (const grupo of grupos) {
     const checagens = await grupo()

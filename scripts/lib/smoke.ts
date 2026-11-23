@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export type Checagem = {
-  grupo: "versao" | "saude" | "pagina" | "headers" | "protecao"
+  grupo: "versao" | "saude" | "pagina" | "headers" | "protecao" | "publico"
   nome: string
   ok: boolean
   detalhe: string
@@ -154,6 +154,28 @@ export function checarHeaders(h: Headers): Checagem[] {
     ),
     checarPermissoes(h.get("permissions-policy") ?? ""),
     checarHsts(h.get("strict-transport-security") ?? ""),
+  ]
+}
+
+const TOOLS_DO_MCP = [
+  "ayurveda_alimento",
+  "ayurveda_candidatos",
+  "ayurveda_substitutos",
+  "ayurveda_checar_combinacao",
+  "clima_agora",
+  "clima_proximas_horas",
+]
+
+export function checarPublico(r: { bastidores: number; toolsDoMcp: string[] }): Checagem[] {
+  const faltam = TOOLS_DO_MCP.filter((tool) => !r.toolsDoMcp.includes(tool))
+  return [
+    checagem("publico", "bastidores", r.bastidores === 200, `status ${r.bastidores}, esperado 200`),
+    checagem(
+      "publico",
+      "mcp tools/list",
+      faltam.length === 0,
+      faltam.length === 0 ? "seis tools" : `faltam ${faltam.join(", ")}`,
+    ),
   ]
 }
 

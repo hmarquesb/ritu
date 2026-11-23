@@ -4,6 +4,7 @@ import {
   checarHeaders,
   checarPagina,
   checarProtecao,
+  checarPublico,
   checarSaude,
   ultimaMigracao,
   versaoChegou,
@@ -288,6 +289,41 @@ describe("ultimaMigracao", () => {
 
   it("devolve texto vazio quando não há migração", () => {
     expect(ultimaMigracao([])).toBe("")
+  })
+})
+
+describe("checarPublico", () => {
+  const SEIS_TOOLS = [
+    "ayurveda_alimento",
+    "ayurveda_candidatos",
+    "ayurveda_substitutos",
+    "ayurveda_checar_combinacao",
+    "clima_agora",
+    "clima_proximas_horas",
+  ]
+
+  it("passa com 200 e as seis tools, em qualquer ordem", () => {
+    const checagens = checarPublico({
+      bastidores: 200,
+      toolsDoMcp: [...SEIS_TOOLS].reverse(),
+    })
+    expect(checagens.every((c) => c.ok)).toBe(true)
+    expect(checagens.every((c) => c.grupo === "publico")).toBe(true)
+  })
+
+  it("falha quando /bastidores não responde 200", () => {
+    const checagens = checarPublico({ bastidores: 500, toolsDoMcp: SEIS_TOOLS })
+    expect(porNome(checagens, "bastidores").ok).toBe(false)
+  })
+
+  it("falha com o nome da tool que falta", () => {
+    const checagens = checarPublico({
+      bastidores: 200,
+      toolsDoMcp: SEIS_TOOLS.filter((t) => t !== "clima_agora"),
+    })
+    const tools = porNome(checagens, "mcp tools/list")
+    expect(tools.ok).toBe(false)
+    expect(tools.detalhe).toContain("clima_agora")
   })
 })
 

@@ -912,4 +912,11 @@ export const mapa: LinhaDoMapa[] = [
     arquivos: ["evals/det/bastidores/numeros.eval.ts"],
     desde: 4,
   },
+  {
+    grupo: "Páginas públicas",
+    linha:
+      "A política de privacidade do Sobre: todo marcador tem valor, os prazos batem com a configuração, o alerta e o emocional são os do agente, sem `mailto:` sem contato; a conversa de exemplo da landing cita os nomes da base das três sugestões",
+    arquivos: ["evals/det/publico/politica.eval.ts"],
+    desde: 4,
+  },
 ]

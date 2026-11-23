@@ -6,7 +6,7 @@ export const textosEntrada = {
     subtitulo: "Que bom ter você aqui",
     oQueE:
       "Um agente ayurvédico para o seu momento. Conte como você está e o que tem em casa, e receba um chá, uma refeição simples ou uma prática para agora.",
-    aviso: "Projeto de estudo. Não é orientação médica.",
+    aviso: "Projeto de estudo. Não é orientação médica. Para maiores de 18 anos.",
     demo: "Testar com perfil de demonstração",
     demoApoio: "Sem cadastro. Você entra com um perfil pronto, que expira em 24 horas.",
     google: "Entrar com Google",
@@ -38,6 +38,7 @@ export const textosEntrada = {
     },
     demo: "Esta demonstração expira em 24 horas e depois é apagada.",
     botao: "Entendi, quero começar",
+    politica: "Leia a política de privacidade",
   },
   evitar: {
     titulo: "Tem algum alimento que você nunca pode comer?",

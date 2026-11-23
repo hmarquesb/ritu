@@ -1,8 +1,17 @@
 import { describe, expect, it } from "vitest"
 import { checkpoints } from "../evals/llm/checkpoints"
 import { FAMILIAS } from "../evals/llm/tipos"
+import { textosDaConversa } from "../src/core/conversation/textos"
 import { GRUPOS } from "../src/core/knowledge/vocab"
-import { config, telaConversa, textosBastidores, textosConversa, textosLimites } from "./index"
+import { loadKnowledgeBase } from "../src/infra/knowledge/yaml-knowledge"
+import {
+  config,
+  exemploDaLanding,
+  telaConversa,
+  textosBastidores,
+  textosConversa,
+  textosLimites,
+} from "./index"
 import { formatar } from "./textos-conversa"
 
 function textosDe(valor: unknown): string[] {
@@ -410,6 +419,45 @@ describe("config do Bastidores e do MCP", () => {
     for (const texto of textos) {
       expect(texto.trim().length).toBeGreaterThan(0)
       expect(texto).not.toMatch(/[<>]/)
+    }
+  })
+})
+
+describe("config da landing, do Sobre e do README", () => {
+  it("tem siteUrl nulo ou https sem barra final", () => {
+    const url = config.publico.siteUrl
+    if (url !== null) expect(url).toMatch(/^https:\/\/[^/\s]+$/)
+  })
+
+  it("usa só ids de prática, preparo e alimento que existem na base", () => {
+    const kb = loadKnowledgeBase()
+    for (const sugestao of exemploDaLanding.sugestoes) {
+      if (sugestao.tipo === "pratica") {
+        expect(kb.pratica(sugestao.id), sugestao.id).toBeDefined()
+      } else {
+        expect(kb.preparo(sugestao.id), sugestao.id).toBeDefined()
+        for (const ingrediente of sugestao.ingredientes) {
+          expect(kb.alimento(ingrediente), ingrediente).toBeDefined()
+        }
+      }
+    }
+  })
+
+  it("mantém o aviso de idade na entrada", () => {
+    expect(config.textosEntrada.entrada.aviso).toBe(
+      "Projeto de estudo. Não é orientação médica. Para maiores de 18 anos.",
+    )
+    expect(config.textosEntrada.avisoInicial.politica).toBe("Leia a política de privacidade")
+  })
+
+  it("reexporta os textos fixos de alerta do agente em cuidados", () => {
+    expect(config.textosSobre.cuidados.alerta).toBe(textosDaConversa.alertaFisico)
+    expect(config.textosSobre.cuidados.emocional).toBe(textosDaConversa.alertaEmocional)
+  })
+
+  it("tem um rótulo em inglês para cada destaque de Bastidores", () => {
+    for (const destaque of config.bastidores.destaques) {
+      expect(config.rotulosEn[destaque], destaque).toBeTruthy()
     }
   })
 })

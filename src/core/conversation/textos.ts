@@ -1,3 +1,4 @@
+import { textosAlertas } from "@config/textos-alertas"
 import { citadoNoPerfilDoNaoCome, itemNoPerfilDoEvitar } from "@/core/accounts/no-perfil"
 import type { Perfil } from "@/core/accounts/types"
 import type { EvitarItem } from "@/core/knowledge/filtros"
@@ -31,10 +32,8 @@ export const textosDaConversa = {
     "Tudo bem, tem dia que é assim. Se quiser, me conta como você está agora que eu tento ajudar.",
   ajuda:
     'Tudo o que eu guardo sobre você aparece em "O que sei sobre você", e lá dá para corrigir e apagar. Dosha, cidade, Evitar sempre e apagar seus dados ficam no Perfil. O que você tem em casa fica em Minha casa.',
-  alertaFisico:
-    "O que você descreveu pede o olhar de um profissional de saúde, e eu não devo sugerir nada para isso. Se for forte, repentino ou estiver piorando, procure um atendimento de urgência ou ligue 192.",
-  alertaEmocional:
-    "Sinto muito que você esteja passando por isso. Você não precisa enfrentar isso só. O CVV atende de graça, 24 horas, pelo telefone 188 ou pelo chat em cvv.org.br. Se você estiver em perigo agora, ligue 192.",
+  alertaFisico: textosAlertas.fisico,
+  alertaEmocional: textosAlertas.emocional,
   casaTem: "Boa, {itens} em casa. Confirma abaixo que eu guardo em Minha casa.",
   casaAcabou: "Entendi, acabou {itens}. Confirma abaixo que eu atualizo Minha casa.",
   casaDesconhecido: "Ainda não conheço {itens}: guardo na sua casa, mas não uso em sugestões.",

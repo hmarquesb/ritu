@@ -167,6 +167,7 @@ export const textosVoce = {
     demoUmaHora: "Este é um perfil de demonstração. Ele some em 1 hora.",
     demoMenosDeUmaHora: "Este é um perfil de demonstração. Ele some em menos de 1 hora.",
     tema: "Tema",
+    sobre: "Sobre o Ritu e privacidade",
     sair: "Sair",
     apagar: "Apagar meus dados",
     confirmaTitulo: "Apagar todos os seus dados?",

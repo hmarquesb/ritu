@@ -7,6 +7,8 @@ test("a Entrada mostra o nome e o aviso", async ({ page }) => {
     page.getByText("Ritu", { exact: true }).locator("visible=true").first(),
   ).toBeVisible()
   await expect(
-    page.getByText("Projeto de estudo. Não é orientação médica.", { exact: true }),
+    page.getByText("Projeto de estudo. Não é orientação médica. Para maiores de 18 anos.", {
+      exact: true,
+    }),
   ).toBeVisible()
 })

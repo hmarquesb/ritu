@@ -12,7 +12,7 @@ import { SecaoSuperficies } from "./_secoes/superficies"
 import { SecaoTema } from "./_secoes/tema"
 import { SecaoTipografia } from "./_secoes/tipografia"
 
-export const metadata: Metadata = { title: "Marca · Ritu", robots: { index: false } }
+export const metadata: Metadata = { title: "Marca", robots: { index: false } }
 
 export default async function MarcaPage(): Promise<ReactElement> {
   const initial = parseTheme((await cookies()).get(THEME_COOKIE)?.value)

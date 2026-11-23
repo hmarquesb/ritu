@@ -30,7 +30,7 @@ test("abre sem sessão, sem redirecionar, com as três seções", async ({ page 
   for (const titulo of [T.semana.titulo, T.evals.titulo, T.mcp.titulo]) {
     await expect(page.getByRole("heading", { level: 2, name: titulo })).toBeVisible()
   }
-  await expect(page.getByText(T.aviso)).toBeVisible()
+  await expect(page.getByRole("contentinfo").getByText(T.aviso)).toBeVisible()
 })
 
 test("abre na demonstração, sem redirecionar", async ({ page }) => {

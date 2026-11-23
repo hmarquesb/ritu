@@ -1,12 +1,12 @@
 import { config, textosBastidores } from "@config/index"
 import { headers } from "next/headers"
-import Link from "next/link"
 import { StateBlock } from "@/components/base/state-block"
-import { Logo } from "@/components/brand/logo"
 import { GraficoEvolucao } from "@/components/ritu/bastidores/grafico-evolucao"
 import { NumerosDaSemana } from "@/components/ritu/bastidores/numeros-da-semana"
 import { TabelaMetricas, type TabelaPronta } from "@/components/ritu/bastidores/tabela-metricas"
 import { UseOMcp } from "@/components/ritu/bastidores/use-o-mcp"
+import { CabecalhoPublico } from "@/components/ritu/publico/cabecalho"
+import { RodapePublico } from "@/components/ritu/publico/rodape"
 import { formatarMetrica, montarEvolucao, rotuloDoGrafico } from "@/core/bastidores/evolucao"
 import type { NumerosDaSemana as Numeros } from "@/core/bastidores/numeros"
 import { DESCRICOES_PUBLICAS } from "@/core/mcp/tools"
@@ -14,7 +14,7 @@ import { getContainer } from "@/infra/container"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = { title: "Bastidores · Ritu" }
+export const metadata = { title: "Bastidores" }
 
 const T = textosBastidores
 
@@ -83,8 +83,12 @@ function Secao({
   children: React.ReactNode
 }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-5 border-t border-line pt-8">
-      <h2 id={id} className="font-title text-title font-semibold text-ink">
+    <section
+      id={id}
+      aria-labelledby={`${id}-titulo`}
+      className="flex flex-col gap-5 border-t border-line pt-8"
+    >
+      <h2 id={`${id}-titulo`} className="font-title text-title font-semibold text-ink">
         {titulo}
       </h2>
       {children}
@@ -97,14 +101,7 @@ export default async function Bastidores() {
   const endereco = `${origem}${config.bastidores.mcp.caminho}`
   return (
     <>
-      <header className="mx-auto flex w-full max-w-[64rem] items-center px-4 pt-5 min-[48rem]:px-6">
-        <Link
-          href="/"
-          className="inline-flex min-h-11 items-center rounded-md text-ink outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          <Logo variant="full" size="sm" />
-        </Link>
-      </header>
+      <CabecalhoPublico />
       <main
         id="conteudo"
         className="mx-auto flex w-full max-w-content flex-col gap-10 px-4 pb-12 pt-6 min-[48rem]:max-w-[64rem] min-[48rem]:px-6"
@@ -123,9 +120,7 @@ export default async function Bastidores() {
           <UseOMcp endereco={endereco} tools={DESCRICOES_PUBLICAS} />
         </Secao>
       </main>
-      <footer className="mx-auto w-full max-w-[64rem] px-4 pb-10 text-sm text-ink-muted min-[48rem]:px-6">
-        {T.aviso}
-      </footer>
+      <RodapePublico atual="bastidores" />
     </>
   )
 }

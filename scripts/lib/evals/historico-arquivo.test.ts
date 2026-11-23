@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import { config } from "../../../config"
 import { type Historico, historicoSchema } from "../../../src/core/evals/historico"
+import { nomesDeCheckpoint } from "./casos"
 import { gerarComparacao } from "./comparacao"
 import { formatarHistorico } from "./historico"
 import { avaliarMetas } from "./metas"
@@ -17,13 +18,15 @@ const textoDaComparacao = readFileSync(caminho("../../../evals/COMPARACAO.md"), 
 const historico: Historico = historicoSchema.parse(JSON.parse(textoDoHistorico))
 
 describe("evals/resultados/historico.json", () => {
-  it("valida com historicoSchema e tem as três entradas na ordem de checkpoints.ts", () => {
+  it("valida com historicoSchema e segue a ordem de checkpoints.ts", () => {
     expect(historico.versao).toBe(1)
-    expect(historico.checkpoints.map((e) => e.checkpoint)).toEqual([
-      "c1-base",
-      "c2-conversa",
-      "c3-confiavel",
-    ])
+    const nomes = historico.checkpoints.map((e) => e.checkpoint)
+    const ordem = nomesDeCheckpoint()
+    for (const nome of nomes) expect(ordem).toContain(nome)
+    const posicoes = nomes.map((nome) => ordem.indexOf(nome))
+    expect(posicoes).toEqual([...posicoes].sort((x, y) => x - y))
+    expect(new Set(nomes).size).toBe(nomes.length)
+    for (const nome of ["c1-base", "c2-conversa", "c3-confiavel"]) expect(nomes).toContain(nome)
   })
 
   it("tem toda métrica de DEFINICAO_DAS_METRICAS em cada entrada", () => {

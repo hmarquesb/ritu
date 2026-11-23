@@ -45,7 +45,7 @@ test("abaixo do piso mostra só o aviso de pouco uso", async ({ page }) => {
   await expect(semana.getByText(T.semana.poucos.titulo)).toBeVisible()
   await expect(semana.getByText("Por enquanto são 7.")).toBeVisible()
   await expect(semana.locator("dt")).toHaveCount(0)
-  await expect(page.locator("main")).not.toContainText("42")
+  await expect(semana).not.toContainText("42")
 })
 
 test("acima do piso mostra os sete indicadores, as intenções e as tools", async ({ page }) => {

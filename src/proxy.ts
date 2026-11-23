@@ -25,6 +25,7 @@ export function proxy(request: NextRequest): NextResponse {
     metodo: request.method,
     origin: request.headers.get("origin"),
     host,
+    caminho: request.nextUrl.pathname,
   })
   if (!permitido) {
     return aplicar(NextResponse.json({ erro: "origem_invalida" }, { status: 403 }), headers)

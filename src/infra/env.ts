@@ -173,6 +173,14 @@ export const ENV_VARS: readonly EnvVar[] = [
     producao: "local",
     descricao: "URL de produção, para `smoke` e `smoke:completo`.",
   },
+  {
+    name: "CONTATO_PRIVACIDADE",
+    entrega: 4,
+    obrigatoria: false,
+    producao: "obrigatoria",
+    descricao:
+      "E-mail mostrado na política de privacidade. Nova, entrega 4, não obrigatória fora de produção",
+  },
 ]
 
 function valorPresente(valor: string | undefined): string | undefined {
@@ -199,6 +207,14 @@ export function testers(env: EnvSource = process.env): string[] {
     .split(",")
     .map((item) => normalizarEmail(item))
     .filter((item) => item !== "")
+}
+
+/**
+ * Valor cru de CONTATO_PRIVACIDADE (ausente ou vazia vira undefined). Não valida
+ * nem apara: quem mostra o contato usa `contatoDePrivacidade` (src/core/publico/contato.ts).
+ */
+export function contatoPrivacidade(env: EnvSource = process.env): string | undefined {
+  return optionalEnv("CONTATO_PRIVACIDADE", env)
 }
 
 export function envStatus(env: EnvSource = process.env): {

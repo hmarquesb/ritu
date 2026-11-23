@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, it, vi } from "vitest"
 import { MissingEnvError } from "@/core/errors"
 import {
+  contatoPrivacidade,
   ENV_VARS,
   type EnvVar,
   envStatus,
@@ -31,6 +32,28 @@ describe("testers", () => {
   it("a descrição no catálogo diz que não tem limite de uso", () => {
     const variavel = ENV_VARS.find((item) => item.name === "TESTER_IDS")
     expect(variavel?.descricao).toBe("E-mails do Google, separados por vírgula, sem limite de uso.")
+  })
+})
+
+describe("CONTATO_PRIVACIDADE", () => {
+  it("está no catálogo como obrigatória em produção, nova da entrega 4 e não obrigatória fora dela", () => {
+    expect(ENV_VARS.find((item) => item.name === "CONTATO_PRIVACIDADE")).toMatchObject({
+      entrega: 4,
+      obrigatoria: false,
+      producao: "obrigatoria",
+    })
+  })
+
+  it("o leitor devolve o valor cru, sem validar nem aparar", () => {
+    expect(contatoPrivacidade({ CONTATO_PRIVACIDADE: "  nao-e-email " })).toBe("  nao-e-email ")
+  })
+
+  it.each([
+    ["ausente", {}],
+    ["vazia", { CONTATO_PRIVACIDADE: "" }],
+    ["só espaços", { CONTATO_PRIVACIDADE: "   " }],
+  ])("devolve undefined quando a variável está %s", (_, env) => {
+    expect(contatoPrivacidade(env)).toBeUndefined()
   })
 })
 
@@ -79,7 +102,7 @@ describe("envStatus", () => {
   const status = envStatus({ DATABASE_URL: "x", EXTRA: "y" })
 
   it("lista só as variáveis do catálogo, sem as de fora", () => {
-    expect(status).toHaveLength(22)
+    expect(status).toHaveLength(23)
     expect(status.map((item) => item.name)).not.toContain("EXTRA")
   })
 
@@ -179,6 +202,11 @@ const TABELA_PRODUCAO: readonly [string, UsoEmProducao, string][] = [
   ["GRAFANA_TOKEN", "local", "Para `painel:publicar`."],
   ["GRAFANA_ALERTA_EMAIL", "local", "Para `painel:publicar`."],
   ["SITE_URL", "local", "URL de produção, para `smoke` e `smoke:completo`."],
+  [
+    "CONTATO_PRIVACIDADE",
+    "obrigatoria",
+    "E-mail mostrado na política de privacidade. Nova, entrega 4, não obrigatória fora de produção",
+  ],
 ]
 
 const NOVAS_ENTREGA_4 = [
@@ -190,6 +218,7 @@ const NOVAS_ENTREGA_4 = [
   "GRAFANA_TOKEN",
   "GRAFANA_ALERTA_EMAIL",
   "SITE_URL",
+  "CONTATO_PRIVACIDADE",
 ]
 
 function variavel(name: string, producao: UsoEmProducao, obrigatoria = false): EnvVar {

@@ -12,6 +12,7 @@ const OBRIGATORIAS_DE_PRODUCAO = [
   "AUTH_GOOGLE_SECRET",
   "OTEL_EXPORTER_OTLP_ENDPOINT",
   "OTEL_EXPORTER_OTLP_HEADERS",
+  "CONTATO_PRIVACIDADE",
 ]
 
 function linhaDe(linhas: string[], nome: string): string {
@@ -70,6 +71,13 @@ describe("linhasDoEnvProducao", () => {
     ])
     expect(codigo).toBe(1)
     expect(linhaDe(linhas, "RITU_MODO")).toMatch(/proibida$/)
+  })
+
+  it("código 1 e 'ausente' quando CONTATO_PRIVACIDADE falta em produção", () => {
+    const nomes = OBRIGATORIAS_DE_PRODUCAO.filter((nome) => nome !== "CONTATO_PRIVACIDADE")
+    const { codigo, linhas } = linhasDoEnvProducao(ENV_VARS, nomes)
+    expect(codigo).toBe(1)
+    expect(linhaDe(linhas, "CONTATO_PRIVACIDADE")).toMatch(/ausente$/)
   })
 
   it("opcional ausente aparece como ausente, sem derrubar o código", () => {

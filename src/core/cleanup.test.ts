@@ -1,9 +1,13 @@
 import { config } from "@config/index"
 import { describe, expect, it } from "vitest"
+import type { BastidoresStore } from "@/core/bastidores/ports"
+import { RituError } from "@/core/errors"
 import type { Stores } from "@/core/stores"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryBastidores } from "@/infra/fakes/memory-bastidores"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { executarLimpeza } from "./cleanup"
 
 const T = "2026-01-15T12:00:00.000Z"
@@ -19,7 +23,12 @@ function montar() {
   const stores = createMemoryStores(clock)
   const ledger = createMemoryLedger(clock)
   const limiter = createMemoryLimiter()
-  return { clock, stores, ledger, limiter }
+  const bastidores = createMemoryBastidores(stores)
+  const telemetry = createMemoryTelemetry()
+  // Roda a limpeza com as deps da montagem; um store de bastidores pode ser trocado por teste.
+  const limpar = (store: BastidoresStore = bastidores) =>
+    executarLimpeza({ stores, clock, ledger, limiter, bastidores: store, telemetry })
+  return { clock, stores, ledger, limiter, bastidores, telemetry, limpar }
 }
 
 // Instante T menos ms, em ISO, para o clock fixo.
@@ -48,9 +57,9 @@ async function criarRunEmEspera(stores: Stores, contaId: string): Promise<string
 }
 
 describe("executarLimpeza", () => {
-  it("sem dados devolve zeros", async () => {
-    const { clock, stores, ledger, limiter } = montar()
-    expect(await executarLimpeza({ stores, clock, ledger, limiter })).toEqual({
+  it("sem dados devolve zeros e os cinco sinais de ontem", async () => {
+    const { limpar } = montar()
+    expect(await limpar()).toEqual({
       mensagens: 0,
       mensagens_com_incomodo: 0,
       retornos: 0,
@@ -61,11 +70,13 @@ describe("executarLimpeza", () => {
       demos: 0,
       llm_uso: 0,
       limites: 0,
+      sinais_registrados: 5,
+      sinais_apagados: 0,
     })
   })
 
   it("limites de hoje e de ontem ficam e os de anteontem saem", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { clock, limiter, limpar } = montar()
     const teto = [{ chave: "usuario:a", teto: 100 }]
     clock.set("2026-01-13T12:00:00.000Z")
     await limiter.consumir(teto, "dia", "2026-01-13")
@@ -75,7 +86,7 @@ describe("executarLimpeza", () => {
     await limiter.consumir(teto, "dia", HOJE)
     await limiter.consumir([{ chave: "usuario:a", teto: 100 }], "minuto", "2026-01-15T11:59")
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.limites).toBe(1)
     expect(await limiter.usado("usuario:a", "dia", "2026-01-13")).toBe(0)
@@ -84,7 +95,7 @@ describe("executarLimpeza", () => {
   })
 
   it("janela de uso de minuto com mais de 1 dia e de dia com mais de 30 dias saem; as recentes ficam", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { clock, ledger, limpar } = montar()
     const modelo = Object.keys(config.llmCotas.modelos)[0] ?? ""
     const limites = { rpm: 100, tpm: 1_000_000, rpd: 1_000 }
     clock.set(antes(25 * HORA_MS))
@@ -95,7 +106,7 @@ describe("executarLimpeza", () => {
     await ledger.reservar(modelo, limites)
     clock.set(T)
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     // minuto de 25 h, minuto de 31 dias e dia de 31 dias
     expect(r.llm_uso).toBe(3)
@@ -105,7 +116,7 @@ describe("executarLimpeza", () => {
   })
 
   it("mensagem de 7 dias fica e a de 7 dias + 1 min sai", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { clock, stores, limpar } = montar()
     const a = await criarConta(stores, "a")
     clock.set(antes(7 * DIA_MS + MINUTO))
     await stores.messages.gravar(a, {
@@ -123,7 +134,7 @@ describe("executarLimpeza", () => {
     })
     clock.set(T)
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.mensagens).toBe(1)
     expect(await stores.messages.doDia(a, "2026-01-07")).toEqual([])
@@ -131,7 +142,7 @@ describe("executarLimpeza", () => {
   })
 
   it("mensagem com incômodo de ontem sai e a de hoje fica", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { stores, limpar } = montar()
     const a = await criarConta(stores, "a")
     await stores.messages.gravar(a, {
       autor: "pessoa",
@@ -146,7 +157,7 @@ describe("executarLimpeza", () => {
       dia: HOJE,
     })
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.mensagens_com_incomodo).toBe(1)
     expect(r.mensagens).toBe(0)
@@ -155,7 +166,7 @@ describe("executarLimpeza", () => {
   })
 
   it("retorno aguardando de 8 dias sai e o respondido de 8 dias fica", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { clock, stores, limpar } = montar()
     const a = await criarConta(stores, "a")
     clock.set(antes(8 * DIA_MS))
     const run = await stores.runs.criar(a, { caminho: "casa", intencoes: [], dia: "2026-01-07" })
@@ -166,7 +177,7 @@ describe("executarLimpeza", () => {
     await stores.outcomes.responder(a, respondido?.id ?? "", "ajudou", "toque")
     clock.set(T)
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.retornos).toBe(1)
     const restantes = await stores.outcomes.doRun(a, run.id)
@@ -175,7 +186,7 @@ describe("executarLimpeza", () => {
   })
 
   it("falta de 30 dias fica e a de 31 sai", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { stores, limpar } = montar()
     const a = await criarConta(stores, "a")
     await stores.shortages.registrar(
       a,
@@ -188,7 +199,7 @@ describe("executarLimpeza", () => {
       "2025-12-15",
     )
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.faltas).toBe(1)
     const dias = await stores.shortages.diasComFalta(a, "2025-01-01")
@@ -196,7 +207,7 @@ describe("executarLimpeza", () => {
   })
 
   it("evitar temporário de ontem sai e o de hoje fica", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { stores, limpar } = montar()
     const a = await criarConta(stores, "a")
     await stores.profiles.acrescentarEvitarTemporario(a, ONTEM, [
       { tipo: "grupo", valor: "castanhas" },
@@ -205,7 +216,7 @@ describe("executarLimpeza", () => {
       { tipo: "grupo", valor: "castanhas" },
     ])
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.evitar_temporario).toBe(1)
     expect(await stores.profiles.evitarTemporario(a, ONTEM)).toEqual([])
@@ -215,7 +226,7 @@ describe("executarLimpeza", () => {
   })
 
   it("run em espera há 31 min vira expired e a proposta pendente vira expirada; o de 29 min fica", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { clock, stores, limpar } = montar()
     const antigaConta = await criarConta(stores, "antiga")
     const recenteConta = await criarConta(stores, "recente")
     clock.set(antes(31 * MINUTO))
@@ -224,7 +235,7 @@ describe("executarLimpeza", () => {
     const recente = await criarRunEmEspera(stores, recenteConta)
     clock.set(T)
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.runs_expirados).toBe(1)
     expect(r.propostas_expiradas).toBe(1)
@@ -235,7 +246,7 @@ describe("executarLimpeza", () => {
   })
 
   it("conta de demonstração vencida sai e a válida fica", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { stores, limpar } = montar()
     const vencida = await stores.accounts.criar({
       tipo: "demo",
       expira_em: new Date(Date.parse(T) - MINUTO),
@@ -245,15 +256,89 @@ describe("executarLimpeza", () => {
       expira_em: new Date(Date.parse(T) + DIA_MS),
     })
 
-    const r = await executarLimpeza({ stores, clock, ledger, limiter })
+    const r = await limpar()
 
     expect(r.demos).toBe(1)
     expect(await stores.accounts.buscar(valida.id)).toBeDefined()
     expect(await stores.accounts.buscar(vencida.id)).toBeUndefined()
   })
 
+  it("grava os sinais de ontem antes de apagar a demonstração vencida: o 👍 dela segue contado", async () => {
+    const { clock, stores, bastidores, limpar } = montar()
+    const demo = await stores.accounts.criar({
+      tipo: "demo",
+      expira_em: new Date(Date.parse(T) - MINUTO),
+    })
+    clock.set(antes(DIA_MS))
+    const run = await stores.runs.criar(demo.id, { caminho: "casa", intencoes: [], dia: ONTEM })
+    await stores.runs.votar(demo.id, run.id, "up")
+    clock.set(T)
+
+    const r = await limpar()
+
+    expect(r.demos).toBe(1)
+    expect(r.sinais_registrados).toBe(5)
+    expect((await bastidores.sinais(ONTEM, ONTEM)).feedback).toEqual({ up: 1, down: 0 })
+  })
+
+  it("duas limpezas no mesmo dia deixam os mesmos sinais de ontem", async () => {
+    const { clock, stores, bastidores, limpar } = montar()
+    const a = await criarConta(stores, "a")
+    clock.set(antes(DIA_MS))
+    const run = await stores.runs.criar(a, { caminho: "casa", intencoes: [], dia: ONTEM })
+    await stores.runs.votar(a, run.id, "down")
+    clock.set(T)
+
+    await limpar()
+    const primeira = await bastidores.sinais(ONTEM, ONTEM)
+    const segunda = await limpar()
+
+    expect(segunda.sinais_registrados).toBe(5)
+    expect(await bastidores.sinais(ONTEM, ONTEM)).toEqual(primeira)
+    expect(primeira.feedback).toEqual({ up: 0, down: 1 })
+  })
+
+  it("sinais com mais de 30 dias saem e os de exatamente 30 dias ficam", async () => {
+    const { bastidores, limpar } = montar()
+    // 2025-12-15 tem 31 dias; 2025-12-16 tem 30 dias, no limite da retenção
+    await bastidores.registrarSinaisDoDia("2025-12-15", config.clima.fusoPadrao)
+    await bastidores.registrarSinaisDoDia("2025-12-16", config.clima.fusoPadrao)
+
+    const r = await limpar()
+
+    // só os cinco sinais de 2025-12-15 saem
+    expect(r.sinais_apagados).toBe(5)
+    expect(await bastidores.apagarSinaisAntesDe("2025-12-16")).toBe(0)
+  })
+
+  it("registro que falha é logado com o erro.codigo e a limpeza segue", async () => {
+    const { stores, bastidores, telemetry, limpar } = montar()
+    await stores.accounts.criar({
+      tipo: "demo",
+      expira_em: new Date(Date.parse(T) - MINUTO),
+    })
+    const quebrado: BastidoresStore = {
+      ...bastidores,
+      registrarSinaisDoDia: async () => {
+        throw new RituError("sinais_indisponiveis", "falhou")
+      },
+    }
+
+    const r = await limpar(quebrado)
+
+    expect(r.sinais_registrados).toBe(0)
+    expect(r.demos).toBe(1)
+    expect(telemetry.logs).toEqual([
+      {
+        codigo: "sinais_dia_falhou",
+        nivel: "error",
+        campos: { "erro.codigo": "sinais_indisponiveis" },
+      },
+    ])
+  })
+
   it("devolve a contagem de cada item", async () => {
-    const { clock, stores, ledger, limiter } = montar()
+    const { clock, stores, limiter, limpar } = montar()
     const a = await criarConta(stores, "a")
     const b = await criarConta(stores, "b")
     const c = await criarConta(stores, "c")
@@ -287,7 +372,7 @@ describe("executarLimpeza", () => {
     await stores.accounts.criar({ tipo: "demo", expira_em: new Date(Date.parse(T) - MINUTO) })
 
     await limiter.consumir([{ chave: "usuario:a", teto: 100 }], "dia", "2026-01-10")
-    expect(await executarLimpeza({ stores, clock, ledger, limiter })).toEqual({
+    expect(await limpar()).toEqual({
       limites: 1,
       mensagens: 1,
       mensagens_com_incomodo: 1,
@@ -298,6 +383,8 @@ describe("executarLimpeza", () => {
       propostas_expiradas: 1,
       demos: 1,
       llm_uso: 0,
+      sinais_registrados: 5,
+      sinais_apagados: 0,
     })
   })
 })

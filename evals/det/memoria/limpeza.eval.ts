@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest"
 import { executarLimpeza } from "@/core/cleanup"
 import type { Stores } from "@/core/stores"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryBastidores } from "@/infra/fakes/memory-bastidores"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 
 const CONTA = "conta-1"
 const DIA_EM_MS = 86_400_000
@@ -27,6 +29,8 @@ function limpar(stores: Stores, clock: Relogio) {
     clock,
     ledger: createMemoryLedger(clock),
     limiter: createMemoryLimiter(),
+    bastidores: createMemoryBastidores(stores),
+    telemetry: createMemoryTelemetry(),
   })
 }
 

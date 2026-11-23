@@ -94,6 +94,7 @@ export const LOGS = {
   atributo_proibido: "warn", // erro.codigo
   run_falhou: "error", // erro.codigo
   padroes_conta_falhou: "error", // erro.codigo (012; D1)
+  sinais_dia_falhou: "error", // erro.codigo (023; limpeza)
   erro_inesperado: "error", // erro.codigo
 } as const
 

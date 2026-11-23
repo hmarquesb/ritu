@@ -7,8 +7,10 @@ import type { UsageLimiter } from "@/core/limits/ports"
 import type { Stores, Transactor } from "@/core/stores"
 import { diaLocal } from "@/core/time/dia-local"
 import { createContainer } from "@/infra/container"
+import { createMemoryBastidores } from "@/infra/fakes/memory-bastidores"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 
 const AGORA = new Date("2026-03-10T15:00:00.000Z")
 const HORA_MS = 3_600_000
@@ -180,6 +182,8 @@ describe("demonstração vencida", () => {
       clock: m.clock,
       ledger: createMemoryLedger(m.clock),
       limiter: m.limiter,
+      bastidores: createMemoryBastidores(m.stores),
+      telemetry: createMemoryTelemetry(),
     })
     expect(resultado.demos).toBe(1)
     expect(await m.stores.accounts.buscar(viva.id)).toBeDefined()

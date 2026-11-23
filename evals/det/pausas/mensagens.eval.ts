@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { executarLimpeza } from "@/core/cleanup"
 import { type Pergunta, textoDaResposta } from "@/core/runs/pergunta"
+import { createMemoryBastidores } from "@/infra/fakes/memory-bastidores"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
+import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
 import { createScriptedRuntime } from "@/infra/fakes/scripted-runtime"
 import { cenariosComPausa, montarCenario, rodarCenario } from "../../../test/fixtures/cenarios"
 import type { CenarioDeConversa } from "../../../test/fixtures/cenarios/tipos"
@@ -96,6 +98,8 @@ describe("mensagens: a variante fica marcada com incômodo", () => {
       clock: deps.clock,
       ledger: deps.ledger,
       limiter: createMemoryLimiter(),
+      bastidores: createMemoryBastidores(deps.stores),
+      telemetry: createMemoryTelemetry(),
     })
 
     expect(await deps.stores.messages.doDia(contaId, run?.dia ?? "")).toEqual([])
@@ -119,6 +123,8 @@ describe("mensagens: a variante sem resposta expira, e a limpeza apaga a pergunt
       clock: deps.clock,
       ledger: deps.ledger,
       limiter: createMemoryLimiter(),
+      bastidores: createMemoryBastidores(deps.stores),
+      telemetry: createMemoryTelemetry(),
     })
 
     const depois = await deps.stores.runs.buscar(contaId, r.run_id)

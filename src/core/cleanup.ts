@@ -1,8 +1,11 @@
 import { config } from "@config/index"
+import type { BastidoresStore } from "@/core/bastidores/ports"
 import type { Clock } from "@/core/clock"
+import { RituError } from "@/core/errors"
 import type { UsageLimiter } from "@/core/limits/ports"
 import type { UsageLedger } from "@/core/llm/ledger"
 import type { Stores } from "@/core/stores"
+import type { Telemetry } from "@/core/telemetry/ports"
 import { diaLocal, diasAtras } from "@/core/time/dia-local"
 
 const DIA_MS = 86_400_000
@@ -19,20 +22,46 @@ export type ResultadoLimpeza = {
   demos: number
   llm_uso: number
   limites: number
+  sinais_registrados: number
+  sinais_apagados: number
 }
 
-// Apaga o que passou do prazo de memória, expira os runs em espera e apaga os limites de antes de ontem. Cortes por dia usam o fuso padrão.
+// Grava os sinais de ontem; falha é logada e devolve 0, para a limpeza seguir.
+async function registrarSinaisDeOntem(
+  deps: { bastidores: BastidoresStore; telemetry: Telemetry },
+  ontem: string,
+): Promise<number> {
+  try {
+    return await deps.bastidores.registrarSinaisDoDia(ontem, config.clima.fusoPadrao)
+  } catch (erro) {
+    deps.telemetry.log("sinais_dia_falhou", {
+      "erro.codigo": erro instanceof RituError ? erro.code : "desconhecido",
+    })
+    return 0
+  }
+}
+
+// Grava os sinais de ontem antes de apagar as contas vencidas; apaga os sinais além da retenção. Apaga o que passou do prazo de memória, expira os runs em espera e apaga os limites de antes de ontem. Cortes por dia usam o fuso padrão.
 export async function executarLimpeza(deps: {
   stores: Stores
   clock: Clock
   ledger: UsageLedger
   limiter: UsageLimiter
+  bastidores: BastidoresStore
+  telemetry: Telemetry
 }): Promise<ResultadoLimpeza> {
-  const { stores, clock, ledger, limiter } = deps
+  const { stores, clock, ledger, limiter, bastidores, telemetry } = deps
   const agora = clock.now()
   const hoje = diaLocal(agora)
-  const { memoria } = config
+  const { memoria, bastidores: configBastidores } = config
 
+  const sinais_registrados = await registrarSinaisDeOntem(
+    { bastidores, telemetry },
+    diasAtras(hoje, 1),
+  )
+  const sinais_apagados = await bastidores.apagarSinaisAntesDe(
+    diasAtras(hoje, configBastidores.retencaoSinaisDias),
+  )
   const mensagens = await stores.messages.apagarAntesDe(
     new Date(agora.getTime() - memoria.mensagensDias * DIA_MS),
   )
@@ -61,5 +90,7 @@ export async function executarLimpeza(deps: {
     demos,
     llm_uso,
     limites,
+    sinais_registrados,
+    sinais_apagados,
   }
 }

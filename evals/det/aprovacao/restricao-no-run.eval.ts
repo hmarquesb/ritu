@@ -5,6 +5,7 @@ import { executarLimpeza } from "@/core/cleanup"
 import { gravarResposta } from "@/core/runs/gravar-resposta"
 import { getContainer } from "@/infra/container"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryBastidores } from "@/infra/fakes/memory-bastidores"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
@@ -45,7 +46,14 @@ async function ambiente() {
   // Vira o dia e roda a limpeza diária, que apaga o temporário de ontem.
   const virarDia = async () => {
     clock.advance(DIA_MS)
-    await executarLimpeza({ stores, clock, ledger, limiter: createMemoryLimiter() })
+    await executarLimpeza({
+      stores,
+      clock,
+      ledger,
+      limiter: createMemoryLimiter(),
+      bastidores: createMemoryBastidores(stores),
+      telemetry: createMemoryTelemetry(),
+    })
   }
   return { stores, clock, telemetry, ledger, contaId, deps, ler, virarDia }
 }
@@ -204,6 +212,8 @@ describe("aprovadas no bloco: vão ao perfil e filtram no dia seguinte", () => {
       clock: deps.clock,
       ledger: deps.ledger,
       limiter: createMemoryLimiter(),
+      bastidores: createMemoryBastidores(deps.stores),
+      telemetry: createMemoryTelemetry(),
     })
     const seguinte = await preparar(
       { stores: deps.stores, kb, clock: deps.clock, telemetry: deps.telemetry },
@@ -228,6 +238,8 @@ describe("aprovadas no bloco: vão ao perfil e filtram no dia seguinte", () => {
       clock: deps.clock,
       ledger: deps.ledger,
       limiter: createMemoryLimiter(),
+      bastidores: createMemoryBastidores(deps.stores),
+      telemetry: createMemoryTelemetry(),
     })
     const seguinte = await preparar(
       { stores: deps.stores, kb, clock: deps.clock, telemetry: deps.telemetry },

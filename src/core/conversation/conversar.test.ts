@@ -17,6 +17,7 @@ import { createApprovingJudge, createScriptedJudge } from "@/infra/fakes/fake-ju
 import { createFakeLlm } from "@/infra/fakes/fake-llm"
 import { createFakeWeather } from "@/infra/fakes/fake-weather"
 import { createFixedClock } from "@/infra/fakes/fixed-clock"
+import { createMemoryBastidores } from "@/infra/fakes/memory-bastidores"
 import { createMemoryLimiter } from "@/infra/fakes/memory-limiter"
 import { createMemoryLedger, createMemoryStores } from "@/infra/fakes/memory-stores"
 import { createMemoryTelemetry } from "@/infra/fakes/memory-telemetry"
@@ -361,6 +362,8 @@ describe("conversar: alertas", () => {
         clock: m.clock,
         ledger: m.ledger,
         limiter: createMemoryLimiter(),
+        bastidores: createMemoryBastidores(m.stores),
+        telemetry: createMemoryTelemetry(),
       })
       expect(await m.stores.messages.doDia(m.conta.id, run.dia)).toEqual([])
     })

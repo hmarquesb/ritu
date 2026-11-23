@@ -3,8 +3,15 @@ import { closeDatabase, getContainer } from "@/infra/container"
 
 async function main(): Promise<number> {
   try {
-    const { stores, clock, ledger, limiter } = getContainer()
-    const resultado = await executarLimpeza({ stores, clock, ledger, limiter })
+    const { stores, clock, ledger, limiter, bastidores, telemetry } = getContainer()
+    const resultado = await executarLimpeza({
+      stores,
+      clock,
+      ledger,
+      limiter,
+      bastidores,
+      telemetry,
+    })
     for (const [item, quantidade] of Object.entries(resultado)) {
       console.log(`${item}: ${quantidade}`)
     }

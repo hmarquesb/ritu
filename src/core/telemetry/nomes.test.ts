@@ -103,7 +103,7 @@ describe("nomes da telemetria", () => {
     expectTypeOf<NomeDeSpan>().toEqualTypeOf<keyof typeof SPANS>()
   })
 
-  it("LOGS tem os 12 códigos com os níveis da spec", () => {
+  it("LOGS tem os 13 códigos com os níveis da spec", () => {
     expect(LOGS).toEqual({
       run_inicio: "info",
       run_retomado: "info",
@@ -116,9 +116,10 @@ describe("nomes da telemetria", () => {
       atributo_proibido: "warn",
       run_falhou: "error",
       padroes_conta_falhou: "error",
+      sinais_dia_falhou: "error",
       erro_inesperado: "error",
     })
-    expect(Object.keys(LOGS)).toHaveLength(12)
+    expect(Object.keys(LOGS)).toHaveLength(13)
     expectTypeOf<CodigoDeLog>().toEqualTypeOf<keyof typeof LOGS>()
   })
 

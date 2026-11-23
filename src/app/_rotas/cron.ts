@@ -42,8 +42,10 @@ export function rotaDaLimpeza(deps: DepsDaRotaDeCron): (request: Request) => Pro
       return Response.json({ erro: "sem_autorizacao" }, { status: 401 })
     }
     try {
-      const { stores, clock, ledger, limiter } = container
-      return Response.json(await executarLimpeza({ stores, clock, ledger, limiter }))
+      const { stores, clock, ledger, limiter, bastidores, telemetry } = container
+      return Response.json(
+        await executarLimpeza({ stores, clock, ledger, limiter, bastidores, telemetry }),
+      )
     } catch {
       container.telemetry.log("erro_inesperado")
       return Response.json({ erro: "erro_inesperado" }, { status: 500 })

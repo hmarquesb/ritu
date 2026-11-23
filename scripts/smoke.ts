@@ -1,4 +1,4 @@
-// ⚠️ Confere a produção no ar: versão, saúde, página, cabeçalhos, proteções e as portas públicas (Bastidores e MCP). Opt-in, fora dos gates.
+// ⚠️ Confere a produção no ar: versão, saúde, página, cabeçalhos, proteções e as portas públicas (Bastidores, Sobre e MCP). Opt-in, fora dos gates.
 // Não chama modelo nem cria conta. Precisa de CRON_SECRET no .env.local.
 //   npm run smoke -- <url>        (ou SITE_URL)
 // Com RITU_VERSAO_ESPERADA, espera até 120 s a versão chegar. Sai com 1 no primeiro grupo que falha.
@@ -140,9 +140,22 @@ async function lerToolsDoMcp(base: string): Promise<string[]> {
   return nomesDasTools(await lista.text(), lista.headers.get("content-type"))
 }
 
+async function lerSobre(base: string): Promise<{ status: number; html: string }> {
+  try {
+    const resposta = await fetch(`${base}/sobre`)
+    return { status: resposta.status, html: await resposta.text() }
+  } catch {
+    return { status: 0, html: "" }
+  }
+}
+
 async function checagensPublicas(base: string): Promise<Checagem[]> {
   const bastidores = await statusDe(`${base}/bastidores`)
-  return checarPublico({ bastidores, toolsDoMcp: await lerToolsDoMcp(base) })
+  return checarPublico({
+    bastidores,
+    toolsDoMcp: await lerToolsDoMcp(base),
+    sobre: await lerSobre(base),
+  })
 }
 
 function linhaDe(checagem: Checagem): string {

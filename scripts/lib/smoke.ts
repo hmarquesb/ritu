@@ -166,7 +166,26 @@ const TOOLS_DO_MCP = [
   "clima_proximas_horas",
 ]
 
-export function checarPublico(r: { bastidores: number; toolsDoMcp: string[] }): Checagem[] {
+const FRASES_DO_SOBRE = ["Privacidade", AVISO]
+
+function checarSobre(sobre: { status: number; html: string }): Checagem {
+  if (sobre.status !== 200) {
+    return checagem("publico", "sobre", false, `status ${sobre.status}, esperado 200`)
+  }
+  const faltam = FRASES_DO_SOBRE.filter((frase) => !sobre.html.includes(frase))
+  return checagem(
+    "publico",
+    "sobre",
+    faltam.length === 0,
+    faltam.length === 0 ? "status 200 e as frases esperadas" : `faltam ${faltam.join(", ")}`,
+  )
+}
+
+export function checarPublico(r: {
+  bastidores: number
+  toolsDoMcp: string[]
+  sobre: { status: number; html: string }
+}): Checagem[] {
   const faltam = TOOLS_DO_MCP.filter((tool) => !r.toolsDoMcp.includes(tool))
   return [
     checagem("publico", "bastidores", r.bastidores === 200, `status ${r.bastidores}, esperado 200`),
@@ -176,6 +195,7 @@ export function checarPublico(r: { bastidores: number; toolsDoMcp: string[] }): 
       faltam.length === 0,
       faltam.length === 0 ? "seis tools" : `faltam ${faltam.join(", ")}`,
     ),
+    checarSobre(r.sobre),
   ]
 }
 

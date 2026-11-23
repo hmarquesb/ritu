@@ -301,18 +301,20 @@ describe("checarPublico", () => {
     "clima_agora",
     "clima_proximas_horas",
   ]
+  const SOBRE_OK = { status: 200, html: "<p>Privacidade</p><p>Não é orientação médica.</p>" }
 
   it("passa com 200 e as seis tools, em qualquer ordem", () => {
     const checagens = checarPublico({
       bastidores: 200,
       toolsDoMcp: [...SEIS_TOOLS].reverse(),
+      sobre: SOBRE_OK,
     })
     expect(checagens.every((c) => c.ok)).toBe(true)
     expect(checagens.every((c) => c.grupo === "publico")).toBe(true)
   })
 
   it("falha quando /bastidores não responde 200", () => {
-    const checagens = checarPublico({ bastidores: 500, toolsDoMcp: SEIS_TOOLS })
+    const checagens = checarPublico({ bastidores: 500, toolsDoMcp: SEIS_TOOLS, sobre: SOBRE_OK })
     expect(porNome(checagens, "bastidores").ok).toBe(false)
   })
 
@@ -320,10 +322,40 @@ describe("checarPublico", () => {
     const checagens = checarPublico({
       bastidores: 200,
       toolsDoMcp: SEIS_TOOLS.filter((t) => t !== "clima_agora"),
+      sobre: SOBRE_OK,
     })
     const tools = porNome(checagens, "mcp tools/list")
     expect(tools.ok).toBe(false)
     expect(tools.detalhe).toContain("clima_agora")
+  })
+
+  it("sobre: passa com 200 e as duas frases", () => {
+    const checagens = checarPublico({ bastidores: 200, toolsDoMcp: SEIS_TOOLS, sobre: SOBRE_OK })
+    expect(porNome(checagens, "sobre").ok).toBe(true)
+    expect(porNome(checagens, "sobre").grupo).toBe("publico")
+  })
+
+  it("sobre: falha quando falta 'Privacidade'", () => {
+    const checagens = checarPublico({
+      bastidores: 200,
+      toolsDoMcp: SEIS_TOOLS,
+      sobre: { status: 200, html: "<p>Não é orientação médica.</p>" },
+    })
+    expect(porNome(checagens, "sobre").ok).toBe(false)
+    expect(porNome(checagens, "sobre").detalhe).toContain("Privacidade")
+  })
+
+  it("sobre: falha com 500, sem trazer o HTML no detalhe", () => {
+    const html = "<p>Privacidade</p><p>Não é orientação médica.</p><p>erro-interno-xyz</p>"
+    const checagens = checarPublico({
+      bastidores: 200,
+      toolsDoMcp: SEIS_TOOLS,
+      sobre: { status: 500, html },
+    })
+    const sobre = porNome(checagens, "sobre")
+    expect(sobre.ok).toBe(false)
+    expect(sobre.detalhe).toContain("500")
+    expect(sobre.detalhe).not.toContain("erro-interno-xyz")
   })
 })
 
